@@ -35,7 +35,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/inspektor-gadget/inspektor-gadget/internal/deployinfo"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-service/api"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadgets"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/logger"
@@ -90,7 +89,6 @@ const (
 )
 
 type Runtime struct {
-	info           *deployinfo.DeployInfo
 	defaultValues  map[string]string
 	globalParams   *params.Params
 	restConfig     *rest.Config
@@ -655,10 +653,7 @@ func (r *Runtime) runBuiltInGadget(gadgetCtx runtime.GadgetContext, target targe
 }
 
 func (r *Runtime) GetCatalog() (*runtime.Catalog, error) {
-	if r.info == nil {
-		return nil, nil
-	}
-	return r.info.Catalog, nil
+	return nil, nil
 }
 
 func (r *Runtime) SetDefaultValue(key params.ValueHint, value string) {
