@@ -483,7 +483,7 @@ All these options should be set at the same time to enable TLS connection`,
 			return nil, fmt.Errorf("creating TLS certificate authority: %w", err)
 		}
 
-		purl, err := url.Parse(target.addressOrPod)
+		purl, err := url.Parse("dummy://" + target.addressOrPod)
 		if err != nil {
 			return nil, fmt.Errorf("parsing address %v: %w", target.addressOrPod, err)
 		}
