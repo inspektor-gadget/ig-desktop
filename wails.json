@@ -1,0 +1,19 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "Inspektor Gadget",
+  "outputfilename": "ig-desktop",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Michael Friese",
+    "email": "mfriese@microsoft.com"
+  },
+  "info": {
+    "companyName": "The Inspektor Gadget Authors",
+    "productName": "Inspektor Gadget Desktop",
+    "productVersion": "0.1",
+    "copyright": "Copyright (C) 2025 The Inspektor Gadget Authors"
+  }
+}

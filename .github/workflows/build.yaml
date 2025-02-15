@@ -1,0 +1,48 @@
+name: Build Apps
+on:
+  push:
+    branches:
+      - main
+    tags:
+      # Match any new tag
+      - '*'
+env:
+  # Necessary for most environments as build failure can occur due to OOM issues
+  NODE_OPTIONS: "--max-old-space-size=4096"
+jobs:
+  build:
+    permissions:
+      contents: write
+      packages: write
+    strategy:
+      # Failure in one platform build won't impact the others
+      fail-fast: false
+      matrix:
+        build:
+          - name: 'ig-desktop-linux'
+            platform:  'linux/amd64'
+            os: 'ubuntu-22.04'
+          - name: 'ig-desktop-win.exe'
+            platform:  'windows/amd64'
+            os: 'windows-latest'
+#          - name: 'ig-desktop-macos'
+#            platform:  'darwin/universal'
+#            os: 'macos-latest'
+    runs-on: ${{ matrix.build.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build wails
+        uses: ./.github/actions/wails
+        id: build
+        with:
+          build-name: ${{ matrix.build.name }}
+          build-platform: ${{ matrix.build.platform }}
+          build-tags: "withoutebpf"
+          package: true
+          nsis: true
+          go-version: '1.24'
+          node-version: '23.5.0'
+          wails-build-webview2: "embed"

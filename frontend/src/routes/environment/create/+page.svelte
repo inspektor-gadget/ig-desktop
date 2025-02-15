@@ -1,0 +1,94 @@
+<script lang="js">
+	import { getContext } from 'svelte';
+	import { goto } from '$app/navigation';
+	import Params from '$lib/components/params.svelte';
+	import Plus from '$lib/icons/circle-plus.svg?raw';
+
+	const api = getContext('api');
+
+	let runtimes = $state(null);
+	let selectedRuntime = $state(null);
+
+	async function loadRuntimes() {
+		const res = await api.request({ cmd: 'getRuntimes' });
+		console.log(res);
+		runtimes = res;
+	}
+
+	loadRuntimes();
+
+	let runtimeParams = $state([]);
+	let values = $state({});
+	let name = $state('');
+
+	async function setRuntime(rt) {
+		selectedRuntime = rt;
+		const res = await api.request({ cmd: 'getRuntimeParams', data: { runtime: rt } });
+		runtimeParams = res;
+	}
+
+	async function createEnvironment() {
+		const res = await api.request({ cmd: 'createEnvironment', data: { name: name, params: values, runtime:
+				selectedRuntime } });
+		// TODO: Feedback
+		console.log('env', res);
+		goto('/env/' + res.id);
+	}
+
+	let validated = $derived(name.length > 0 && selectedRuntime);
+</script>
+
+<div class="flex flex-col shadow-lg z-1">
+	<div class="p-4 flex flex-row justify-between bg-gray-950">
+		<div class="text-xl">Create Environment</div>
+	</div>
+</div>
+
+<div class="p-4 flex flex-col gap-4 grow overflow-auto">
+	<div class="p-4 bg-gray-950 rounded">
+		<div class="flex flex-col gap-2">
+			<div>
+				<div class="text-lg">Name</div>
+			</div>
+			<input type="text" bind:value={name} class="w-full p-1.5 text-sm rounded bg-gray-800" />
+		</div>
+	</div>
+
+	<div class="p-4 bg-gray-950 rounded">
+		<div class="flex flex-col gap-2">
+			<div>
+				<div class="text-lg">Runtime</div>
+				<div class="text-gray-400 text-sm">Select your target runtime</div>
+			</div>
+			<div class="grid grid-cols-2 gap-2">
+				{#each runtimes as rt}
+					<div onpointerdown={() => { setRuntime(rt.key) }}
+							 class="select-none flex flex-col gap-1 cursor-pointer p-4 bg-gray-900 rounded hover:bg-gray-800 border-2"
+							 class:border-gray-600={selectedRuntime !== rt.key} class:border-green-600={selectedRuntime === rt.key}>
+						<div>{rt.title}</div>
+						<div class="text-gray-400 text-sm">{rt.description}</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+
+	{#if runtimeParams}
+		<div class="flex flex-col p-4 bg-gray-950 rounded gap-2">
+			<div class="text-lg">Configuration</div>
+			<Params params={runtimeParams} values={values} />
+		</div>
+	{/if}
+</div>
+
+<div class="flex flex-row justify-between p-4 bg-gray-950">
+	<div></div>
+	<div>
+		<button disabled={!validated}
+						class="flex flex-row gap-2 py-2 px-4 rounded cursor-pointer bg-green-800 hover:bg-green-700 disabled:bg-green-950 disabled:text-gray-500 disabled:cursor-not-allowed"
+						onclick={createEnvironment}>
+			<span>{@html Plus}</span>
+			<span>Create Environment</span>
+		</button>
+	</div>
+</div>
