@@ -4,6 +4,7 @@
 	import Play from '$lib/icons/play.svg?raw';
 	import { load } from 'js-yaml';
 	import { environments } from '$lib/shared/environments.svelte.js';
+	import { preferences } from '$lib/shared/preferences.svelte.js';
 	import { goto } from '$app/navigation';
 	import Title from '$lib/components/params/title.svelte';
 
@@ -74,9 +75,22 @@
 	}
 
 	async function runGadget() {
-		const res = await api.request({ cmd: 'runGadget', data: { image: data.url, params: $state.snapshot(values),
-				environmentID: environmentID, detached, instanceName }	});
-		console.log(res);
+		const gadgetRunRequest = {
+			image: data.url,
+			params: $state.snapshot(values),
+			environmentID: environmentID,
+			detached,
+			instanceName,
+		};
+
+		// TODO: error handling
+		const res = await api.request({ cmd: 'runGadget', data: gadgetRunRequest});
+
+		// add to history but keep 10 entries max
+		const history = preferences.get('gadget-history') || []
+		history.unshift(gadgetRunRequest)
+		preferences.set('gadget-history', history.slice(0, 10));
+
 		if (detached) {
 			goto('/env/' + environmentID);
 		} else {

@@ -10,7 +10,14 @@
 	import Trash from '$lib/icons/fa/trash.svg?raw';
 	import Close from '$lib/icons/close.svg?raw';
 	import Play from '$lib/icons/play.svg?raw';
+	import PlaySmall from '$lib/icons/fa/play.svg?raw';
+	import Lock from '$lib/icons/fa/lock.svg?raw';
+	import LockOpen from '$lib/icons/fa/lock-open.svg?raw';
+	import Heart from '$lib/icons/fa/heart.svg?raw';
+	import History from '$lib/icons/fa/clock-rotate-left.svg?raw';
 	import Info from '$lib/icons/fa/info.svg?raw';
+	import Server from '$lib/icons/fa/server.svg?raw';
+	import { preferences } from '$lib/shared/preferences.svelte.js';
 
 	const api = getContext('api');
 
@@ -29,12 +36,13 @@
 		getList(env.id);
 	})
 
+	let history = $derived(preferences.get('gadget-history') || [])
+
 	async function getList(id) {
 		targetState = 0;
 		try {
 			const tmp = await api.request({ cmd: 'listInstances', data: { environmentID: id } });
-			console.log('out', tmp);
-			detachedInstances = tmp.gadgetInstances;
+			detachedInstances = tmp.gadgetInstances || []; // TODO: check why this can return empty
 			targetState = 1;
 		} catch (err) {
 			targetState = 2;
@@ -62,94 +70,153 @@
 	function runInstance() {
 		goto('/gadgets/run/' + gadgetURL);
 	}
+
+	async function runGadget(gadgetRunRequest) {
+		const res = await api.request({ cmd: 'runGadget', data: { ...gadgetRunRequest, environmentID: env.id }});
+		if (gadgetRunRequest.detached) {
+			getList(env.id);
+		} else {
+			goto('/env/' + env.id + '/running/' + res.id);
+		}
+	}
 </script>
 {#if !env}
 	Env not found
 {:else}
-<div class="flex flex-row overflow-auto">
+<div class="flex flex-col overflow-auto">
 	<div class="flex flex-col flex-1 min-w-0 bg-gray-900 p-4 gap-4">
-		<div class="font-bold flex flex-row items-center justify-between">
-			<div class="flex flex-row gap-2 items-center">
-				<div class:text-red-800={targetState === 2} class:text-green-600={targetState === 1}
-						 class:text-orange-500={targetState === 0}>{@html CircleSmall}</div>
-				<div class="text-2xl">{env.name}</div>
+		<div class="flex flex-row items-center justify-between">
+			<div class="flex flex-row gap-4 items-center">
+				<div class="flex flex-col gap-0.5">
+					<div class="flex flex-row items-center gap-1">
+						<div class="text-2xl font-bold">{env.name}</div>
+						<div class:text-red-800={targetState === 2} class:text-green-600={targetState === 1}
+								 class:text-orange-500={targetState === 0}>{@html CircleSmall}</div>
+					</div>
+					<div class="text-xs flex flex-row gap-1 text-gray-400 items-center">
+						{#if env.runtime === 'grpc-ig'}
+							{#if env.params && env.params['tls-key-file']}
+								<div class="text-green-300" title="Secure Connection">{@html Lock}</div>
+							{:else}
+								<div class="text-red-300" title="Insecure Connection">{@html LockOpen}</div>
+							{/if}
+							<div>{env.params['remote-address']}</div>
+						{:else}
+							<div class="text-xs flex flex-row gap-4 rounded">
+								Kubernetes
+							</div>
+						{/if}
+					</div>
+				</div>
 			</div>
 			<div>
 				<button onclick={() => { if (confirm('Do you really want to delete this environment?')) deleteEnvironment() }}
-								class="rounded bg-red-900 hover:bg-red-800 text-white px-2 py-1 text-xs font-base cursor-pointer flex flex-row gap-1 items-center"><div>{@html Trash} </div>
-					<div>Delete Environment</div></button>
+								class="rounded bg-red-900 hover:bg-red-800 text-white px-2 py-1 text-sm font-base cursor-pointer flex flex-row gap-1 items-center">
+					<span>{@html Trash} </span>
+					<span>Delete Environment</span>
+				</button>
 			</div>
 		</div>
 
-		{#if env.runtime === 'grpc-ig'}
-			<div class="p-4 bg-gray-950 flex flex-row gap-4 rounded">
-				<div>Address {env.params['remote-address']}</div>
+		<div class="flex flex-col gap-2">
+			<div class="flex flex-row gap-2 items-center">
+				<div>{@html PlaySmall}</div>
+				<div>Run Gadget</div>
 			</div>
-		{:else}
-			<div class="p-4 bg-gray-950 flex flex-row gap-4 rounded">
-				Kubernetes
+			<div class="flex flex-col p-2 bg-gray-950 rounded gap-4">
+				<div class="flex flex-row gap-2">
+					<input type="text" bind:value={gadgetURL} class="grow p-1.5 text-sm rounded bg-gray-800"
+								 placeholder="gadget image url" />
+					<button disabled={!validURL} onclick={runInstance} title="Run Gadget"
+									class="flex flex-row text-sm items-center gap-1 py-1 px-2 rounded cursor-pointer bg-green-800 hover:bg-green-700 disabled:bg-green-950 disabled:text-gray-500 disabled:cursor-not-allowed">
+						{@html PlaySmall}
+					</button>
+				</div>
 			</div>
+		</div>
+
+		{#if history.length > 0}
+		<div class="flex flex-col gap-2">
+			<div class="flex flex-row gap-2 items-center">
+				<div>{@html History}</div>
+				<div>Recently run Gadgets</div>
+			</div>
+			<div class="p-4 bg-gray-950 flex flex-col gap-4 rounded overflow-hidden">
+				<div class="text-sm">
+					{#each history as entry, idx}
+						<div class="flex flex-row gap-2 justify-between">
+							<div class="flex flex-row gap-2 items-start">
+								<div>{entry.image} {#if entry.detached}(detached){/if}</div>
+<!--								<div>-->
+<!--									{#each Object.entries(entry.params) as [key, value]}-->
+<!--										<div>{key} = {value}</div>-->
+<!--									{/each}-->
+<!--								</div>-->
+							</div>
+							<div class="flex flex-row gap-2 items-end">
+								<button class="cursor-pointer hover:text-white" title="Remove from list"
+												onclick={() => { history.splice(idx, 1) }}>{@html Trash}</button>
+								<button class="cursor-pointer hover:text-white" title="Run again"
+												onclick={() => { runGadget(entry) }}>{@html PlaySmall}</button>
+							</div>
+						</div>
+					{/each}
+				</div>
+			</div>
+		</div>
 		{/if}
 
-		<div class="font-bold flex flex-row items-center">
-			<span>Run Gadget</span>
-		</div>
-		<div class="p-4 bg-gray-950 flex flex-row gap-4 rounded">
-			<input type="text" bind:value={gadgetURL} class="grow p-1.5 text-sm rounded bg-gray-800"
-						 placeholder="gadget image url" />
-			<button disabled={!validURL} onclick={runInstance}
-							class="flex flex-row gap-1 pl-2 py-2 px-4 rounded cursor-pointer bg-green-800 hover:bg-green-700 disabled:bg-green-950 disabled:text-gray-500 disabled:cursor-not-allowed">
-				<span>{@html Play}</span>
-				<span>Run Gadget</span>
-			</button>
-		</div>
-
-		<div class="font-bold flex flex-row items-center gap-2">
-			<div>Headless Gadget Instances</div>
-			<div><a href="https://inspektor-gadget.io/docs/latest/reference/headless" title="Help"
-							target="_blank">{@html Info}</a></div>
-		</div>
-
-		<div class="p-4 bg-gray-950 flex flex-col gap-4 rounded overflow-hidden">
-			<table class="min-w-full max-w-full w-full">
-				<thead class="bg-gray-950 sticky top-0">
-				<tr>
-					<th class="w-32 font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">ID
-					</th>
-					<th class="font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">Name</th>
-					<th class="font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">Tags</th>
-					<th class="font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">Image</th>
-					<th></th>
-				</tr>
-				</thead>
-				<tbody class="text-xs text-gray-400 font-mono">
-				{#each detachedInstances as instance}
-					<tr>
-						<td
-							class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.id?.substring(0, 12)}</td>
-						<td
-							class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.name}</td>
-						<td
-							class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.tags}</td>
-						<td
-							class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.gadgetConfig?.imageName}</td>
-						<td>
-							<div class="flex flex-row gap-2 justify-end px-2">
-								<button class="cursor-pointer hover:text-white" title="Attach"
-												onclick={() => { attachInstance(instance) }}>{@html Browser}</button>
-								<button class="cursor-pointer hover:text-white" title="Delete"
-												onclick={() => { if (confirm('Do you really want to delete this instance?'))
-													removeInstance(instance) }}>{@html
-									Trash}</button>
-							</div>
-						</td>
-					</tr>
-				{/each}
-				</tbody>
-			</table>
-			{#if detachedInstances.length === 0}
-				<div class="text-white text-center text-xs">No running instances found</div>
-			{/if}
+		<div class="flex flex-col gap-2">
+			<div class="flex flex-row items-center gap-2">
+				<div class="flex flex-row gap-2 items-center">
+					<div>{@html Server}</div>
+					<div>Headless Gadget Instances</div>
+				</div>
+				<div><a href="https://inspektor-gadget.io/docs/latest/reference/headless" title="Help"
+								target="_blank">{@html Info}</a></div>
+			</div>
+			<div class="p-2 bg-gray-950 flex flex-col gap-4 rounded overflow-hidden">
+				{#if detachedInstances.length}
+					<table class="min-w-full max-w-full w-full">
+						<thead class="bg-gray-950 sticky top-0">
+						<tr>
+							<th class="w-32 font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">ID
+							</th>
+							<th class="font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">Name</th>
+							<th class="font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">Tags</th>
+							<th class="font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">Image</th>
+							<th></th>
+						</tr>
+						</thead>
+						<tbody class="text-xs text-gray-400 font-mono">
+						{#each detachedInstances as instance}
+							<tr>
+								<td
+									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.id?.substring(0, 12)}</td>
+								<td
+									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.name}</td>
+								<td
+									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.tags}</td>
+								<td
+									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.gadgetConfig?.imageName}</td>
+								<td>
+									<div class="flex flex-row gap-2 justify-end px-2">
+										<button class="cursor-pointer hover:text-white" title="Attach"
+														onclick={() => { attachInstance(instance) }}>{@html Browser}</button>
+										<button class="cursor-pointer hover:text-white" title="Delete"
+														onclick={() => { if (confirm('Do you really want to delete this instance?'))
+															removeInstance(instance) }}>{@html
+											Trash}</button>
+									</div>
+								</td>
+							</tr>
+						{/each}
+						</tbody>
+					</table>
+				{:else}
+					<div class="text-white text-center text-xs p-4">No running instances found</div>
+				{/if}
+			</div>
 		</div>
 	</div>
 <!--	<div class="flex flex-col w-1/4 p-4">-->

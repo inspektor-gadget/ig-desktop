@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import Params from '$lib/components/params.svelte';
 	import Plus from '$lib/icons/circle-plus.svg?raw';
+	import Gadget from '$lib/icons/gadget.svg';
 
 	const api = getContext('api');
 
@@ -45,8 +46,15 @@
 </div>
 
 <div class="p-4 flex flex-col gap-4 grow overflow-auto">
-	<div class="p-4 bg-gray-950 rounded">
-		<div class="flex flex-col gap-2">
+	<div class="p-4 bg-gray-950 rounded flex flex-row gap-4">
+		<div
+			class="text-gray-100 group-hover:rounded-2xl group-hover:bg-brand group-hover:text-white bg-gray-700 rounded-3xl flex items-center justify-center w-12 h-12 transition-all duration-200 overflow-hidden">
+			<div class="grid" title={name}>
+				<div
+					class="col-start-1 row-start-1 flex justify-center text-lg z-10 shadow">{name.substring(0,3)}</div>
+			</div>
+		</div>
+		<div class="flex flex-col gap-2 grow">
 			<div>
 				<div class="text-lg">Name</div>
 			</div>
