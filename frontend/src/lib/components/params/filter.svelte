@@ -38,8 +38,8 @@
 		const res = filters.map(f => {
 			return `${f.key}${f.op}${f.value?.replace(/\\/g, '\\\\').replace(/,/g, '\\,') || ''}`;
 		}).join(',');
-		if (!res.length) {
-			delete(config.values[param.key]);
+		if (!filters.length) {
+			config.set(param, undefined);
 		} else {
 			config.set(param, res);
 		}
@@ -52,7 +52,7 @@
 </div>
 <div class="flex flex-col gap-1">
 	{#each filters as filter, idx}
-		<div class="flex flex-row items-start gap-2 items-stretch">
+		<div class="flex flex-row items-start gap-1 items-stretch">
 			<div class="grid">
 				<svg
 					class="pointer-events-none relative right-1 z-10 col-start-1 row-start-1 h-4 w-4 self-center justify-self-end forced-colors:hidden"

@@ -2,8 +2,15 @@
 	import Title from '$lib/components/params/title.svelte';
 	import { getContext } from 'svelte';
 	import Delete from '$lib/icons/fa/trash.svg?raw';
+	import SortUp from '$lib/icons/fa/sort-up.svg?raw';
+	import SortDown from '$lib/icons/fa/sort-down.svg?raw';
 
 	let currentGadget = getContext('currentGadget');
+
+	const operations = {
+		'-': { icon: SortUp, title: 'Descending' },
+		'': { icon: SortDown, title: 'Ascending' },
+	}
 
 	let fields = $derived.by(() => {
 		const gadgetInfo = currentGadget();
@@ -12,9 +19,8 @@
 		}
 		let tmpFields = [];
 		Object.values(gadgetInfo.dataSources).forEach((ds) => {
-			tmpFields.push({ key: ds.name, display: ds.name });
 			ds.fields.forEach(f => {
-				tmpFields.push({ key: ds.name + '.' + f.fullName, display: '- ' + ds.name + '.' + f.fullName });
+				tmpFields.push({ ds: ds.name, field: f.fullName, display: ds.name + '.' + f.fullName });
 			})
 		});
 		return tmpFields;
@@ -23,11 +29,16 @@
 	let { param, config } = $props();
 	let filters = $state([]);
 
-
 	$effect(() => {
-		const res = filters.map(f => {
-			return `${f.field}:${f.key || ''}=${f.value?.replace(/\\/g, '\\\\').replace(/,/g, '\\,') || ''}`;
-		}).join(',');
+		const dataSources = {};
+		filters.forEach(f => {
+			dataSources[f.field.ds] = [...(dataSources[f.field.ds] || []), f];
+		})
+		const res = Object.entries(dataSources).map(([d, fields]) => {
+			return d + ':' + fields.map(f => {
+				return `${f.sorting}${f.field.field}`;
+			}).join(',');
+		}).join(';')
 		if (!filters.length) {
 			config.set(param, undefined);
 		} else {
@@ -54,17 +65,14 @@
 				<select class="col-start-1 row-start-1 pl-3 pr-8 appearance-none p-1.5 rounded bg-gray-800"
 								bind:value={filter.field}>
 					{#each fields as field}
-						<option value={field.key}>{field.display}</option>
+						<option value={field}>{field.display}</option>
 					{/each}
 				</select>
 			</div>
-			<div class="flex flex-row grow">
-				<input class="w-full p-1.5 text-sm rounded bg-gray-800" type="text" placeholder="{param.defaultValue}"
-							 bind:value={filter.key}>
-			</div>
-			<div class="flex flex-row grow">
-				<input class="w-full p-1.5 text-sm rounded bg-gray-800" type="text" placeholder="{param.defaultValue}"
-							 bind:value={filter.value}>
+			<div class="grid">
+				<button title={operations[filter.sorting].title} onclick={() => { filter.sorting = filter.sorting === '' ?
+				'-' : '' }}
+								class="p-2 rounded cursor-pointer bg-gray-800 hover:bg-gray-700">{@html operations[filter.sorting].icon}</button>
 			</div>
 			<button class="flex flex-row gap-2 py-1 px-2 rounded cursor-pointer bg-red-900 hover:bg-red-800 items-center"
 							onclick={() => { filters.splice(idx, 1); }}>
@@ -74,8 +82,8 @@
 	{/each}
 	<div>
 		<button class="flex flex-row gap-2 py-1 px-2 rounded cursor-pointer bg-gray-800 hover:bg-gray-700 items-center"
-						onclick={() => { filters.push({}); }}>
-			<span>Add Annotation</span>
+						onclick={() => { filters.push({ sorting: '' }); }}>
+			<span>Add Sorting</span>
 		</button>
 	</div>
 </div>

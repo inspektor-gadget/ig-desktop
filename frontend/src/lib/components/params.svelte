@@ -7,6 +7,7 @@
 	import Number from './params/number.svelte';
 	import Filter from './params/filter.svelte';
 	import Annotations from './params/annotation.svelte';
+	import Sort from './params/sort.svelte';
 
 	const config = $state({
 		values,
@@ -31,6 +32,9 @@
 		}
 		if (param.key === 'annotate') {
 			return Annotations;
+		}
+		if (param.key === 'sort') {
+			return Sort;
 		}
 		switch (param.typeHint || param.type) {
 			case 'bool':
