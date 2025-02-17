@@ -2,6 +2,8 @@
 	import Table from '$lib/icons/table-column.svg?raw';
 	import Dots from '$lib/icons/dots-vertical.svg?raw';
 	import { getContext } from 'svelte';
+	import { environments } from '$lib/shared/environments.svelte.js';
+	import { page } from '$app/state';
 
 	let { ds, events } = $props();
 
@@ -14,6 +16,18 @@
 	}
 
 	const gadget = getContext('gadget');
+
+	let env = $derived(environments[page.params.env]);
+
+	const visibleFields = $derived(ds.fields.filter((field) => {
+		if (env.runtime === 'grpc-ig') {
+			if (field.tags?.indexOf('kubernetes') >= 0) return false;
+		}
+		if (field.annotations['columns.hidden'] === 'true') {
+			return false;
+		}
+		return visible(field.flags);
+	}).sort((a, b) => {	return (a.order || 0) - (b.order || 0) }));
 
 	function inspect(data) {
 		const snapshot = { fields: $state.snapshot(ds.fields), entry: $state.snapshot(data) };
@@ -35,17 +49,15 @@
 		<table class="min-w-full">
 			<thead class="bg-gray-950 sticky top-10">
 			<tr>
-				{#each ds.fields as field}
-					{#if (visible(field.flags))}
-						<th
-							class="font-normal text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">
-							<div class="flex flex-col">
-								<div class="flex flex-row items-center justify-between">
-									<div title={field.annotations?.description} class="uppercase">{field.fullName}</div>
-								</div>
+				{#each visibleFields as field}
+					<th
+						class="font-normal text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">
+						<div class="flex flex-col">
+							<div class="flex flex-row items-center justify-between">
+								<div title={field.annotations?.description} class="uppercase">{field.fullName}</div>
 							</div>
-						</th>
-					{/if}
+						</div>
+					</th>
 				{/each}
 			</tr>
 			</thead>
@@ -57,13 +69,11 @@
                     // gadget.showAttribs.set(true);
                     // gadget.attribsPage.set(4);
                 }}>
-					{#each ds.fields as field}
-						{#if (visible(field.flags))}
-							<td
-								class="text-nowrap text-ellipsis border-r px-2 py-0 border-r-gray-600 last:border-r-0"
-								class:text-right={['Uint64', 'Uint32', 'Uint16', 'Int64', 'Int32', 'Int16'].indexOf(field.kind) >= 0}
-							>{entry[field.fullName]}</td>
-						{/if}
+					{#each visibleFields as field}
+						<td
+							class="text-nowrap text-ellipsis border-r px-2 py-0 border-r-gray-600 last:border-r-0"
+							class:text-right={['Uint64', 'Uint32', 'Uint16', 'Int64', 'Int32', 'Int16'].indexOf(field.kind) >= 0}
+						>{entry[field.fullName]}</td>
 					{/each}
 				</tr>
 			{/each}
