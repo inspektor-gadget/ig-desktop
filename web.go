@@ -28,6 +28,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/inspektor-gadget/inspektor-gadget/cmd/kubectl-gadget/utils"
+	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadgets"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -141,7 +143,22 @@ func (w *App) GetRuntime(id string) (*grpcruntime.Runtime, error) {
 	if err != nil {
 		return nil, err
 	}
-	rt := grpcruntime.New()
+	var rt *grpcruntime.Runtime
+	switch environment.Runtime {
+	case "grpc-k8s":
+		rt = grpcruntime.New(grpcruntime.WithConnectUsingK8SProxy)
+		config, err := utils.KubernetesConfigFlags.ToRESTConfig()
+		if err != nil {
+			return nil, fmt.Errorf("could not load kubernetes config: %v", err)
+		}
+		rt.SetRestConfig(config)
+
+		namespace, _ := utils.GetNamespace()
+		rt.SetDefaultValue(gadgets.K8SNamespace, namespace)
+	case "grpc-ig":
+		rt = grpcruntime.New()
+	}
+
 	params := rt.GlobalParamDescs().ToParams()
 	err = params.CopyFromMap(environment.Params, "")
 	if err != nil {
@@ -316,7 +333,9 @@ func (w *App) Run() error {
 				return
 			}
 			go func() {
-				err = env.RemoveGadgetInstance(ctx, nil, removeInstanceRequest.ID)
+				// use default params; TODO!
+				rtParams := env.ParamDescs().ToParams()
+				err = env.RemoveGadgetInstance(ctx, rtParams, removeInstanceRequest.ID)
 				if err != nil {
 					send(ev.SetError(err))
 					return
@@ -510,7 +529,10 @@ func (w *App) Run() error {
 					send(ev.SetError(err))
 					return
 				}
-				instances, err := env.GetGadgetInstances(ctx, nil)
+
+				// use default params; TODO!
+				rtParams := env.ParamDescs().ToParams()
+				instances, err := env.GetGadgetInstances(ctx, rtParams)
 				if err != nil {
 					log.Println(err)
 					return
@@ -544,7 +566,9 @@ func (w *App) Run() error {
 					gadgetInfoRequest.URL,
 				)
 
-				gi, err := env.GetGadgetInfo(gadgetCtx, nil, nil)
+				// use default params; TODO!
+				rtParams := env.ParamDescs().ToParams()
+				gi, err := env.GetGadgetInfo(gadgetCtx, rtParams, nil)
 				if err != nil {
 					send(ev.SetError(err))
 					return
