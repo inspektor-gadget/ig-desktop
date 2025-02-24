@@ -151,7 +151,7 @@ runs:
         elif [[ "${{ inputs.build-tags }}" == "false" && "$DISTRO" == '24.04' ]]; then 
           build_options+=" -tags webkit2_41"
         fi
-        if ${{ inputs.nsis == true }}; then
+        if ${{ inputs.nsis == 'true' }}; then
           build_options+=' -nsis'
         fi
         echo "BUILD_OPTIONS=$build_options" >> "$GITHUB_OUTPUT"
@@ -238,7 +238,7 @@ runs:
       working-directory: ${{ inputs.app-working-directory }}
       shell: bash
       run: |
-        ditto -c -k --keepParent ${{ inputs.app-working-directory }}/build/bin/${{inputs.build-name}}.app ${{ inputs.app-working-directory }}/build/bin/${{inputs.build-name}}.app.zip
+        ditto -c -k --keepParent ${{ inputs.app-working-directory }}/build/bin/Inspektor\ Gadget.app ${{ inputs.app-working-directory }}/build/bin/${{inputs.build-name}}.app.zip
     - name: Building Installer
       if: runner.os == 'macOS' && inputs.sign != 'false' && inputs.sign-macos-installer-id != '' && startsWith(github.ref, 'refs/tags/')
       shell: bash
