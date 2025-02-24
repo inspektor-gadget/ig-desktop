@@ -25,9 +25,9 @@ jobs:
           - name: 'ig-desktop-win.exe'
             platform:  'windows/amd64'
             os: 'windows-latest'
-#          - name: 'ig-desktop-macos'
-#            platform:  'darwin/universal'
-#            os: 'macos-latest'
+          - name: 'ig-desktop-macos'
+            platform:  'darwin/universal'
+            os: 'macos-latest'
     runs-on: ${{ matrix.build.os }}
     steps:
       - name: Checkout
