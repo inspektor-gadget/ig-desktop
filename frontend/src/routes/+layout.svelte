@@ -92,6 +92,11 @@
 
 	let isApp = $state(false)
 
+	let modalError = $state(null);
+	function handleError(err) {
+		modalError = err;
+	}
+
 	let ws;
 	if (window.runtime) {
 		isApp = true;
@@ -145,7 +150,12 @@
 			window.runtime.WindowMaximise();
 		}
 	}
+
+	window.onunhandledrejection = (err) => {
+		handleError(err.reason);
+	}
 </script>
+<svelte:window on:error={handleError} />
 <div class="flex flex-col h-screen">
 	{#if isApp}
 		<div ondblclick={() => { toggleMaximize() }} style="--wails-draggable: drag"
@@ -207,3 +217,22 @@
 		<div class="p-1 pl-2 border-t border-t-gray-800 text-xs text-gray-500 bg-gray-950">Disconnected</div>
 	{/if}
 </div>
+{#if modalError}
+	<div class="fixed top-0 left-0 w-full h-full flex flex-row justify-between bg-gray-900 text-white z-100">
+		<div></div>
+		<div class="flex flex-col justify-between max-w-1/3">
+			<div></div>
+			<div class="flex flex-col bg-gray-950 p-16 rounded-xl gap-8">
+				<div class="text-lg text-gray-400">An error occurred</div>
+				<div>{modalError}</div>
+				<div class="flex flex-row justify-end">
+					<button onclick={() => { modalError = null }}
+						class="flex flex-row gap-2 py-1 px-2 rounded cursor-pointer bg-red-900 hover:bg-red-800 items-center">Close
+					</button>
+				</div>
+			</div>
+			<div></div>
+		</div>
+		<div></div>
+	</div>
+{/if}

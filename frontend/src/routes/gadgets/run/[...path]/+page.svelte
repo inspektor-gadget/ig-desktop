@@ -12,7 +12,7 @@
 
 	const api = getContext('api');
 
-	let environmentID = $state('');
+	let environmentID = $state(null);
 
 	let detached = $state(false);
 	let instanceName = $state('');
@@ -63,17 +63,6 @@
 		});
 	});
 
-	async function loadGadgetInfo() {
-		const res = await api.request({ cmd: 'getGadgetInfo', data: { url: data.url, environmentID: environmentID } });
-		if (!res) {
-			error = 'Could not fetch gadget information. Is the given URL correct?';
-			return;
-		} else {
-			error = null;
-		}
-		gadgetInfo = res;
-	}
-
 	async function runGadget() {
 		const gadgetRunRequest = {
 			image: data.url,
@@ -97,8 +86,6 @@
 			goto('/env/' + environmentID + '/running/' + res.id);
 		}
 	}
-
-	loadGadgetInfo();
 </script>
 <div class="p-4 flex flex-row justify-between items-center bg-gray-950">
 	<div>{data.url}</div>

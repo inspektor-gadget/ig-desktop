@@ -128,7 +128,7 @@ func getDir(suffix string) (string, error) {
 
 func (w *App) GetRuntime(id string) (*grpcruntime.Runtime, error) {
 	if err := uuid.Validate(id); err != nil {
-		return nil, fmt.Errorf("environment ID: %w", id)
+		return nil, fmt.Errorf("environment ID: %s", id)
 	}
 	dir, err := getDir("env")
 	if err != nil {
@@ -191,7 +191,7 @@ func (w *App) DeleteEnvironment(environment *Environment) error {
 		return err
 	}
 	if err := uuid.Validate(environment.ID); err != nil {
-		return fmt.Errorf("environment ID: %w", environment.ID)
+		return fmt.Errorf("environment ID: %s", environment.ID)
 	}
 	os.Remove(filepath.Join(dir, environment.ID+".json"))
 	return nil
