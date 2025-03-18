@@ -3,11 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 )
 
 // App struct
 type App struct {
 	ctx context.Context
+
+	mu        sync.Mutex
+	deploying map[string]struct{}
 }
 
 // NewApp creates a new App application struct

@@ -29,19 +29,29 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/inspektor-gadget/inspektor-gadget/cmd/kubectl-gadget/utils"
-	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadgets"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"google.golang.org/protobuf/encoding/protojson"
-
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/datasource"
 	gadgetcontext "github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-context"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-service/api"
+	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadgets"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/logger"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/operators"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/operators/simple"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"google.golang.org/protobuf/encoding/protojson"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 
+	"ig-frontend/pkg/deploy"
 	grpcruntime "ig-frontend/pkg/grpc-runtime"
 	json2 "ig-frontend/pkg/json"
+)
+
+const (
+	ParamContext = "context"
+
+	TypeK8S    = "grpc-k8s"
+	TypeDaemon = "grpc-ig"
 )
 
 var upgrader = websocket.Upgrader{
@@ -93,6 +103,8 @@ const (
 	TypeGadgetLog         = 4
 	TypeGadgetStop        = 5
 	TypeGadgetEventArray  = 6
+	TypeGadgetPrepare     = 7
+	TypeDeployLog         = 20
 	TypeEnvironmentCreate = 100
 	TypeEnvironmentDelete = 101
 	TypeEnvironmentUpdate = 102
@@ -103,6 +115,9 @@ type Environment struct {
 	Name    string            `json:"name"`
 	Runtime string            `json:"runtime"`
 	Params  map[string]string `json:"params"`
+
+	// InDeployment is only used at runtime
+	InDeployment bool `json:"inDeployment"`
 }
 
 func getDir(suffix string) (string, error) {
@@ -126,9 +141,9 @@ func getDir(suffix string) (string, error) {
 	return dirname, nil
 }
 
-func (w *App) GetRuntime(id string) (*grpcruntime.Runtime, error) {
+func (a *App) GetEnvironment(id string) (*Environment, error) {
 	if err := uuid.Validate(id); err != nil {
-		return nil, fmt.Errorf("environment ID: %s", id)
+		return nil, fmt.Errorf("invalid environment ID %q: %w", id, err)
 	}
 	dir, err := getDir("env")
 	if err != nil {
@@ -143,11 +158,23 @@ func (w *App) GetRuntime(id string) (*grpcruntime.Runtime, error) {
 	if err != nil {
 		return nil, err
 	}
+	return &environment, nil
+}
+
+func (a *App) GetRuntime(id string) (*grpcruntime.Runtime, error) {
+	environment, err := a.GetEnvironment(id)
+	if err != nil {
+		return nil, err
+	}
 	var rt *grpcruntime.Runtime
 	switch environment.Runtime {
-	case "grpc-k8s":
+	case TypeK8S:
 		rt = grpcruntime.New(grpcruntime.WithConnectUsingK8SProxy)
-		config, err := utils.KubernetesConfigFlags.ToRESTConfig()
+		config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+			clientcmd.NewDefaultClientConfigLoadingRules(),
+			&clientcmd.ConfigOverrides{
+				CurrentContext: environment.Params[ParamContext],
+			}).ClientConfig()
 		if err != nil {
 			return nil, fmt.Errorf("could not load kubernetes config: %v", err)
 		}
@@ -155,7 +182,7 @@ func (w *App) GetRuntime(id string) (*grpcruntime.Runtime, error) {
 
 		namespace, _ := utils.GetNamespace()
 		rt.SetDefaultValue(gadgets.K8SNamespace, namespace)
-	case "grpc-ig":
+	case TypeDaemon:
 		rt = grpcruntime.New()
 	}
 
@@ -173,7 +200,7 @@ func (w *App) GetRuntime(id string) (*grpcruntime.Runtime, error) {
 	return rt, nil
 }
 
-func (w *App) AddEnvironment(environment *Environment) error {
+func (a *App) AddEnvironment(environment *Environment) error {
 	dir, err := getDir("env")
 	if err != nil {
 		return err
@@ -185,7 +212,7 @@ func (w *App) AddEnvironment(environment *Environment) error {
 	return os.WriteFile(filename, d, 0o644)
 }
 
-func (w *App) DeleteEnvironment(environment *Environment) error {
+func (a *App) DeleteEnvironment(environment *Environment) error {
 	dir, err := getDir("env")
 	if err != nil {
 		return err
@@ -197,7 +224,7 @@ func (w *App) DeleteEnvironment(environment *Environment) error {
 	return nil
 }
 
-func (w *App) GetEnvironments() ([]*Environment, error) {
+func (a *App) GetEnvironments() ([]*Environment, error) {
 	dir, err := getDir("env")
 	if err != nil {
 		return nil, err
@@ -224,9 +251,10 @@ func (w *App) GetEnvironments() ([]*Environment, error) {
 }
 
 type GenericLogger struct {
-	send       func(any)
-	instanceID string
-	level      logger.Level
+	send        func(any)
+	instanceID  string
+	messageType int
+	level       logger.Level
 }
 
 func (l *GenericLogger) SetLevel(level logger.Level) {
@@ -239,7 +267,7 @@ func (l *GenericLogger) GetLevel() logger.Level {
 
 func (l *GenericLogger) Log(severity logger.Level, params ...any) {
 	d, _ := json.Marshal(map[string]any{
-		"severity": severity,
+		"severity": uint32(severity),
 		"msg":      fmt.Sprint(params...),
 	})
 	l.send(&GadgetEvent{
@@ -251,7 +279,7 @@ func (l *GenericLogger) Log(severity logger.Level, params ...any) {
 
 func (l *GenericLogger) Logf(severity logger.Level, format string, params ...any) {
 	d, _ := json.Marshal(map[string]any{
-		"severity": severity,
+		"severity": uint32(severity),
 		"msg":      fmt.Sprintf(format, params...),
 	})
 	l.send(&GadgetEvent{
@@ -261,7 +289,7 @@ func (l *GenericLogger) Logf(severity logger.Level, format string, params ...any
 	})
 }
 
-func (w *App) Run() error {
+func (a *App) Run() error {
 	var l sync.Mutex
 
 	cancellers := make(map[string]context.CancelFunc)
@@ -270,10 +298,10 @@ func (w *App) Run() error {
 		d, _ := json.Marshal(ev)
 		l.Lock()
 		defer l.Unlock()
-		runtime.EventsEmit(w.ctx, "client", string(d))
+		runtime.EventsEmit(a.ctx, "client", string(d))
 	}
 
-	ctx := w.ctx
+	ctx := a.ctx
 
 	runtime.EventsOn(ctx, "server", func(optionalData ...interface{}) {
 		ev := &Event{}
@@ -304,11 +332,19 @@ func (w *App) Run() error {
 		switch ev.Command {
 		case "helo":
 			// Send environments
-			env, err := w.GetEnvironments()
+			env, err := a.GetEnvironments()
 			if err != nil {
 				// TODO LOG
 				return
 			}
+			a.mu.Lock()
+			// Set deployment status
+			for _, env := range env {
+				if _, ok := a.deploying[env.ID]; ok {
+					env.InDeployment = true
+				}
+			}
+			a.mu.Unlock()
 			for _, env := range env {
 				d, _ := json.Marshal(env)
 				cmd := &GadgetEvent{
@@ -327,7 +363,7 @@ func (w *App) Run() error {
 				send(ev.SetError(err))
 				return
 			}
-			env, err := w.GetRuntime(removeInstanceRequest.EnvironmentID)
+			env, err := a.GetRuntime(removeInstanceRequest.EnvironmentID)
 			if err != nil {
 				send(ev.SetError(err))
 				return
@@ -375,13 +411,22 @@ func (w *App) Run() error {
 				send(ev.SetError(err))
 				return
 			}
-			env, err := w.GetRuntime(gadgetRunRequest.EnvironmentID)
+			env, err := a.GetRuntime(gadgetRunRequest.EnvironmentID)
 			if err != nil {
 				send(ev.SetError(err))
 				return
 			}
 
 			instanceID := uuid.New().String()
+
+			// First, send an event that lets the client prepare for receiving gadget relevant information
+			xev := &GadgetEvent{
+				Type:          TypeGadgetPrepare,
+				EnvironmentID: gadgetRunRequest.EnvironmentID,
+				InstanceID:    instanceID,
+			}
+			send(xev)
+
 			xop := simple.New("exp", simple.WithPriority(1000), simple.OnPreStart(func(gadgetCtx operators.GadgetContext) error {
 				gi, _ := gadgetCtx.SerializeGadgetInfo()
 				gid, _ := protojson.Marshal(gi)
@@ -442,7 +487,7 @@ func (w *App) Run() error {
 
 			options := []gadgetcontext.Option{
 				gadgetcontext.WithDataOperators(xop),
-				gadgetcontext.WithLogger(logger.NewFromGenericLogger(&GenericLogger{send: send, instanceID: instanceID, level: logger.DebugLevel})),
+				gadgetcontext.WithLogger(logger.NewFromGenericLogger(&GenericLogger{send: send, instanceID: instanceID, messageType: TypeGadgetLog, level: logger.DebugLevel})),
 				gadgetcontext.WithUseInstance(ev.Command == "attachInstance"),
 			}
 
@@ -492,8 +537,8 @@ func (w *App) Run() error {
 				Title       string `json:"title"`
 				Description string `json:"description"`
 			}{
-				{Key: "grpc-ig", Title: "IG Daemon", Description: "Connect to Inspektor Gadget running as Daemon"},
-				{Key: "grpc-k8s", Title: "IG on Kubernetes", Description: "Connect to Inspektor Gadget running on a Kubernetes cluster"},
+				{Key: TypeDaemon, Title: "IG Daemon", Description: "Connect to Inspektor Gadget running as Daemon"},
+				{Key: TypeK8S, Title: "IG on Kubernetes", Description: "Connect to Inspektor Gadget running on a Kubernetes cluster"},
 			}
 			send(ev.SetData(runtimes))
 		case "getRuntimeParams":
@@ -524,7 +569,7 @@ func (w *App) Run() error {
 				return
 			}
 			go func() {
-				env, err := w.GetRuntime(listInstancesRequest.EnvironmentID)
+				env, err := a.GetRuntime(listInstancesRequest.EnvironmentID)
 				if err != nil {
 					send(ev.SetError(err))
 					return
@@ -554,7 +599,7 @@ func (w *App) Run() error {
 				return
 			}
 
-			env, err := w.GetRuntime(gadgetInfoRequest.EnvironmentID)
+			env, err := a.GetRuntime(gadgetInfoRequest.EnvironmentID)
 			if err != nil {
 				send(ev.SetError(err))
 				return
@@ -583,7 +628,11 @@ func (w *App) Run() error {
 				send(ev.SetError(err))
 				return
 			}
-			err = w.AddEnvironment(env)
+
+			// keep runtime info clean
+			env.InDeployment = false
+
+			err = a.AddEnvironment(env)
 			if err != nil {
 				send(ev.SetError(err))
 				return
@@ -605,7 +654,7 @@ func (w *App) Run() error {
 				send(ev.SetError(err))
 				return
 			}
-			err = w.DeleteEnvironment(env)
+			err = a.DeleteEnvironment(env)
 			// Emit deletion of environment first
 			d, _ := json.Marshal(env)
 			cmd := &GadgetEvent{
@@ -616,6 +665,102 @@ func (w *App) Run() error {
 
 			// Then ack create action
 			send(ev.SetData(env))
+		case "getKubeContexts":
+			cfg, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+				// &clientcmd.ClientConfigLoadingRules{},
+				clientcmd.NewDefaultClientConfigLoadingRules(),
+				&clientcmd.ConfigOverrides{}).RawConfig()
+			if err != nil {
+				send(ev.SetError(err))
+				return
+			}
+
+			list := make([]string, 0, len(cfg.Contexts))
+			for k := range cfg.Contexts {
+				list = append(list, k)
+			}
+
+			send(ev.SetData(list))
+			return
+		case "getDeploymentParams":
+			params := (&deploy.Deployment{}).Params()
+			send(ev.SetData(params))
+		case "deploy":
+			var deployRequest struct {
+				EnvironmentID string            `json:"environmentID"`
+				Params        map[string]string `json:"params"`
+			}
+			err = json.Unmarshal(ev.Data, &deployRequest)
+			if err != nil {
+				send(ev.SetError(err))
+				return
+			}
+
+			log.Printf("%+v", deployRequest.Params)
+
+			err := (&deploy.Deployment{}).ValidateParamValues(deployRequest.Params)
+			if err != nil {
+				send(ev.SetError(err))
+				return
+			}
+
+			dpl := &deploy.Deployment{}
+			dpl.Logger = logger.NewFromGenericLogger(&GenericLogger{send: send, level: logger.DebugLevel, messageType: TypeDeployLog})
+
+			go func() {
+				err = dpl.Deploy("gadget")
+				if err != nil {
+					send(ev.SetError(err))
+					return
+				}
+				// Ack action
+				send(ev.SetData(nil))
+			}()
+		case "getDeploymentStatus":
+			var getDeploymentStatusRequest struct {
+				EnvironmentID string `json:"environmentID"`
+			}
+			var getDeploymentStatusResponse struct {
+				Found bool            `json:"found"`
+				Info  json.RawMessage `json:"info"`
+			}
+
+			err = json.Unmarshal(ev.Data, &getDeploymentStatusRequest)
+			if err != nil {
+				send(ev.SetError(err))
+				return
+			}
+
+			config, err := a.GetK8SConfigForEnvironment(getDeploymentStatusRequest.EnvironmentID)
+			if err != nil {
+				send(ev.SetError(err))
+				return
+			}
+
+			k8sClient, err := kubernetes.NewForConfig(config)
+			if err != nil {
+				send(ev.SetError(err))
+				return
+			}
+
+			daemonSetInterface := k8sClient.AppsV1().DaemonSets("gadget")
+			list, err := daemonSetInterface.List(ctx, metav1.ListOptions{
+				LabelSelector: "k8s-app=gadget",
+			})
+			if err != nil {
+				send(ev.SetError(err))
+				return
+			}
+
+			getDeploymentStatusResponse.Found = len(list.Items) > 0
+
+			if len(list.Items) > 0 {
+				info, _ := json.Marshal(list.Items[0])
+				getDeploymentStatusResponse.Info = info
+			}
+
+			send(ev.SetData(&getDeploymentStatusResponse))
+			return
 		case "getArtifactHubPackage":
 			var hubRequest struct {
 				Repository string `json:"repository"`

@@ -1,6 +1,8 @@
 <script lang="js">
 	let { param, config } = $props();
 
+	let isMultiline = $derived(param.tags?.find(tag => tag === 'multiline'))
+
 	import Title from './title.svelte';
 </script>
 
@@ -8,6 +10,11 @@
 	<Title {param} />
 </div>
 <div class="grow">
-	<input class="w-full p-1.5 text-sm rounded bg-gray-800" type="text" placeholder="{param.defaultValue}"
-				 bind:value={() => { return config.get(param) }, (v) => { config.set(param, v) }}>
+	{#if isMultiline}
+		<textarea rows="4" class="w-full p-1.5 text-sm rounded bg-gray-800" type="text" placeholder="{param.defaultValue}"
+					 bind:value={() => { return config.get(param) }, (v) => { config.set(param, v) }}></textarea>
+	{:else}
+		<input class="w-full p-1.5 text-sm rounded bg-gray-800" type="text" placeholder="{param.defaultValue}"
+				 bind:value={() => { return config.get(param) }, (v) => { config.set(param, v) }} />
+	{/if}
 </div>

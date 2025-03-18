@@ -34,15 +34,18 @@
 		gadget.inspect = snapshot;
 		console.log(snapshot);
 	}
+
+	let collapsed = $state(false);
 </script>
 
+{#if !collapsed}
 <div class="flex flex-col overflow-x-auto overscroll-none h-full border-t-1 border-gray-500">
 	<div
 		class="sticky left-0 top-0 h-10 p-2 flex flex-row bg-gray-950 items-center text-base font-normal">
 		<div class="pr-2">{@html Table}</div>
 		<h2 class="px-2">{ds.name}</h2>
 		<div class="flex-1"></div>
-		<button class="pl-2">{@html Dots}</button>
+		<button class="pl-2" onclick={() => { collapsed = !collapsed; }}>{@html Dots}</button>
 	</div>
 
 	<div class="flex-col md:block scrollbar-hide text-sm border-b border-b-gray-950">
@@ -81,3 +84,4 @@
 		</table>
 	</div>
 </div>
+{/if}

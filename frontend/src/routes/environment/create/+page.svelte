@@ -3,16 +3,15 @@
 	import { goto } from '$app/navigation';
 	import Params from '$lib/components/params.svelte';
 	import Plus from '$lib/icons/circle-plus.svg?raw';
-	import Gadget from '$lib/icons/gadget.svg';
 
 	const api = getContext('api');
 
 	let runtimes = $state(null);
 	let selectedRuntime = $state(null);
+	let contexts = $state([]);
 
 	async function loadRuntimes() {
 		const res = await api.request({ cmd: 'getRuntimes' });
-		console.log(res);
 		runtimes = res;
 	}
 
@@ -26,6 +25,17 @@
 		selectedRuntime = rt;
 		const res = await api.request({ cmd: 'getRuntimeParams', data: { runtime: rt } });
 		runtimeParams = res;
+		if (rt === 'grpc-k8s') {
+			const res = await api.request({ cmd: 'getKubeContexts' });
+			console.log('contexts', res);
+			if (res) {
+				runtimeParams.unshift({
+					key: 'context',
+					title: 'Kubernetes Context',
+					possibleValues: res
+				})
+			}
+		}
 	}
 
 	async function createEnvironment() {
@@ -89,7 +99,7 @@
 	{/if}
 </div>
 
-<div class="flex flex-row justify-between p-4 bg-gray-950">
+<div class="flex flex-row justify-between p-4 bg-gray-950 border-t-1 border-gray-800">
 	<div></div>
 	<div>
 		<button disabled={!validated}

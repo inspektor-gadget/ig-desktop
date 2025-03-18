@@ -36,7 +36,7 @@
 					 exact={true}><div
 				class="flex flex-row gap-2 items-center"><button class="small-icon rounded-4xl p-0.5 hover:bg-gray-700"
 				onclick={(ev) => { ev.preventDefault(); ev.stopPropagation(); closeInstance(instanceKey); return false; }}>{@html Delete}</button><div>{instances[instanceKey].name ||
-			instances[instanceKey].gadgetInfo.imageName}</div></div></Tab>
+			instances[instanceKey].gadgetInfo?.imageName || ''}</div></div></Tab>
 		{/each}
 	</div>
 	{@render children()}

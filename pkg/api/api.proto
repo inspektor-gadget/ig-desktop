@@ -1,0 +1,317 @@
+// Copyright 2019-2023 The Inspektor Gadget authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+option go_package = "github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-service/api";
+
+package api;
+
+message BuiltInGadgetRunRequest {
+  // name of the gadget as returned by gadgetDesc.Name()
+  string gadgetName = 1;
+
+  // category of the gadget as returned by gadgetDesc.Category()
+  string gadgetCategory = 2;
+
+  // params is a combined map of all params a gadget could need (including those
+  // of runtime and operators, which need specific prefixes, see implementation in
+  // pkg/runtime/grpc)
+  map<string, string> params = 3;
+
+  // args are all parameters which were not specified with a flag
+  repeated string args = 4;
+
+  // a list of nodes the gadget should run on; if not specified, it should run
+  // on all nodes
+  repeated string nodes = 10;
+
+  // if set to true, the gadget service should forward the request to each node
+  // from the nodes list (or each node it knows, if the list is empty) and combine
+  // their output
+  bool fanOut = 11;
+
+  // sets the requested log level (see pkg/logger/logger.go)
+  uint32 logLevel = 12;
+
+  // time that a gadget should run; use 0, if the gadget should run until it's being
+  // stopped or done; time is in nanoseconds and directly converted to time.Duration
+  int64 timeout = 13;
+}
+
+message GadgetRunRequest {
+  string imageName = 1;
+
+  // paramValues is a combined map of all params a gadget could need (including those
+  // of runtime and operators, which need specific prefixes, see implementation in
+  // pkg/runtime/grpc)
+  map<string, string> paramValues = 2;
+
+  // args are all parameters which were not specified with a flag
+  repeated string args = 3;
+
+  // used to inform the server about the expected protocol version
+  uint32 version = 4;
+
+  // sets the requested log level (see pkg/logger/logger.go)
+  uint32 logLevel = 12;
+
+  // time that a gadget should run; use 0, if the gadget should run until it's being
+  // stopped or done; time is in nanoseconds and directly converted to time.Duration
+  int64 timeout = 13;
+}
+
+message GadgetAttachRequest {
+  // id of the gadget to attach to
+  string id = 1;
+
+  // used to inform the server about the expected protocol version
+  uint32 version = 2;
+}
+
+message BuiltInGadgetStopRequest {
+}
+
+message GadgetEvent {
+  // Types are specified in consts.go. Upper 16 bits are used for log severity levels
+  uint32 type = 1;
+  uint32 seq = 2;
+  bytes payload = 3;
+  uint32 dataSourceID = 4;
+}
+
+message BuiltInGadgetControlRequest {
+  oneof Event {
+    BuiltInGadgetRunRequest runRequest = 1;
+    BuiltInGadgetStopRequest stopRequest = 2;
+  }
+}
+
+message GadgetStopRequest {
+}
+
+message GadgetControlRequest {
+  oneof Event {
+    GadgetRunRequest runRequest = 1;
+    GadgetStopRequest stopRequest = 2;
+    GadgetAttachRequest attachRequest = 3;
+  }
+}
+
+message InfoRequest {
+  string version = 1;
+}
+
+message InfoResponse {
+  string version = 1;
+  bytes catalog = 2;
+  bool experimental = 3;
+  string serverVersion = 4;
+}
+
+message DataElement {
+  repeated bytes payload = 1;
+}
+
+message GadgetData {
+  string node = 1;
+  uint32 seq = 2;
+  DataElement data = 3;
+}
+
+message GadgetDataArray {
+  string node = 1;
+  uint32 seq = 2;
+  repeated DataElement dataArray = 3;
+}
+
+message Param {
+  string key = 1;
+  string description = 2;
+  string defaultValue = 3;
+  string typeHint = 4;
+  string title = 5;
+  string alias = 6;
+  repeated string tags = 7;
+  string valueHint = 8;
+  repeated string possibleValues = 9;
+  bool isMandatory = 10;
+  string prefix = 11;
+}
+
+message GadgetInfo {
+  string name = 1;
+  string imageName = 2;
+  repeated DataSource dataSources = 4;
+  map<string, string> annotations = 5;
+  bytes metadata = 6;
+  repeated Param params = 7;
+  string id = 8;
+}
+
+message DataSource {
+  uint32 id = 1;
+  string name = 2;
+  uint32 type = 3;
+  repeated Field fields = 4;
+  repeated string tags = 5;
+  map<string, string> annotations = 6;
+  uint32 flags = 7;
+}
+
+enum Kind {
+  Invalid = 0;
+  Bool = 1;
+  Int8 = 2;
+  Int16 = 3;
+  Int32 = 4;
+  Int64 = 5;
+  Uint8 = 6;
+  Uint16 = 7;
+  Uint32 = 8;
+  Uint64 = 9;
+  Float32 = 10;
+  Float64 = 11;
+  String = 12;
+  CString = 13;
+  Bytes = 14;
+}
+
+message Field {
+  // name contains the plain field name
+  string name = 1;
+
+  // fullName contains a fully qualified field name
+  // e.g. when it is a sub field of another, it's called
+  // otherfieldsname.name
+  string fullName = 2;
+
+  // index holds the index to this field inside the
+  // field array of the DataSource
+  uint32 index = 3;
+
+  // payloadIndex describes in which payload this field
+  // is contained
+  uint32 payloadIndex = 4;
+
+  // offs is the offset of the fields' contents inside the
+  // payload specified by payloadIndex
+  uint32 offs = 5;
+
+  // size is (if fixed) the size of the fields' content
+  uint32 size = 6;
+
+  // flags describe different attributes of the field, like
+  // whether it has a parent, is virtual, etc.
+  uint32 flags = 7;
+
+  // kind describes how the content of the field should be
+  // handled
+  Kind kind = 8;
+
+  // tags can contain multiple tags that describe the contents
+  // of the field; they are used by operators to find
+  // interesting fields, for example
+  repeated string tags = 9;
+
+  // annotations are additional information that can be used
+  // by operators or third party consumers
+  map<string, string> annotations = 10;
+
+  // parent holds the index of the field that is considered
+  // this fields' parent; only true if the corresponding flag
+  // is set in flags
+  uint32 parent = 11;
+
+  // order determines the default position of this field when
+  // ordering multiple fields
+  int32 order = 12;
+}
+
+message GetGadgetInfoRequest {
+  // params are the gadget's parameters
+  map<string, string> paramValues = 1;
+
+  string imageName = 2;
+
+  // can be used to inform about the expected version of GadgetInfo
+  uint32 version = 3;
+
+  uint32 flags = 4;
+}
+
+message GetGadgetInfoResponse {
+  GadgetInfo gadgetInfo = 1;
+}
+
+service BuiltInGadgetManager {
+  rpc GetInfo(InfoRequest) returns (InfoResponse) {}
+  rpc RunBuiltInGadget(stream BuiltInGadgetControlRequest) returns (stream GadgetEvent) {}
+}
+
+message CreateGadgetInstanceRequest {
+  GadgetInstance gadgetInstance = 1;
+  int32 eventBufferLength = 2;
+}
+
+message CreateGadgetInstanceResponse {
+  int32 result = 1;
+  GadgetInstance gadgetInstance = 2;
+}
+
+message ListGadgetInstancesRequest {}
+
+message GadgetInstance {
+  // id is the unique ID of the instance; this can be set by the client but overridden from the server, depending on the
+  // environment; must contain only hex characters in lowercase
+  string id = 1;
+  GadgetRunRequest gadgetConfig = 2;
+
+  // tags can hold multiple opaque strings so that users can more easily find their gadget instances
+  repeated string tags = 3;
+
+  // timeCreated holds the time the instance was created as a UNIX timestamp
+  int64 timeCreated = 4;
+
+  // name is a (non-unique) string assigned to a gadget, set by the client
+  string name = 6;
+
+  // nodes is a list of nodes the gadget should run on; if empty, all nodes will run the gadget
+  repeated string nodes = 5;
+}
+
+message ListGadgetInstanceResponse {
+  repeated GadgetInstance gadgetInstances = 1;
+}
+
+message GadgetInstanceId {
+  string id = 1;
+}
+
+message StatusResponse {
+  int32 result = 1;
+  string message = 2;
+}
+
+service GadgetManager {
+  rpc GetGadgetInfo(GetGadgetInfoRequest) returns (GetGadgetInfoResponse) {}
+  rpc RunGadget(stream GadgetControlRequest) returns (stream GadgetEvent) {}
+}
+
+service GadgetInstanceManager {
+  rpc CreateGadgetInstance(CreateGadgetInstanceRequest) returns (CreateGadgetInstanceResponse) {}
+  rpc ListGadgetInstances(ListGadgetInstancesRequest) returns (ListGadgetInstanceResponse) {}
+  rpc GetGadgetInstance(GadgetInstanceId) returns (GadgetInstance) {}
+  rpc RemoveGadgetInstance(GadgetInstanceId) returns (StatusResponse) {}
+}

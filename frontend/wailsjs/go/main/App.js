@@ -10,8 +10,16 @@ export function DeleteEnvironment(arg1) {
   return window['go']['main']['App']['DeleteEnvironment'](arg1);
 }
 
+export function GetEnvironment(arg1) {
+  return window['go']['main']['App']['GetEnvironment'](arg1);
+}
+
 export function GetEnvironments() {
   return window['go']['main']['App']['GetEnvironments']();
+}
+
+export function GetK8SConfigForEnvironment(arg1) {
+  return window['go']['main']['App']['GetK8SConfigForEnvironment'](arg1);
 }
 
 export function GetRuntime(arg1) {

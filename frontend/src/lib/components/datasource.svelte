@@ -10,6 +10,7 @@
 	import { instances } from '$lib/shared/instances.svelte.js';
 	import { getContext, setContext } from 'svelte';
 	import { preferences } from '$lib/shared/preferences.svelte.js';
+	import Flamegraph from './flamegraph.svelte';
 
 	let { instanceID } = $props();
 
@@ -116,6 +117,7 @@
 								<DatasourceChart {ds} dsID={id}></DatasourceChart>
 							{:else}
 								<DatasourceTable {ds} {events}></DatasourceTable>
+								<Flamegraph {ds} {events} />
 							{/if}
 						{/if}
 					{/each}

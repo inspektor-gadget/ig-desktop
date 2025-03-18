@@ -1,5 +1,6 @@
 <script>
 	import { getContext, setContext } from 'svelte';
+	import { page } from '$app/state';
 	import Params from '$lib/components/params.svelte';
 	import Play from '$lib/icons/play.svg?raw';
 	import { load } from 'js-yaml';
@@ -12,14 +13,13 @@
 
 	const api = getContext('api');
 
-	let environmentID = $state(null);
+	let environmentID = $state(page.url.searchParams.get('environmentID') || '');
 
 	let detached = $state(false);
 	let instanceName = $state('');
 
 	let validated = $derived(environmentID);
 
-	// let gadgetInfo = $state(null);
 	let values = $state({});
 
 	let gadgetInfo = $state(null);
@@ -181,7 +181,7 @@
 	</div>
 </div>
 
-<div class="flex flex-row justify-between p-4 bg-gray-950">
+<div class="flex flex-row justify-between p-4 bg-gray-950 border-t-1 border-gray-800">
 	<div></div>
 	<div>
 		<button disabled={!validated} onclick={runGadget}

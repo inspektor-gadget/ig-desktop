@@ -1,6 +1,7 @@
 <script lang="js">
 	import '../app.css';
 	import { setContext } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	import Logo from '$lib/components/logo.svelte';
 	import BrandIcon from '$lib/icons/ig/small.svg?raw';
@@ -14,10 +15,10 @@
 	import Restore from '$lib/icons/fa/window-restore.svg?raw';
 	import Kubernetes from '$lib/icons/env/kubernetes.svg?raw';
 	import ArtifactHub from '$lib/icons/artifacthub-logo.svg?raw';
+
 	import NavbarLink from '$lib/components/navbar-link.svelte';
 
 	let { children } = $props();
-
 	import { appState } from './state.svelte.js';
 	import { instances } from '$lib/shared/instances.svelte.js';
 	import { environments } from '$lib/shared/environments.svelte.js';
@@ -44,10 +45,13 @@
 					delete (requests[msg.reqID]);
 				}
 				break;
-			case 2: // gadgetInfo
+			case 7: // gadgetPrepare
 				console.log('new gadget', msg);
-				instances[msg.instanceID] = { running: true, gadgetInfo: msg.data, events: [], logs: [], environment:
+				instances[msg.instanceID] = { running: true, gadgetInfo: null, events: [], logs: [], environment:
 					msg.environmentID };
+				break;
+			case 2: // gadgetInfo
+				instances[msg.instanceID].gadgetInfo = msg.data;
 				break;
 			case 3: // gadgetEvent
 				buffer.unshift(msg);
@@ -68,7 +72,11 @@
 				}
 				break;
 			case 4: // logging
-				if (instances[msg.instanceID]) instances[msg.instanceID].logs.push(msg.data);
+				if (instances[msg.instanceID]) {
+					instances[msg.instanceID].logs.push(msg.data);
+				} else {
+					console.log('missed log', msg.data);
+				}
 				break;
 			case 5: // quit
 				if (instances[msg.instanceID]) instances[msg.instanceID].running = false;
@@ -155,7 +163,7 @@
 		handleError(err.reason);
 	}
 </script>
-<svelte:window on:error={handleError} />
+<!--<svelte:window on:error={(err) => { console.log(err); handleError(JSON.stringify(err)) }} />-->
 <div class="flex flex-col h-screen">
 	{#if isApp}
 		<div ondblclick={() => { toggleMaximize() }} style="--wails-draggable: drag"
@@ -214,7 +222,8 @@
 		<div class="flex-1 flex text-gray-100 bg-gray-950 items-center justify-center align-middle font-mono">
 			Calling the Inspektor...
 		</div>
-		<div class="p-1 pl-2 border-t border-t-gray-800 text-xs text-gray-500 bg-gray-950">Disconnected</div>
+		<div class="p-1 pl-2 border-t border-t-gray-800 text-xs text-gray-500 bg-gray-950" onclick={() => {
+			window.location.href = '/';	}}>Disconnected</div>
 	{/if}
 </div>
 {#if modalError}

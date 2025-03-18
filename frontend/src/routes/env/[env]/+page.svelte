@@ -8,16 +8,15 @@
 	import Browser from '$lib/icons/fa/browser.svg?raw';
 	import CircleSmall from '$lib/icons/fa/circle-small.svg?raw';
 	import Trash from '$lib/icons/fa/trash.svg?raw';
-	import Close from '$lib/icons/close.svg?raw';
-	import Play from '$lib/icons/play.svg?raw';
-	import PlaySmall from '$lib/icons/fa/play.svg?raw';
+		import PlaySmall from '$lib/icons/fa/play.svg?raw';
 	import Lock from '$lib/icons/fa/lock.svg?raw';
 	import LockOpen from '$lib/icons/fa/lock-open.svg?raw';
-	import Heart from '$lib/icons/fa/heart.svg?raw';
 	import History from '$lib/icons/fa/clock-rotate-left.svg?raw';
 	import Info from '$lib/icons/fa/info.svg?raw';
 	import Server from '$lib/icons/fa/server.svg?raw';
 	import { preferences } from '$lib/shared/preferences.svelte.js';
+	import Deploy from '$lib/components/deploy.svelte';
+	import Play from '$lib/icons/play.svg?raw';
 
 	const api = getContext('api');
 
@@ -30,11 +29,27 @@
 	let gadgetURL = $state('');
 	let validURL = $derived(gadgetURL !== '');
 
+	let deploymentStatus = $state(false);
+
+	// for grpc-k8s, we also require a valid deploymentStatus
+	let ready = $derived(env.runtime !== 'grpc-k8s' || deploymentStatus);
+
 	$effect(() => {
 		if (!env) return;
 		detachedInstances = [];
+		deploymentStatus = false;
 		getList(env.id);
+		getDeploymentStatus(env);
 	})
+
+	async function getDeploymentStatus(env) {
+		if (env.runtime !== 'grpc-k8s') {
+			return;
+		}
+		const tmp = await api.request({ cmd: 'getDeploymentStatus', data: { environmentID: env.id } });
+		console.log(tmp);
+		deploymentStatus = tmp.found;
+	}
 
 	let history = $derived(preferences.get('gadget-history') || [])
 
@@ -68,7 +83,7 @@
 	}
 
 	function runInstance() {
-		goto('/gadgets/run/' + gadgetURL);
+		goto('/gadgets/run/' + gadgetURL + '?environmentID=' + env.id);
 	}
 
 	async function runGadget(gadgetRunRequest) {
@@ -82,6 +97,8 @@
 </script>
 {#if !env}
 	Env not found
+{:else if !ready}
+	<Deploy environmentID={env.id} />
 {:else}
 <div class="flex flex-col overflow-auto">
 	<div class="flex flex-col flex-1 min-w-0 bg-gray-900 p-4 gap-4">
@@ -109,6 +126,7 @@
 					</div>
 				</div>
 			</div>
+			<div>{deploymentStatus}</div>
 			<div>
 				<button onclick={() => { if (confirm('Do you really want to delete this environment?')) deleteEnvironment() }}
 								class="rounded bg-red-900 hover:bg-red-800 text-white px-2 py-1 text-sm font-base cursor-pointer flex flex-row gap-1 items-center">
