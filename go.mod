@@ -7,7 +7,7 @@ toolchain go1.23.2
 require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/inspektor-gadget/inspektor-gadget v0.38.0
+	github.com/inspektor-gadget/inspektor-gadget v0.38.1
 	github.com/moby/moby v28.0.2+incompatible
 	github.com/sirupsen/logrus v1.9.3
 	github.com/wailsapp/wails/v2 v2.10.1
