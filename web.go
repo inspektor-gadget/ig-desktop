@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -104,6 +105,7 @@ const (
 	TypeGadgetStop        = 5
 	TypeGadgetEventArray  = 6
 	TypeGadgetPrepare     = 7
+	TypeGadgetError       = 8
 	TypeDeployLog         = 20
 	TypeEnvironmentCreate = 100
 	TypeEnvironmentDelete = 101
@@ -512,6 +514,16 @@ func (a *App) Run() error {
 					send(ev.SetData(nil))
 				}
 				if err != nil {
+					if !errors.Is(err, context.Canceled) {
+						// also send an error message to the gadget tab
+						msg, _ := json.Marshal(err.Error())
+						ev := &GadgetEvent{
+							Type:       TypeGadgetError,
+							InstanceID: instanceID,
+							Data:       msg,
+						}
+						send(ev)
+					}
 					send(ev.SetError(err))
 				}
 

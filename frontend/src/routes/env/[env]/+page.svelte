@@ -5,10 +5,12 @@
 	import { instances } from '$lib/shared/instances.svelte.js';
 	import { goto } from '$app/navigation';
 
+	import Section from '$lib/components/section.svelte';
+
 	import Browser from '$lib/icons/fa/browser.svg?raw';
 	import CircleSmall from '$lib/icons/fa/circle-small.svg?raw';
 	import Trash from '$lib/icons/fa/trash.svg?raw';
-		import PlaySmall from '$lib/icons/fa/play.svg?raw';
+	import PlaySmall from '$lib/icons/fa/play.svg?raw';
 	import Lock from '$lib/icons/fa/lock.svg?raw';
 	import LockOpen from '$lib/icons/fa/lock-open.svg?raw';
 	import History from '$lib/icons/fa/clock-rotate-left.svg?raw';
@@ -16,7 +18,11 @@
 	import Server from '$lib/icons/fa/server.svg?raw';
 	import { preferences } from '$lib/shared/preferences.svelte.js';
 	import Deploy from '$lib/components/deploy.svelte';
-	import Play from '$lib/icons/play.svg?raw';
+	import DotsVertical from '$lib/icons/dots-vertical.svg?raw';
+	import PenToSquare from '$lib/icons/fa/light/pen-to-square.svelte';
+	import IconTrash from '$lib/icons/fa/light/trash.svelte';
+	import { Dropdown, DropdownItem } from '$lib/components/Dropdown';
+	import Icon from '$lib/components/icon.svelte';
 
 	const api = getContext('api');
 
@@ -70,10 +76,14 @@
 	}
 
 	async function attachInstance(instance) {
-		const res = await api.request({ cmd: 'attachInstance', data: { environmentID: env.id, image: instance.id } });
-		console.log('attachInstance', res);
-		instances[res.id].name = instance.name; // TODO: hacky workaround; would be better to get this via API
-		goto('/env/' + env.id + '/running/' + res.id);
+		try {
+			const res = await api.request({ cmd: 'attachInstance', data: { environmentID: env.id, image: instance.id } });
+			console.log('attachInstance', res);
+			instances[res.id].name = instance.name; // TODO: hacky workaround; would be better to get this via API
+			goto('/env/' + env.id + '/running/' + res.id);
+		} catch (err) {
+			console.log('error attaching to gadget', err);
+		}
 	}
 
 	async function removeInstance(instance) {
@@ -87,11 +97,15 @@
 	}
 
 	async function runGadget(gadgetRunRequest) {
-		const res = await api.request({ cmd: 'runGadget', data: { ...gadgetRunRequest, environmentID: env.id }});
-		if (gadgetRunRequest.detached) {
-			getList(env.id);
-		} else {
-			goto('/env/' + env.id + '/running/' + res.id);
+		try {
+			const res = await api.request({ cmd: 'runGadget', data: { ...gadgetRunRequest, environmentID: env.id }});
+			if (gadgetRunRequest.detached) {
+				getList(env.id);
+			} else {
+				goto('/env/' + env.id + '/running/' + res.id);
+			}
+		} catch (err) {
+			console.log('error running gadget', err);
 		}
 	}
 </script>
@@ -127,12 +141,17 @@
 				</div>
 			</div>
 			<div>{deploymentStatus}</div>
-			<div>
-				<button onclick={() => { if (confirm('Do you really want to delete this environment?')) deleteEnvironment() }}
-								class="rounded bg-red-900 hover:bg-red-800 text-white px-2 py-1 text-sm font-base cursor-pointer flex flex-row gap-1 items-center">
-					<span>{@html Trash} </span>
-					<span>Delete Environment</span>
-				</button>
+			<div class="relative">
+<!--				<button onclick={() => { if (confirm('Do you really want to delete this environment?')) deleteEnvironment() }}-->
+<!--								class="rounded bg-red-900 hover:bg-red-800 text-white px-2 py-1 text-sm font-base cursor-pointer flex flex-row gap-1 items-center">-->
+<!--					<span>{@html Trash} </span>-->
+<!--					<span>Delete Environment</span>-->
+<!--				</button>-->
+				<button class="p-1 hover:bg-gray-700 rounded peer" tabindex="0">{@html DotsVertical}</button>
+				<Dropdown>
+					<DropdownItem icon={IconTrash} onclick={() => { goto('/env/' + page.params.env + '/config') }}>Edit</DropdownItem>
+					<DropdownItem icon={IconTrash} onclick={() => { if (confirm('Do you really want to delete this environment?')) deleteEnvironment() }}>Delete</DropdownItem>
+				</Dropdown>
 			</div>
 		</div>
 
@@ -154,6 +173,29 @@
 		</div>
 
 		{#if history.length > 0}
+			<Section title="History">
+				{#snippet icon()}
+					<Icon name="adjustments.svg" />
+				{/snippet}
+				<div class="text-sm">
+					{#each history as entry, idx}
+						<div class="flex flex-row gap-2 justify-between">
+							<div class="flex flex-row gap-2 items-start">
+								<div>{entry.image} {#if entry.detached}(detached){/if}</div>
+								<!--								<div>-->
+								<!--									{#each Object.entries(entry.params) as [key, value]}-->
+								<!--										<div>{key} = {value}</div>-->
+								<!--									{/each}-->
+								<!--								</div>-->
+							</div>
+							<div class="flex flex-row gap-2 items-end">
+								<button class="cursor-pointer hover:text-white" title="Remove from list" onclick={() => { history.splice(idx, 1) }}>{@html Trash}</button>
+								<button class="cursor-pointer hover:text-white" title="Run again" onclick={() => { runGadget(entry) }}>{@html PlaySmall}</button>
+							</div>
+						</div>
+					{/each}
+				</div>
+			</Section>
 		<div class="flex flex-col gap-2">
 			<div class="flex flex-row gap-2 items-center">
 				<div>{@html History}</div>
@@ -172,10 +214,8 @@
 <!--								</div>-->
 							</div>
 							<div class="flex flex-row gap-2 items-end">
-								<button class="cursor-pointer hover:text-white" title="Remove from list"
-												onclick={() => { history.splice(idx, 1) }}>{@html Trash}</button>
-								<button class="cursor-pointer hover:text-white" title="Run again"
-												onclick={() => { runGadget(entry) }}>{@html PlaySmall}</button>
+								<button class="cursor-pointer hover:text-white" title="Remove from list" onclick={() => { history.splice(idx, 1) }}>{@html Trash}</button>
+								<button class="cursor-pointer hover:text-white" title="Run again" onclick={() => { runGadget(entry) }}>{@html PlaySmall}</button>
 							</div>
 						</div>
 					{/each}
@@ -190,8 +230,7 @@
 					<div>{@html Server}</div>
 					<div>Headless Gadget Instances</div>
 				</div>
-				<div><a href="https://inspektor-gadget.io/docs/latest/reference/headless" title="Help"
-								target="_blank">{@html Info}</a></div>
+				<div><a href="https://inspektor-gadget.io/docs/latest/reference/headless" title="Help" target="_blank">{@html Info}</a></div>
 			</div>
 			<div class="p-2 bg-gray-950 flex flex-col gap-4 rounded overflow-hidden">
 				{#if detachedInstances.length}
@@ -209,14 +248,10 @@
 						<tbody class="text-xs text-gray-400 font-mono">
 						{#each detachedInstances as instance}
 							<tr>
-								<td
-									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.id?.substring(0, 12)}</td>
-								<td
-									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.name}</td>
-								<td
-									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.tags}</td>
-								<td
-									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.gadgetConfig?.imageName}</td>
+								<td class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.id?.substring(0, 12)}</td>
+								<td class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.name}</td>
+								<td class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.tags}</td>
+								<td class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.gadgetConfig?.imageName}</td>
 								<td>
 									<div class="flex flex-row gap-2 justify-end px-2">
 										<button class="cursor-pointer hover:text-white" title="Attach"

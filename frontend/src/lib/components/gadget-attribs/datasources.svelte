@@ -51,29 +51,22 @@
 									</div>
 									<div class="text-xs flex flex-row flex-wrap gap-1 text-gray-400">
 										{#if (field.flags & 0x01) !== 0}
-											<div class="px-1 py-0.5 rounded bg-gray-500/60">empty
-											</div>
+											<div class="px-1 py-0.5 rounded bg-gray-500/60">empty</div>
 										{/if}
 										{#if (field.flags & 0x02) !== 0}
-											<div
-												class="px-1 py-0.5 rounded bg-green-800/60">container
-											</div>
+											<div class="px-1 py-0.5 rounded bg-green-800/60">container</div>
 										{/if}
 										{#if (field.flags & 0x04) !== 0}
-											<div class="px-1 py-0.5 rounded bg-gray-700/60">hidden
-											</div>
+											<div class="px-1 py-0.5 rounded bg-gray-700/60">hidden</div>
 										{/if}
 										{#if (field.flags & 0x08) !== 0}
-											<div class="px-1 py-0.5 rounded bg-blue-800/60">w-parent
-											</div>
+											<div class="px-1 py-0.5 rounded bg-blue-800/60">w-parent</div>
 										{/if}
 										{#if (field.flags & 0x10) !== 0}
-											<div class="px-1 py-0.5 rounded bg-orange-800/60">static
-											</div>
+											<div class="px-1 py-0.5 rounded bg-orange-800/60">static</div>
 										{/if}
 										{#if (field.flags & 0x20) !== 0}
-											<div class="px-1 py-0.5 rounded bg-red-800/60">unref
-											</div>
+											<div class="px-1 py-0.5 rounded bg-red-800/60">unref</div>
 										{/if}
 									</div>
 								</div>

@@ -141,7 +141,11 @@
 {:else}
 	<div class="flex-1 flex text-gray-100 bg-gray-900 items-center justify-center align-middle font-mono">
 		<div>
-			<div class="text-xl">Gadget Instance not found</div>
+			<div class="text-xl">Gadget information not available</div>
 		</div>
+	</div>
+	<div class="h-2 bg-gray-800 cursor-ns-resize touch-none select-none" onpointerdown={resize}></div>
+	<div bind:this={logPane} class="flex flex-col overflow-hidden" style="flex: 0 0 {logHeight}px">
+		<Log log={logs} />
 	</div>
 {/if}

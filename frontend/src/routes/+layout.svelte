@@ -32,7 +32,7 @@
 	function handler(ev) {
 		const msg = JSON.parse(ev);
 		if (!msg) return;
-		if (msg.data) msg.data.msgID = msgID++;
+		if (msg.data && typeof msg.data === 'object') msg.data.msgID = msgID++;
 		switch (msg.type) {
 			case 1:
 				if (msg.reqID && requests[msg.reqID]) {
@@ -47,8 +47,14 @@
 				break;
 			case 7: // gadgetPrepare
 				console.log('new gadget', msg);
-				instances[msg.instanceID] = { running: true, gadgetInfo: null, events: [], logs: [], environment:
-					msg.environmentID };
+				instances[msg.instanceID] = {
+					running: true,
+					gadgetInfo: null,
+					events: [],
+					logs: [],
+					environment: msg.environmentID,
+					error: null,
+				};
 				break;
 			case 2: // gadgetInfo
 				instances[msg.instanceID].gadgetInfo = msg.data;
@@ -82,8 +88,11 @@
 				if (instances[msg.instanceID]) instances[msg.instanceID].running = false;
 				break;
 			case 6: // gadgetEvent
-				console.log('arrayData', msg.data);
 				instances[msg.instanceID].events = msg.data.map(evt => { evt.msgID = msgID++; return evt; });
+				break;
+			case 8: // gadgetError
+				console.log('gadget error', msg.data);
+				instances[msg.instanceID].error = msg.data;
 				break;
 			case 100: // envCreate
 				environments[msg.data.id] = msg.data;

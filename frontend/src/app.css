@@ -178,16 +178,26 @@ html, body {
     font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
     font-family: 'Fira Sans';
     font-style: normal;
-    font-weight: 400;
-    src: url('./fonts/fira-sans/fira-sans-v17-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+    font-weight: 300;
+    src: url('./fonts/fira-sans/fira-sans-v17-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese-300.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
+
+/*!* fira-sans-regular - latin *!*/
+/*@font-face {*/
+/*    font-display: swap; !* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. *!*/
+/*    font-family: 'Fira Sans';*/
+/*    font-style: normal;*/
+/*    font-weight: 400;*/
+/*    src: url('./fonts/fira-sans/fira-sans-v17-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese-regular.woff2') format('woff2'); !* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ *!*/
+/*}*/
+
 /* fira-sans-italic - latin */
 @font-face {
     font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
     font-family: 'Fira Sans';
     font-style: italic;
     font-weight: 400;
-    src: url('./fonts/fira-sans/fira-sans-v17-latin-italic.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+    src: url('./fonts/fira-sans/fira-sans-v17-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese-italic.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 /* fira-sans-600 - latin */
 @font-face {
@@ -195,7 +205,7 @@ html, body {
     font-family: 'Fira Sans';
     font-style: normal;
     font-weight: 600;
-    src: url('./fonts/fira-sans/fira-sans-v17-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+    src: url('./fonts/fira-sans/fira-sans-v17-cyrillic_cyrillic-ext_greek_greek-ext_latin_latin-ext_vietnamese-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
 /* dancing-script-regular - latin */
