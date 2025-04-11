@@ -383,7 +383,7 @@ func (w *App) Run() error {
 
 			instanceID := uuid.New().String()
 			xop := simple.New("exp", simple.WithPriority(1000), simple.OnPreStart(func(gadgetCtx operators.GadgetContext) error {
-				gi, _ := gadgetCtx.SerializeGadgetInfo()
+				gi, _ := gadgetCtx.SerializeGadgetInfo(false)
 				gid, _ := protojson.Marshal(gi)
 
 				xev := &GadgetEvent{
