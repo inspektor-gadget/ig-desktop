@@ -64,7 +64,7 @@
 				<select class="col-start-1 row-start-1 pl-3 pr-8 appearance-none p-1.5 rounded bg-gray-800"
 								bind:value={filter.key}>
 					{#each fields as field}
-						<option>{field.ds}.{field.fullName}</option>
+						<option>{field.ds}:{field.fullName}</option>
 					{/each}
 				</select>
 			</div>
