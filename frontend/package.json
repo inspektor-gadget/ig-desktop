@@ -42,7 +42,7 @@
 		"@tailwindcss/vite": "^4.1.7",
 		"d3": "^7.9.0",
 		"js-yaml": "^4.1.0",
-		"marked": "^15.0.11",
+		"marked": "^15.0.12",
 		"monaco-editor": "^0.52.2"
 	}
 }
