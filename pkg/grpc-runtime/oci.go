@@ -44,9 +44,10 @@ func (r *Runtime) GetGadgetInfo(gadgetCtx runtime.GadgetContext, runtimeParams *
 	client := api.NewGadgetManagerClient(conn)
 
 	in := &api.GetGadgetInfoRequest{
-		ParamValues: paramValues,
-		ImageName:   gadgetCtx.ImageName(),
-		Version:     api.VersionGadgetInfo,
+		ParamValues:      paramValues,
+		ImageName:        gadgetCtx.ImageName(),
+		Version:          api.VersionGadgetInfo,
+		RequestExtraInfo: gadgetCtx.ExtraInfo(),
 	}
 
 	// specify that ImageName will contain a gadget instance ID
@@ -58,13 +59,18 @@ func (r *Runtime) GetGadgetInfo(gadgetCtx runtime.GadgetContext, runtimeParams *
 	if err != nil {
 		return nil, fmt.Errorf("getting gadget info: %w", err)
 	}
+	extraInfo := &api.ExtraInfo{}
 
-	err = gadgetCtx.LoadGadgetInfo(out.GadgetInfo, paramValues, false, nil)
+	if gadgetCtx.ExtraInfo() {
+		extraInfo = out.GadgetInfo.ExtraInfo
+	}
+
+	err = gadgetCtx.LoadGadgetInfo(out.GadgetInfo, paramValues, false, extraInfo)
 	if err != nil {
 		return nil, fmt.Errorf("initializing local operators: %w", err)
 	}
 
-	return gadgetCtx.SerializeGadgetInfo(false)
+	return gadgetCtx.SerializeGadgetInfo(gadgetCtx.ExtraInfo())
 }
 
 func (r *Runtime) RunGadget(gadgetCtx runtime.GadgetContext, runtimeParams *params.Params, paramValues api.ParamValues) error {

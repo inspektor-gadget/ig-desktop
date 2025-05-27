@@ -564,6 +564,7 @@ func (w *App) Run() error {
 				gadgetCtx := gadgetcontext.New(
 					ctx,
 					gadgetInfoRequest.URL,
+					gadgetcontext.IncludeExtraInfo(true),
 				)
 
 				// use default params; TODO!
