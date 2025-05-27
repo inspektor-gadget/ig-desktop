@@ -12,6 +12,7 @@
 	import Metadata from './gadget-attribs/metadata.svelte';
 	import GadgetInfo from './gadget-attribs/gadgetinfo.svelte';
 	import Inspect from './gadget-attribs/inspect.svelte';
+	import ExtraInfo from './gadget-attribs/extrainfo.svelte';
 
 	let {
 		gadgetInfo, onclose = () => {
@@ -24,7 +25,7 @@
 		{ class: Metadata, name: 'Metadata', icon: Book },
 		{ class: GadgetInfo, name: 'Gadget Information', icon: Bug },
 		{ class: Inspect, name: 'Inspect', icon: Layers },
-		// { class: Inspect, name: 'Inspect', icon: Adjustments }
+		{ class: ExtraInfo, name: 'Extra Info', icon: Adjustments }
 	];
 
 	let tabIndex = $state(0); // gadget.attribsPage;
