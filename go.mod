@@ -8,7 +8,7 @@ require (
 	github.com/inspektor-gadget/inspektor-gadget v0.41.0
 	github.com/moby/moby v28.2.2+incompatible
 	github.com/sirupsen/logrus v1.9.3
-	github.com/wailsapp/wails/v2 v2.10.1
+	github.com/wailsapp/wails/v2 v2.10.2
 	golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
 	google.golang.org/grpc v1.74.2
 	google.golang.org/protobuf v1.36.6
