@@ -11,7 +11,7 @@ require (
 	github.com/wailsapp/wails/v2 v2.10.2
 	golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
 	google.golang.org/grpc v1.74.2
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/protobuf v1.36.7
 	k8s.io/api v0.33.2
 	k8s.io/apimachinery v0.33.2
 	k8s.io/client-go v0.33.2
