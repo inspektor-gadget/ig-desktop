@@ -18,10 +18,6 @@ export function GetRuntime(arg1) {
   return window['go']['main']['App']['GetRuntime'](arg1);
 }
 
-export function Greet(arg1) {
-  return window['go']['main']['App']['Greet'](arg1);
-}
-
 export function Run() {
   return window['go']['main']['App']['Run']();
 }

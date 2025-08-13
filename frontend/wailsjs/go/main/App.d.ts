@@ -11,6 +11,4 @@ export function GetEnvironments():Promise<Array<main.Environment>>;
 
 export function GetRuntime(arg1:string):Promise<grpcruntime.Runtime>;
 
-export function Greet(arg1:string):Promise<string>;
-
 export function Run():Promise<void>;
