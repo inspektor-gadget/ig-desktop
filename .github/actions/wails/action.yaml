@@ -50,7 +50,7 @@ inputs:
   go-version:
     description: "Version of Go to use"
     required: false
-    default: "1.23"
+    default: "1.24"
   node-version:
     description: "Node js version"
     required: false
@@ -184,7 +184,7 @@ runs:
     # install wails
     - name: Install Wails
       if: inputs.build == 'true' && inputs.wails-dev-build == 'false'
-      run: go install github.com/wailsapp/wails/v2/cmd/wails@${{inputs.wails-version}}
+      run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{inputs.wails-version}}
       shell: bash
     - name: Install macOS Wails deps
       if: runner.os == 'macOS'
@@ -193,20 +193,18 @@ runs:
     # Building step
     - name: Build App
       if: inputs.build == 'true'
-      env:
-        BUILD_OPTIONS: ${{ steps.build_options.outputs.BUILD_OPTIONS }}
       working-directory: ${{ inputs.app-working-directory }}
-      run: wails build --platform ${{inputs.build-platform}} -webview2 ${{inputs.wails-build-webview2}} -o ${{inputs.build-name}} $BUILD_OPTIONS -skipbindings
+      run: OS=${{inputs.build-platform}} wails3 task build
       shell: bash
     - name: Add macOS perms
       if: inputs.build == 'true' && runner.os == 'macOS'
       working-directory: ${{ inputs.app-working-directory }}
-      run: chmod +x build/bin/*/Contents/MacOS/*
+      run: chmod +x bin/ig-desktop
       shell: bash
     - name: Add Linux perms
       if: inputs.build == 'true' && runner.os  == 'Linux'
       working-directory: ${{ inputs.app-working-directory }}
-      run: chmod +x build/bin/*
+      run: chmod +x bin/ig-desktop
       shell: bash
     # Package and Sign MacOS
     - name: Import Code-Signing Certificates for macOS

@@ -1,5 +1,7 @@
 name: Build Apps
 on:
+  pull_request:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -20,14 +22,14 @@ jobs:
       matrix:
         build:
           - name: 'ig-desktop-linux-amd64'
-            platform:  'linux/amd64'
-            os: 'ubuntu-22.04'
+            platform:  'linux'
+            os: 'ubuntu-24.04'
           - name: 'ig-desktop-win-amd64.exe'
-            platform:  'windows/amd64'
+            platform:  'windows'
             os: 'windows-latest'
-          - name: 'ig-desktop-macos'
-            platform:  'darwin/universal'
-            os: 'macos-latest'
+#          - name: 'ig-desktop-macos'
+#            platform:  'darwin'
+#            os: 'macos-latest'
     runs-on: ${{ matrix.build.os }}
     steps:
       - name: Checkout

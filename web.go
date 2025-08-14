@@ -30,7 +30,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/inspektor-gadget/inspektor-gadget/cmd/kubectl-gadget/utils"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadgets"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/datasource"
@@ -261,7 +261,7 @@ func (l *GenericLogger) Logf(severity logger.Level, format string, params ...any
 	})
 }
 
-func (w *App) Run() error {
+func (w *App) Run(app *application.App) error {
 	var l sync.Mutex
 
 	cancellers := make(map[string]context.CancelFunc)
@@ -270,22 +270,17 @@ func (w *App) Run() error {
 		d, _ := json.Marshal(ev)
 		l.Lock()
 		defer l.Unlock()
-		runtime.EventsEmit(w.ctx, "client", string(d))
+		app.Event.Emit("client", string(d))
 	}
 
 	ctx := w.ctx
 
-	runtime.EventsOn(ctx, "server", func(optionalData ...interface{}) {
+	app.Event.On("server", func(event *application.CustomEvent) {
 		ev := &Event{}
 
-		if len(optionalData) == 0 {
-			log.Printf("no data in message")
-			return
-		}
+		log.Printf("message: %s", event.Data)
 
-		log.Printf("message: %s", optionalData[0])
-
-		str, ok := optionalData[0].(string)
+		str, ok := event.Data.(string)
 		if !ok {
 			log.Printf("message not of type string")
 			return
