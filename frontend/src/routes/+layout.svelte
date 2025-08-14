@@ -1,28 +1,27 @@
 <script lang="js">
-	import '../app.css';
-	import { setContext } from 'svelte';
+    import '../app.css';
+    import {Events, Window} from '@wailsio/runtime';
+    import {setContext} from 'svelte';
 
-	import Logo from '$lib/components/logo.svelte';
-	import BrandIcon from '$lib/icons/ig/small.svg?raw';
-	import Gadget from '$lib/icons/gadget.svg?raw';
-	import Plus from '$lib/icons/circle-plus.svg?raw';
-	import Info from '$lib/icons/info.svg?raw';
-	import Book from '$lib/icons/book.svg?raw';
-	import Close from '$lib/icons/close-small.svg?raw';
-	import Maximize from '$lib/icons/fa/window-maximize.svg?raw';
-	import Minimize from '$lib/icons/fa/window-minimize.svg?raw';
-	import Restore from '$lib/icons/fa/window-restore.svg?raw';
-	import Kubernetes from '$lib/icons/env/kubernetes.svg?raw';
-	import ArtifactHub from '$lib/icons/artifacthub-logo.svg?raw';
-	import NavbarLink from '$lib/components/navbar-link.svelte';
+    import Logo from '$lib/components/logo.svelte';
+    import BrandIcon from '$lib/icons/ig/small.svg?raw';
+    import Gadget from '$lib/icons/gadget.svg?raw';
+    import Plus from '$lib/icons/circle-plus.svg?raw';
+    import Info from '$lib/icons/info.svg?raw';
+    import Book from '$lib/icons/book.svg?raw';
+    import Close from '$lib/icons/close-small.svg?raw';
+    import Maximize from '$lib/icons/fa/window-maximize.svg?raw';
+    import Minimize from '$lib/icons/fa/window-minimize.svg?raw';
+    import Restore from '$lib/icons/fa/window-restore.svg?raw';
+    import ArtifactHub from '$lib/icons/artifacthub-logo.svg?raw';
+    import NavbarLink from '$lib/components/navbar-link.svelte';
+    import {appState} from './state.svelte.js';
+    import {instances} from '$lib/shared/instances.svelte.js';
+    import {environments} from '$lib/shared/environments.svelte.js';
 
-	let { children } = $props();
+    let { children } = $props();
 
-	import { appState } from './state.svelte.js';
-	import { instances } from '$lib/shared/instances.svelte.js';
-	import { environments } from '$lib/shared/environments.svelte.js';
-
-	let version = $state('unknown');
+    let version = $state('unknown');
 	let connected = $state(false);
 
 	let buffer = [];
@@ -98,17 +97,17 @@
 	}
 
 	let ws;
-	if (window.runtime) {
+	if (true) {
 		isApp = true;
 		connected = true;
 		ws = {
 			send: (msg) =>  {
-				window.runtime.EventsEmit('server', msg)
+				Events.Emit({name: 'server', data: msg})
 			}
 		}
 		console.log('installing client listener');
-		window.runtime.EventsOn('client', (msg) => {
-			handler(msg);
+		Events.On('client', (msg) => {
+			handler(msg.data);
 		});
 		ws.send(JSON.stringify({ cmd: 'helo' })); // handshake with wails
 	} else {
@@ -144,10 +143,10 @@
 	async function toggleMaximize() {
 		if (isMaximized) {
 			isMaximized = false;
-			window.runtime.WindowUnmaximise();
+			Window.UnMaximise();
 		} else {
 			isMaximized = true;
-			window.runtime.WindowMaximise();
+			Window.Maximise();
 		}
 	}
 
