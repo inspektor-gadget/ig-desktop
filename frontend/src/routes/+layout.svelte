@@ -143,7 +143,7 @@
 	async function toggleMaximize() {
 		if (isMaximized) {
 			isMaximized = false;
-			Window.UnMaximise();
+			Window.ToggleMaximise();
 		} else {
 			isMaximized = true;
 			Window.Maximise();
@@ -197,6 +197,7 @@
 				<div class="flex flex-col grow">
 				</div>
 				<div class="flex flex-col">
+					<NavbarLink href="/bpflow">B</NavbarLink>
 					<NavbarLink href="/browse/artifacthub">{@html ArtifactHub}</NavbarLink>
 					<NavbarLink href="https://inspektor-gadget.io/docs/latest/" target="_blank">{@html Book}</NavbarLink>
 					<NavbarLink href="/info">{@html Info}</NavbarLink>
