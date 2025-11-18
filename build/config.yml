@@ -9,9 +9,9 @@ info:
   productName: "Inspektor Gadget Desktop" # The name of the application
   productIdentifier: "io.inspektor-gadget.ig-desktop" # The unique product identifier
   description: "Desktop Frontend for Inspektor Gadget" # The application description
-  copyright: "(C) 2025-2026 The Inspektor Gadget Contributors" # Copyright text
-  comments: "" # Comments
-  version: "v0.0.1" # The application version
+  copyright: "(C) 2025 The Inspektor Gadget Contributors" # Copyright text
+  comments: "-" # Comments
+  version: "v0.2" # The application version
 
 # Dev mode configuration
 dev_mode:

@@ -1,10 +1,9 @@
-<script>
+<script lang="ts">
 	import Info from '$lib/icons/info.svg?raw';
 	import Column from '$lib/icons/column.svg?raw';
 	import Book from '$lib/icons/book.svg?raw';
 	import Bug from '$lib/icons/bug.svg?raw';
 	import Layers from '$lib/icons/layers.svg?raw';
-	import Adjustments from '$lib/icons/adjustments.svg?raw';
 	import Close from '$lib/icons/close.svg?raw';
 
 	import DataSources from './gadget-attribs/datasources.svelte';
@@ -13,17 +12,14 @@
 	import GadgetInfo from './gadget-attribs/gadgetinfo.svelte';
 	import Inspect from './gadget-attribs/inspect.svelte';
 
-	let {
-		gadgetInfo, onclose = () => {
-		}
-	} = $props();
+	let { gadgetInfo, onclose = () => {} }: { gadgetInfo: any; onclose?: () => void } = $props();
 
 	const tabs = [
 		{ class: DataSources, name: 'Data Sources', icon: Column },
 		{ class: Params, name: 'Parameters', icon: Info },
 		{ class: Metadata, name: 'Metadata', icon: Book },
 		{ class: GadgetInfo, name: 'Gadget Information', icon: Bug },
-		{ class: Inspect, name: 'Inspect', icon: Layers },
+		{ class: Inspect, name: 'Inspect', icon: Layers }
 		// { class: Inspect, name: 'Inspect', icon: Adjustments }
 	];
 
@@ -33,16 +29,23 @@
 
 <div class="flex flex-row bg-gray-950">
 	{#each tabs as tab, id}
-		<button title={tab.name}
-						onclick={() => {
-                tabIndex = id }} class={tabIndex === id ?
-            "cursor-pointer p-2 bg-gray-900 border-t-gray-500 border-t border-r border-r-gray-700 border-b border-b-transparent" :
-            "cursor-pointer p-2 border-t border-t-transparent border-r border-r-gray-700 border-b border-b-gray-700"}>{@html tab.icon}</button>
+		<button
+			title={tab.name}
+			onclick={() => {
+				tabIndex = id;
+			}}
+			class={tabIndex === id
+				? 'cursor-pointer border-t border-r border-b border-t-gray-500 border-r-gray-700 border-b-transparent bg-gray-900 p-2'
+				: 'cursor-pointer border-t border-r border-b border-t-transparent border-r-gray-700 border-b-gray-700 p-2'}
+			>{@html tab.icon}</button
+		>
 	{/each}
 	<div class="flex-1 border-b border-b-gray-700"></div>
-	<button class="cursor-pointer border-b border-b-gray-700 p-2" onclick={onclose}>{@html Close}</button>
+	<button class="cursor-pointer border-b border-b-gray-700 p-2" onclick={onclose}
+		>{@html Close}</button
+	>
 </div>
 
-<div class="flex-1 overflow-auto flex flex-col">
+<div class="flex flex-1 flex-col overflow-auto bg-gray-900">
 	<Component {gadgetInfo} />
 </div>

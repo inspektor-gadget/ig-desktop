@@ -1,78 +1,152 @@
-<script>
+<script lang="ts">
 	import { getContext } from 'svelte';
 	import { page } from '$app/state';
-	import { environments } from '$lib/shared/environments.svelte.js';
-	import { instances } from '$lib/shared/instances.svelte.js';
+	import { environments } from '$lib/shared/environments.svelte';
+	import { instances } from '$lib/shared/instances.svelte';
 	import { goto } from '$app/navigation';
+	import type { GadgetInstance, GadgetRunRequest } from '$lib/types';
+	import Panel from '$lib/components/Panel.svelte';
+	import { confirmationModal } from '$lib/stores/confirmation-modal.svelte';
 
 	import Browser from '$lib/icons/fa/browser.svg?raw';
-	import CircleSmall from '$lib/icons/fa/circle-small.svg?raw';
 	import Trash from '$lib/icons/fa/trash.svg?raw';
-	import Close from '$lib/icons/close.svg?raw';
-	import Play from '$lib/icons/play.svg?raw';
 	import PlaySmall from '$lib/icons/fa/play.svg?raw';
-	import Lock from '$lib/icons/fa/lock.svg?raw';
-	import LockOpen from '$lib/icons/fa/lock-open.svg?raw';
-	import Heart from '$lib/icons/fa/heart.svg?raw';
 	import History from '$lib/icons/fa/clock-rotate-left.svg?raw';
 	import Info from '$lib/icons/fa/info.svg?raw';
 	import Server from '$lib/icons/fa/server.svg?raw';
-	import { preferences } from '$lib/shared/preferences.svelte.js';
+	import Cog from '$lib/icons/cog-small.svg?raw';
+	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
+	import ChevronRight from '$lib/icons/chevron-right.svg?raw';
+	import Grid from '$lib/icons/grid-small.svg?raw';
+	import { preferences } from '$lib/shared/preferences.svelte';
+	import { formatAbsoluteTime, formatRelativeTime } from '$lib/utils/time';
+	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
 
-	const api = getContext('api');
+	const api: any = getContext('api');
 
-	let env = $derived(environments[page.params.env]);
+	let env = $derived(environments[page.params.env || '']);
 
-	let detachedInstances = $state([]);
+	let detachedInstances = $state<GadgetInstance[]>([]);
 
 	let targetState = $state(0);
+	let currentEnvId = $state<string | null>(null);
 
 	let gadgetURL = $state('');
 	let validURL = $derived(gadgetURL !== '');
 
+	let settingsModalOpen = $state(false);
+
 	$effect(() => {
-		if (!env) return;
+		if (!env) {
+			currentEnvironment.clear();
+			return;
+		}
+		currentEnvId = env.id;
 		detachedInstances = [];
+		currentEnvironment.setEnvironment(env);
 		getList(env.id);
-	})
 
-	let history = $derived(preferences.get('gadget-history') || [])
+		// Poll for headless instances every 7 seconds
+		const pollInterval = setInterval(() => {
+			if (currentEnvId === env.id) {
+				getList(env.id);
+			}
+		}, 7000);
 
-	async function getList(id) {
+		// Cleanup interval on effect re-run or component unmount
+		return () => {
+			clearInterval(pollInterval);
+		};
+	});
+
+	let history = $derived(
+		(preferences.get(`gadget-history-${env?.id}`) as GadgetRunRequest[]) || []
+	);
+
+	// Pagination for history
+	const ITEMS_PER_PAGE = 5;
+	let currentPage = $state(0);
+	const totalPages = $derived(Math.max(1, Math.ceil(history.length / ITEMS_PER_PAGE)));
+	const paginatedHistory = $derived(
+		history.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE)
+	);
+
+	// Reset to first page if current page is out of bounds
+	$effect(() => {
+		if (currentPage >= totalPages) {
+			currentPage = Math.max(0, totalPages - 1);
+		}
+	});
+
+	async function getList(requestedEnvId: string) {
 		targetState = 0;
+		currentEnvironment.setConnectionStatus('connecting');
 		try {
-			const tmp = await api.request({ cmd: 'listInstances', data: { environmentID: id } });
-			detachedInstances = tmp.gadgetInstances || []; // TODO: check why this can return empty
-			targetState = 1;
+			const tmp = await api.request({
+				cmd: 'listInstances',
+				data: { environmentID: requestedEnvId }
+			});
+			// Only update state if this is still the current environment
+			if (requestedEnvId === currentEnvId) {
+				detachedInstances = tmp.gadgetInstances || []; // TODO: check why this can return empty
+				targetState = 1;
+				currentEnvironment.setConnectionStatus('connected');
+			}
 		} catch (err) {
-			targetState = 2;
+			// Only update state if this is still the current environment
+			if (requestedEnvId === currentEnvId) {
+				targetState = 2;
+				currentEnvironment.setConnectionStatus('error', (err as Error).message);
+			}
 		}
 	}
 
 	async function deleteEnvironment() {
+		const confirmed = await confirmationModal.confirm({
+			title: 'Delete Environment',
+			message: 'Do you really want to delete this environment?',
+			confirmLabel: 'Delete',
+			cancelLabel: 'Cancel'
+		});
+		if (!confirmed) return;
 		const res = await api.request({ cmd: 'deleteEnvironment', data: { id: env.id } });
-		goto('/')
+		goto('/');
 	}
 
-	async function attachInstance(instance) {
-		const res = await api.request({ cmd: 'attachInstance', data: { environmentID: env.id, image: instance.id } });
+	async function attachInstance(instance: GadgetInstance) {
+		const res = await api.request({
+			cmd: 'attachInstance',
+			data: { environmentID: env.id, image: instance.id }
+		});
 		console.log('attachInstance', res);
-		instances[res.id].name = instance.name; // TODO: hacky workaround; would be better to get this via API
 		goto('/env/' + env.id + '/running/' + res.id);
 	}
 
-	async function removeInstance(instance) {
-		const res = await api.request({ cmd: 'removeInstance', data: { environmentID: env.id, id: instance.id } });
-		console.log('removeInstance', res)
+	async function removeInstance(instance: GadgetInstance) {
+		const confirmed = await confirmationModal.confirm({
+			title: 'Remove Instance',
+			message: 'Do you really want to remove this instance?',
+			confirmLabel: 'Remove',
+			cancelLabel: 'Cancel'
+		});
+		if (!confirmed) return;
+		const res = await api.request({
+			cmd: 'removeInstance',
+			data: { environmentID: env.id, id: instance.id }
+		});
+		console.log('removeInstance', res);
 		getList(env.id);
 	}
 
 	function runInstance() {
-		goto('/gadgets/run/' + gadgetURL);
+		goto('/gadgets/run/' + gadgetURL + '?env=' + env.id);
 	}
 
-	async function runGadget(gadgetRunRequest) {
-		const res = await api.request({ cmd: 'runGadget', data: { ...gadgetRunRequest, environmentID: env.id }});
+	async function runGadget(gadgetRunRequest: GadgetRunRequest) {
+		const res = await api.request({
+			cmd: 'runGadget',
+			data: { ...gadgetRunRequest, environmentID: env.id }
+		});
 		if (gadgetRunRequest.detached) {
 			getList(env.id);
 		} else {
@@ -80,147 +154,385 @@
 		}
 	}
 </script>
+
 {#if !env}
-	Env not found
+	<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
+		<div class="text-gray-600">{@html Server}</div>
+		<div class="text-sm text-gray-500">Environment not found</div>
+	</div>
 {:else}
-<div class="flex flex-col overflow-auto">
-	<div class="flex flex-col flex-1 min-w-0 bg-gray-900 p-4 gap-4">
-		<div class="flex flex-row items-center justify-between">
-			<div class="flex flex-row gap-4 items-center">
-				<div class="flex flex-col gap-0.5">
-					<div class="flex flex-row items-center gap-1">
-						<div class="text-2xl font-bold">{env.name}</div>
-						<div class:text-red-800={targetState === 2} class:text-green-600={targetState === 1}
-								 class:text-orange-500={targetState === 0}>{@html CircleSmall}</div>
-					</div>
-					<div class="text-xs flex flex-row gap-1 text-gray-400 items-center">
-						{#if env.runtime === 'grpc-ig'}
-							{#if env.params && env.params['tls-key-file']}
-								<div class="text-green-300" title="Secure Connection">{@html Lock}</div>
-							{:else}
-								<div class="text-red-300" title="Insecure Connection">{@html LockOpen}</div>
-							{/if}
-							<div>{env.params['remote-address']}</div>
-						{:else}
-							<div class="text-xs flex flex-row gap-4 rounded">
-								Kubernetes
-							</div>
-						{/if}
-					</div>
+	<div class="flex flex-1 flex-col gap-8 overflow-auto p-8 text-gray-100">
+		<div class="mx-auto w-full max-w-7xl">
+			<!-- Page Header -->
+			<div class="mb-8 flex items-start justify-between gap-6">
+				<div class="flex flex-col gap-3">
+					<h1 class="text-4xl font-bold">
+						{env.name}
+					</h1>
 				</div>
-			</div>
-			<div>
-				<button onclick={() => { if (confirm('Do you really want to delete this environment?')) deleteEnvironment() }}
-								class="rounded bg-red-900 hover:bg-red-800 text-white px-2 py-1 text-sm font-base cursor-pointer flex flex-row gap-1 items-center">
-					<span>{@html Trash} </span>
-					<span>Delete Environment</span>
+				<button
+					onclick={() => (settingsModalOpen = true)}
+					class="cursor-pointer rounded-lg border border-gray-800 bg-gray-900/50 p-3 text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-900 hover:text-blue-400"
+					title="Environment Settings"
+				>
+					{@html Cog}
 				</button>
 			</div>
-		</div>
 
-		<div class="flex flex-col gap-2">
-			<div class="flex flex-row gap-2 items-center">
-				<div>{@html PlaySmall}</div>
-				<div>Run Gadget</div>
-			</div>
-			<div class="flex flex-col p-2 bg-gray-950 rounded gap-4">
-				<div class="flex flex-row gap-2">
-					<input type="text" bind:value={gadgetURL} class="grow p-1.5 text-sm rounded bg-gray-800"
-								 placeholder="gadget image url" />
-					<button disabled={!validURL} onclick={runInstance} title="Run Gadget"
-									class="flex flex-row text-sm items-center gap-1 py-1 px-2 rounded cursor-pointer bg-green-800 hover:bg-green-700 disabled:bg-green-950 disabled:text-gray-500 disabled:cursor-not-allowed">
-						{@html PlaySmall}
-					</button>
-				</div>
-			</div>
-		</div>
+			<!-- Content Grid -->
+			<div class="grid grid-cols-1 gap-6">
+				<!-- Run Gadget Card -->
+				<Panel title="Run Gadget" icon={PlaySmall} color="blue" bodyPadding="large">
+					<p class="mb-2 text-sm text-gray-400">
+						Enter a gadget image URL or discover gadgets from ArtifactHub
+					</p>
+					<div class="flex flex-col gap-2 md:flex-row">
+						<a
+							href="/browse/artifacthub"
+							title="Discover Gadgets"
+							class="flex cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-900 md:w-auto md:justify-start"
+						>
+							<span class="text-blue-400">{@html Grid}</span>
+							<span class="text-gray-200">Discover</span>
+						</a>
+						<input
+							type="text"
+							bind:value={gadgetURL}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' && validURL) {
+									runInstance();
+								}
+							}}
+							class="grow rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-sm text-gray-100 placeholder-gray-500 transition-all focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 focus:outline-none"
+							placeholder="ghcr.io/inspektor-gadget/gadget/trace_open:latest"
+						/>
+						<button
+							disabled={!validURL}
+							onclick={runInstance}
+							title="Run Gadget"
+							class="flex cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-blue-800 bg-blue-900/20 px-4 py-3 text-sm text-blue-400 transition-all hover:border-blue-500/50 hover:bg-blue-900/40 disabled:cursor-not-allowed disabled:border-gray-800 disabled:bg-gray-900/20 disabled:text-gray-600 md:w-auto"
+						>
+							<span>{@html PlaySmall}</span>
+							<span>Run</span>
+						</button>
+					</div>
+				</Panel>
 
-		{#if history.length > 0}
-		<div class="flex flex-col gap-2">
-			<div class="flex flex-row gap-2 items-center">
-				<div>{@html History}</div>
-				<div>Recently run Gadgets</div>
-			</div>
-			<div class="p-4 bg-gray-950 flex flex-col gap-4 rounded overflow-hidden">
-				<div class="text-sm">
-					{#each history as entry, idx}
-						<div class="flex flex-row gap-2 justify-between">
-							<div class="flex flex-row gap-2 items-start">
-								<div>{entry.image} {#if entry.detached}(detached){/if}</div>
-<!--								<div>-->
-<!--									{#each Object.entries(entry.params) as [key, value]}-->
-<!--										<div>{key} = {value}</div>-->
-<!--									{/each}-->
-<!--								</div>-->
+				<!-- Recently Run Gadgets Card -->
+				{#if history.length > 0}
+					<Panel
+						title="Recently run Gadgets"
+						icon={History}
+						color="purple"
+						badge={history.length}
+						bodyPadding="large"
+					>
+						{#snippet headerActions()}
+							<button
+								onclick={() => currentPage--}
+								disabled={currentPage === 0}
+								class="cursor-pointer text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-700"
+								title="Previous page"
+							>
+								{@html ChevronLeft}
+							</button>
+							<span class="text-xs text-gray-500">{currentPage + 1} / {totalPages}</span>
+							<button
+								onclick={() => currentPage++}
+								disabled={currentPage >= totalPages - 1}
+								class="cursor-pointer text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-700"
+								title="Next page"
+							>
+								{@html ChevronRight}
+							</button>
+						{/snippet}
+
+						{#each paginatedHistory as entry, idx}
+							<div
+								class="group/item flex flex-col gap-2 rounded-lg border border-gray-800 bg-gray-900/50 p-4 transition-all hover:border-purple-500/50 hover:bg-gray-900"
+							>
+								<div class="flex flex-row items-start justify-between gap-4">
+									<div class="flex flex-1 flex-col gap-2">
+										<div class="flex flex-row items-center gap-2 font-mono text-sm">
+											<span class="font-medium text-gray-200">{entry.image}</span>
+											{#if entry.detached}
+												<span class="rounded bg-blue-500/20 px-2 py-0.5 text-xs text-blue-400"
+													>detached</span
+												>
+											{/if}
+											{#if entry.instanceName}
+												<span class="rounded bg-purple-500/20 px-2 py-0.5 text-xs text-purple-400"
+													>{entry.instanceName}</span
+												>
+											{/if}
+											{#if entry.timestamp}
+												<span
+													class="cursor-help text-xs text-gray-500"
+													title={formatAbsoluteTime(entry.timestamp)}
+													>{formatRelativeTime(entry.timestamp)}</span
+												>
+											{/if}
+										</div>
+										{#if entry.params && Object.keys(entry.params).length > 0}
+											<div class="flex flex-row flex-wrap gap-2 text-xs">
+												{#each Object.entries(entry.params) as [key, value]}
+													<span
+														class="rounded-lg border border-gray-800 bg-gray-950/50 px-2 py-1 font-mono"
+														><span class="text-gray-500">{key}:</span>
+														<span class="text-gray-300">{value}</span></span
+													>
+												{/each}
+											</div>
+										{/if}
+									</div>
+									<div class="flex flex-row items-start gap-1">
+										<button
+											class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-red-400"
+											title="Remove from list"
+											onclick={() => {
+												const historyKey = `gadget-history-${env.id}`;
+												const currentHistory =
+													(preferences.get(historyKey) as GadgetRunRequest[]) || [];
+												const actualIdx = currentPage * ITEMS_PER_PAGE + idx;
+												currentHistory.splice(actualIdx, 1);
+												preferences.set(historyKey, currentHistory);
+											}}>{@html Trash}</button
+										>
+										<button
+											class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-gray-200"
+											title="Configure and run"
+											onclick={() => {
+												const params = new URLSearchParams();
+												params.set('env', env.id);
+												if (entry.params) {
+													params.set('params', JSON.stringify(entry.params));
+												}
+												if (entry.detached !== undefined) {
+													params.set('detached', String(entry.detached));
+												}
+												if (entry.instanceName) {
+													params.set('instanceName', entry.instanceName);
+												}
+												goto('/gadgets/run/' + entry.image + '?' + params.toString());
+											}}>{@html Cog}</button
+										>
+										<button
+											class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-purple-400"
+											title="Run again"
+											onclick={() => {
+												runGadget(entry);
+											}}>{@html PlaySmall}</button
+										>
+									</div>
+								</div>
 							</div>
-							<div class="flex flex-row gap-2 items-end">
-								<button class="cursor-pointer hover:text-white" title="Remove from list"
-												onclick={() => { history.splice(idx, 1) }}>{@html Trash}</button>
-								<button class="cursor-pointer hover:text-white" title="Run again"
-												onclick={() => { runGadget(entry) }}>{@html PlaySmall}</button>
+						{/each}
+					</Panel>
+				{/if}
+
+				<!-- Headless Gadget Instances Card -->
+				<Panel
+					title="Headless Gadget Instances"
+					icon={Server}
+					color="blue"
+					badge={detachedInstances.length > 0 ? detachedInstances.length : undefined}
+					bodyPadding="large"
+				>
+					{#snippet headerActions()}
+						<a
+							href="https://inspektor-gadget.io/docs/latest/reference/headless"
+							title="Documentation"
+							target="_blank"
+							class="text-gray-400 transition-all hover:text-blue-400">{@html Info}</a
+						>
+					{/snippet}
+
+					{#if detachedInstances.length}
+						<div class="overflow-x-auto">
+							<table class="w-full min-w-full">
+								<thead>
+									<tr class="border-b border-gray-800">
+										<th
+											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
+											>ID</th
+										>
+										<th
+											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
+											>Name</th
+										>
+										<th
+											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
+											>Tags</th
+										>
+										<th
+											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
+											>Image</th
+										>
+										<th class="px-4 py-3"></th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each detachedInstances as instance}
+										<tr
+											class="group/item border-b border-gray-800 transition-all last:border-b-0 hover:bg-gray-900/50"
+										>
+											<td class="px-4 py-3 font-mono text-sm text-gray-400"
+												>{instance.id?.substring(0, 12)}</td
+											>
+											<td class="px-4 py-3 text-sm text-gray-300">{instance.name}</td>
+											<td class="px-4 py-3 font-mono text-xs text-gray-500">{instance.tags}</td>
+											<td class="px-4 py-3 font-mono text-xs text-gray-400"
+												>{instance.gadgetConfig?.imageName}</td
+											>
+											<td class="px-4 py-3">
+												<div class="flex flex-row justify-end gap-1">
+													<button
+														class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-blue-400"
+														title="Attach"
+														onclick={() => {
+															attachInstance(instance);
+														}}>{@html Browser}</button
+													>
+													<button
+														class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-red-400"
+														title="Delete"
+														onclick={() => {
+															removeInstance(instance);
+														}}>{@html Trash}</button
+													>
+												</div>
+											</td>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+					{:else}
+						<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
+							<div class="text-gray-600">{@html Server}</div>
+							<div class="text-sm text-gray-500">No running instances found</div>
+						</div>
+					{/if}
+				</Panel>
+			</div>
+		</div>
+
+		<!-- Settings Modal -->
+		{#if settingsModalOpen}
+			<div
+				class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+				onclick={(e) => {
+					if (e.target === e.currentTarget) settingsModalOpen = false;
+				}}
+			>
+				<div
+					class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-800 bg-gray-950"
+				>
+					<!-- Modal Header -->
+					<div
+						class="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-6 py-4"
+					>
+						<div class="flex items-center gap-3">
+							<div class="text-blue-400">{@html Cog}</div>
+							<h2 class="text-lg font-semibold">Environment Settings</h2>
+						</div>
+						<button
+							onclick={() => (settingsModalOpen = false)}
+							class="cursor-pointer rounded p-1 text-gray-500 transition-all hover:bg-gray-800 hover:text-gray-200"
+							title="Close"
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke-width="2"
+								stroke="currentColor"
+								class="h-5 w-5"
+							>
+								<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						</button>
+					</div>
+
+					<!-- Modal Body -->
+					<div class="flex-1 overflow-y-auto p-6">
+						<div class="flex flex-col gap-6">
+							<!-- Environment Name -->
+							<div class="flex flex-col gap-2">
+								<label class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
+									>Name</label
+								>
+								<div
+									class="rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-gray-200"
+								>
+									{env.name}
+								</div>
+							</div>
+
+							<!-- Environment ID -->
+							<div class="flex flex-col gap-2">
+								<label class="text-sm font-semibold tracking-wide text-gray-500 uppercase">ID</label
+								>
+								<div
+									class="rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 font-mono text-sm text-gray-400"
+								>
+									{env.id}
+								</div>
+							</div>
+
+							<!-- Runtime -->
+							<div class="flex flex-col gap-2">
+								<label class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
+									>Runtime</label
+								>
+								<div
+									class="rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-gray-200"
+								>
+									{env.runtime}
+								</div>
+							</div>
+
+							<!-- Parameters -->
+							{#if env.params && Object.keys(env.params).length > 0}
+								<div class="flex flex-col gap-2">
+									<label class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
+										>Configuration</label
+									>
+									<div
+										class="flex flex-col gap-2 rounded-lg border border-gray-800 bg-gray-900/50 p-4"
+									>
+										{#each Object.entries(env.params) as [key, value]}
+											<div class="flex flex-col gap-1">
+												<div class="text-xs font-medium text-gray-500">{key}</div>
+												<div class="font-mono text-sm text-gray-300">{value}</div>
+											</div>
+										{/each}
+									</div>
+								</div>
+							{/if}
+
+							<!-- Danger Zone -->
+							<div
+								class="mt-4 flex flex-col gap-4 rounded-lg border border-red-800/50 bg-red-900/10 p-4"
+							>
+								<div class="flex flex-col gap-1">
+									<h3 class="font-semibold text-red-400">Danger Zone</h3>
+									<p class="text-sm text-gray-400">Irreversible actions for this environment</p>
+								</div>
+								<button
+									onclick={() => {
+										deleteEnvironment();
+									}}
+									class="flex cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-red-800 bg-red-900/20 px-4 py-2.5 text-sm text-red-400 transition-all hover:border-red-500/50 hover:bg-red-900/40"
+								>
+									<span>{@html Trash}</span>
+									<span>Delete Environment</span>
+								</button>
 							</div>
 						</div>
-					{/each}
+					</div>
 				</div>
 			</div>
-		</div>
 		{/if}
-
-		<div class="flex flex-col gap-2">
-			<div class="flex flex-row items-center gap-2">
-				<div class="flex flex-row gap-2 items-center">
-					<div>{@html Server}</div>
-					<div>Headless Gadget Instances</div>
-				</div>
-				<div><a href="https://inspektor-gadget.io/docs/latest/reference/headless" title="Help"
-								target="_blank">{@html Info}</a></div>
-			</div>
-			<div class="p-2 bg-gray-950 flex flex-col gap-4 rounded overflow-hidden">
-				{#if detachedInstances.length}
-					<table class="min-w-full max-w-full w-full">
-						<thead class="bg-gray-950 sticky top-0">
-						<tr>
-							<th class="w-32 font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">ID
-							</th>
-							<th class="font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">Name</th>
-							<th class="font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">Tags</th>
-							<th class="font-normal uppercase text-xs text-ellipsis border-r p-2 border-r-gray-600 last:border-r-0">Image</th>
-							<th></th>
-						</tr>
-						</thead>
-						<tbody class="text-xs text-gray-400 font-mono">
-						{#each detachedInstances as instance}
-							<tr>
-								<td
-									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.id?.substring(0, 12)}</td>
-								<td
-									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.name}</td>
-								<td
-									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.tags}</td>
-								<td
-									class="text-ellipsis border-r px-2 py-2 border-r-gray-600 last:border-r-0">{instance.gadgetConfig?.imageName}</td>
-								<td>
-									<div class="flex flex-row gap-2 justify-end px-2">
-										<button class="cursor-pointer hover:text-white" title="Attach"
-														onclick={() => { attachInstance(instance) }}>{@html Browser}</button>
-										<button class="cursor-pointer hover:text-white" title="Delete"
-														onclick={() => { if (confirm('Do you really want to delete this instance?'))
-															removeInstance(instance) }}>{@html
-											Trash}</button>
-									</div>
-								</td>
-							</tr>
-						{/each}
-						</tbody>
-					</table>
-				{:else}
-					<div class="text-white text-center text-xs p-4">No running instances found</div>
-				{/if}
-			</div>
-		</div>
 	</div>
-<!--	<div class="flex flex-col w-1/4 p-4">-->
-<!--		<div class="flex flex-col p-4 bg-gray-950 rounded"></div>-->
-<!--	</div>-->
-</div>
 {/if}

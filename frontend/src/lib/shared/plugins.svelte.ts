@@ -7,10 +7,10 @@ import * as svelte from 'svelte/compiler';
  * Loads a Svelte component from source code,
  * compiles it on the fly, and returns the component.
  *
- * @param {string} source - The raw Svelte component source code.
- * @returns {Promise<any>} - A promise that resolves to the compiled component.
+ * @param source - The raw Svelte component source code.
+ * @returns A promise that resolves to the compiled component.
  */
-export async function loadAndCompileComponent(source) {
+export async function loadAndCompileComponent(source: string): Promise<any> {
 	// Compile the Svelte component source.
 	const { js, css } = svelte.compile(source, {
 		generate: 'client', // For a DOM app (could be "ssr" for SSR)

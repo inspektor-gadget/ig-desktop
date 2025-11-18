@@ -1,15 +1,15 @@
 {
 	"fixed": {
-		"file_version": "{{.Info.ProductVersion}}"
+		"file_version": "v0.2"
 	},
 	"info": {
 		"0000": {
-			"ProductVersion": "{{.Info.ProductVersion}}",
-			"CompanyName": "{{.Info.CompanyName}}",
-			"FileDescription": "{{.Info.ProductName}}",
-			"LegalCopyright": "{{.Info.Copyright}}",
-			"ProductName": "{{.Info.ProductName}}",
-			"Comments": "{{.Info.Comments}}"
+			"ProductVersion": "v0.2",
+			"CompanyName": "Inspektor Gadget Contributors",
+			"FileDescription": "Desktop Frontend for Inspektor Gadget",
+			"LegalCopyright": "(C) 2025 The Inspektor Gadget Contributors",
+			"ProductName": "Inspektor Gadget Desktop",
+			"Comments": "-"
 		}
 	}
 }

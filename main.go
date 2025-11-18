@@ -24,8 +24,8 @@ func main() {
 
 	app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:     "Inspektor Gadget Desktop",
-		Width:     1024,
-		Height:    768,
+		Width:     1280,
+		Height:    900,
 		Frameless: true,
 	})
 

@@ -1,22 +1,22 @@
-<script>
+<script lang="ts">
 	import Chart from '$lib/icons/chart.svg?raw';
 	import Timeline from './charts/Timeline2.svelte';
 	import { getContext } from 'svelte';
 
 	const gadget = getContext('gadget');
 
-	export let ds;
-	export let dsID;
+	let { ds, dsID } = $props();
 
-	let data = [];
+	let data = $state<never[]>([]);
 
-	function updateMetrics(d) {
+	function updateMetrics(d: never) {
 		data = d;
 	}
 
 	gadget.subscribeMetrics(dsID, updateMetrics);
 </script>
-<div class="sticky left-0 p-2 flex flex-row flex-1 bg-gray-950">
+
+<div class="sticky left-0 flex flex-1 flex-row bg-gray-950 p-2">
 	<div class="pr-2">{@html Chart}</div>
 	<h2 class="flex-122">{ds.name}</h2>
 </div>

@@ -11,7 +11,7 @@ tasks:
       - task: common:build:frontend
       - task: common:generate:icons
     cmds:
-      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}
+      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}-{{.ARCH}}
     vars:
       BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production,withoutebpf -trimpath -buildvcs=false -ldflags="-w -s"{{else}}-tags withoutebpf -buildvcs=false -gcflags=all="-l"{{end}}'
     env:
@@ -26,11 +26,11 @@ tasks:
       - task: build
         vars:
           PRODUCTION: "true"
-    cmds:
-      - task: create:appimage
-      - task: create:deb
-      - task: create:rpm
-      - task: create:aur
+#    cmds:
+#      - task: create:appimage
+#      - task: create:deb
+#      - task: create:rpm
+#      - task: create:aur
 
   create:appimage:
     summary: Creates an AppImage

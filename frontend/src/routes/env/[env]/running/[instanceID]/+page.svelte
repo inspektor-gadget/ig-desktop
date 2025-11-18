@@ -4,4 +4,3 @@
 </script>
 
 <DataSource instanceID={page.params.instanceID} />
-
