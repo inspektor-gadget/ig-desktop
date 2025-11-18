@@ -10,7 +10,7 @@ import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 
 self.MonacoEnvironment = {
-	getWorker: function (_, label) {
+	getWorker: function (_: string, label: string): Worker {
 		switch (label) {
 			case 'json':
 				return new jsonWorker();

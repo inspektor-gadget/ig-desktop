@@ -10,9 +10,9 @@ export default defineConfig({
 			'/api/v1/ws': {
 				target: 'ws://127.0.0.1:9080',
 				ws: true,
-				rewriteWsOrigin: true,
+				rewriteWsOrigin: true
 			}
-		},
+		}
 	},
 	plugins: [sveltekit(), tailwindcss()]
 });

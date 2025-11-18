@@ -1,259 +1,205 @@
 @import 'tailwindcss';
 
-/*:root {*/
-/*    --border-color: rgb(15, 15, 15);*/
-/*    --message-empty-primary-color: #fff;*/
-/*    --message-empty-primary-color-rgb: 255,255,255;*/
+html,
+body {
+	overscroll-behavior-x: none;
+	background: #09090b;
+	scrollbar-color: rgba(107, 114, 128, 0.6) #09090b;
+}
 
-/*    --vh: 5.17px;*/
-/*    --primary-color: #8774e1;*/
-/*    --primary-color-rgb: 135,116,225;*/
-/*    --light-primary-color: rgba(135, 116, 225, 0.08);*/
-/*    --light-filled-primary-color: #292730;*/
-/*    --dark-primary-color: hsl(250.45871559633028, 64.49704142011832%, 62.86274509803921%);*/
-/*    --saved-color: #8774e1;*/
-/*    --light-filled-saved-color: #b2a6eb;*/
-/*    --message-out-background-color: #8774e1;*/
-/*    --message-out-background-color-rgb: 135,116,225;*/
-/*    --light-message-out-background-color: rgba(135, 116, 225, 1);*/
-/*    --light-filled-message-out-background-color: #8774e1;*/
-/*    --dark-message-out-background-color: hsl(250.45871559633028, 64.49704142011832%, -33.13725490196079%);*/
-/*    --message-out-primary-color: #ffffff;*/
-/*    --message-out-primary-color-rgb: 255,255,255;*/
-/*    --light-filled-message-out-primary-color: #907fe3;*/
-/*    --surface-color: #212121;*/
-/*    --surface-color-rgb: 33,33,33;*/
-/*    --danger-color: #ff595a;*/
-/*    --danger-color-rgb: 255,89,90;*/
-/*    --light-danger-color: rgba(255, 89, 90, 0.08);*/
-/*    --dark-danger-color: hsl(359.6385542168675, 100%, 59.450980392156865%);*/
-/*    --primary-text-color: #ffffff;*/
-/*    --primary-text-color-rgb: 255,255,255;*/
-/*    --secondary-text-color: #aaaaaa;*/
-/*    --light-secondary-text-color: rgba(170, 170, 170, 0.08);*/
-/*    --light-filled-secondary-text-color: #2b2b2b;*/
-/*    --message-background-color: #212121;*/
-/*    --light-message-background-color: rgba(33, 33, 33, 0.08);*/
-/*    --light-filled-message-background-color: #212121;*/
-/*    --dark-message-background-color: hsl(0, 0%, 4.941176470588237%);*/
-/*    --green-color: #5CC85E;*/
-/*    --message-highlighting-color: hsla(299.142857, 44.166666%, 37.470588%, 0.4);*/
-/*    --message-highlighting-color-rgb: 137,53,138;*/
-/*    --message-highlighting-alpha: 0.4;*/
-/*    --messages-text-size: 16px;*/
-/*    --left-column-width: 420px;*/
-/*    --peer-0-color-rgb: 204,80,73;*/
-/*    --peer-1-color-rgb: 214,119,34;*/
-/*    --peer-2-color-rgb: 149,92,219;*/
-/*    --peer-3-color-rgb: 64,169,32;*/
-/*    --peer-4-color-rgb: 48,158,186;*/
-/*    --peer-5-color-rgb: 54,138,209;*/
-/*    --peer-6-color-rgb: 199,80,139;*/
-/*    --peer-7-color-rgb: 255,147,128;*/
-/*    --peer-7-border-background: repeating-linear-gradient(-45deg, #992f37 0px, #992f37 5px, #ff9380 5px, #ff9380 10px);*/
-/*    --peer-8-color-rgb: 236,176,78;*/
-/*    --peer-8-border-background: repeating-linear-gradient(-45deg, #c35714 0px, #c35714 5px, #ecb04e 5px, #ecb04e 10px);*/
-/*    --peer-9-color-rgb: 198,151,255;*/
-/*    --peer-9-border-background: repeating-linear-gradient(-45deg, #5e31c8 0px, #5e31c8 5px, #c697ff 5px, #c697ff 10px);*/
-/*    --peer-10-color-rgb: 167,235,110;*/
-/*    --peer-10-border-background: repeating-linear-gradient(-45deg, #167e2d 0px, #167e2d 5px, #a7eb6e 5px, #a7eb6e 10px);*/
-/*    --peer-11-color-rgb: 64,216,208;*/
-/*    --peer-11-border-background: repeating-linear-gradient(-45deg, #045c7f 0px, #045c7f 5px, #40d8d0 5px, #40d8d0 10px);*/
-/*    --peer-12-color-rgb: 82,191,255;*/
-/*    --peer-12-border-background: repeating-linear-gradient(-45deg, #0b5494 0px, #0b5494 5px, #52bfff 5px, #52bfff 10px);*/
-/*    --peer-13-color-rgb: 255,134,166;*/
-/*    --peer-13-border-background: repeating-linear-gradient(-45deg, #8e366e 0px, #8e366e 5px, #ff86a6 5px, #ff86a6 10px);*/
-/*    --peer-14-color-rgb: 63,162,254;*/
-/*    --peer-14-border-background: repeating-linear-gradient(-45deg, #3fa2fe 0px, #3fa2fe 5px, #e5424f 5px, #e5424f 10px, #ffffff 10px, #ffffff 15px);*/
-/*    --peer-15-color-rgb: 255,144,94;*/
-/*    --peer-15-border-background: repeating-linear-gradient(-45deg, #ff905e 0px, #ff905e 5px, #32a527 5px, #32a527 10px, #ffffff 10px, #ffffff 15px);*/
-/*    --peer-16-color-rgb: 102,211,100;*/
-/*    --peer-16-border-background: repeating-linear-gradient(-45deg, #66d364 0px, #66d364 5px, #d5444f 5px, #d5444f 10px, #ffffff 10px, #ffffff 15px);*/
-/*    --peer-17-color-rgb: 34,188,226;*/
-/*    --peer-17-border-background: repeating-linear-gradient(-45deg, #22bce2 0px, #22bce2 5px, #3da240 5px, #3da240 10px, #ffffff 10px, #ffffff 15px);*/
-/*    --peer-18-color-rgb: 34,188,226;*/
-/*    --peer-18-border-background: repeating-linear-gradient(-45deg, #22bce2 0px, #22bce2 5px, #ff9778 5px, #ff9778 10px, #ffda6b 10px, #ffda6b 15px);*/
-/*    --peer-19-color-rgb: 151,145,255;*/
-/*    --peer-19-border-background: repeating-linear-gradient(-45deg, #9791ff 0px, #9791ff 5px, #f2731d 5px, #f2731d 10px, #ffdb59 10px, #ffdb59 15px);*/
-/*    --peer-20-color-rgb: 61,166,235;*/
-/*    --peer-20-border-background: repeating-linear-gradient(-45deg, #3da6eb 0px, #3da6eb 5px, #eea51d 5px, #eea51d 10px, #ffffff 10px, #ffffff 15px);*/
-/*    --peer-border-background: var(--primary-color);*/
-/*    --message-out-peer-border-background: var(--message-out-primary-color);*/
-/*    --message-out-peer-1-border-background: var(--message-out-primary-color);*/
-/*    --message-out-peer-2-border-background: repeating-linear-gradient(-45deg, var(--message-out-primary-color) 0px, var(--message-out-primary-color) 5px, rgba(var(--message-out-primary-color-rgb), 0.2) 5px, rgba(var(--message-out-primary-color-rgb), 0.2) 10px);*/
-/*    --message-out-peer-3-border-background: repeating-linear-gradient(-45deg, rgba(var(--message-out-primary-color-rgb), 0.4) 0px, rgba(var(--message-out-primary-color-rgb), 0.4) 5px, rgba(var(--message-out-primary-color-rgb), 0.2) 5px, rgba(var(--message-out-primary-color-rgb), 0.2) 10px, var(--message-out-primary-color) 10px, var(--message-out-primary-color) 15px);*/
-/*    --message-empty-peer-1-border-background: var(--message-empty-primary-color);*/
-/*    --message-empty-peer-2-border-background: repeating-linear-gradient(-45deg, var(--message-empty-primary-color) 0px, var(--message-empty-primary-color) 5px, rgba(var(--message-empty-primary-color-rgb), 0.2) 5px, rgba(var(--message-empty-primary-color-rgb), 0.2) 10px);*/
-/*    --message-empty-peer-3-border-background: repeating-linear-gradient(-45deg, rgba(var(--message-empty-primary-color-rgb), 0.4) 0px, rgba(var(--message-empty-primary-color-rgb), 0.4) 5px, rgba(var(--message-empty-primary-color-rgb), 0.2) 5px, rgba(var(--message-empty-primary-color-rgb), 0.2) 10px, var(--message-empty-primary-color) 10px, var(--message-empty-primary-color) 15px);*/
-/*    --right-column-proportion: 0.34615384615384615;*/
-/*    --middle-column-width: 1092px;*/
-/*    --middle-column-width-value: 1092;*/
+/* Gradient background overlay - inspired by EchoFi design */
+.bg-gradient-overlay {
+	position: relative;
+	/*background: radial-gradient(*/
+	/*	ellipse 100% 60% at 50% -10%,*/
+	/*    rgba(255, 255, 255, 0.15),*/
+	/*	transparent 50%*/
+	/*), #09090B;*/
+	background:
+		linear-gradient(
+			75deg,
+			hsl(240deg 10% 4%) 0%,
+			hsl(240deg 1% 17%) 20%,
+			hsl(240deg 0% 30%) 33%,
+			hsl(344deg 0% 35%) 42%,
+			hsl(344deg 0% 36%) 49%,
+			hsl(240deg 0% 32%) 54%,
+			hsl(240deg 1% 18%) 63%,
+			hsl(240deg 10% 4%) 99%
+		),
+		#09090b;
+}
 
-
-/*    --reflect: 1;*/
-/*    --message-out-icon-text-color: #8774e1;*/
-/*    --message-out-link-color: #fff;*/
-/*    --message-out-selection-background-color: rgba(33,33,33, 0.4);*/
-/*    --message-out-time-color: rgba(255, 255, 255, 0.6);*/
-/*    --message-out-status-color: #fff;*/
-/*    --message-out-reaction-tag-dot-color: #8774e1;*/
-/*    --message-handhelds-margin: 5.5625rem;*/
-/*    --messages-line-height: 1.3125;*/
-/*    --messages-custom-emoji-size: calc(16px + 4px);*/
-/*    --messages-time-text-size: calc(16px - 4px);*/
-
-/*    --transition-standard-in: 0.3s cubic-bezier(0.4, 0, 0.2, 1);*/
-/*    --background-color: #181818;*/
-/*    --chat-input-padding: 0.5rem;*/
-/*    --messages-container-width: 728px;*/
-/*    --transition-standard-out: 0.25s cubic-bezier(0.4, 0, 0.2, 1);*/
-
-/*    --tabs-transition: 0.2s ease-in-out;*/
-/*    --font-weight-bold: 500;*/
-/*    --chat-input-max-width: 728px;*/
-
-/*    --font-size: 16px;*/
-/*    --font-size-11: 11px;*/
-/*    --font-size-12: 12px;*/
-/*    --font-size-13: 13px;*/
-/*    --font-size-14: 14px;*/
-/*    --font-size-15: 15px;*/
-/*    --font-size-16: 16px;*/
-/*    --font-size-18: 18px;*/
-
-/*    --size: 54px;*/
-/*}*/
-
-html, body {
-    overscroll-behavior-x: none;
-
-    scrollbar-color: rgba(107, 114, 128, 0.6) #010205;
+.main-gradient {
+	/*background: linear-gradient(*/
+	/*    75deg,*/
+	/*    hsl(240deg 8% 8%) 0%,*/
+	/*    hsl(240deg 4% 9%) 20%,*/
+	/*    hsl(240deg 2% 11%) 33%,*/
+	/*    hsl(240deg 1% 11%) 42%,*/
+	/*    hsl(240deg 1% 10%) 49%,*/
+	/*    hsl(240deg 1% 9%) 54%,*/
+	/*    hsl(240deg 4% 9%) 63%,*/
+	/*    hsl(240deg 7% 9%) 99%*/
+	/*), #09090B;*/
+	background: rgba(255, 255, 255, 0.02);
 }
 
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+	width: 10px;
+	height: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: rgba(107, 114, 128, 0.6);
-    border-radius: 8px;
+	background-color: rgba(107, 114, 128, 0.6);
+	border-radius: 8px;
 }
 
 ::-webkit-scrollbar-corner {
-    background-color: #010205;
+	background-color: #09090b;
 }
 
 ::-webkit-scrollbar-track {
-    background-color: #010205;
+	background-color: #09090b;
 }
 
 /* lato-regular - latin_latin-ext */
 @font-face {
-    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-    font-family: 'Lato';
-    font-style: normal;
-    font-weight: 400;
-    src: url('./fonts/lato/lato-v24-latin_latin-ext-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Lato';
+	font-style: normal;
+	font-weight: 400;
+	src: url('./fonts/lato/lato-v24-latin_latin-ext-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 /* lato-italic - latin_latin-ext */
 @font-face {
-    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-    font-family: 'Lato';
-    font-style: italic;
-    font-weight: 400;
-    src: url('./fonts/lato/lato-v24-latin_latin-ext-italic.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Lato';
+	font-style: italic;
+	font-weight: 400;
+	src: url('./fonts/lato/lato-v24-latin_latin-ext-italic.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 /* lato-700 - latin_latin-ext */
 @font-face {
-    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-    font-family: 'Lato';
-    font-style: normal;
-    font-weight: 700;
-    src: url('./fonts/lato/lato-v24-latin_latin-ext-700.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Lato';
+	font-style: normal;
+	font-weight: 700;
+	src: url('./fonts/lato/lato-v24-latin_latin-ext-700.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
 /* fira-sans-regular - latin */
 @font-face {
-    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-    font-family: 'Fira Sans';
-    font-style: normal;
-    font-weight: 400;
-    src: url('./fonts/fira-sans/fira-sans-v17-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Fira Sans';
+	font-style: normal;
+	font-weight: 400;
+	src: url('./fonts/fira-sans/fira-sans-v17-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 /* fira-sans-italic - latin */
 @font-face {
-    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-    font-family: 'Fira Sans';
-    font-style: italic;
-    font-weight: 400;
-    src: url('./fonts/fira-sans/fira-sans-v17-latin-italic.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Fira Sans';
+	font-style: italic;
+	font-weight: 400;
+	src: url('./fonts/fira-sans/fira-sans-v17-latin-italic.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 /* fira-sans-600 - latin */
 @font-face {
-    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-    font-family: 'Fira Sans';
-    font-style: normal;
-    font-weight: 600;
-    src: url('./fonts/fira-sans/fira-sans-v17-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Fira Sans';
+	font-style: normal;
+	font-weight: 600;
+	src: url('./fonts/fira-sans/fira-sans-v17-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
 /* dancing-script-regular - latin */
 @font-face {
-    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-    font-family: 'Dancing Script';
-    font-style: normal;
-    font-weight: 400;
-    src: url('./fonts/dancing-script/dancing-script-v25-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Dancing Script';
+	font-style: normal;
+	font-weight: 400;
+	src: url('./fonts/dancing-script/dancing-script-v25-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
 @font-face {
-    font-family: 'FireCode';
-    font-style: normal;
-    font-weight: 900;
-    font-display: block;
-    src: url("./fonts/FiraCode-Regular.woff2") format("woff2"), url("./fonts/FiraCode-Regular.ttf") format("truetype");
+	font-family: 'FireCode';
+	font-style: normal;
+	font-weight: 900;
+	font-display: block;
+	src:
+		url('./fonts/FiraCode-Regular.woff2') format('woff2'),
+		url('./fonts/FiraCode-Regular.ttf') format('truetype');
 }
 
 @font-face {
-    font-family: 'FireCode';
-    font-style: normal;
-    font-weight: 200;
-    font-display: block;
-    src: url("./fonts/FiraCode-Light.woff2") format("woff2"), url("./fonts/FiraCode-Light.ttf") format("truetype");
+	font-family: 'FireCode';
+	font-style: normal;
+	font-weight: 200;
+	font-display: block;
+	src:
+		url('./fonts/FiraCode-Light.woff2') format('woff2'),
+		url('./fonts/FiraCode-Light.ttf') format('truetype');
 }
 
 /* urbanist-regular - latin */
 @font-face {
-    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-    font-family: 'Urbanist';
-    font-style: normal;
-    font-weight: 400;
-    src: url('./fonts/urbanist/urbanist-v15-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Urbanist';
+	font-style: normal;
+	font-weight: 400;
+	src: url('./fonts/urbanist/urbanist-v15-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 /* urbanist-600 - latin */
 @font-face {
-    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
-    font-family: 'Urbanist';
-    font-style: normal;
-    font-weight: 600;
-    src: url('./fonts/urbanist/urbanist-v15-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+	font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+	font-family: 'Urbanist';
+	font-style: normal;
+	font-weight: 600;
+	src: url('./fonts/urbanist/urbanist-v15-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
 .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-
+	-ms-overflow-style: none;
+	scrollbar-width: none;
 }
 .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+	display: none;
 }
 
-
 @theme {
-    --font-sans: 'Fira Sans', 'Lato';
-    --font-serif: 'Dancing Script', serif;
-    --font-mono: FireCode, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+	--font-sans: 'Fira Sans', 'Lato';
+	--font-serif: 'Dancing Script', serif;
+	--font-mono:
+		FireCode, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+		'Courier New', monospace;
+
+	/* Neutral grayscale palette - matching the EchoFi screenshot */
+	--color-gray-50: #f9fafb;
+	--color-gray-100: #e5e7eb;
+	--color-gray-200: #d1d5db;
+	--color-gray-300: #9ca3af;
+	--color-gray-400: #6b7280;
+	--color-gray-500: #52525b;
+	--color-gray-600: #3f3f46;
+	--color-gray-700: #27272a;
+	--color-gray-800: #18181b;
+	--color-gray-900: #0f0f11;
+	--color-gray-950: #09090b;
+
+	/* Custom semantic colors */
+	--color-bg-primary: #09090b;
+	--color-bg-secondary: #0f0f11;
+	--color-bg-tertiary: #18181b;
+	--color-border: #27272a;
+
+	/* Accent colors for interactive elements (cyan from the chart) */
+	--color-cyan-400: #22d3ee;
+	--color-cyan-500: #06b6d4;
+	--color-blue-500: #3b82f6;
+	--color-blue-600: #2563eb;
+	--color-purple-500: #a855f7;
+	--color-purple-600: #9333ea;
 }
 
 /* Override dark mode for now */

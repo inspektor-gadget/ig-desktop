@@ -1,19 +1,17 @@
-<script>
+<script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import type * as Monaco from 'monaco-editor';
 
 	let { content, readOnly = false } = $props();
 
-	let editor = $state(null);
-	let monaco;
-	let editorContainer;
+	let editor = $state<Monaco.editor.IStandaloneCodeEditor | null>(null);
+	let monaco: typeof Monaco;
+	let editorContainer: HTMLDivElement;
 
 	$effect(() => {
 		if (!editor) return;
 		console.log('updating text');
-		const model = monaco.editor.createModel(
-			content,
-			'c'
-		);
+		const model = monaco.editor.createModel(content, 'c');
 		editor.setModel(model);
 	});
 
@@ -27,10 +25,7 @@
 			automaticLayout: true,
 			readOnly
 		});
-		const model = monaco.editor.createModel(
-			content,
-			'c'
-		);
+		const model = monaco.editor.createModel(content, 'c');
 		editor.setModel(model);
 
 		monaco.editor.defineTheme('default', {
@@ -60,4 +55,5 @@
 		editor?.dispose();
 	});
 </script>
-<div class="w-full h-full" bind:this={editorContainer}></div>
+
+<div class="h-full w-full" bind:this={editorContainer}></div>
