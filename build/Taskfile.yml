@@ -49,6 +49,8 @@ tasks:
       - go.sum
     generates:
       - "frontend/bindings/**/*"
+    env:
+      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production,withoutebpf -trimpath -buildvcs=false -ldflags="-w -s"{{else}}-tags withoutebpf -buildvcs=false -gcflags=all="-l"{{end}}'
     cmds:
       - wails3 generate bindings -f '{{.BUILD_FLAGS}}' -clean=true 
 
