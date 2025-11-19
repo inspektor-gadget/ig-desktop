@@ -190,6 +190,11 @@ runs:
       if: runner.os == 'macOS'
       run: brew install mitchellh/gon/gon
       shell: bash
+    - name: Prepare App
+      if: inputs.build == 'true'
+      working-directory: ${{ inputs.app-working-directory }}
+      run: OS=${{inputs.build-platform}} PRODUCTION=true wails3 task common:update:build-assets
+      shell: bash
     # Building step
     - name: Build App
       if: inputs.build == 'true'
