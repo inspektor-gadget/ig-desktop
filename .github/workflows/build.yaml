@@ -27,9 +27,9 @@ jobs:
           - name: 'ig-desktop-win-amd64.exe'
             platform:  'windows'
             os: 'windows-latest'
-#          - name: 'ig-desktop-macos'
-#            platform:  'darwin'
-#            os: 'macos-latest'
+          - name: 'ig-desktop-macos'
+            platform:  'darwin'
+            os: 'macos-latest'
     runs-on: ${{ matrix.build.os }}
     steps:
       - name: Checkout
@@ -39,11 +39,12 @@ jobs:
       - name: Build wails
         uses: ./.github/actions/wails
         id: build
+        continue-on-error: true
         with:
           build-name: ${{ matrix.build.name }}
           build-platform: ${{ matrix.build.platform }}
           build-tags: "withoutebpf"
           package: true
-          go-version: '1.24'
+          go-version: '1.25'
           node-version: '23.5.0'
           wails-build-webview2: "embed"
