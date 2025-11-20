@@ -1,6 +1,6 @@
 <script>
-	import DataSource from '$lib/components/datasource.svelte';
+	import Gadget from '$lib/components/Gadget.svelte';
 	import { page } from '$app/state';
 </script>
 
-<DataSource instanceID={page.params.instanceID} />
+<Gadget instanceID={page.params.instanceID} />

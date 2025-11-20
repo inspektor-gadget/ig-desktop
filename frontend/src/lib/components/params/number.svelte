@@ -1,9 +1,27 @@
-<script lang="js">
-	let { param, config } = $props();
+<script lang="ts">
+	import Title from './Title.svelte';
+	import Input from '$lib/components/forms/Input.svelte';
 
-	import Title from './title.svelte';
+	interface Param {
+		key: string;
+		title?: string;
+		description?: string;
+		defaultValue?: string;
+	}
 
-	let value = $state(config.get(param));
+	interface Config {
+		get: (param: Param) => string;
+		set: (param: Param, value: string) => void;
+	}
+
+	interface Props {
+		param: Param;
+		config: Config;
+	}
+
+	let { param, config }: Props = $props();
+
+	let value = $state(config.get(param) || '');
 
 	$effect(() => {
 		config.set(param, value);
@@ -14,10 +32,5 @@
 	<Title {param} />
 </div>
 <div class="grow">
-	<input
-		type="number"
-		class="rounded bg-gray-800 p-1.5"
-		placeholder={param.defaultValue}
-		bind:value
-	/>
+	<Input type="number" bind:value placeholder={param.defaultValue} />
 </div>

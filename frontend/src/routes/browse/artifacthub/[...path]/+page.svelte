@@ -13,10 +13,13 @@
 	import Unsigned from '$lib/icons/signature-slash.svg?raw';
 	import Star from '$lib/icons/star-sharp.svg?raw';
 	import Link from '$lib/icons/href.svg?raw';
+	import { page } from '$app/state';
 
 	let { data } = $props();
 
 	const api = getContext('api');
+
+	let environmentID = $derived(page.url.searchParams.get('env') || '');
 
 	let pkg = $state(null);
 
@@ -240,7 +243,10 @@
 					<Panel title="Images" icon={Code} color="green">
 						<div class="flex flex-col gap-3">
 							{#each pkg.containers_images as image}
-								<a href="/gadgets/run/{image.image}" class="group">
+								<a
+									href="/gadgets/run/{image.image}{environmentID ? `?env=${environmentID}` : ''}"
+									class="group"
+								>
 									<div
 										class="flex flex-col gap-3 rounded-lg border border-gray-800 bg-gradient-to-br from-gray-900 to-gray-950 p-4 transition-all hover:scale-[1.02] hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10"
 									>

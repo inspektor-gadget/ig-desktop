@@ -1,12 +1,13 @@
 <script lang="ts">
 	import List from '$lib/icons/list.svg?raw';
 	import Delete from '$lib/icons/close-small.svg?raw';
-	import Tab from '$lib/components/tab.svelte';
+	import Tab from '$lib/components/Tab.svelte';
 	import { instances } from '$lib/shared/instances.svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import type { Snippet } from 'svelte';
 	import { getContext } from 'svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -17,17 +18,30 @@
 	const api: any = getContext('api');
 
 	async function closeInstance(instanceID: string) {
+		const instance = instances[instanceID];
+		const instanceName =
+			instance?.name || instance?.gadgetInfo?.imageName || instanceID.substring(0, 8);
+
 		try {
 			const res = await api.request({ cmd: 'stopInstance', data: { id: instanceID } });
-		} catch (err) {
-			// ignore
+			console.log('stopped');
+
+			// Show success toast
+			toastStore.success(`Instance "${instanceName}" stopped successfully`);
+
+			if (page.params.instanceID && page.params.instanceID === instanceID) {
+				// Page is currently open, move to env
+				goto(`/env/${page.params.env}`);
+			}
+			delete instances[instanceID];
+		} catch (err: any) {
+			// Show error toast
+			const errorMessage = err?.message || err?.toString() || 'Unknown error';
+			toastStore.error(`Failed to stop instance "${instanceName}": ${errorMessage}`, 7000, {
+				label: 'Retry',
+				onClick: () => closeInstance(instanceID)
+			});
 		}
-		console.log('stopped');
-		if (page.params.instanceID && page.params.instanceID === instanceID) {
-			// Page is currently open, move to env
-			goto(`/env/${page.params.env}`);
-		}
-		delete instances[instanceID];
 	}
 </script>
 

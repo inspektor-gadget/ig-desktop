@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getContext, setContext } from 'svelte';
-	import Params from '$lib/components/params.svelte';
+	import Params from '$lib/components/Params.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import Play from '$lib/icons/play.svg?raw';
@@ -15,9 +15,15 @@
 	import { preferences } from '$lib/shared/preferences.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import Title from '$lib/components/params/title.svelte';
+	import Title from '$lib/components/params/Title.svelte';
 	import type { GadgetInfo, GadgetRunRequest } from '$lib/types';
 	import { Clipboard } from '@wailsio/runtime';
+	import {
+		saveK8sRecent,
+		saveGadgetURLRecent,
+		addGadgetToHistory
+	} from '$lib/utils/env-preferences';
+	import { toastStore } from '$lib/stores/toast.svelte';
 
 	let { data }: { data: any } = $props();
 
@@ -44,6 +50,7 @@
 
 	let gadgetInfo = $state<GadgetInfo | null>(null);
 	setContext('currentGadget', () => gadgetInfo);
+	setContext('environmentID', () => environmentID);
 
 	let error = $state<string | null>(null);
 	let originalError = $state<string | null>(null);
@@ -139,19 +146,60 @@
 			timestamp: Date.now()
 		};
 
-		// TODO: error handling
-		const res = await api.request({ cmd: 'runGadget', data: gadgetRunRequest });
+		// Save K8s parameter values to recent lists
+		if (environmentID && gadgetInfo?.params) {
+			for (const param of gadgetInfo.params) {
+				// Only save K8s parameters that have values
+				if (param.valueHint?.startsWith('k8s:') && values[(param.prefix || '') + param.key]) {
+					const resourceType = param.valueHint.replace('k8s:', '');
+					const value = values[(param.prefix || '') + param.key];
 
-		// add to per-environment history but keep 50 entries max per environment
-		const historyKey = `gadget-history-${environmentID}`;
-		const history = (preferences.get(historyKey) as GadgetRunRequest[]) || [];
-		history.unshift(gadgetRunRequest);
-		preferences.set(historyKey, history.slice(0, 50));
+					// For arrays (comma-separated), save each value
+					if (typeof value === 'string' && value.includes(',')) {
+						const parts = value
+							.split(',')
+							.map((v) => v.trim())
+							.filter((v) => v);
+						parts.forEach((v) => saveK8sRecent(environmentID, resourceType, v));
+					} else if (value) {
+						saveK8sRecent(environmentID, resourceType, String(value));
+					}
+				}
+			}
+		}
 
-		if (detached) {
-			goto('/env/' + environmentID);
-		} else {
-			goto('/env/' + environmentID + '/running/' + res.id);
+		try {
+			const res = await api.request({ cmd: 'runGadget', data: gadgetRunRequest });
+
+			// Save gadget URL to recents
+			if (environmentID && data.url) {
+				saveGadgetURLRecent(environmentID, data.url);
+			}
+
+			// Add to per-environment history with deduplication (max 50 entries)
+			if (environmentID) {
+				addGadgetToHistory(environmentID, gadgetRunRequest, 50);
+			}
+
+			if (detached) {
+				// Show info toast for headless instances (success confirmed when instance appears in list)
+				const displayName = instanceName || 'Unnamed instance';
+				toastStore.info(`Starting headless instance "${displayName}"...`, 3000);
+				goto('/env/' + environmentID);
+			} else {
+				goto('/env/' + environmentID + '/running/' + res.id);
+			}
+		} catch (err: any) {
+			// Show error toast
+			const errorMessage = err?.message || err?.toString() || 'Unknown error';
+			toastStore.error(
+				`Failed to start ${detached ? 'headless instance' : 'gadget'}: ${errorMessage}`,
+				7000,
+				{
+					label: 'Retry',
+					onClick: () => runGadget()
+				}
+			);
 		}
 	}
 

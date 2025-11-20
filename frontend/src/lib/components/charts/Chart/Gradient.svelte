@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	let { id = '', x1, x2, y1, y2, colors = [] } = $props();
 </script>
 

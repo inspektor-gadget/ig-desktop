@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { scaleLinear } from 'd3-scale';
 
 	// import points from './data.js';

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Title from '$lib/components/params/title.svelte';
+	import Title from '$lib/components/params/Title.svelte';
 	import { getContext } from 'svelte';
 	import Delete from '$lib/icons/fa/trash.svg?raw';
 	import SortUp from '$lib/icons/fa/sort-up.svg?raw';
@@ -107,7 +107,7 @@
 		<button
 			class="flex cursor-pointer flex-row items-center gap-2 rounded bg-gray-800 px-2 py-1 hover:bg-gray-700"
 			onclick={() => {
-				filters.push({ sorting: '' });
+				filters.push({ field: '', sorting: '' });
 			}}
 		>
 			<span>Add Sorting</span>

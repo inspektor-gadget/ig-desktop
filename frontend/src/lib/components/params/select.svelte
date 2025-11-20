@@ -1,33 +1,44 @@
-<script lang="js">
-	let { param, config } = $props();
+<script lang="ts">
+	import Title from './Title.svelte';
+	import Select from '$lib/components/forms/Select.svelte';
 
-	import Title from './title.svelte';
+	interface Param {
+		key: string;
+		title?: string;
+		description?: string;
+		possibleValues: string[];
+	}
+
+	interface Config {
+		values: Record<string, string>;
+	}
+
+	interface Props {
+		param: Param;
+		config: Config;
+	}
+
+	let { param, config }: Props = $props();
+
+	// Convert possibleValues array to options format
+	const options = $derived(
+		param.possibleValues.map((value) => ({
+			value,
+			label: value
+		}))
+	);
+
+	// Ensure value is never undefined
+	let value = $state(config.values[param.key] || '');
+
+	$effect(() => {
+		config.values[param.key] = value;
+	});
 </script>
 
 <div class="w-1/3">
 	<Title {param} />
 </div>
 <div>
-	<div class="grid">
-		<svg
-			class="pointer-events-none relative right-1 z-10 col-start-1 row-start-1 h-4 w-4 self-center justify-self-end forced-colors:hidden"
-			viewBox="0 0 16 16"
-			fill="currentColor"
-			aria-hidden="true"
-		>
-			<path
-				fill-rule="evenodd"
-				d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-				clip-rule="evenodd"
-			></path>
-		</svg>
-		<select
-			class="col-start-1 row-start-1 appearance-none rounded bg-gray-800 p-1.5 pr-8 pl-3"
-			bind:value={config.values[param.key]}
-		>
-			{#each param.possibleValues as value}
-				<option {value}>{value}</option>
-			{/each}
-		</select>
-	</div>
+	<Select bind:value {options} class="text-sm" />
 </div>

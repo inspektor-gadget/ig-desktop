@@ -1,5 +1,9 @@
-<script>
-	let { width = '3rem' } = $props();
+<script lang="ts">
+	interface Props {
+		width?: string;
+	}
+
+	let { width = '3rem' }: Props = $props();
 </script>
 
 <svg {width} viewBox="0 0 119 110" fill="none" xmlns="http://www.w3.org/2000/svg">

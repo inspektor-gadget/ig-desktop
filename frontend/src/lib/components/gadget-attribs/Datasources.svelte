@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import Annotations from '$lib/icons/fa/memo-circle-info.svg?raw';
 	import { preferences } from '$lib/shared/preferences.svelte.js';
 

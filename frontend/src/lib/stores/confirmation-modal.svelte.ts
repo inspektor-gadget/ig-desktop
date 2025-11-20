@@ -69,20 +69,22 @@ class ConfirmationModalStore {
 	 * Handle confirmation - resolves the promise with true
 	 */
 	handleConfirm() {
-		if (this.state.resolve) {
-			this.state.resolve(true);
-		}
+		const resolve = this.state.resolve;
 		this.close();
+		if (resolve) {
+			resolve(true);
+		}
 	}
 
 	/**
 	 * Handle cancellation - resolves the promise with false
 	 */
 	handleCancel() {
-		if (this.state.resolve) {
-			this.state.resolve(false);
-		}
+		const resolve = this.state.resolve;
 		this.close();
+		if (resolve) {
+			resolve(false);
+		}
 	}
 
 	/**

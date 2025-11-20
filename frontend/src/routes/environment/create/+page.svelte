@@ -2,7 +2,7 @@
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Panel from '$lib/components/Panel.svelte';
-	import Params from '$lib/components/params.svelte';
+	import Params from '$lib/components/Params.svelte';
 	import K8sDeployModal from '$lib/components/K8sDeployModal.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { deployments } from '$lib/shared/deployments.svelte';
@@ -14,6 +14,8 @@
 	import Code from '$lib/icons/code.svg?raw';
 	import Adjustments from '$lib/icons/adjustments.svg?raw';
 	import type { IGDeploymentStatus, RuntimeInfo } from '$lib/types';
+	import Input from '$lib/components/forms/Input.svelte';
+	import Select from '$lib/components/forms/Select.svelte';
 
 	const api: any = getContext('api');
 
@@ -164,12 +166,7 @@
 					</div>
 				</div>
 				<div class="flex grow flex-col gap-2">
-					<input
-						type="text"
-						bind:value={name}
-						placeholder="Enter environment name..."
-						class="w-full rounded bg-gray-800 p-2 text-sm transition-colors focus:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-					/>
+					<Input bind:value={name} placeholder="Enter environment name..." class="text-sm" />
 				</div>
 			</div>
 		</Panel>
@@ -199,20 +196,14 @@
 								<!-- Kubernetes Context Selector -->
 								{#if rt.key === 'grpc-k8s' && rt.contexts && rt.contexts.length > 0}
 									<div class="flex flex-col gap-1.5" onclick={(e) => e.stopPropagation()}>
-										<label for="context-select-{rt.key}" class="text-xs text-gray-500">
-											Kubernetes Context:
-										</label>
-										<select
-											id="context-select-{rt.key}"
+										<Select
 											bind:value={selectedContext}
+											options={rt.contexts.map((ctx) => ({ value: ctx, label: ctx }))}
 											onchange={handleContextChange}
-											class="hover:bg-gray-750 cursor-pointer rounded border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-white transition-all focus:border-purple-600 focus:outline-none"
+											label="Kubernetes Context:"
 											disabled={selectedRuntime !== rt.key}
-										>
-											{#each rt.contexts as context}
-												<option value={context}>{context}</option>
-											{/each}
-										</select>
+											class="text-sm"
+										/>
 									</div>
 								{/if}
 							</div>

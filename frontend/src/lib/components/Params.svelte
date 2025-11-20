@@ -11,15 +11,20 @@
 		showAdvanced?: boolean;
 	} = $props();
 
-	import Text from './params/text.svelte';
-	import Select from './params/select.svelte';
-	import Bool from './params/bool.svelte';
-	import Number from './params/number.svelte';
-	import Filter from './params/filter.svelte';
-	import Annotations from './params/annotation.svelte';
-	import Sort from './params/sort.svelte';
+	import Text from './params/Text.svelte';
+	import Select from './params/Select.svelte';
+	import Bool from './params/Bool.svelte';
+	import Number from './params/Number.svelte';
+	import Filter from './params/Filter.svelte';
+	import Annotations from './params/Annotation.svelte';
+	import Sort from './params/Sort.svelte';
+	import K8sAutocomplete from './params/K8sAutocomplete.svelte';
 
 	function getComponentForParam(param: any) {
+		// Check for K8s valueHint first
+		if (param.valueHint && param.valueHint.startsWith('k8s:')) {
+			return K8sAutocomplete;
+		}
 		if (param.possibleValues) {
 			return Select;
 		}
@@ -86,17 +91,41 @@
 			.filter((e: any) => e.items.length !== 0)
 	);
 
+	// Create a mapping of valueHints to parameter keys for dependency tracking
+	const valueHintToKey = $derived.by(() => {
+		const mapping: Record<string, string> = {};
+		for (const param of params) {
+			if (param.valueHint) {
+				const fullKey = (param.prefix || '') + param.key;
+				mapping[param.valueHint] = fullKey;
+			}
+		}
+		return mapping;
+	});
+
 	const config = $derived({
 		values,
+		valueHintToKey,
 		get: (param: any) => {
 			return config.values[(param.prefix || '') + param.key];
 		},
 		set: (param: any, value: any) => {
-			if (!value) {
+			// Delete if value is falsy, empty string, or empty array
+			if (!value || value === '' || (Array.isArray(value) && value.length === 0)) {
 				delete config.values[(param.prefix || '') + param.key];
 				return;
 			}
-			config.values[(param.prefix || '') + param.key] = '' + value;
+			// For arrays, join with commas; otherwise convert to string
+			config.values[(param.prefix || '') + param.key] = Array.isArray(value)
+				? value.join(',')
+				: '' + value;
+		},
+		getAll: () => {
+			return config.values;
+		},
+		getByValueHint: (valueHint: string) => {
+			const key = config.valueHintToKey[valueHint];
+			return key ? config.values[key] : undefined;
 		}
 	});
 </script>
@@ -113,7 +142,7 @@
 					class="flex flex-row gap-4 border-b-gray-900 py-2 text-sm last:border-b-0"
 					class:border-b={showDescriptions}
 				>
-					<param.component {config} {param} />
+					<param.component {config} {param} {values} />
 				</div>
 			{/each}
 		</div>

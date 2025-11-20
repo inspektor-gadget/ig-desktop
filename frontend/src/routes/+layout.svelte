@@ -3,7 +3,7 @@
 	import { Application, Window } from '@wailsio/runtime';
 	import { setContext } from 'svelte';
 
-	import Logo from '$lib/components/logo.svelte';
+	import Logo from '$lib/components/Logo.svelte';
 	import BrandIcon from '$lib/icons/ig/small.svg?raw';
 	import BrandIconLarge from '$lib/icons/ig/large.svg?raw';
 	import Gadget from '$lib/icons/gadget.svg?raw';
@@ -15,9 +15,11 @@
 	import Minimize from '$lib/icons/fa/window-minimize.svg?raw';
 	import Restore from '$lib/icons/fa/window-restore.svg?raw';
 	import ArtifactHub from '$lib/icons/artifacthub-logo.svg?raw';
-	import NavbarLink from '$lib/components/navbar-link.svelte';
+	import NavbarLink from '$lib/components/NavbarLink.svelte';
 	import K8sDeployModal from '$lib/components/K8sDeployModal.svelte';
 	import ConfirmationModal from '$lib/components/ConfirmationModal.svelte';
+	import ConfigurationModal from '$lib/components/ConfigurationModal.svelte';
+	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import { appState } from './state.svelte.js';
 	import { environments } from '$lib/shared/environments.svelte.js';
 	import { deployments } from '$lib/shared/deployments.svelte';
@@ -28,12 +30,16 @@
 	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
 	import Lock from '$lib/icons/fa/lock.svg?raw';
 	import LockOpen from '$lib/icons/fa/lock-open.svg?raw';
+	import Cog from '$lib/icons/cog-small.svg?raw';
 
 	let { children } = $props();
 
 	// Deployment modal state
 	let deployModalOpen = $state(false);
 	let activeDeploymentId = $state(undefined);
+
+	// Configuration modal state
+	let configModalOpen = $state(false);
 
 	let version = $state('unknown');
 
@@ -215,7 +221,19 @@
 					<span>{gradientEnabled ? 'Gradient On' : 'Gradient Off'}</span>
 				</button>
 			</div>
-			<div>Version {version}</div>
+			<div class="flex items-center gap-2">
+				<span>Version {version}</span>
+				<button
+					onclick={() => {
+						configModalOpen = true;
+					}}
+					class="flex items-center gap-1 rounded px-2 py-0.5 transition-colors hover:bg-gray-800 hover:text-gray-300"
+					title="Configuration"
+					aria-label="Open configuration"
+				>
+					{@html Cog}
+				</button>
+			</div>
 		</div>
 	{:else}
 		<div
@@ -305,3 +323,14 @@
 
 <!-- Global Confirmation Modal -->
 <ConfirmationModal />
+
+<!-- Global Configuration Modal -->
+<ConfigurationModal
+	bind:open={configModalOpen}
+	onClose={() => {
+		configModalOpen = false;
+	}}
+/>
+
+<!-- Global Toast Container -->
+<ToastContainer hasDeploymentIndicator={!!deployments.getActive()} />

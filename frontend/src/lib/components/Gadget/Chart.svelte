@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Chart from '$lib/icons/chart.svg?raw';
-	import Timeline from './charts/Timeline2.svelte';
+	import Timeline from '../charts/Timeline2.svelte';
 	import { getContext } from 'svelte';
 
 	const gadget = getContext('gadget');

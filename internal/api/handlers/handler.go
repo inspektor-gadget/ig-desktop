@@ -91,6 +91,11 @@ func (h *Handler) Handlers() []api.CommandHandler {
 		commandHandler{"getArtifactHubPackage", h.HandleGetArtifactHubPackage},
 		commandHandler{"checkIGDeployment", h.HandleCheckIGDeployment},
 		commandHandler{"deployIG", h.HandleDeployIG},
+		commandHandler{"getK8sNodes", h.HandleGetK8sNodes},
+		commandHandler{"getK8sPods", h.HandleGetK8sPods},
+		commandHandler{"getK8sNamespaces", h.HandleGetK8sNamespaces},
+		commandHandler{"getK8sContainers", h.HandleGetK8sContainers},
+		commandHandler{"getK8sLabels", h.HandleGetK8sLabels},
 	}
 }
 

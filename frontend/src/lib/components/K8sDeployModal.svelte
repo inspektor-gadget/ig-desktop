@@ -8,6 +8,8 @@
 	import ExclamationCircle from '$lib/icons/close-circle.svg?raw';
 	import Certificate from '$lib/icons/certificate.svg?raw';
 	import ChevronDown from '$lib/icons/chevron-down.svg?raw';
+	import Input from '$lib/components/forms/Input.svelte';
+	import Textarea from '$lib/components/forms/Textarea.svelte';
 
 	interface Props {
 		open: boolean;
@@ -209,62 +211,28 @@
 						</p>
 
 						<!-- Namespace -->
-						<div class="flex flex-col gap-2">
-							<label
-								for="namespace"
-								class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
-							>
-								Namespace
-							</label>
-							<input
-								id="namespace"
-								type="text"
-								bind:value={namespace}
-								placeholder="gadget"
-								class="w-full rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-gray-200 transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-							/>
-							<p class="text-xs text-gray-500">
-								The Kubernetes namespace where Inspektor Gadget will be deployed
-							</p>
-						</div>
+						<Input
+							bind:value={namespace}
+							label="Namespace"
+							placeholder="gadget"
+							description="The Kubernetes namespace where Inspektor Gadget will be deployed"
+						/>
 
 						<!-- Release Name -->
-						<div class="flex flex-col gap-2">
-							<label
-								for="releaseName"
-								class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
-							>
-								Release Name
-							</label>
-							<input
-								id="releaseName"
-								type="text"
-								bind:value={releaseName}
-								placeholder="gadget"
-								class="w-full rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-gray-200 transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-							/>
-							<p class="text-xs text-gray-500">The Helm release name for this installation</p>
-						</div>
+						<Input
+							bind:value={releaseName}
+							label="Release Name"
+							placeholder="gadget"
+							description="The Helm release name for this installation"
+						/>
 
 						<!-- Chart Version -->
-						<div class="flex flex-col gap-2">
-							<label
-								for="chartVersion"
-								class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
-							>
-								Chart Version (Optional)
-							</label>
-							<input
-								id="chartVersion"
-								type="text"
-								bind:value={chartVersion}
-								placeholder="latest"
-								class="w-full rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-gray-200 transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-							/>
-							<p class="text-xs text-gray-500">
-								Leave empty to use the latest version, or specify a version like "0.43.0"
-							</p>
-						</div>
+						<Input
+							bind:value={chartVersion}
+							label="Chart Version (Optional)"
+							placeholder="latest"
+							description="Leave empty to use the latest version, or specify a version like '0.43.0'"
+						/>
 
 						<!-- Advanced Options Toggle -->
 						<button
@@ -286,24 +254,14 @@
 						</button>
 
 						{#if showAdvanced}
-							<div class="flex flex-col gap-2">
-								<label
-									for="customValues"
-									class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
-								>
-									Custom Values (YAML)
-								</label>
-								<textarea
-									id="customValues"
-									bind:value={customValues}
-									placeholder="key: value&#13;&#10;nested:&#13;&#10;  key: value"
-									rows="6"
-									class="w-full rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 font-mono text-sm text-gray-200 transition-all focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-								></textarea>
-								<p class="text-xs text-gray-500">
-									Custom Helm values in YAML format to override default chart values
-								</p>
-							</div>
+							<Textarea
+								bind:value={customValues}
+								label="Custom Values (YAML)"
+								placeholder="key: value&#13;&#10;nested:&#13;&#10;  key: value"
+								rows={6}
+								description="Custom Helm values in YAML format to override default chart values"
+								class="font-mono text-sm"
+							/>
 						{/if}
 
 						<!-- Deploy Button -->

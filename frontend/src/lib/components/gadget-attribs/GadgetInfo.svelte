@@ -1,5 +1,5 @@
-<script>
-	import Monaco from '../monaco.svelte';
+<script lang="ts">
+	import Monaco from '../Monaco.svelte';
 
 	let { gadgetInfo } = $props();
 

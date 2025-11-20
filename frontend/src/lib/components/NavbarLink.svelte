@@ -1,13 +1,22 @@
-<script>
+<script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
 	import { Browser } from '@wailsio/runtime';
 
-	let { href, children, target = null, title = null } = $props();
-	let active = $derived(
+	interface Props {
+		href: string;
+		children: Snippet;
+		target?: string | null;
+		title?: string | null;
+	}
+
+	let { href, children, target = null, title = null }: Props = $props();
+
+	const active = $derived(
 		page.url.pathname === href || (href !== '/' && page.url.pathname.startsWith(href))
 	);
 
-	const onclick = (ev) => {
+	const onclick = (ev: MouseEvent) => {
 		if (!target) {
 			return true;
 		}

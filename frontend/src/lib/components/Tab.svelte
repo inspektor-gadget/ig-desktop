@@ -1,9 +1,17 @@
-<script>
+<script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
 
-	let { children, href, shrink = false, exact = false } = $props();
+	interface Props {
+		children: Snippet;
+		href: string;
+		shrink?: boolean;
+		exact?: boolean;
+	}
 
-	let active = $derived(exact ? page.url.pathname === href : page.url.pathname.startsWith(href));
+	let { children, href, shrink = false, exact = false }: Props = $props();
+
+	const active = $derived(exact ? page.url.pathname === href : page.url.pathname.startsWith(href));
 </script>
 
 <a

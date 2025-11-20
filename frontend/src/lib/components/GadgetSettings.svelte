@@ -6,11 +6,11 @@
 	import Layers from '$lib/icons/layers.svg?raw';
 	import Close from '$lib/icons/close.svg?raw';
 
-	import DataSources from './gadget-attribs/datasources.svelte';
-	import Params from './gadget-attribs/params.svelte';
-	import Metadata from './gadget-attribs/metadata.svelte';
-	import GadgetInfo from './gadget-attribs/gadgetinfo.svelte';
-	import Inspect from './gadget-attribs/inspect.svelte';
+	import DataSources from './gadget-attribs/Datasources.svelte';
+	import Params from './gadget-attribs/Params.svelte';
+	import Metadata from './gadget-attribs/Metadata.svelte';
+	import GadgetInfo from './gadget-attribs/GadgetInfo.svelte';
+	import Inspect from './gadget-attribs/Inspect.svelte';
 
 	let { gadgetInfo, onclose = () => {} }: { gadgetInfo: any; onclose?: () => void } = $props();
 

@@ -1,8 +1,9 @@
 <script lang="ts">
-	import DatasourceTable from './ds-table.svelte';
-	import DatasourceChart from './ds-chart.svelte';
-	import Settings from './gadget-settings.svelte';
-	import Log from './log.svelte';
+	import DatasourceTable from './Gadget/Table.svelte';
+	import DatasourceChart from './Gadget/Chart.svelte';
+	import Settings from './GadgetSettings.svelte';
+	import Log from './Gadget/Log.svelte';
+	import Input from './forms/Input.svelte';
 
 	import Play from '$lib/icons/play.svg?raw';
 	import Stop from '$lib/icons/stop.svg?raw';
@@ -34,7 +35,9 @@
 			const dy = e.clientY - startY;
 
 			const newHeight = Math.min(500, Math.max(20, startHeight - dy));
-			preferences.set('gadget.log-height', newHeight);
+			requestAnimationFrame(() => {
+				preferences.set('gadget.log-height', newHeight);
+			});
 		};
 
 		const onPointerUp = () => {
@@ -56,7 +59,9 @@
 			const dy = e.clientX - startX;
 
 			const newWidth = Math.min(700, Math.max(100, startWidth - dy));
-			preferences.set('gadget.inspector-width', newWidth);
+			requestAnimationFrame(() => {
+				preferences.set('gadget.inspector-width', newWidth);
+			});
 		};
 
 		const onPointerUp = () => {
@@ -72,6 +77,9 @@
 	setContext('gadget', gadget);
 
 	const api: any = getContext('api');
+
+	// Search/filter state (placeholder for future implementation)
+	let searchQuery = $state('');
 
 	const instance = $derived(instances[instanceID]);
 	const environmentName = $derived(
@@ -143,7 +151,9 @@
 					{#if elapsedTime}<div class="px-2 font-mono text-sm text-gray-400">
 							{elapsedTime}
 						</div>{/if}
-					<div class="px-2"><input class="rounded bg-gray-800 p-1 text-sm" type="text" /></div>
+					<div class="px-2">
+						<Input bind:value={searchQuery} placeholder="Search..." class="text-sm" />
+					</div>
 					<button
 						class="cursor-pointer"
 						onclick={() => {

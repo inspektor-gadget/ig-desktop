@@ -1,9 +1,35 @@
-<script lang="js">
-	let { param, config } = $props();
+<script lang="ts">
+	import Title from './Title.svelte';
+	import Input from '$lib/components/forms/Input.svelte';
+	import Textarea from '$lib/components/forms/Textarea.svelte';
 
-	let isMultiline = $derived(param.tags?.find((tag) => tag === 'multiline'));
+	interface Param {
+		key: string;
+		title?: string;
+		description?: string;
+		defaultValue?: string;
+		tags?: string[];
+	}
 
-	import Title from './title.svelte';
+	interface Config {
+		get: (param: Param) => string;
+		set: (param: Param, value: string) => void;
+	}
+
+	interface Props {
+		param: Param;
+		config: Config;
+	}
+
+	let { param, config }: Props = $props();
+
+	const isMultiline = $derived(param.tags?.find((tag) => tag === 'multiline'));
+
+	let value = $state(config.get(param) || '');
+
+	$effect(() => {
+		config.set(param, value);
+	});
 </script>
 
 <div class="w-1/3">
@@ -11,33 +37,8 @@
 </div>
 <div class="grow">
 	{#if isMultiline}
-		<textarea
-			rows="4"
-			class="w-full rounded bg-gray-800 p-1.5 text-sm"
-			type="text"
-			placeholder={param.defaultValue}
-			bind:value={
-				() => {
-					return config.get(param);
-				},
-				(v) => {
-					config.set(param, v);
-				}
-			}
-		></textarea>
+		<Textarea bind:value rows={4} placeholder={param.defaultValue} class="text-sm" />
 	{:else}
-		<input
-			class="w-full rounded bg-gray-800 p-1.5 text-sm"
-			type="text"
-			placeholder={param.defaultValue}
-			bind:value={
-				() => {
-					return config.get(param);
-				},
-				(v) => {
-					config.set(param, v);
-				}
-			}
-		/>
+		<Input bind:value placeholder={param.defaultValue} class="text-sm" />
 	{/if}
 </div>

@@ -7,6 +7,7 @@
 	import Spinner from '$lib/components/Spinner.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
 	import Search from '$lib/icons/search-small.svg?raw';
+	import { page } from '$app/state';
 
 	// {
 	// 		"package_id": "e36de540-4772-4761-a321-f8936e73dc53",
@@ -46,6 +47,7 @@
 	let search = $state('');
 	let list = $state([]);
 	let isLoading = $state(true);
+	let environmentID = $derived(page.url.searchParams.get('env') || '');
 
 	let results = $derived(
 		!search
@@ -123,7 +125,10 @@
 			>
 				{#each results as entry}
 					<a
-						href="artifacthub/{entry.repository.name}/{entry.normalized_name}/{entry.version}"
+						href="artifacthub/{entry.repository
+							.name}/{entry.normalized_name}/{entry.version}{environmentID
+							? `?env=${environmentID}`
+							: ''}"
 						class="group relative flex flex-col justify-between gap-3 rounded-xl border border-gray-800 bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 p-5 shadow-lg shadow-gray-950/50 transition-all hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 					>
 						{#if entry.official}

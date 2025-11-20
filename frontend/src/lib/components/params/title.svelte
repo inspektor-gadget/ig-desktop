@@ -1,5 +1,16 @@
-<script lang="js">
-	let { param, onclick = $bindable() } = $props();
+<script lang="ts">
+	interface Param {
+		key: string;
+		title?: string;
+		description?: string;
+	}
+
+	interface Props {
+		param: Param;
+		onclick?: ((e: MouseEvent) => void) | undefined;
+	}
+
+	let { param, onclick = $bindable() }: Props = $props();
 </script>
 
 <div class="flex flex-col gap-1" {onclick}>

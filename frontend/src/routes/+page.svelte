@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { Browser } from '@wailsio/runtime';
 	import { environments } from '$lib/shared/environments.svelte.js';
-	import { preferences } from '$lib/shared/preferences.svelte';
 	import { goto } from '$app/navigation';
 	import type { GadgetRunRequest } from '$lib/types';
 	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
+	import { getEnvPref } from '$lib/utils/env-preferences';
+	import { onMount } from 'svelte';
 
 	import Panel from '$lib/components/Panel.svelte';
 	import Server from '$lib/icons/fa/server.svg?raw';
@@ -23,8 +24,12 @@
 		currentEnvironment.clear();
 	});
 
-	// Get all environment histories
-	let allHistories = $derived.by(() => {
+	// Helper function to load all histories
+	function loadHistories(): Array<{
+		gadget: GadgetRunRequest;
+		envId: string;
+		envName: string;
+	}> {
 		const envList = Object.values(environments);
 		const histories: Array<{
 			gadget: GadgetRunRequest;
@@ -33,7 +38,7 @@
 		}> = [];
 
 		envList.forEach((env) => {
-			const history = (preferences.get(`gadget-history-${env.id}`) as GadgetRunRequest[]) || [];
+			const history = getEnvPref<GadgetRunRequest[]>(env.id, 'gadget-history') || [];
 			history.forEach((gadget) => {
 				histories.push({
 					gadget,
@@ -43,10 +48,31 @@
 			});
 		});
 
-		// Sort by timestamp (newest first)
+		// Sort by timestamp (newest first) and return top 5
 		return histories
 			.sort((a, b) => (b.gadget.timestamp || 0) - (a.gadget.timestamp || 0))
-			.slice(0, 5); // Show only 5 most recent
+			.slice(0, 5);
+	}
+
+	// Reactive state for all histories
+	let allHistories = $state(loadHistories());
+
+	// Reload when environments change
+	$effect(() => {
+		Object.values(environments); // Track dependencies
+		allHistories = loadHistories();
+	});
+
+	// Listen to custom events to refresh when env prefs change
+	onMount(() => {
+		const handleEnvPrefChange = (e: CustomEvent) => {
+			const key = e.detail?.key;
+			if (key?.startsWith('env:') && key?.includes(':gadget-history')) {
+				allHistories = loadHistories();
+			}
+		};
+		window.addEventListener('envPrefChange', handleEnvPrefChange as EventListener);
+		return () => window.removeEventListener('envPrefChange', handleEnvPrefChange as EventListener);
 	});
 
 	function formatRelativeTime(timestamp: number): string {
