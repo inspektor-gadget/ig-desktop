@@ -26,11 +26,11 @@ tasks:
       - task: build
         vars:
           PRODUCTION: "true"
-    cmds:
-      - task: create:appimage
-      - task: create:deb
-      - task: create:rpm
-      - task: create:aur
+#    cmds:
+#      - task: create:appimage
+#      - task: create:deb
+#      - task: create:rpm
+#      - task: create:aur
 
   create:appimage:
     summary: Creates an AppImage
