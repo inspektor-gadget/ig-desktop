@@ -164,6 +164,11 @@ runs:
         cache: ${{ inputs.build-cache }}
         cache-dependency-path: 'go.sum'
         go-version: ${{ inputs.go-version }}
+    - name: Pull NSIS
+      if: runner.os == 'Windows'
+      run: |
+        winget install NSIS.NSIS --silent
+      shell: bash
     - name: Install Garble
       if: inputs.build-obfuscate == 'true'
       run: go install mvdan.cc/garble@latest
