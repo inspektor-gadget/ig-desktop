@@ -27,7 +27,7 @@
 		"@tailwindcss/typography": "^0.5.16",
 		"@types/d3": "^7.4.3",
 		"@types/js-yaml": "^4.0.9",
-		"@xyflow/svelte": "^1.2.3",
+		"@xyflow/svelte": "^1.4.2",
 		"eslint": "^9.39.1",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.11.0",
