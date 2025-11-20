@@ -11,7 +11,10 @@ tasks:
       - task: common:build:frontend
       - task: common:generate:icons
     cmds:
-      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}-{{.ARCH}}
+# fix suffix later on when adding more architectures
+      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}-linux-amd64
+      - tar -cjf {{.BIN_DIR}}/{{.APP_NAME}}-linux-amd64.tar.bz2 {{.BIN_DIR}}/{{.APP_NAME}}-linux-amd64
+      - rm {{.BIN_DIR}}/{{.APP_NAME}}-linux-amd64
     vars:
       BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production,withoutebpf -trimpath -buildvcs=false -ldflags="-w -s"{{else}}-tags withoutebpf -buildvcs=false -gcflags=all="-l"{{end}}'
     env:
