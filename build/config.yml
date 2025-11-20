@@ -11,7 +11,7 @@ info:
   description: "Desktop Frontend for Inspektor Gadget" # The application description
   copyright: "(C) 2025 The Inspektor Gadget Contributors" # Copyright text
   comments: "-" # Comments
-  version: "v0.0.1" # The application version
+  version: "v0.2" # The application version
 
 # Dev mode configuration
 dev_mode:
