@@ -13,6 +13,10 @@
 	import GridSmall from '$lib/icons/grid-small.svg?raw';
 	import ChevronRight from '$lib/icons/chevron-right.svg?raw';
 	import ArtifactHub from '$lib/icons/artifacthub-logo.svg?raw';
+	import Book from '$lib/icons/book.svg?raw';
+	import BookSmall from '$lib/icons/book-small.svg?raw';
+	import Link from '$lib/icons/link.svg?raw';
+	import CirclePlus from '$lib/icons/circle-plus.svg?raw';
 
 	// Clear current environment when on home page
 	$effect(() => {
@@ -111,49 +115,87 @@
 <div class="flex flex-1 flex-col gap-8 overflow-auto bg-gray-950/80 p-8 text-gray-100">
 	{#if !Object.keys(environments).length}
 		<!-- Welcome state when no environments exist -->
-		<div class="flex flex-1 flex-col items-center justify-center gap-8">
-			<div>
-				<div class="-translate-x-8 -translate-y-2 -rotate-6 font-serif text-4xl">Welcome!</div>
-				<div class="text-lg">The Inspektor awaits you.</div>
+		<div class="mx-auto w-full max-w-7xl">
+			<!-- Hero Section -->
+			<div class="mt-12 mb-12 flex flex-col items-center gap-6 text-center">
+				<div class="flex flex-col gap-2">
+					<h1
+						class="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-6xl font-bold text-transparent"
+					>
+						Welcome!
+					</h1>
+					<p class="text-2xl text-gray-400">The Inspektor awaits you.</p>
+				</div>
+				<p class="max-w-2xl text-lg text-gray-500">
+					Get started by setting up your first environment to begin exploring and debugging your
+					systems with Inspektor Gadget's powerful eBPF-based tools.
+				</p>
 			</div>
-			<div class="flex w-1/3 flex-col gap-4 text-center text-gray-400">
-				<div>
-					Let's start by <a class="underline" href="/environment/create"
-						>creating a new environment</a
-					>
-					(the button on the upper left let's you create one).
-				</div>
-				<div>
-					If you haven't yet installed Inspektor Gadget on either your host or cluster, please take
-					a look at the
-					<a
-						class="underline"
-						target="_blank"
-						href="https://inspektor-gadget.io/docs/latest/quick-start">Quickstart Guide</a
-					>
-					to find out how that's done. In order to use this tool, you can either choose to deploy Inspektor
-					Gadget to your
-					<a
-						class="underline"
-						target="_blank"
-						href="https://inspektor-gadget.io/docs/latest/quick-start#kubernetes"
-						>Kubernetes cluster</a
-					>
-					or run it as a
-					<a
-						target="_blank"
-						class="underline"
-						href="https://inspektor-gadget.io/docs/latest/quick-start#kubernetes"
-						>daemon on your Linux machine</a
-					>.
-				</div>
+
+			<!-- Get Started Panel -->
+			<div class="mx-auto mb-16 max-w-3xl">
+				<Panel title="Get Started" icon={CirclePlus} color="blue" bodyPadding="large">
+					<div class="flex flex-col gap-6">
+						<div class="flex flex-col gap-3">
+							<h3 class="text-xl font-semibold text-gray-200">Create Your First Environment</h3>
+							<p class="text-gray-400">
+								Connect to a Kubernetes cluster or Linux host to start running gadgets. Use the
+								button in the upper left or click below.
+							</p>
+						</div>
+
+						<a
+							href="/environment/create"
+							class="group/btn flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-all hover:bg-blue-500"
+						>
+							<div class="h-5 w-5">{@html CirclePlus}</div>
+							<span>Create New Environment</span>
+						</a>
+
+						<div class="flex flex-col gap-2 border-t border-gray-800 pt-4">
+							<p class="text-sm text-gray-400">Haven't installed Inspektor Gadget yet?</p>
+							<p class="text-sm text-gray-500">
+								For Kubernetes, you can use a 1-click installation directly from IG Desktop. Just
+								follow the step above and create a new environment.
+							</p>
+							<p class="text-sm text-gray-500">
+								Otherwise, check out the
+								<button
+									onclick={() =>
+										Browser.OpenURL('https://inspektor-gadget.io/docs/latest/quick-start')}
+									class="text-blue-400 underline hover:text-blue-300"
+								>
+									Quickstart Guide
+								</button>
+								to deploy Inspektor Gadget to your
+								<button
+									onclick={() =>
+										Browser.OpenURL(
+											'https://inspektor-gadget.io/docs/latest/quick-start#kubernetes'
+										)}
+									class="text-blue-400 underline hover:text-blue-300"
+								>
+									Kubernetes cluster
+								</button>
+								or run it as a
+								<button
+									onclick={() =>
+										Browser.OpenURL('https://inspektor-gadget.io/docs/latest/quick-start#linux')}
+									class="text-blue-400 underline hover:text-blue-300"
+								>
+									daemon on your Linux machine
+								</button>.
+							</p>
+						</div>
+					</div>
+				</Panel>
 			</div>
 		</div>
 	{:else}
 		<!-- Main content when environments exist -->
-		<div class="mx-auto w-full max-w-7xl">
+		<div class="mx-auto flex w-full max-w-7xl flex-col gap-12">
 			<!-- Hero Section -->
-			<div class="mt-8 mb-12 flex flex-col gap-4">
+			<div class="mt-12 flex flex-col gap-4">
 				<h1
 					class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-5xl font-bold text-transparent"
 				>
@@ -300,7 +342,7 @@
 
 			<!-- Quick Tips -->
 			<div
-				class="mt-12 rounded-xl border border-gray-800 bg-gray-900/30 p-6 shadow-sm shadow-gray-950/90"
+				class="rounded-xl border border-gray-800 bg-gray-900/30 p-6 shadow-sm shadow-gray-950/90"
 			>
 				<h3 class="mb-4 text-sm font-semibold tracking-wide text-gray-400 uppercase">
 					Did You Know?
@@ -322,6 +364,143 @@
 					{/each}
 				</div>
 			</div>
+
+			{@render Resources()}
 		</div>
 	{/if}
 </div>
+
+{#snippet Resources()}
+	<!-- Resources & Community Panel -->
+	<div class="mx-auto max-w-7xl">
+		<Panel title="Resources & Community" icon={Book} color="purple" bodyPadding="large">
+			<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+				<!-- Documentation Section -->
+				<div class="flex flex-col gap-3">
+					<h3
+						class="flex items-center gap-2 text-sm font-semibold tracking-wide text-gray-400 uppercase"
+					>
+						<div class="h-4 w-4">{@html BookSmall}</div>
+						Documentation
+					</h3>
+					<div class="flex flex-col gap-2">
+						<button
+							onclick={() => Browser.OpenURL('https://inspektor-gadget.io/')}
+							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+						>
+							<div class="flex items-center gap-3">
+								<div class="text-purple-400">{@html Link}</div>
+								<span class="text-gray-200">Website</span>
+							</div>
+							<div
+								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+							>
+								{@html ChevronRight}
+							</div>
+						</button>
+
+						<button
+							onclick={() => Browser.OpenURL('https://inspektor-gadget.io/blog')}
+							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+						>
+							<div class="flex items-center gap-3">
+								<div class="text-purple-400">{@html Link}</div>
+								<span class="text-gray-200">Blog</span>
+							</div>
+							<div
+								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+							>
+								{@html ChevronRight}
+							</div>
+						</button>
+
+						<button
+							onclick={() => Browser.OpenURL('https://inspektor-gadget.io/docs/latest/quick-start')}
+							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+						>
+							<div class="flex items-center gap-3">
+								<div class="text-purple-400">{@html Book}</div>
+								<span class="text-gray-200">Quickstart Guide</span>
+							</div>
+							<div
+								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+							>
+								{@html ChevronRight}
+							</div>
+						</button>
+
+						<button
+							onclick={() =>
+								Browser.OpenURL('https://inspektor-gadget.io/docs/latest/gadget-devel/')}
+							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+						>
+							<div class="flex items-center gap-3">
+								<div class="text-purple-400">{@html Book}</div>
+								<span class="text-gray-200">Gadget Development Guide</span>
+							</div>
+							<div
+								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+							>
+								{@html ChevronRight}
+							</div>
+						</button>
+					</div>
+				</div>
+
+				<!-- Community Section -->
+				<div class="flex flex-col gap-3">
+					<h3
+						class="flex items-center gap-2 text-sm font-semibold tracking-wide text-gray-400 uppercase"
+					>
+						<div class="h-4 w-4">{@html GridSmall}</div>
+						Community
+					</h3>
+					<div class="flex flex-col gap-2">
+						<button
+							onclick={() => Browser.OpenURL('https://discord.gg/HbapduTjj9')}
+							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+						>
+							<div class="flex items-center gap-3">
+								<div class="text-purple-400">{@html GridSmall}</div>
+								<div class="flex flex-col">
+									<span class="text-gray-200">Discord</span>
+									<span class="text-xs text-gray-500">Join our Discord community</span>
+								</div>
+							</div>
+							<div
+								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+							>
+								{@html ChevronRight}
+							</div>
+						</button>
+
+						<button
+							onclick={() => Browser.OpenURL('https://kubernetes.slack.com/archives/CSYL75LF6')}
+							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+						>
+							<div class="flex items-center gap-3">
+								<div class="text-purple-400">{@html GridSmall}</div>
+								<div class="flex flex-col">
+									<span class="text-gray-200">Slack</span>
+									<span class="text-xs text-gray-500">Connect on Slack</span>
+								</div>
+							</div>
+							<div
+								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+							>
+								{@html ChevronRight}
+							</div>
+						</button>
+					</div>
+
+					<div class="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
+						<p class="text-sm text-gray-400">
+							Have questions or want to contribute? Join our community to connect with other users
+							and the Inspektor Gadget team.
+						</p>
+					</div>
+				</div>
+			</div>
+		</Panel>
+	</div>
+{/snippet}
