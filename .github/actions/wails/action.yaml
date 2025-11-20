@@ -207,6 +207,8 @@ runs:
       shell: bash
       run: |
         ditto -c -k --keepParent ${{ inputs.app-working-directory }}/bin/ig-desktop.app ${{ inputs.app-working-directory }}/bin/${{inputs.build-name}}.app.zip
+        rm -rf ${{ inputs.app-working-directory }}/bin/ig-desktop.app 
+        rm ${{ inputs.app-working-directory }}/bin/ig-desktop
     - uses: actions/upload-artifact@v4
       if: inputs.package == 'true'
       with:
