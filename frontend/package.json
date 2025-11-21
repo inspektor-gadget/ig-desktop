@@ -24,7 +24,7 @@
 		"@tailwindcss/container-queries": "^0.1.1",
 		"@tailwindcss/forms": "^0.5.10",
 		"@tailwindcss/postcss": "^4.1.17",
-		"@tailwindcss/typography": "^0.5.16",
+		"@tailwindcss/typography": "^0.5.19",
 		"@types/d3": "^7.4.3",
 		"@types/js-yaml": "^4.0.9",
 		"@xyflow/svelte": "^1.4.2",
