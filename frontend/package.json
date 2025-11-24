@@ -48,6 +48,6 @@
 		"d3": "^7.9.0",
 		"js-yaml": "^4.1.1",
 		"marked": "^17.0.1",
-		"monaco-editor": "^0.52.2"
+		"monaco-editor": "^0.55.1"
 	}
 }
