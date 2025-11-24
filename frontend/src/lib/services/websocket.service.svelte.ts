@@ -38,7 +38,7 @@ export class WebSocketService {
 		this.connected = true;
 		this.ws = {
 			send: (msg: string) => {
-				Events.Emit({ name: 'server', data: msg });
+				Events.Emit('server', msg);
 			}
 		};
 
