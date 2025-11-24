@@ -6,7 +6,7 @@
 	import Layers from '$lib/icons/layers.svg?raw';
 	import Close from '$lib/icons/close.svg?raw';
 
-	import DataSources from './gadget-attribs/Datasources.svelte';
+	import DataSources from './gadget-attribs/DataSources.svelte';
 	import Params from './gadget-attribs/Params.svelte';
 	import Metadata from './gadget-attribs/Metadata.svelte';
 	import GadgetInfo from './gadget-attribs/GadgetInfo.svelte';
