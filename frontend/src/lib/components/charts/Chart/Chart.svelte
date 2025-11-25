@@ -1,21 +1,20 @@
 <script lang="ts">
-	import { setContext } from 'svelte';
+	import { setContext, type Snippet } from 'svelte';
+	import type { ChartDimensions } from '$lib/types/charts';
 
-	let { dimensions = {} } = $props();
+	interface Props {
+		dimensions: ChartDimensions;
+		children: Snippet;
+	}
 
-	let currentDimensions = $state(dimensions);
+	let { dimensions, children }: Props = $props();
 
-	$effect(() => {
-		currentDimensions = dimensions;
-	});
-
+	// Use getter to provide reactive access to dimensions from context
 	setContext('Chart', {
 		get dimensions() {
-			return currentDimensions;
+			return dimensions;
 		}
 	});
-
-	let { children } = $props();
 </script>
 
 <svg class="Chart" width={dimensions.width} height={dimensions.height}>

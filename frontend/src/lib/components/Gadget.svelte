@@ -1,6 +1,5 @@
 <script lang="ts">
-	import DatasourceTable from './Gadget/Table.svelte';
-	import DatasourceChart from './Gadget/Chart.svelte';
+	import DatasourceView from './Gadget/DatasourceView.svelte';
 	import Settings from './GadgetSettings.svelte';
 	import Log from './Gadget/Log.svelte';
 	import Input from './forms/Input.svelte';
@@ -77,7 +76,7 @@
 		window.addEventListener('pointerup', onPointerUp);
 	}
 
-	const gadget = $state<any>({});
+	const gadget: { info?: typeof gadgetInfo } = $state({});
 	setContext('gadget', gadget);
 
 	// Update gadget context with gadget info when available
@@ -87,7 +86,9 @@
 		}
 	});
 
-	const api: any = getContext('api');
+	const api = getContext<{ request: (opts: { cmd: string; data?: unknown }) => Promise<unknown> }>(
+		'api'
+	);
 
 	// Search/filter state with debouncing
 	let searchInput = $state('');
@@ -238,9 +239,9 @@
 
 	async function stopInstance(instanceID: string) {
 		try {
-			const res = await api.request({ cmd: 'stopInstance', data: { id: instanceID } });
+			await api.request({ cmd: 'stopInstance', data: { id: instanceID } });
 		} catch (err) {
-			// ignore
+			console.error('Failed to stop instance:', err);
 		}
 	}
 </script>
@@ -442,22 +443,19 @@
 				<div class="flex flex-1 flex-col justify-stretch overflow-y-auto overscroll-none">
 					{#each gadgetInfo.dataSources as ds, id}
 						{#if ds.annotations?.['view.hidden'] !== 'true'}
-							{#if ds.annotations?.['metrics.realtime'] === 'true'}
-								<DatasourceChart {ds} dsID={id}></DatasourceChart>
-							{:else}
-								<DatasourceTable
-									{ds}
-									{events}
-									eventVersion={eventCount}
-									{searchQuery}
-									{searchModeFilter}
-									{searchHighlightInFilterMode}
-									onMatchInfo={handleMatchInfo}
-									{currentMatchIndex}
-									onScrollToIndex={handleScrollToIndex}
-									isRunning={instance.running}
-								></DatasourceTable>
-							{/if}
+							<DatasourceView
+								{ds}
+								{instanceID}
+								{events}
+								eventVersion={eventCount}
+								{searchQuery}
+								{searchModeFilter}
+								{searchHighlightInFilterMode}
+								onMatchInfo={handleMatchInfo}
+								{currentMatchIndex}
+								onScrollToIndex={handleScrollToIndex}
+								isRunning={instance.running}
+							/>
 						{/if}
 					{/each}
 				</div>

@@ -10,7 +10,6 @@
 	import {
 		gadgetFieldToColumn,
 		wrapRowsForEnrichment,
-		isNumericKind,
 		getColumnAlignment
 	} from '$lib/utils/table-adapters';
 	import { configuration } from '$lib/stores/configuration.svelte';
@@ -20,6 +19,7 @@
 	let {
 		ds,
 		events,
+		snapshotData,
 		eventVersion = 0,
 		searchQuery = '',
 		searchModeFilter = true,
@@ -28,10 +28,15 @@
 		currentMatchIndex = -1,
 		onScrollToIndex,
 		hookRegistry = null,
-		isRunning = true
+		isRunning = true,
+		showHeader = true,
+		onSortChange,
+		sortReset = 0
 	}: {
 		ds: any;
-		events: EventRingBuffer<any> | undefined;
+		events?: EventRingBuffer<any> | undefined;
+		/** Direct array data from snapshots (for array datasources) */
+		snapshotData?: any[] | undefined;
 		eventVersion?: number;
 		searchQuery?: string;
 		searchModeFilter?: boolean;
@@ -45,6 +50,11 @@
 		onScrollToIndex?: (scrollFn: (index: number) => void) => void;
 		hookRegistry?: TableHookRegistry | null;
 		isRunning?: boolean;
+		showHeader?: boolean;
+		/** Callback when custom sorting is applied (column name) or cleared (null) */
+		onSortChange?: (sortColumn: string | null) => void;
+		/** Trigger to reset sorting - increment to reset */
+		sortReset?: number;
 	} = $props();
 
 	// Get gadget info from context
@@ -55,13 +65,19 @@
 	let menuOpen = $state(false);
 	let menuButton: HTMLButtonElement | undefined = $state();
 
-	// Sorting state (only active when gadget is stopped)
+	// Sorting state (active when gadget is stopped OR when viewing snapshots)
 	let sortColumn = $state<string | null>(null);
 	let sortDirection = $state<'asc' | 'desc'>('asc');
 
+	// Snapshot mode allows sorting while running (since data is discrete snapshots)
+	const isSnapshotMode = $derived(snapshotData !== undefined);
+
+	// Sorting is allowed when gadget is stopped OR when in snapshot mode
+	const canSort = $derived(!isRunning || isSnapshotMode);
+
 	// Handle column header click for sorting
 	function handleColumnSort(fieldName: string) {
-		if (isRunning) return; // Only allow sorting when stopped
+		if (!canSort) return;
 		if (sortColumn === fieldName) {
 			// Toggle direction if clicking same column
 			sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -72,12 +88,27 @@
 		}
 	}
 
-	// Reset sorting when gadget starts running
+	// Reset sorting when gadget starts running (but not in snapshot mode)
 	$effect(() => {
-		if (isRunning) {
+		if (isRunning && !isSnapshotMode) {
 			sortColumn = null;
 			sortDirection = 'asc';
 		}
+	});
+
+	// Reset sorting when sortReset trigger changes (skip initial value of 0)
+	let lastSortReset = 0;
+	$effect(() => {
+		if (sortReset > 0 && sortReset !== lastSortReset) {
+			lastSortReset = sortReset;
+			sortColumn = null;
+			sortDirection = 'asc';
+		}
+	});
+
+	// Notify parent when sort changes
+	$effect(() => {
+		onSortChange?.(sortColumn);
 	});
 
 	// Configuration key for column visibility (per gadget + datasource)
@@ -95,6 +126,7 @@
 	// Toggle column visibility
 	function toggleColumnVisibility(fieldName: string) {
 		if (!columnVisibilityKey) return;
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Local Set for O(1) operations, immediately converted to array
 		const current = new Set(hiddenColumns);
 		if (current.has(fieldName)) {
 			current.delete(fieldName);
@@ -143,9 +175,6 @@
 	// Check if a specific entry matches (for highlight mode row background)
 	const isHighlightMode = $derived(!searchModeFilter && searchQuery.length > 0);
 
-	// Field names for search matching (cached for performance)
-	const visibleFieldNames = $derived(visibleFields.map((f: any) => f.fullName));
-
 	// ============================================================
 	// FILTERING SYSTEM
 	// When no search query is active, display events directly from ring buffer.
@@ -170,6 +199,7 @@
 	let lastFilteredQuery = '';
 	let lastFilteredVersion = 0;
 	let lastFilteredLength = 0;
+	let lastSnapshotDataRef: unknown[] | undefined = undefined; // Track snapshotData identity
 	let workerInitialized = false;
 
 	// Initialize Web Worker
@@ -202,23 +232,30 @@
 
 	// Request full refilter via Web Worker (for query changes)
 	function requestFullFilter() {
-		if (!filterWorker || !needsFiltering || !events) return;
+		if (!filterWorker || !needsFiltering) return;
 
-		// Get all events from ring buffer as plain array
-		const allEvents = events.toArray();
+		// Get all events - from snapshotData (array datasource) or events ring buffer
+		const allEvents = snapshotData !== undefined ? snapshotData : (events?.toArray() ?? []);
+		if (allEvents.length === 0) return;
 
 		pendingRequestId++;
 		filterWorker.postMessage({
 			type: 'filter',
 			id: pendingRequestId,
-			events: allEvents,
+			events: $state.snapshot(allEvents),
 			query: searchQuery,
-			fieldNames: visibleFieldNames
+			fieldNames: $state.snapshot(visibleFieldNames)
 		});
 	}
 
 	// Request incremental filter via Web Worker (for new events only)
 	function requestIncrementalFilter(newEventsCount: number) {
+		// For snapshotData, we always do full filter since it's a complete replacement
+		if (snapshotData !== undefined) {
+			requestFullFilter();
+			return;
+		}
+
 		if (!filterWorker || !needsFiltering || newEventsCount <= 0 || !events) return;
 
 		// Get only the NEW events from ring buffer (they're at indices 0 to newEventsCount-1)
@@ -229,9 +266,9 @@
 		filterWorker.postMessage({
 			type: 'filter-incremental',
 			id: pendingRequestId,
-			newEvents,
+			newEvents: $state.snapshot(newEvents),
 			query: searchQuery,
-			fieldNames: visibleFieldNames
+			fieldNames: $state.snapshot(visibleFieldNames)
 		});
 	}
 
@@ -242,6 +279,7 @@
 			lastFilteredQuery = '';
 			lastFilteredVersion = 0;
 			lastFilteredLength = 0;
+			lastSnapshotDataRef = undefined;
 			workerFilteredEvents = [];
 			computedMatchIndices = [];
 			hasReceivedFilterResult = false;
@@ -249,22 +287,27 @@
 	});
 
 	// Trigger filter when dependencies change
-	// - Full refilter on query changes (debounced)
+	// - Full refilter on query changes or snapshotData changes (debounced)
 	// - Incremental filter on new events (immediate, only sends new events)
 	$effect(() => {
 		// Only run worker filtering when we have a search query in filter mode
-		if (!needsFiltering || !workerInitialized || !events) return;
+		if (!needsFiltering || !workerInitialized) return;
+
+		// For snapshotData mode, need different handling
+		const hasData = snapshotData !== undefined ? snapshotData.length > 0 : events !== undefined;
+		if (!hasData) return;
 
 		// Track reactive dependencies
 		// eventVersion is a reactive prop that changes when events are added
 		const currentVersion = eventVersion;
-		const currentLength = events.length;
+		const currentLength = snapshotData !== undefined ? snapshotData.length : (events?.length ?? 0);
 		const currentQuery = searchQuery;
-		const _fields = visibleFields; // Track for reactivity
+		void visibleFields; // Track for reactivity
 
 		// Detect what changed
 		const queryChanged = currentQuery !== lastFilteredQuery;
 		const versionChanged = currentVersion !== lastFilteredVersion;
+		const snapshotDataChanged = snapshotData !== lastSnapshotDataRef;
 		const newEventsCount = currentLength - lastFilteredLength;
 
 		// Clear pending debounce
@@ -272,12 +315,13 @@
 			clearTimeout(filterDebounceTimeout);
 		}
 
-		if (queryChanged || lastFilteredVersion === 0) {
-			// Query changed or first filter - need full refilter (debounced)
+		if (queryChanged || snapshotDataChanged || lastFilteredVersion === 0) {
+			// Query changed, snapshotData changed, or first filter - need full refilter (debounced)
 			filterDebounceTimeout = setTimeout(() => {
 				lastFilteredQuery = currentQuery;
 				lastFilteredVersion = currentVersion;
 				lastFilteredLength = currentLength;
+				lastSnapshotDataRef = snapshotData;
 				requestFullFilter();
 			}, FILTER_DEBOUNCE_MS);
 		} else if (versionChanged && newEventsCount > 0) {
@@ -305,16 +349,26 @@
 	// While waiting for first filter result, show unfiltered events to avoid blank screen
 	const unsortedEvents = $derived.by(() => {
 		// Access eventVersion to create dependency - this is updated by parent when events change
-		const _version = eventVersion;
+		void eventVersion;
+
+		// If snapshotData is provided (array datasource), use it directly
+		if (snapshotData !== undefined) {
+			if (needsFiltering && hasReceivedFilterResult) {
+				return workerFilteredEvents;
+			}
+			return snapshotData;
+		}
+
+		// Otherwise use events ring buffer
 		if (needsFiltering && hasReceivedFilterResult) {
 			return workerFilteredEvents;
 		}
 		return events?.toArray() ?? [];
 	});
 
-	// Apply sorting when gadget is stopped and a sort column is selected
+	// Apply sorting when allowed (stopped or snapshot mode) and a sort column is selected
 	const displayEvents = $derived.by(() => {
-		if (!sortColumn || isRunning) {
+		if (!sortColumn || !canSort) {
 			return unsortedEvents;
 		}
 
@@ -551,6 +605,9 @@
 		toggleableFields.filter((field: any) => isColumnVisible(field.fullName))
 	);
 
+	// Field names for search matching (cached for performance)
+	const visibleFieldNames = $derived(visibleFields.map((f: any) => f.fullName));
+
 	// Merge gadget columns with hook columns
 	const allColumns = $derived.by(() => {
 		const gadgetCols = visibleFields.map((f: any) => gadgetFieldToColumn(f, env));
@@ -650,48 +707,61 @@
 
 <div class="gadget-table flex h-full flex-col overflow-hidden border-t-1 border-gray-500">
 	<!-- Datasource header (name + menu) -->
-	<div class="flex h-10 flex-row items-center bg-gray-950 p-2 text-base font-normal flex-shrink-0">
-		<div class="pr-2">{@html Table}</div>
-		<h2 class="px-2">{ds.name}</h2>
-		<div class="flex-1"></div>
-		<div class="relative">
-			<button
-				bind:this={menuButton}
-				class="pl-2 hover:text-white transition-colors"
-				onclick={() => (menuOpen = !menuOpen)}
-				title="Column visibility"
-			>
-				{@html Dots}
-			</button>
-			{#if menuOpen}
-				<div
-					id="column-menu"
-					class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-lg border border-gray-700 bg-gray-900 shadow-xl"
+	{#if showHeader}
+		<div
+			class="flex h-10 flex-row items-center bg-gray-950 p-2 text-base font-normal flex-shrink-0"
+		>
+			<div class="pr-2">{@html Table}</div>
+			<h2 class="px-2">{ds.name}</h2>
+			<div class="flex-1"></div>
+			<div class="relative">
+				<button
+					bind:this={menuButton}
+					class="pl-2 hover:text-white transition-colors"
+					onclick={() => (menuOpen = !menuOpen)}
+					title="Column visibility"
+					aria-label="Toggle column visibility menu"
+					aria-haspopup="menu"
+					aria-expanded={menuOpen}
+					aria-controls="column-menu"
 				>
+					{@html Dots}
+				</button>
+				{#if menuOpen}
 					<div
-						class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase border-b border-gray-700"
+						id="column-menu"
+						role="menu"
+						aria-label="Column visibility options"
+						class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-lg border border-gray-700 bg-gray-900 shadow-xl"
 					>
-						Columns
+						<div
+							class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase border-b border-gray-700"
+						>
+							Columns
+						</div>
+						<div class="py-1" role="group" aria-label="Column toggles">
+							{#each toggleableFields as field}
+								<label
+									class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-800 cursor-pointer text-sm"
+									role="menuitemcheckbox"
+									aria-checked={isColumnVisible(field.fullName)}
+								>
+									<input
+										type="checkbox"
+										checked={isColumnVisible(field.fullName)}
+										onchange={() => toggleColumnVisibility(field.fullName)}
+										class="rounded border-gray-600 bg-gray-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+									/>
+									<span class="text-gray-200 truncate" title={field.fullName}>{field.fullName}</span
+									>
+								</label>
+							{/each}
+						</div>
 					</div>
-					<div class="py-1">
-						{#each toggleableFields as field}
-							<label
-								class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-800 cursor-pointer text-sm"
-							>
-								<input
-									type="checkbox"
-									checked={isColumnVisible(field.fullName)}
-									onchange={() => toggleColumnVisibility(field.fullName)}
-									class="rounded border-gray-600 bg-gray-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
-								/>
-								<span class="text-gray-200 truncate" title={field.fullName}>{field.fullName}</span>
-							</label>
-						{/each}
-					</div>
-				</div>
-			{/if}
+				{/if}
+			</div>
 		</div>
-	</div>
+	{/if}
 
 	<!-- Virtualized table -->
 	<div class="flex-1 overflow-hidden">
@@ -717,18 +787,18 @@
 							{@const isSorted = sortColumn === field.fullName}
 							<th
 								class="relative border-r border-r-gray-600 p-2 text-xs font-normal last:border-r-0 overflow-hidden"
-								class:cursor-pointer={!isRunning}
-								class:hover:bg-gray-800={!isRunning}
+								class:cursor-pointer={canSort}
+								class:hover:bg-gray-800={canSort}
 								onclick={() => handleColumnSort(field.fullName)}
 							>
 								<div
-									title={isRunning
-										? field.annotations?.description
-										: `${field.annotations?.description || field.fullName} (click to sort)`}
+									title={canSort
+										? `${field.annotations?.description || field.fullName} (click to sort)`
+										: field.annotations?.description}
 									class="uppercase overflow-hidden text-ellipsis whitespace-nowrap flex items-center gap-1"
 								>
 									<span class="overflow-hidden text-ellipsis">{field.fullName}</span>
-									{#if isSorted && !isRunning}
+									{#if isSorted && canSort}
 										<span class="text-blue-400 flex-shrink-0">
 											{#if sortDirection === 'asc'}
 												<svg

@@ -2,8 +2,13 @@ import {
 	handleGadgetEvent,
 	handleGadgetLogging,
 	handleGadgetArrayData
-} from '$lib/handlers/gadget.handler';
-import type { RecordedEvent } from '$lib/types';
+} from '$lib/handlers/gadget.handler.svelte';
+import type {
+	RecordedEvent,
+	GadgetEventMessage,
+	GadgetLogMessage,
+	GadgetArrayDataMessage
+} from '$lib/types';
 
 // Event type constants (from internal/api/constants.go)
 const TypeGadgetEvent = 3;
@@ -82,10 +87,14 @@ export class ReplayService {
 	private sleep(ms: number, signal: AbortSignal): Promise<void> {
 		return new Promise((resolve) => {
 			const timeout = setTimeout(resolve, ms);
-			signal.addEventListener('abort', () => {
-				clearTimeout(timeout);
-				resolve(); // Resolve instead of reject for clean abort
-			});
+			signal.addEventListener(
+				'abort',
+				() => {
+					clearTimeout(timeout);
+					resolve(); // Resolve instead of reject for clean abort
+				},
+				{ once: true }
+			);
 		});
 	}
 
@@ -93,22 +102,27 @@ export class ReplayService {
 		// Ensure event data has the structure expected by handlers
 		// The msgID will be assigned by EventBuffer for individual events
 		// or by handleGadgetArrayData for array events
-		const payload = {
-			instanceID: instanceId,
-			type: event.type,
-			datasourceID: event.datasourceId,
-			data: event.data
-		};
-
 		switch (event.type) {
 			case TypeGadgetEvent:
-				handleGadgetEvent(payload);
+				handleGadgetEvent({
+					instanceID: instanceId,
+					datasourceID: event.datasourceId,
+					data: event.data as Record<string, unknown>
+				} as GadgetEventMessage);
 				break;
 			case TypeGadgetLog:
-				handleGadgetLogging(payload);
+				handleGadgetLogging({
+					instanceID: instanceId,
+					datasourceID: event.datasourceId,
+					data: event.data
+				} as GadgetLogMessage);
 				break;
 			case TypeGadgetEventArray:
-				handleGadgetArrayData(payload);
+				handleGadgetArrayData({
+					instanceID: instanceId,
+					datasourceID: event.datasourceId,
+					data: event.data as Record<string, unknown>[]
+				} as GadgetArrayDataMessage);
 				break;
 		}
 	}

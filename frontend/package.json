@@ -44,7 +44,7 @@
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.1.17",
-		"@wailsio/runtime": "latest",
+		"@wailsio/runtime": "3.0.0-alpha.73",
 		"d3": "^7.9.0",
 		"js-yaml": "^4.1.1",
 		"marked": "^17.0.1",

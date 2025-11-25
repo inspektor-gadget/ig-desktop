@@ -5,7 +5,7 @@ import {
 	handleGadgetLogging,
 	handleGadgetQuit,
 	handleGadgetArrayData
-} from '$lib/handlers/gadget.handler';
+} from '$lib/handlers/gadget.handler.svelte';
 import {
 	handleEnvironmentCreate,
 	handleEnvironmentDelete

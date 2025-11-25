@@ -1,21 +1,32 @@
 <script lang="ts">
 	import * as d3 from 'd3';
+	import type { CurveFactory } from 'd3';
+
+	interface Props {
+		type?: 'line' | 'area';
+		data?: unknown[];
+		xAccessor: (d: unknown) => number;
+		yAccessor: (d: unknown) => number;
+		y0Accessor?: number | ((d: unknown) => number);
+		interpolation?: CurveFactory;
+		style?: string;
+	}
 
 	let {
 		type = 'line',
 		data = [],
-		xAccessor = () => {},
-		yAccessor = () => {},
+		xAccessor,
+		yAccessor,
 		y0Accessor = 0,
 		interpolation = d3.curveMonotoneX,
 		style = ''
-	} = $props();
+	}: Props = $props();
 
 	const lineGenerator = $derived.by(() => {
-		const generator = d3[type]().x(xAccessor).y(yAccessor).curve(interpolation);
-		if (type === 'area') {
-			generator.y0(y0Accessor).y1(yAccessor);
-		}
+		const generator =
+			type === 'area'
+				? d3.area().x(xAccessor).y0(y0Accessor).y1(yAccessor).curve(interpolation)
+				: d3.line().x(xAccessor).y(yAccessor).curve(interpolation);
 		return generator;
 	});
 
