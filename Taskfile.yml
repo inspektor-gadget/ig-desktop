@@ -10,6 +10,12 @@ vars:
   APP_NAME: "ig-desktop"
   BIN_DIR: "bin"
   VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
+  # VERSION: Set via environment variable for releases (e.g., VERSION=v1.0.0)
+  # Falls back to dev-<commit> or just "dev" if git isn't available
+  GIT_COMMIT:
+    sh: git rev-parse --short HEAD 2>/dev/null || echo ""
+  VERSION: '{{.VERSION | default (printf "dev-%s" .GIT_COMMIT) | default "dev"}}'
+  VERSION_LDFLAGS: '-X ig-frontend/internal/version.Version={{.VERSION}}'
 
 tasks:
   build:

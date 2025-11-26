@@ -43,6 +43,19 @@
 
 	let version = $state('unknown');
 
+	// Fetch version when connected
+	$effect(() => {
+		if (websocketService.connected) {
+			apiService.request({ cmd: 'getVersion' }).then((data) => {
+				if (data?.version) {
+					version = data.version;
+				}
+			}).catch((err) => {
+				console.error('Failed to fetch version:', err);
+			});
+		}
+	});
+
 	// Toggle for gradient background - persist to localStorage
 	let gradientEnabled = $state(
 		typeof window !== 'undefined' ? localStorage.getItem('gradientEnabled') !== 'false' : true

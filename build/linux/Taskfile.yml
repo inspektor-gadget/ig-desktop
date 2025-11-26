@@ -16,7 +16,7 @@ tasks:
       - tar -cjf {{.BIN_DIR}}/{{.APP_NAME}}-linux-amd64.tar.bz2 {{.BIN_DIR}}/{{.APP_NAME}}-linux-amd64
       - rm {{.BIN_DIR}}/{{.APP_NAME}}-linux-amd64
     vars:
-      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production,withoutebpf -trimpath -buildvcs=false -ldflags="-w -s"{{else}}-tags withoutebpf -buildvcs=false -gcflags=all="-l"{{end}}'
+      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production,withoutebpf -trimpath -buildvcs=false -ldflags="-w -s {{.VERSION_LDFLAGS}}"{{else}}-tags withoutebpf -buildvcs=false -ldflags="{{.VERSION_LDFLAGS}}" -gcflags=all="-l"{{end}}'
     env:
       GOOS: linux
       CGO_ENABLED: 1

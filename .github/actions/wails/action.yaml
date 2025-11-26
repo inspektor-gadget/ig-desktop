@@ -195,11 +195,23 @@ runs:
       if: runner.os == 'macOS'
       run: brew install mitchellh/gon/gon
       shell: bash
+    # Determine version from git tag or commit
+    - name: Set Version
+      id: version
+      shell: bash
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          VERSION="${{ github.ref_name }}"
+        else
+          VERSION="dev-$(git rev-parse --short HEAD)"
+        fi
+        echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "Building version: $VERSION"
     # Building step
     - name: Build App
       if: inputs.build == 'true'
       working-directory: ${{ inputs.app-working-directory }}
-      run: OS=${{inputs.build-platform}} PRODUCTION=true wails3 task package
+      run: OS=${{inputs.build-platform}} PRODUCTION=true VERSION=${{ steps.version.outputs.VERSION }} wails3 task package
       shell: bash
     - name: Build .app zip file
       if: runner.os == 'macOS'
