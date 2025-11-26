@@ -19,7 +19,7 @@
 
 	let { open = $bindable(false), onClose }: Props = $props();
 
-	let activeCategory = $state('general');
+	let activeCategory = $state(configurationSchema.categories[0]?.id ?? '');
 
 	// Map setting types to their components
 	const settingComponents: Record<SettingType, Component<any>> = {
