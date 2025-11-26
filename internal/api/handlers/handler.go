@@ -97,6 +97,7 @@ func (h *Handler) Handlers() []api.CommandHandler {
 		commandHandler{"getK8sContainers", h.HandleGetK8sContainers},
 		commandHandler{"getK8sLabels", h.HandleGetK8sLabels},
 		commandHandler{"getVersion", h.HandleGetVersion},
+		commandHandler{"checkForUpdates", h.HandleCheckForUpdates},
 	}
 }
 

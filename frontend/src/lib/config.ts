@@ -26,6 +26,21 @@ import type { ConfigurationSchema } from './config.types';
 export const configurationSchema: ConfigurationSchema = {
 	categories: [
 		{
+			id: 'general',
+			name: 'General',
+			icon: '⚙️',
+			settings: [
+				{
+					key: 'checkForUpdates',
+					title: 'Check for updates on start',
+					description:
+						'Automatically check for new versions when the application starts. Connects to GitHub to fetch release information.',
+					type: 'toggle',
+					default: false
+				}
+			]
+		},
+		{
 			id: 'appearance',
 			name: 'Appearance',
 			icon: '🎨',

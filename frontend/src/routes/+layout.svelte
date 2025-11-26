@@ -19,6 +19,8 @@
 	import K8sDeployModal from '$lib/components/K8sDeployModal.svelte';
 	import ConfirmationModal from '$lib/components/ConfirmationModal.svelte';
 	import ConfigurationModal from '$lib/components/ConfigurationModal.svelte';
+	import UpdateCheckModal from '$lib/components/UpdateCheckModal.svelte';
+	import VersionInfoModal from '$lib/components/VersionInfoModal.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import { appState } from './state.svelte.js';
 	import { environments } from '$lib/shared/environments.svelte.js';
@@ -42,18 +44,87 @@
 	// Configuration modal state
 	let configModalOpen = $state(false);
 
+	// Update check modal state (for opt-in on second start)
+	let updateCheckModalOpen = $state(false);
+
+	// Version info modal state
+	let versionInfoModalOpen = $state(false);
+
 	let version = $state('unknown');
+
+	// Update check state
+	let updateInfo = $state({
+		checking: false,
+		updateAvailable: false,
+		latestVersion: '',
+		releasesUrl: 'https://github.com/inspektor-gadget/ig-desktop/releases'
+	});
+
+	// Start count tracking for opt-in modal
+	const START_COUNT_KEY = 'ig-start-count';
+	const UPDATE_OPT_IN_SHOWN_KEY = 'ig-update-opt-in-shown';
+
+	// Check for updates
+	function checkForUpdates() {
+		updateInfo.checking = true;
+		apiService
+			.request({ cmd: 'checkForUpdates' })
+			.then((data) => {
+				if (data) {
+					updateInfo.updateAvailable = data.updateAvailable || false;
+					updateInfo.latestVersion = data.latestVersion || '';
+					updateInfo.releasesUrl = data.releasesUrl || updateInfo.releasesUrl;
+				}
+			})
+			.catch((err) => {
+				console.error('Failed to check for updates:', err);
+			})
+			.finally(() => {
+				updateInfo.checking = false;
+			});
+	}
+
+	// Track start count and show opt-in modal on second start
+	function handleStartCount() {
+		if (typeof window === 'undefined') return;
+
+		const startCount = parseInt(localStorage.getItem(START_COUNT_KEY) || '0', 10) + 1;
+		localStorage.setItem(START_COUNT_KEY, String(startCount));
+
+		const optInShown = localStorage.getItem(UPDATE_OPT_IN_SHOWN_KEY) === 'true';
+
+		// Show opt-in modal on second start if not already shown
+		if (startCount === 2 && !optInShown) {
+			localStorage.setItem(UPDATE_OPT_IN_SHOWN_KEY, 'true');
+			// Delay slightly to let the app initialize
+			setTimeout(() => {
+				updateCheckModalOpen = true;
+			}, 500);
+		}
+
+		// Check for updates if enabled
+		const checkForUpdatesEnabled = configuration.get('checkForUpdates');
+		if (checkForUpdatesEnabled) {
+			checkForUpdates();
+		}
+	}
 
 	// Fetch version when connected
 	$effect(() => {
 		if (websocketService.connected) {
-			apiService.request({ cmd: 'getVersion' }).then((data) => {
-				if (data?.version) {
-					version = data.version;
-				}
-			}).catch((err) => {
-				console.error('Failed to fetch version:', err);
-			});
+			apiService
+				.request({ cmd: 'getVersion' })
+				.then((data) => {
+					if (data?.version) {
+						version = data.version;
+					}
+				})
+				.catch((err) => {
+					console.error('Failed to fetch version:', err);
+				});
+
+			// Handle start count and update checks
+			handleStartCount();
 		}
 	});
 
@@ -210,7 +281,27 @@
 				</div>
 			</div>
 			<div class="flex items-center gap-2">
-				<span>Version {version}</span>
+				{#if updateInfo.updateAvailable}
+					<button
+						onclick={() => {
+							versionInfoModalOpen = true;
+						}}
+						class="text-blue-400 hover:text-blue-300"
+						title="Click for version details"
+					>
+						Update available: {updateInfo.latestVersion} (current: {version})
+					</button>
+				{:else}
+					<button
+						onclick={() => {
+							versionInfoModalOpen = true;
+						}}
+						class="hover:text-gray-300"
+						title="Click for version details"
+					>
+						Version {version}
+					</button>
+				{/if}
 				<button
 					onclick={() => {
 						configModalOpen = true;
@@ -311,6 +402,26 @@
 
 <!-- Global Confirmation Modal -->
 <ConfirmationModal />
+
+<!-- Update Check Opt-in Modal -->
+<UpdateCheckModal
+	bind:open={updateCheckModalOpen}
+	onClose={() => {
+		updateCheckModalOpen = false;
+		// If they enabled it, check for updates now
+		if (configuration.get('checkForUpdates')) {
+			checkForUpdates();
+		}
+	}}
+/>
+
+<!-- Version Info Modal -->
+<VersionInfoModal
+	bind:open={versionInfoModalOpen}
+	onClose={() => {
+		versionInfoModalOpen = false;
+	}}
+/>
 
 <!-- Global Configuration Modal -->
 <ConfigurationModal
