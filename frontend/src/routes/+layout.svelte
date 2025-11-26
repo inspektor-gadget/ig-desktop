@@ -28,6 +28,7 @@
 	import { apiService } from '$lib/services/api.service.svelte';
 	import { messageRouter } from '$lib/services/message-router.service.svelte';
 	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
+	import { configuration } from '$lib/stores/configuration.svelte';
 	import Lock from '$lib/icons/fa/lock.svg?raw';
 	import LockOpen from '$lib/icons/fa/lock-open.svg?raw';
 	import Cog from '$lib/icons/cog-small.svg?raw';
@@ -56,17 +57,8 @@
 		}
 	});
 
-	// Toggle for gradient background - persist to localStorage
-	let gradientEnabled = $state(
-		typeof window !== 'undefined' ? localStorage.getItem('gradientEnabled') !== 'false' : true
-	);
-
-	// Save preference when it changes
-	$effect(() => {
-		if (typeof window !== 'undefined') {
-			localStorage.setItem('gradientEnabled', String(gradientEnabled));
-		}
-	});
+	// Get gradient setting from configuration store
+	let gradientEnabled = $derived(configuration.get('gradientEnabled') !== false);
 
 	let modalError = $state(null);
 	function handleError(err) {
@@ -216,23 +208,6 @@
 						{currentEnvironment.getStatusText()}
 					</span>
 				</div>
-				<button
-					onclick={() => {
-						gradientEnabled = !gradientEnabled;
-					}}
-					class="flex items-center gap-1 rounded px-2 py-0.5 transition-colors hover:bg-gray-800 hover:text-gray-300"
-					title="Toggle gradient background"
-				>
-					<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-						></path>
-					</svg>
-					<span>{gradientEnabled ? 'Gradient On' : 'Gradient Off'}</span>
-				</button>
 			</div>
 			<div class="flex items-center gap-2">
 				<span>Version {version}</span>

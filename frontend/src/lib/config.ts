@@ -24,5 +24,20 @@
 import type { ConfigurationSchema } from './config.types';
 
 export const configurationSchema: ConfigurationSchema = {
-	categories: []
+	categories: [
+		{
+			id: 'appearance',
+			name: 'Appearance',
+			icon: '🎨',
+			settings: [
+				{
+					key: 'gradientEnabled',
+					title: 'Use gradients in design',
+					description: 'Enable gradient background effect in the application',
+					type: 'toggle',
+					default: true
+				}
+			]
+		}
+	]
 };
