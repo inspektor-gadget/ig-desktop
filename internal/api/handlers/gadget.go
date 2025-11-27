@@ -34,6 +34,9 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 		Params        map[string]string `json:"params"`
 		Detached      bool              `json:"detached"`
 		InstanceName  string            `json:"instanceName"`
+		Record        bool              `json:"record"`
+		SessionID     string            `json:"sessionId"`
+		SessionName   string            `json:"sessionName"`
 	}
 	err := json.Unmarshal(ev.Data, &req)
 	if err != nil {
@@ -48,6 +51,9 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 		Params:        req.Params,
 		Detached:      req.Detached,
 		InstanceName:  req.InstanceName,
+		Record:        req.Record,
+		SessionID:     req.SessionID,
+		SessionName:   req.SessionName,
 	}
 
 	instanceID, err := h.gadgetService.Run(h.ctx, runReq)

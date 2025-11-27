@@ -26,6 +26,7 @@ import (
 	"ig-frontend/internal/artifacthub"
 	"ig-frontend/internal/environment"
 	"ig-frontend/internal/gadget"
+	"ig-frontend/internal/session"
 )
 
 // Handler coordinates all command handlers
@@ -36,6 +37,7 @@ type Handler struct {
 	gadgetService   *gadget.Service
 	instanceManager *gadget.InstanceManager
 	artifactHub     *artifacthub.Client
+	sessionService  *session.Service
 
 	mu   sync.Mutex
 	send func(any)
@@ -63,6 +65,7 @@ func New(
 	gadgetService *gadget.Service,
 	instanceManager *gadget.InstanceManager,
 	artifactHub *artifacthub.Client,
+	sessionService *session.Service,
 ) *Handler {
 	return &Handler{
 		ctx:             ctx,
@@ -71,6 +74,7 @@ func New(
 		gadgetService:   gadgetService,
 		instanceManager: instanceManager,
 		artifactHub:     artifactHub,
+		sessionService:  sessionService,
 	}
 }
 
@@ -98,6 +102,11 @@ func (h *Handler) Handlers() []api.CommandHandler {
 		commandHandler{"getK8sLabels", h.HandleGetK8sLabels},
 		commandHandler{"getVersion", h.HandleGetVersion},
 		commandHandler{"checkForUpdates", h.HandleCheckForUpdates},
+		commandHandler{"listSessions", h.HandleListSessions},
+		commandHandler{"getSession", h.HandleGetSession},
+		commandHandler{"getGadgetRun", h.HandleGetGadgetRun},
+		commandHandler{"getRunEvents", h.HandleGetRunEvents},
+		commandHandler{"deleteSession", h.HandleDeleteSession},
 	}
 }
 

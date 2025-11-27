@@ -12,8 +12,13 @@
 
 	let { href, children, target = null, title = null }: Props = $props();
 
+	// Check if this link should be highlighted via query param (for visual purposes only)
+	const highlightEnvId = $derived(page.url.searchParams.get('highlightEnvironment'));
+
 	const active = $derived(
-		page.url.pathname === href || (href !== '/' && page.url.pathname.startsWith(href))
+		page.url.pathname === href ||
+			(href !== '/' && page.url.pathname.startsWith(href)) ||
+			(highlightEnvId && href === `/env/${highlightEnvId}`)
 	);
 
 	const onclick = (ev: MouseEvent) => {

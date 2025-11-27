@@ -54,4 +54,12 @@ type GadgetEvent struct {
 	Type          int             `json:"type"`
 	Data          json.RawMessage `json:"data"`
 	DatasourceID  string          `json:"datasourceID,omitempty"`
+	SessionInfo   *SessionInfo    `json:"sessionInfo,omitempty"`
+}
+
+// SessionInfo sent to frontend when recording is enabled
+type SessionInfo struct {
+	SessionID string `json:"sessionId"`
+	RunID     string `json:"runId"`
+	IsNew     bool   `json:"isNew"` // true if new session was created
 }

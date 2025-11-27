@@ -1,4 +1,5 @@
 import { instances } from '$lib/shared/instances.svelte';
+import { currentSessionStore } from '$lib/stores/current-session.svelte';
 
 /**
  * Buffer for gadget events to improve performance by batching updates.
@@ -29,7 +30,6 @@ class EventBuffer {
 
 		this.buffer.forEach((msg) => {
 			if (!instances[msg.instanceID] || !instances[msg.instanceID].events) {
-				console.log('not existing');
 				return;
 			}
 			instances[msg.instanceID].events.unshift(msg.data);
@@ -62,7 +62,8 @@ const eventBuffer = new EventBuffer();
  * Creates a new instance entry when a gadget starts.
  */
 export function handleGadgetInfo(msg: any): void {
-	console.log('new gadget', msg);
+	const sessionInfo = msg.sessionInfo;
+
 	instances[msg.instanceID] = {
 		name: msg.data?.imageName || 'Unknown Gadget',
 		running: true,
@@ -71,8 +72,14 @@ export function handleGadgetInfo(msg: any): void {
 		logs: [],
 		environment: msg.environmentID,
 		startTime: Date.now(),
-		eventCount: 0
+		eventCount: 0,
+		session: sessionInfo
 	};
+
+	// Store session for single-session-per-start mode
+	if (sessionInfo?.isNew && msg.environmentID) {
+		currentSessionStore.set(msg.environmentID, sessionInfo.sessionId);
+	}
 }
 
 /**
@@ -108,7 +115,6 @@ export function handleGadgetQuit(msg: any): void {
  * Processes an array of events at once instead of individually.
  */
 export function handleGadgetArrayData(msg: any): void {
-	console.log('arrayData', msg.data);
 	if (instances[msg.instanceID]) {
 		instances[msg.instanceID].events = msg.data.map((evt: any) => {
 			evt.msgID = eventBuffer.getNextMsgID();

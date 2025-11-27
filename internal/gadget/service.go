@@ -29,6 +29,7 @@ import (
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/datasource"
 	apiTypes "ig-frontend/internal/api"
 	"ig-frontend/internal/environment"
+	"ig-frontend/internal/session"
 	json2 "ig-frontend/pkg/json"
 )
 
@@ -36,6 +37,7 @@ import (
 type Service struct {
 	runtimeFactory  *environment.RuntimeFactory
 	instanceManager *InstanceManager
+	sessionService  *session.Service
 	send            func(any)
 }
 
@@ -52,6 +54,94 @@ func (s *Service) SetSendFunc(send func(any)) {
 	s.send = send
 }
 
+// SetSessionService sets the session service for the service
+func (s *Service) SetSessionService(ss *session.Service) {
+	s.sessionService = ss
+}
+
+// setupSessionRecording creates or uses an existing session for recording.
+// Returns nil if recording setup fails (gadget will continue without recording).
+func (s *Service) setupSessionRecording(instanceID string, req RunRequest, gi *api.GadgetInfo) *apiTypes.SessionInfo {
+	sessionID := req.SessionID
+	isNew := false
+
+	if sessionID == "" {
+		var err error
+		sessionID, err = s.sessionService.CreateSession(req.SessionName, req.EnvironmentID)
+		if err != nil {
+			log.Printf("failed to create session: %v (continuing without recording)", err)
+			return nil
+		}
+		isNew = true
+	}
+
+	gadgetInfoBytes, err := protojson.Marshal(gi)
+	if err != nil {
+		log.Printf("failed to marshal gadget info: %v (continuing without recording)", err)
+		return nil
+	}
+
+	runID, err := s.sessionService.StartGadgetRun(instanceID, sessionID, req.Image, req.Params, gadgetInfoBytes)
+	if err != nil {
+		log.Printf("failed to start gadget run: %v (continuing without recording)", err)
+		return nil
+	}
+
+	return &apiTypes.SessionInfo{
+		SessionID: sessionID,
+		RunID:     runID,
+		IsNew:     isNew,
+	}
+}
+
+// subscribeToDataSources subscribes to all data sources and sends events to the frontend.
+// If withRecording is true, events are also written to the session service.
+func (s *Service) subscribeToDataSources(gadgetCtx operators.GadgetContext, instanceID string, withRecording bool) error {
+	for _, ds := range gadgetCtx.GetDataSources() {
+		formatter, err := json2.New(ds, json2.WithFlatten(true), json2.WithShowAll(true))
+		if err != nil {
+			return err
+		}
+		dsName := ds.Name()
+
+		switch ds.Type() {
+		case datasource.TypeSingle:
+			ds.Subscribe(func(ds datasource.DataSource, data datasource.Data) error {
+				jsonData := formatter.Marshal(data)
+				s.send(&apiTypes.GadgetEvent{
+					Type:         apiTypes.TypeGadgetEvent,
+					InstanceID:   instanceID,
+					Data:         jsonData,
+					DatasourceID: dsName,
+				})
+				if withRecording && s.sessionService != nil {
+					if err := s.sessionService.WriteEvent(instanceID, apiTypes.TypeGadgetEvent, dsName, jsonData); err != nil {
+						log.Printf("failed to write event to session: %v", err)
+					}
+				}
+				return nil
+			}, 1000)
+		case datasource.TypeArray:
+			ds.SubscribeArray(func(ds datasource.DataSource, data datasource.DataArray) error {
+				jsonData := formatter.MarshalArray(data)
+				s.send(&apiTypes.GadgetEvent{
+					Type:         apiTypes.TypeGadgetEventArray,
+					InstanceID:   instanceID,
+					Data:         jsonData,
+					DatasourceID: dsName,
+				})
+				if withRecording && s.sessionService != nil {
+					if err := s.sessionService.WriteEvent(instanceID, apiTypes.TypeGadgetEventArray, dsName, jsonData); err != nil {
+						log.Printf("failed to write event to session: %v", err)
+					}
+				}
+				return nil
+			}, 1000)
+		}
+	}
+	return nil
+}
+
 // RunRequest contains parameters for running a gadget
 type RunRequest struct {
 	ID            string
@@ -60,6 +150,9 @@ type RunRequest struct {
 	Params        map[string]string
 	Detached      bool
 	InstanceName  string
+	Record        bool   `json:"record"`      // enable recording
+	SessionID     string `json:"sessionId"`   // existing session (empty = new)
+	SessionName   string `json:"sessionName"` // name for new session
 }
 
 // AttachRequest contains parameters for attaching to an instance
@@ -80,59 +173,43 @@ func (s *Service) Run(ctx context.Context, req RunRequest) (string, error) {
 
 	instanceID := uuid.New().String()
 
-	// Create operator for gadget info and event streaming
 	xop := simple.New("exp", simple.WithPriority(1000), simple.OnPreStart(func(gadgetCtx operators.GadgetContext) error {
-		gi, _ := gadgetCtx.SerializeGadgetInfo(false)
-		gid, _ := protojson.Marshal(gi)
+		gi, err := gadgetCtx.SerializeGadgetInfo(false)
+		if err != nil {
+			log.Printf("failed to serialize gadget info: %v", err)
+			return err
+		}
+		gid, err := protojson.Marshal(gi)
+		if err != nil {
+			log.Printf("failed to marshal gadget info: %v", err)
+			return err
+		}
+
+		var sessionInfo *apiTypes.SessionInfo
+		if req.Record && s.sessionService != nil {
+			sessionInfo = s.setupSessionRecording(instanceID, req, gi)
+		}
 
 		s.send(&apiTypes.GadgetEvent{
 			Type:          apiTypes.TypeGadgetInfo,
 			EnvironmentID: req.EnvironmentID,
 			InstanceID:    instanceID,
 			Data:          gid,
+			SessionInfo:   sessionInfo,
 		})
 
-		// Subscribe to datasources
-		ds := gadgetCtx.GetDataSources()
-		for _, ds := range ds {
-			formatter, err := json2.New(ds, json2.WithFlatten(true), json2.WithShowAll(true))
-			if err != nil {
-				log.Println(err)
-				return nil
-			}
-			dsName := ds.Name()
-			switch ds.Type() {
-			case datasource.TypeSingle:
-				ds.Subscribe(func(ds datasource.DataSource, data datasource.Data) error {
-					ev := &apiTypes.GadgetEvent{
-						Type:         apiTypes.TypeGadgetEvent,
-						InstanceID:   instanceID,
-						Data:         formatter.Marshal(data),
-						DatasourceID: dsName,
-					}
-					s.send(ev)
-					return nil
-				}, 1000)
-			case datasource.TypeArray:
-				ds.SubscribeArray(func(ds datasource.DataSource, data datasource.DataArray) error {
-					log.Printf("got array")
-					ev := &apiTypes.GadgetEvent{
-						Type:         apiTypes.TypeGadgetEventArray,
-						InstanceID:   instanceID,
-						Data:         formatter.MarshalArray(data),
-						DatasourceID: dsName,
-					}
-					s.send(ev)
-					return nil
-				}, 1000)
-			}
-		}
-		return nil
+		return s.subscribeToDataSources(gadgetCtx, instanceID, req.Record)
 	}))
+
+	// Create logger and set session service if available
+	gadgetLogger := NewLogger(s.send, instanceID, logger.DebugLevel)
+	if s.sessionService != nil {
+		gadgetLogger.SetSessionService(s.sessionService)
+	}
 
 	options := []gadgetcontext.Option{
 		gadgetcontext.WithDataOperators(xop),
-		gadgetcontext.WithLogger(logger.NewFromGenericLogger(NewLogger(s.send, instanceID, logger.DebugLevel))),
+		gadgetcontext.WithLogger(logger.NewFromGenericLogger(gadgetLogger)),
 		gadgetcontext.WithUseInstance(false),
 	}
 
@@ -153,6 +230,13 @@ func (s *Service) Run(ctx context.Context, req RunRequest) (string, error) {
 		err := runtime.RunGadget(gadgetCtx, rtParams, req.Params)
 		if err != nil {
 			log.Printf("gadget error: %v", err)
+		}
+
+		// Stop session recording if active
+		if s.sessionService != nil {
+			if err := s.sessionService.StopGadgetRun(instanceID); err != nil {
+				log.Printf("failed to stop gadget run: %v", err)
+			}
 		}
 
 		s.instanceManager.Unregister(instanceID)
@@ -177,10 +261,17 @@ func (s *Service) Attach(ctx context.Context, req AttachRequest) (string, error)
 
 	instanceID := uuid.New().String()
 
-	// Create operator for gadget info and event streaming
 	xop := simple.New("exp", simple.WithPriority(1000), simple.OnPreStart(func(gadgetCtx operators.GadgetContext) error {
-		gi, _ := gadgetCtx.SerializeGadgetInfo(false)
-		gid, _ := protojson.Marshal(gi)
+		gi, err := gadgetCtx.SerializeGadgetInfo(false)
+		if err != nil {
+			log.Printf("failed to serialize gadget info: %v", err)
+			return err
+		}
+		gid, err := protojson.Marshal(gi)
+		if err != nil {
+			log.Printf("failed to marshal gadget info: %v", err)
+			return err
+		}
 
 		s.send(&apiTypes.GadgetEvent{
 			Type:          apiTypes.TypeGadgetInfo,
@@ -189,41 +280,7 @@ func (s *Service) Attach(ctx context.Context, req AttachRequest) (string, error)
 			Data:          gid,
 		})
 
-		// Subscribe to datasources
-		ds := gadgetCtx.GetDataSources()
-		for _, ds := range ds {
-			formatter, err := json2.New(ds, json2.WithFlatten(true), json2.WithShowAll(true))
-			if err != nil {
-				log.Println(err)
-				return nil
-			}
-			dsName := ds.Name()
-			switch ds.Type() {
-			case datasource.TypeSingle:
-				ds.Subscribe(func(ds datasource.DataSource, data datasource.Data) error {
-					ev := &apiTypes.GadgetEvent{
-						Type:         apiTypes.TypeGadgetEvent,
-						InstanceID:   instanceID,
-						Data:         formatter.Marshal(data),
-						DatasourceID: dsName,
-					}
-					s.send(ev)
-					return nil
-				}, 1000)
-			case datasource.TypeArray:
-				ds.SubscribeArray(func(ds datasource.DataSource, data datasource.DataArray) error {
-					ev := &apiTypes.GadgetEvent{
-						Type:         apiTypes.TypeGadgetEventArray,
-						InstanceID:   instanceID,
-						Data:         formatter.MarshalArray(data),
-						DatasourceID: dsName,
-					}
-					s.send(ev)
-					return nil
-				}, 1000)
-			}
-		}
-		return nil
+		return s.subscribeToDataSources(gadgetCtx, instanceID, false)
 	}))
 
 	options := []gadgetcontext.Option{

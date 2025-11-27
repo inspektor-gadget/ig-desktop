@@ -60,6 +60,45 @@ export const configurationSchema: ConfigurationSchema = {
 					default: true
 				}
 			]
+		},
+		{
+			id: 'recordings',
+			name: 'Recordings',
+			icon: '🔴',
+			requiredSetting: 'experimentalSessionRecording',
+			settings: [
+				{
+					key: 'alwaysRecord',
+					title: 'Always record',
+					description:
+						'Automatically record all gadget runs. Sessions will be created for each environment.',
+					type: 'toggle',
+					default: false
+				},
+				{
+					key: 'singleSessionPerStart',
+					title: 'Use single session per program start',
+					description:
+						'When enabled, all recordings within the same environment will be saved to a single session file per program start, instead of creating new sessions for each recording. Each environment maintains its own session.',
+					type: 'toggle',
+					default: false
+				}
+			]
+		},
+		{
+			id: 'experimental',
+			name: 'Experimental',
+			icon: '🧪',
+			settings: [
+				{
+					key: 'experimentalSessionRecording',
+					title: 'Session Recording',
+					description:
+						'Enable session recording feature to capture and replay gadget runs. This feature is still being developed.',
+					type: 'toggle',
+					default: false
+				}
+			]
 		}
 	]
 };

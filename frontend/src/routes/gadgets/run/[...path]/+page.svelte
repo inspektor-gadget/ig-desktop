@@ -16,6 +16,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Title from '$lib/components/params/Title.svelte';
+	import Select from '$lib/components/forms/Select.svelte';
 	import type { GadgetInfo, GadgetRunRequest } from '$lib/types';
 	import { Clipboard } from '@wailsio/runtime';
 	import {
@@ -25,6 +26,9 @@
 	} from '$lib/utils/env-preferences';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { analyticsService } from '$lib/services/analytics.service.svelte';
+	import { configuration } from '$lib/stores/configuration.svelte';
+	import { currentSessionStore } from '$lib/stores/current-session.svelte';
+	import type { SessionItem } from '$lib/types';
 
 	let { data }: { data: any } = $props();
 
@@ -37,7 +41,51 @@
 	let commandType = $state<'ig' | 'gadgetctl' | 'kubectl'>('ig');
 	let showAdvanced = $state(true);
 
+	// Experimental feature flag for session recording
+	const sessionRecordingEnabled = $derived(
+		configuration.get('experimentalSessionRecording') === true
+	);
+
+	// Session recording state - initialize from configuration
+	let alwaysRecord = $derived(configuration.get('alwaysRecord') === true);
+	let singleSessionPerStart = $derived(configuration.get('singleSessionPerStart') !== false);
+	let recordGadgetRun = $state(false);
+	let sessionMode = $state<'new' | 'existing'>('new');
+	let sessionName = $state('');
+	let selectedSessionId = $state('');
+	let existingSessions = $state<SessionItem[]>([]);
+
+	// Convert sessions to options for Select component
+	const sessionOptions = $derived(
+		existingSessions.map((s) => ({
+			value: s.id,
+			label: `${s.name || 'Unnamed'} (${s.runCount} runs)`
+		}))
+	);
+
+	// Initialize recordGadgetRun from alwaysRecord setting on mount
+	$effect(() => {
+		if (sessionRecordingEnabled && alwaysRecord) {
+			recordGadgetRun = true;
+		} else if (!sessionRecordingEnabled) {
+			recordGadgetRun = false;
+		}
+	});
+
 	let validated = $derived(environmentID);
+
+	function canRun(): boolean {
+		if (!environmentID) return false;
+		if (
+			sessionRecordingEnabled &&
+			recordGadgetRun &&
+			sessionMode === 'existing' &&
+			!selectedSessionId
+		) {
+			return false; // must select existing session
+		}
+		return true;
+	}
 
 	// Update commandType based on selected environment
 	$effect(() => {
@@ -137,14 +185,59 @@
 			});
 	});
 
+	// Load existing sessions when recording is enabled
+	$effect(() => {
+		if (sessionRecordingEnabled && recordGadgetRun && environmentID) {
+			loadExistingSessions();
+		}
+	});
+
+	async function loadExistingSessions() {
+		try {
+			existingSessions = await api.listSessions(environmentID!);
+
+			// If single-session-per-start is enabled and we have a stored session,
+			// pre-select "existing" mode and select that session for better UX
+			if (singleSessionPerStart && environmentID) {
+				const storedSessionId = currentSessionStore.get(environmentID);
+				if (storedSessionId) {
+					// Verify the stored session exists in the list
+					const sessionExists = existingSessions.some((s) => s.id === storedSessionId);
+					if (sessionExists) {
+						sessionMode = 'existing';
+						selectedSessionId = storedSessionId;
+					}
+				}
+			}
+		} catch (err) {
+			console.error('Failed to load sessions:', err);
+			existingSessions = [];
+		}
+	}
+
 	async function runGadget() {
+		// Determine session ID to use (only when feature is enabled)
+		let sessionIdToUse: string | undefined;
+		const shouldRecord = sessionRecordingEnabled && recordGadgetRun;
+		if (shouldRecord) {
+			if (sessionMode === 'existing') {
+				sessionIdToUse = selectedSessionId || undefined;
+			} else if (singleSessionPerStart && environmentID) {
+				// Check for existing session in single-session-per-start mode
+				sessionIdToUse = currentSessionStore.get(environmentID);
+			}
+		}
+
 		const gadgetRunRequest: GadgetRunRequest = {
 			image: data.url,
 			params: $state.snapshot(values),
 			environmentID: environmentID || undefined,
 			detached,
 			instanceName,
-			timestamp: Date.now()
+			timestamp: Date.now(),
+			record: shouldRecord,
+			sessionId: sessionIdToUse,
+			sessionName: sessionMode === 'new' && !sessionIdToUse ? sessionName : undefined
 		};
 
 		// Save K8s parameter values to recent lists
@@ -161,9 +254,9 @@
 							.split(',')
 							.map((v) => v.trim())
 							.filter((v) => v);
-						parts.forEach((v) => saveK8sRecent(environmentID, resourceType, v));
+						parts.forEach((v) => saveK8sRecent(environmentID!, resourceType, v));
 					} else if (value) {
-						saveK8sRecent(environmentID, resourceType, String(value));
+						saveK8sRecent(environmentID!, resourceType, String(value));
 					}
 				}
 			}
@@ -177,12 +270,12 @@
 
 			// Save gadget URL to recents
 			if (environmentID && data.url) {
-				saveGadgetURLRecent(environmentID, data.url);
+				saveGadgetURLRecent(environmentID!, data.url);
 			}
 
 			// Add to per-environment history with deduplication (max 50 entries)
 			if (environmentID) {
-				addGadgetToHistory(environmentID, gadgetRunRequest, 50);
+				addGadgetToHistory(environmentID!, gadgetRunRequest, 50);
 			}
 
 			if (detached) {
@@ -423,6 +516,93 @@
 					{/if}
 				</div>
 
+				<!-- Session recording settings (experimental) -->
+				{#if sessionRecordingEnabled}
+					<div
+						class="main-gradient flex flex-col gap-4 rounded-xl border border-gray-700 bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
+					>
+						<!-- Session recording toggle -->
+						<div class="flex flex-row gap-4">
+							<div class="grid items-center justify-center">
+								<input
+									type="checkbox"
+									class="peer col-start-1 row-start-1 h-4 w-4 appearance-none rounded border border-gray-300 ring-transparent checked:border-violet-600 checked:bg-violet-600 dark:border-gray-600 dark:checked:border-violet-600 forced-colors:appearance-auto"
+									bind:checked={recordGadgetRun}
+								/>
+								<svg
+									viewBox="0 0 14 14"
+									fill="none"
+									class="pointer-events-none invisible col-start-1 row-start-1 stroke-white peer-checked:visible dark:text-violet-300 forced-colors:hidden"
+									><path
+										d="M3 8L6 11L11 3.5"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									></path></svg
+								>
+							</div>
+							<Title
+								param={{
+									title: 'Record to Session',
+									key: 'recordToSession',
+									description:
+										'Save all gadget events to a session file for later replay and analysis'
+								}}
+								onclick={() => {
+									recordGadgetRun = !recordGadgetRun;
+								}}
+							/>
+						</div>
+
+						<!-- Session mode selection -->
+						{#if recordGadgetRun}
+							<div class="flex flex-col gap-3">
+								<!-- New/Existing radio buttons -->
+								<div class="flex flex-row gap-6">
+									<label class="flex cursor-pointer items-center gap-2">
+										<input
+											type="radio"
+											bind:group={sessionMode}
+											value="new"
+											class="h-4 w-4 cursor-pointer border-gray-300 text-violet-600 focus:ring-violet-600"
+										/>
+										<span class="text-sm text-gray-300">New Session</span>
+									</label>
+									<label class="flex cursor-pointer items-center gap-2">
+										<input
+											type="radio"
+											bind:group={sessionMode}
+											value="existing"
+											class="h-4 w-4 cursor-pointer border-gray-300 text-violet-600 focus:ring-violet-600"
+										/>
+										<span class="text-sm text-gray-300">Add to Existing</span>
+									</label>
+								</div>
+
+								<!-- New session name input -->
+								{#if sessionMode === 'new'}
+									<input
+										type="text"
+										bind:value={sessionName}
+										placeholder="Session name (optional)"
+										class="w-full rounded bg-gray-800 p-2 text-sm text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-violet-600 focus:outline-none"
+									/>
+								{/if}
+
+								<!-- Existing session selector -->
+								{#if sessionMode === 'existing'}
+									<Select
+										bind:value={selectedSessionId}
+										options={sessionOptions}
+										placeholder="Select a session..."
+										class="text-sm"
+									/>
+								{/if}
+							</div>
+						{/if}
+					</div>
+				{/if}
+
 				<Panel title="Parameters" icon={Cog} color="blue">
 					{#snippet headerActions()}
 						<div class="flex flex-row items-center gap-2">
@@ -510,13 +690,18 @@
 <div class="flex flex-row justify-between bg-gray-950 p-4">
 	<div></div>
 	<div>
-		<button
-			disabled={!validated}
-			onclick={runGadget}
-			class="flex cursor-pointer flex-row gap-2 rounded bg-green-800 py-2 pr-4 pl-2 hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-950 disabled:text-gray-500"
-		>
-			<span>{@html Play}</span>
-			<span>Run Gadget</span>
-		</button>
+		<div class="flex flex-col items-end gap-2">
+			{#if sessionRecordingEnabled && recordGadgetRun && sessionMode === 'existing' && !selectedSessionId}
+				<span class="text-xs text-yellow-400">Please select a session to record to</span>
+			{/if}
+			<button
+				disabled={!canRun()}
+				onclick={runGadget}
+				class="flex cursor-pointer flex-row gap-2 rounded bg-green-800 py-2 pr-4 pl-2 hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-950 disabled:text-gray-500"
+			>
+				<span>{@html Play}</span>
+				<span>Run Gadget</span>
+			</button>
+		</div>
 	</div>
 </div>

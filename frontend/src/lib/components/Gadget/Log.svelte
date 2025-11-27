@@ -10,13 +10,11 @@
 	});
 
 	let search = $state('');
-	let entries = $derived(
-		search
-			? log.filter((e) => {
-					return e.msg.toLowerCase().indexOf(search) >= 0;
-				})
-			: log
-	);
+	let entries = $derived.by(() => {
+		if (!search || !log) return log;
+		const lowerSearch = search.toLowerCase();
+		return log.filter((e: { msg: string }) => e.msg.toLowerCase().includes(lowerSearch));
+	});
 
 	const scrollToBottom = async (node: HTMLDivElement) => {
 		node.scroll({ top: node.scrollHeight, behavior: 'smooth' });
@@ -33,7 +31,7 @@
 	</div>
 </div>
 <div bind:this={element} class="shrink grow overflow-auto bg-gray-900 p-2 font-mono text-xs">
-	{#each entries as entry (entry.msgID)}
+	{#each entries as entry, i (entry.msgID ?? i)}
 		<div class="log-severity-{entry.severity}">{entry.msg}</div>
 	{/each}
 </div>

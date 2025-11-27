@@ -27,6 +27,9 @@ export interface GadgetRunRequest {
 	environmentID?: string;
 	instanceName?: string;
 	timestamp?: number;
+	record?: boolean;
+	sessionId?: string;
+	sessionName?: string;
 }
 
 export interface GadgetInfo {
@@ -41,9 +44,16 @@ export interface RuntimeInfo {
 	contexts?: string[];
 }
 
+export interface SessionInfo {
+	sessionId: string;
+	runId: string;
+	isNew: boolean;
+}
+
 export interface Instances {
 	[key: string]: {
 		name: string;
+		session?: SessionInfo;
 		[key: string]: any;
 	};
 }
@@ -80,4 +90,37 @@ export interface IGDeploymentStatus {
 	namespace?: string;
 	version?: string;
 	error?: string;
+}
+
+export interface SessionItem {
+	id: string;
+	name: string;
+	environmentId: string;
+	createdAt: number;
+	updatedAt: number;
+	runCount: number;
+}
+
+export interface GadgetRun {
+	id: string;
+	sessionId: string;
+	gadgetImage: string;
+	params: Record<string, string>;
+	gadgetInfo: any;
+	startedAt: number;
+	stoppedAt: number;
+	eventCount: number;
+}
+
+export interface SessionWithRuns extends SessionItem {
+	runs: GadgetRun[];
+}
+
+export interface RecordedEvent {
+	id: number;
+	runId: string;
+	timestamp: number;
+	type: number;
+	datasourceId?: string;
+	data: any;
 }

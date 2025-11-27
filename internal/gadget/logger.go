@@ -17,17 +17,20 @@ package gadget
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/logger"
 
 	"ig-frontend/internal/api"
+	"ig-frontend/internal/session"
 )
 
 // GenericLogger implements logger.GenericLogger for gadget instances
 type GenericLogger struct {
-	send       func(any)
-	instanceID string
-	level      logger.Level
+	send           func(any)
+	instanceID     string
+	level          logger.Level
+	sessionService *session.Service
 }
 
 // NewLogger creates a new GenericLogger
@@ -37,6 +40,11 @@ func NewLogger(send func(any), instanceID string, level logger.Level) *GenericLo
 		instanceID: instanceID,
 		level:      level,
 	}
+}
+
+// SetSessionService sets the session service for recording logs
+func (l *GenericLogger) SetSessionService(ss *session.Service) {
+	l.sessionService = ss
 }
 
 // SetLevel sets the logging level
@@ -49,17 +57,27 @@ func (l *GenericLogger) GetLevel() logger.Level {
 	return l.level
 }
 
+// sendLogEvent sends a log event and records it to session if active.
+func (l *GenericLogger) sendLogEvent(data []byte) {
+	l.send(&api.GadgetEvent{
+		InstanceID: l.instanceID,
+		Type:       api.TypeGadgetLog,
+		Data:       data,
+	})
+	if l.sessionService != nil {
+		if err := l.sessionService.WriteEvent(l.instanceID, api.TypeGadgetLog, "", data); err != nil {
+			log.Printf("failed to write log to session: %v", err)
+		}
+	}
+}
+
 // Log logs a message with the given severity
 func (l *GenericLogger) Log(severity logger.Level, params ...any) {
 	d, _ := json.Marshal(map[string]any{
 		"severity": severity,
 		"msg":      fmt.Sprint(params...),
 	})
-	l.send(&api.GadgetEvent{
-		InstanceID: l.instanceID,
-		Type:       api.TypeGadgetLog,
-		Data:       d,
-	})
+	l.sendLogEvent(d)
 }
 
 // Logf logs a formatted message with the given severity
@@ -68,9 +86,5 @@ func (l *GenericLogger) Logf(severity logger.Level, format string, params ...any
 		"severity": severity,
 		"msg":      fmt.Sprintf(format, params...),
 	})
-	l.send(&api.GadgetEvent{
-		InstanceID: l.instanceID,
-		Type:       api.TypeGadgetLog,
-		Data:       d,
-	})
+	l.sendLogEvent(d)
 }

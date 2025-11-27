@@ -19,7 +19,23 @@
 
 	let { open = $bindable(false), onClose }: Props = $props();
 
+	// Filter categories based on requiredSetting
+	const visibleCategories = $derived(
+		configurationSchema.categories.filter((category) => {
+			if (!category.requiredSetting) return true;
+			return configuration.get(category.requiredSetting) === true;
+		})
+	);
+
 	let activeCategory = $state(configurationSchema.categories[0]?.id ?? '');
+
+	// Reset to first visible category if current becomes hidden
+	$effect(() => {
+		const isVisible = visibleCategories.some((c) => c.id === activeCategory);
+		if (!isVisible && visibleCategories.length > 0) {
+			activeCategory = visibleCategories[0].id;
+		}
+	});
 
 	// Map setting types to their components
 	const settingComponents: Record<SettingType, Component<any>> = {
@@ -46,7 +62,7 @@
 		<!-- Left Sidebar - Categories -->
 		<div class="w-48 border-r border-gray-800 bg-gray-900/50">
 			<nav class="p-2">
-				{#each configurationSchema.categories as category}
+				{#each visibleCategories as category}
 					<button
 						onclick={() => (activeCategory = category.id)}
 						class="mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all {activeCategory ===
@@ -64,7 +80,7 @@
 		<div class="flex flex-1 flex-col">
 			<!-- Settings Body -->
 			<div class="flex-1 overflow-y-auto p-6">
-				{#each configurationSchema.categories as category}
+				{#each visibleCategories as category}
 					{#if activeCategory === category.id}
 						<div class="space-y-6">
 							<div>

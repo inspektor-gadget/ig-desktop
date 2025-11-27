@@ -52,6 +52,8 @@ export interface Category {
 	name: string;
 	icon: string;
 	settings: Setting[];
+	/** If set, this category is only shown when the specified setting key is truthy */
+	requiredSetting?: string;
 }
 
 export interface ConfigurationSchema {

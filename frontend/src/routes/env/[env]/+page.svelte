@@ -4,13 +4,16 @@
 	import { environments } from '$lib/shared/environments.svelte';
 	import { instances } from '$lib/shared/instances.svelte';
 	import { goto } from '$app/navigation';
-	import type { GadgetInstance, GadgetRunRequest } from '$lib/types';
+	import type { GadgetInstance, GadgetRunRequest, SessionItem } from '$lib/types';
 	import Panel from '$lib/components/Panel.svelte';
 	import { confirmationModal } from '$lib/stores/confirmation-modal.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { analyticsService } from '$lib/services/analytics.service.svelte';
+	import { configuration } from '$lib/stores/configuration.svelte';
+	import { currentSessionStore } from '$lib/stores/current-session.svelte';
 	import BaseModal from '$lib/components/BaseModal.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import SessionItemComponent from '$lib/components/SessionItem.svelte';
 
 	import Browser from '$lib/icons/fa/browser.svg?raw';
 	import Trash from '$lib/icons/fa/trash.svg?raw';
@@ -36,7 +39,15 @@
 
 	const api: any = getContext('api');
 
+	let sessions = $state<SessionItem[]>([]);
+	let loadingSessions = $state(true);
+
 	let env = $derived(environments[page.params.env || '']);
+
+	// Experimental feature flag for session recording
+	const sessionRecordingEnabled = $derived(
+		configuration.get('experimentalSessionRecording') === true
+	);
 
 	let detachedInstances = $state<GadgetInstance[]>([]);
 
@@ -64,6 +75,7 @@
 		detachedInstances = [];
 		currentEnvironment.setEnvironment(env);
 		getList(env.id);
+		loadSessions();
 
 		// Poll for headless instances every 7 seconds
 		const pollInterval = setInterval(() => {
@@ -77,6 +89,19 @@
 			clearInterval(pollInterval);
 		};
 	});
+
+	async function loadSessions() {
+		if (!env?.id || !sessionRecordingEnabled) return;
+		loadingSessions = true;
+		try {
+			sessions = await api.listSessions(env.id);
+		} catch (err) {
+			console.error('Failed to load sessions:', err);
+			sessions = [];
+		} finally {
+			loadingSessions = false;
+		}
+	}
 
 	// Make history reactive state instead of derived
 	let history = $state<GadgetRunRequest[]>([]);
@@ -149,7 +174,6 @@
 			cmd: 'attachInstance',
 			data: { environmentID: env.id, image: instance.id }
 		});
-		console.log('attachInstance', res);
 		goto('/env/' + env.id + '/running/' + res.id);
 	}
 
@@ -163,11 +187,10 @@
 		if (!confirmed) return;
 
 		try {
-			const res = await api.request({
+			await api.request({
 				cmd: 'removeInstance',
 				data: { environmentID: env.id, id: instance.id }
 			});
-			console.log('removeInstance', res);
 
 			// Show success toast
 			const instanceName = instance.name || instance.id.substring(0, 8);
@@ -194,10 +217,30 @@
 	}
 
 	async function runGadget(gadgetRunRequest: GadgetRunRequest) {
+		// Apply recording settings from configuration (only when feature is enabled)
+		const alwaysRecord = configuration.get('alwaysRecord') === true;
+		const singleSessionPerStart = configuration.get('singleSessionPerStart') !== false;
+		const shouldRecord = sessionRecordingEnabled && (gadgetRunRequest.record ?? alwaysRecord);
+
+		// Determine session ID to use
+		let sessionIdToUse = gadgetRunRequest.sessionId;
+		if (shouldRecord && !sessionIdToUse && singleSessionPerStart && env.id) {
+			// Check for existing session in single-session-per-start mode
+			sessionIdToUse = currentSessionStore.get(env.id);
+		}
+
+		const requestData = {
+			...gadgetRunRequest,
+			environmentID: env.id,
+			record: shouldRecord,
+			sessionId: sessionIdToUse,
+			sessionName: !sessionIdToUse ? gadgetRunRequest.sessionName : undefined
+		};
+
 		try {
 			const res = await api.request({
 				cmd: 'runGadget',
-				data: { ...gadgetRunRequest, environmentID: env.id }
+				data: requestData
 			});
 
 			// Track gadget run if analytics is enabled
@@ -222,6 +265,28 @@
 					onClick: () => runGadget(gadgetRunRequest)
 				}
 			);
+		}
+	}
+
+	async function handleDeleteSession(sessionId: string) {
+		const confirmed = await confirmationModal.confirm({
+			title: 'Delete Session',
+			message: 'Do you really want to delete this session? This cannot be undone.',
+			confirmLabel: 'Delete',
+			cancelLabel: 'Cancel'
+		});
+		if (!confirmed) return;
+
+		try {
+			await api.deleteSession(sessionId);
+			toastStore.success('Session deleted successfully');
+			await loadSessions();
+		} catch (err: any) {
+			const errorMessage = err?.message || err?.toString() || 'Unknown error';
+			toastStore.error(`Failed to delete session: ${errorMessage}`, 7000, {
+				label: 'Retry',
+				onClick: () => handleDeleteSession(sessionId)
+			});
 		}
 	}
 </script>
@@ -485,6 +550,40 @@
 						</div>
 					{/if}
 				</Panel>
+
+				<!-- Sessions Card (experimental) -->
+				{#if sessionRecordingEnabled}
+					<Panel
+						title="Sessions"
+						icon={History}
+						color="green"
+						badge={sessions.length > 0 ? sessions.length : undefined}
+						bodyPadding="large"
+					>
+						{#if loadingSessions}
+							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
+								<div class="text-gray-600">{@html History}</div>
+								<div class="text-sm text-gray-500">Loading sessions...</div>
+							</div>
+						{:else if sessions.length === 0}
+							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
+								<div class="text-gray-600">{@html History}</div>
+								<div class="text-sm text-gray-500">
+									No sessions yet. Enable session recording when running a gadget to capture runs.
+								</div>
+							</div>
+						{:else}
+							<div class="flex flex-col gap-3">
+								{#each sessions as session}
+									<SessionItemComponent
+										{session}
+										onDelete={() => handleDeleteSession(session.id)}
+									/>
+								{/each}
+							</div>
+						{/if}
+					</Panel>
+				{/if}
 			</div>
 		</div>
 

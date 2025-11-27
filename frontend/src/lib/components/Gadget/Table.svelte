@@ -25,7 +25,7 @@
 			.filter(
 				/** @param {any} field */
 				(field) => {
-					if (env.runtime === 'grpc-ig') {
+					if (env?.runtime === 'grpc-ig') {
 						if (field.tags?.indexOf('kubernetes') >= 0) return false;
 					}
 					if (field.annotations['columns.hidden'] === 'true') {
@@ -83,7 +83,7 @@
 				</tr>
 			</thead>
 			<tbody class="font-mono text-xs text-gray-200">
-				{#each events as entry (entry.msgID)}
+				{#each events as entry, i (entry.msgID ?? i)}
 					<tr
 						class="cursor-pointer hover:bg-gray-800"
 						onclick={() => {

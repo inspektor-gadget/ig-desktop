@@ -125,7 +125,7 @@
 		<div class="flex flex-1 flex-col overflow-hidden">
 			<div class="flex grow flex-col overflow-hidden">
 				<div class="flex flex-row items-center justify-between p-2">
-					<div class="flex flex-row items-center">
+					<div class="flex flex-row items-center gap-2">
 						<div class="flex flex-row items-center pr-2">
 							{#if instance.running}
 								<button
@@ -145,6 +145,26 @@
 								Stopped
 							{/if}
 						</div>
+						{#if instance.isReplay}
+							<div class="flex items-center gap-2 text-sm text-gray-400">
+								<span
+									class="rounded border border-blue-700 bg-blue-900/50 px-2 py-0.5 text-xs font-semibold text-blue-300"
+								>
+									REPLAY
+								</span>
+								{#if instance.running}
+									<span class="animate-pulse">Playing...</span>
+								{/if}
+							</div>
+						{/if}
+						{#if instance.session}
+							<span
+								class="flex items-center gap-1 rounded border border-red-700 bg-red-900/50 px-2 py-0.5 text-xs font-semibold text-red-300"
+							>
+								<span class="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500"></span>
+								REC
+							</span>
+						{/if}
 					</div>
 					<div class="flex-1"></div>
 					<div class="px-2 font-mono text-sm text-gray-400">{eventCount} events</div>

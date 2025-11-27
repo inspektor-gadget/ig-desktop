@@ -1,4 +1,5 @@
 import { websocketService } from './websocket.service.svelte';
+import type { SessionItem, SessionWithRuns, GadgetRun, RecordedEvent } from '$lib/types';
 
 type RequestCommand = {
 	cmd: string;
@@ -49,6 +50,53 @@ export class ApiService {
 			this.requests[msg.reqID].resolve(msg.data);
 			delete this.requests[msg.reqID];
 		}
+	}
+
+	/**
+	 * List all sessions for a given environment.
+	 * @param environmentId - The environment ID
+	 * @returns Promise that resolves with an array of session items
+	 */
+	async listSessions(environmentId: string): Promise<SessionItem[]> {
+		return this.request({ cmd: 'listSessions', data: { environmentId } });
+	}
+
+	/**
+	 * Delete a session by ID.
+	 * @param sessionId - The session ID to delete
+	 * @returns Promise that resolves when the session is deleted
+	 */
+	async deleteSession(sessionId: string): Promise<void> {
+		await this.request({ cmd: 'deleteSession', data: { sessionId } });
+	}
+
+	/**
+	 * Get a session with all its gadget runs.
+	 * @param sessionId - The session ID
+	 * @returns Promise that resolves with the session and its runs
+	 */
+	async getSession(sessionId: string): Promise<SessionWithRuns> {
+		return this.request({ cmd: 'getSession', data: { sessionId } });
+	}
+
+	/**
+	 * Get a specific gadget run from a session.
+	 * @param sessionId - The session ID
+	 * @param runId - The run ID
+	 * @returns Promise that resolves with the gadget run
+	 */
+	async getRun(sessionId: string, runId: string): Promise<GadgetRun> {
+		return this.request({ cmd: 'getRun', data: { sessionId, runId } });
+	}
+
+	/**
+	 * Get all events for a specific gadget run.
+	 * @param sessionId - The session ID
+	 * @param runId - The run ID
+	 * @returns Promise that resolves with an array of recorded events
+	 */
+	async getRunEvents(sessionId: string, runId: string): Promise<RecordedEvent[]> {
+		return this.request({ cmd: 'getRunEvents', data: { sessionId, runId } });
 	}
 }
 

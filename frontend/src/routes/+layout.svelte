@@ -173,6 +173,21 @@
 	setContext('api', {
 		request(cmd) {
 			return apiService.request(cmd);
+		},
+		listSessions(environmentId) {
+			return apiService.listSessions(environmentId);
+		},
+		deleteSession(sessionId) {
+			return apiService.deleteSession(sessionId);
+		},
+		getSession(sessionId) {
+			return apiService.getSession(sessionId);
+		},
+		getRun(sessionId, runId) {
+			return apiService.getRun(sessionId, runId);
+		},
+		getRunEvents(sessionId, runId) {
+			return apiService.getRunEvents(sessionId, runId);
 		}
 	});
 
