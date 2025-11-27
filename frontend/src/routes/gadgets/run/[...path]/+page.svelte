@@ -24,6 +24,7 @@
 		addGadgetToHistory
 	} from '$lib/utils/env-preferences';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import { analyticsService } from '$lib/services/analytics.service.svelte';
 
 	let { data }: { data: any } = $props();
 
@@ -170,6 +171,9 @@
 
 		try {
 			const res = await api.request({ cmd: 'runGadget', data: gadgetRunRequest });
+
+			// Track gadget run if analytics is enabled
+			analyticsService.trackRunGadget(data.url);
 
 			// Save gadget URL to recents
 			if (environmentID && data.url) {

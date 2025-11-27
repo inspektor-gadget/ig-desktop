@@ -20,7 +20,9 @@
 	import ConfirmationModal from '$lib/components/ConfirmationModal.svelte';
 	import ConfigurationModal from '$lib/components/ConfigurationModal.svelte';
 	import UpdateCheckModal from '$lib/components/UpdateCheckModal.svelte';
+	import AnalyticsOptInModal from '$lib/components/AnalyticsOptInModal.svelte';
 	import VersionInfoModal from '$lib/components/VersionInfoModal.svelte';
+	import { analyticsService } from '$lib/services/analytics.service.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import { appState } from './state.svelte.js';
 	import { environments } from '$lib/shared/environments.svelte.js';
@@ -47,6 +49,9 @@
 	// Update check modal state (for opt-in on second start)
 	let updateCheckModalOpen = $state(false);
 
+	// Analytics opt-in modal state (for opt-in on third start)
+	let analyticsOptInModalOpen = $state(false);
+
 	// Version info modal state
 	let versionInfoModalOpen = $state(false);
 
@@ -60,9 +65,10 @@
 		releasesUrl: 'https://github.com/inspektor-gadget/ig-desktop/releases'
 	});
 
-	// Start count tracking for opt-in modal
+	// Start count tracking for opt-in modals
 	const START_COUNT_KEY = 'ig-start-count';
 	const UPDATE_OPT_IN_SHOWN_KEY = 'ig-update-opt-in-shown';
+	const ANALYTICS_OPT_IN_SHOWN_KEY = 'ig-analytics-opt-in-shown';
 
 	// Check for updates
 	function checkForUpdates() {
@@ -84,21 +90,31 @@
 			});
 	}
 
-	// Track start count and show opt-in modal on second start
+	// Track start count and show opt-in modals
 	function handleStartCount() {
 		if (typeof window === 'undefined') return;
 
 		const startCount = parseInt(localStorage.getItem(START_COUNT_KEY) || '0', 10) + 1;
 		localStorage.setItem(START_COUNT_KEY, String(startCount));
 
-		const optInShown = localStorage.getItem(UPDATE_OPT_IN_SHOWN_KEY) === 'true';
+		const updateOptInShown = localStorage.getItem(UPDATE_OPT_IN_SHOWN_KEY) === 'true';
+		const analyticsOptInShown = localStorage.getItem(ANALYTICS_OPT_IN_SHOWN_KEY) === 'true';
 
-		// Show opt-in modal on second start if not already shown
-		if (startCount === 2 && !optInShown) {
+		// Show update opt-in modal on second start if not already shown
+		if (startCount >= 2 && !updateOptInShown) {
 			localStorage.setItem(UPDATE_OPT_IN_SHOWN_KEY, 'true');
 			// Delay slightly to let the app initialize
 			setTimeout(() => {
 				updateCheckModalOpen = true;
+			}, 500);
+		}
+
+		// Show analytics opt-in modal on third start if not already shown
+		if (startCount >= 3 && updateOptInShown && !analyticsOptInShown) {
+			localStorage.setItem(ANALYTICS_OPT_IN_SHOWN_KEY, 'true');
+			// Delay slightly to let the app initialize
+			setTimeout(() => {
+				analyticsOptInModalOpen = true;
 			}, 500);
 		}
 
@@ -107,6 +123,9 @@
 		if (checkForUpdatesEnabled) {
 			checkForUpdates();
 		}
+
+		// Initialize analytics if user has opted in
+		analyticsService.initialize();
 	}
 
 	// Fetch version when connected
@@ -412,6 +431,14 @@
 		if (configuration.get('checkForUpdates')) {
 			checkForUpdates();
 		}
+	}}
+/>
+
+<!-- Analytics Opt-in Modal -->
+<AnalyticsOptInModal
+	bind:open={analyticsOptInModalOpen}
+	onClose={() => {
+		analyticsOptInModalOpen = false;
 	}}
 />
 

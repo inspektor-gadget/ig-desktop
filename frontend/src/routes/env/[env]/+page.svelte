@@ -8,6 +8,7 @@
 	import Panel from '$lib/components/Panel.svelte';
 	import { confirmationModal } from '$lib/stores/confirmation-modal.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import { analyticsService } from '$lib/services/analytics.service.svelte';
 	import BaseModal from '$lib/components/BaseModal.svelte';
 	import Button from '$lib/components/Button.svelte';
 
@@ -198,6 +199,10 @@
 				cmd: 'runGadget',
 				data: { ...gadgetRunRequest, environmentID: env.id }
 			});
+
+			// Track gadget run if analytics is enabled
+			analyticsService.trackRunGadget(gadgetRunRequest.image);
+
 			if (gadgetRunRequest.detached) {
 				// Show info toast for headless instances (success confirmed when instance appears in list)
 				const displayName = gadgetRunRequest.instanceName || 'Unnamed instance';

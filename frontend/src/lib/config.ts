@@ -37,6 +37,13 @@ export const configurationSchema: ConfigurationSchema = {
 						'Automatically check for new versions when the application starts. Connects to GitHub to fetch release information.',
 					type: 'toggle',
 					default: false
+				},
+				{
+					key: 'sendAnalytics',
+					title: 'Send anonymized usage metrics',
+					description: 'Help improve Inspektor Gadget Desktop by sending anonymous usage data.',
+					type: 'toggle',
+					default: false
 				}
 			]
 		},
