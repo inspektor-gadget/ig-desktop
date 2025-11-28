@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/logger"
 
@@ -74,8 +75,9 @@ func (l *GenericLogger) sendLogEvent(data []byte) {
 // Log logs a message with the given severity
 func (l *GenericLogger) Log(severity logger.Level, params ...any) {
 	d, _ := json.Marshal(map[string]any{
-		"severity": severity,
-		"msg":      fmt.Sprint(params...),
+		"severity":  severity,
+		"msg":       fmt.Sprint(params...),
+		"timestamp": time.Now().Format("2006-01-02 15:04:05"),
 	})
 	l.sendLogEvent(d)
 }
@@ -83,8 +85,9 @@ func (l *GenericLogger) Log(severity logger.Level, params ...any) {
 // Logf logs a formatted message with the given severity
 func (l *GenericLogger) Logf(severity logger.Level, format string, params ...any) {
 	d, _ := json.Marshal(map[string]any{
-		"severity": severity,
-		"msg":      fmt.Sprintf(format, params...),
+		"severity":  severity,
+		"msg":       fmt.Sprintf(format, params...),
+		"timestamp": time.Now().Format("2006-01-02 15:04:05"),
 	})
 	l.sendLogEvent(d)
 }

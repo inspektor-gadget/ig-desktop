@@ -23,6 +23,7 @@
 	let inspectorPane = $state<HTMLDivElement | null>(null);
 	let showInspector = $derived(preferences.getDefault('gadget.show-inspector', false));
 	let logHeight = $derived(preferences.getDefault('gadget.log-height', 300));
+	let logCollapsed = $derived(preferences.getDefault('log-panel-collapsed', true));
 	let inspectorWidth = $derived(preferences.getDefault('gadget.inspector-width', 300));
 
 	function resize(ev: PointerEvent) {
@@ -193,14 +194,16 @@
 					{/each}
 				</div>
 			</div>
-			<div
-				class="h-2 cursor-ns-resize touch-none bg-gray-800 select-none"
-				onpointerdown={resize}
-			></div>
+			{#if !logCollapsed}
+				<div
+					class="h-2 cursor-ns-resize touch-none bg-gray-800 select-none"
+					onpointerdown={resize}
+				></div>
+			{/if}
 			<div
 				bind:this={logPane}
 				class="flex flex-col overflow-hidden"
-				style="flex: 0 0 {logHeight}px"
+				style={logCollapsed ? 'flex: 0 0 auto' : `flex: 0 0 ${logHeight}px`}
 			>
 				<Log log={logs} />
 			</div>
