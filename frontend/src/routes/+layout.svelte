@@ -35,7 +35,7 @@
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import Lock from '$lib/icons/fa/lock.svg?raw';
 	import LockOpen from '$lib/icons/fa/lock-open.svg?raw';
-	import Cog from '$lib/icons/cog-small.svg?raw';
+	import Cog from '$lib/icons/cog.svg?raw';
 
 	let { children } = $props();
 
@@ -289,6 +289,14 @@
 					<NavbarLink href="https://inspektor-gadget.io/docs/latest/" target="_blank"
 						>{@html Book}</NavbarLink
 					>
+					<NavbarLink
+						onclick={() => {
+							configModalOpen = true;
+						}}
+						title="Settings"
+					>
+						{@html Cog}
+					</NavbarLink>
 					<NavbarLink href="/info">{@html Info}</NavbarLink>
 				</div>
 			</div>
@@ -336,16 +344,6 @@
 						Version {version}
 					</button>
 				{/if}
-				<button
-					onclick={() => {
-						configModalOpen = true;
-					}}
-					class="flex items-center gap-1 rounded px-2 py-0.5 transition-colors hover:bg-gray-800 hover:text-gray-300"
-					title="Configuration"
-					aria-label="Open configuration"
-				>
-					{@html Cog}
-				</button>
 			</div>
 		</div>
 	{:else}

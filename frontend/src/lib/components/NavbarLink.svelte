@@ -4,34 +4,48 @@
 	import { Browser } from '@wailsio/runtime';
 
 	interface Props {
-		href: string;
+		href?: string | null;
 		children: Snippet;
 		target?: string | null;
 		title?: string | null;
+		onclick?: ((ev: MouseEvent) => void) | null;
 	}
 
-	let { href, children, target = null, title = null }: Props = $props();
+	let {
+		href = null,
+		children,
+		target = null,
+		title = null,
+		onclick: onclickProp = null
+	}: Props = $props();
 
 	// Check if this link should be highlighted via query param (for visual purposes only)
 	const highlightEnvId = $derived(page.url.searchParams.get('highlightEnvironment'));
 
 	const active = $derived(
-		page.url.pathname === href ||
-			(href !== '/' && page.url.pathname.startsWith(href)) ||
-			(highlightEnvId && href === `/env/${highlightEnvId}`)
+		href &&
+			(page.url.pathname === href ||
+				(href !== '/' && page.url.pathname.startsWith(href)) ||
+				(highlightEnvId && href === `/env/${highlightEnvId}`))
 	);
 
-	const onclick = (ev: MouseEvent) => {
+	const handleClick = (ev: MouseEvent) => {
+		if (onclickProp) {
+			onclickProp(ev);
+			return;
+		}
 		if (!target) {
 			return true;
 		}
-		Browser.OpenURL(href);
+		if (href) {
+			Browser.OpenURL(href);
+		}
 		ev.preventDefault();
 		return false;
 	};
 </script>
 
-<a {href} {target} {onclick} class="group relative block" {title}>
+{#snippet content()}
 	<div class="absolute -left-3 flex h-full items-center">
 		<div
 			class={`${
@@ -50,4 +64,14 @@
 			{@render children()}
 		</div>
 	</div>
-</a>
+{/snippet}
+
+{#if href}
+	<a {href} {target} onclick={handleClick} class="group relative block" {title}>
+		{@render content()}
+	</a>
+{:else}
+	<button type="button" onclick={handleClick} class="group relative block cursor-pointer" {title}>
+		{@render content()}
+	</button>
+{/if}
