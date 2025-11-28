@@ -186,7 +186,7 @@ func (idx *IndexDB) ListByEnvironment(envID string) ([]Session, error) {
 	}
 	defer rows.Close()
 
-	var sessions []Session
+	sessions := []Session{}
 	for rows.Next() {
 		var sess Session
 		err := rows.Scan(
@@ -224,7 +224,7 @@ func (idx *IndexDB) ListAll() ([]Session, error) {
 	}
 	defer rows.Close()
 
-	var sessions []Session
+	sessions := []Session{}
 	for rows.Next() {
 		var sess Session
 		err := rows.Scan(

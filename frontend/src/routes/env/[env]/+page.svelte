@@ -94,7 +94,7 @@
 		if (!env?.id || !sessionRecordingEnabled) return;
 		loadingSessions = true;
 		try {
-			sessions = await api.listSessions(env.id);
+			sessions = (await api.listSessions(env.id)) || [];
 		} catch (err) {
 			console.error('Failed to load sessions:', err);
 			sessions = [];

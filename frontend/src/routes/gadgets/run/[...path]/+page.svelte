@@ -194,7 +194,7 @@
 
 	async function loadExistingSessions() {
 		try {
-			existingSessions = await api.listSessions(environmentID!);
+			existingSessions = (await api.listSessions(environmentID!)) || [];
 
 			// If single-session-per-start is enabled and we have a stored session,
 			// pre-select "existing" mode and select that session for better UX
