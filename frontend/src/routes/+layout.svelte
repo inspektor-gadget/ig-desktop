@@ -33,6 +33,7 @@
 	import { messageRouter } from '$lib/services/message-router.service.svelte';
 	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
 	import { configuration } from '$lib/stores/configuration.svelte';
+	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
 	import Lock from '$lib/icons/fa/lock.svg?raw';
 	import LockOpen from '$lib/icons/fa/lock-open.svg?raw';
 	import Cog from '$lib/icons/cog.svg?raw';
@@ -43,8 +44,8 @@
 	let deployModalOpen = $state(false);
 	let activeDeploymentId = $state(undefined);
 
-	// Configuration modal state
-	let configModalOpen = $state(false);
+	// Configuration modal state - use settingsDialog store for deep-linking support
+	let configModalOpen = $derived(settingsDialog.open);
 
 	// Update check modal state (for opt-in on second start)
 	let updateCheckModalOpen = $state(false);
@@ -291,7 +292,7 @@
 					>
 					<NavbarLink
 						onclick={() => {
-							configModalOpen = true;
+							settingsDialog.open = true;
 						}}
 						title="Settings"
 					>
@@ -465,9 +466,9 @@
 
 <!-- Global Configuration Modal -->
 <ConfigurationModal
-	bind:open={configModalOpen}
+	bind:open={settingsDialog.open}
 	onClose={() => {
-		configModalOpen = false;
+		settingsDialog.close();
 	}}
 />
 

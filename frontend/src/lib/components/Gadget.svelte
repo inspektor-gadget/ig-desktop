@@ -12,6 +12,8 @@
 	import { environments } from '$lib/shared/environments.svelte';
 	import { getContext, setContext } from 'svelte';
 	import { preferences } from '$lib/shared/preferences.svelte';
+	import { configuration } from '$lib/stores/configuration.svelte';
+	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
 
 	let { instanceID }: { instanceID: string } = $props();
 
@@ -111,6 +113,13 @@
 	});
 
 	const eventCount = $derived(instance?.eventCount || 0);
+	const displayedEventCount = $derived(events?.length || 0);
+	const maxEventsConfig = $derived((configuration.get('maxEventsPerGadget') as number) || 500);
+	const isCapped = $derived(eventCount > displayedEventCount);
+
+	function openMaxEventsSettings() {
+		settingsDialog.openTo('general', 'maxEventsPerGadget');
+	}
 
 	async function stopInstance(instanceID: string) {
 		try {
@@ -168,7 +177,19 @@
 						{/if}
 					</div>
 					<div class="flex-1"></div>
-					<div class="px-2 font-mono text-sm text-gray-400">{eventCount} events</div>
+					<div class="px-2 font-mono text-sm text-gray-400">
+						{#if isCapped}
+							<button
+								onclick={openMaxEventsSettings}
+								class="cursor-pointer hover:text-gray-200"
+								title="Click to configure maximum events"
+							>
+								{displayedEventCount} of {eventCount} events
+							</button>
+						{:else}
+							{eventCount} events
+						{/if}
+					</div>
 					{#if elapsedTime}<div class="px-2 font-mono text-sm text-gray-400">
 							{elapsedTime}
 						</div>{/if}

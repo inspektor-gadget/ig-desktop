@@ -44,6 +44,17 @@ export const configurationSchema: ConfigurationSchema = {
 					description: 'Help improve Inspektor Gadget Desktop by sending anonymous usage data.',
 					type: 'toggle',
 					default: false
+				},
+				{
+					key: 'maxEventsPerGadget',
+					title: 'Maximum events per gadget',
+					description:
+						'Limit the number of events shown per gadget instance to improve performance. Older events will be discarded.',
+					type: 'number',
+					min: 10,
+					max: 10000,
+					step: 10,
+					default: 500
 				}
 			]
 		},

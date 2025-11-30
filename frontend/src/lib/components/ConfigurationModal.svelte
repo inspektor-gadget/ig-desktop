@@ -11,6 +11,7 @@
 	import BaseModal from './BaseModal.svelte';
 	import Button from './Button.svelte';
 	import type { Component } from 'svelte';
+	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
 
 	interface Props {
 		open?: boolean;
@@ -18,6 +19,9 @@
 	}
 
 	let { open = $bindable(false), onClose }: Props = $props();
+
+	// Track which setting is highlighted for deep-linking
+	let highlightedSetting = $state<string | null>(null);
 
 	// Filter categories based on requiredSetting
 	const visibleCategories = $derived(
@@ -34,6 +38,21 @@
 		const isVisible = visibleCategories.some((c) => c.id === activeCategory);
 		if (!isVisible && visibleCategories.length > 0) {
 			activeCategory = visibleCategories[0].id;
+		}
+	});
+
+	// Handle deep-linking when modal opens with target category/setting
+	$effect(() => {
+		if (open && settingsDialog.targetCategory) {
+			activeCategory = settingsDialog.targetCategory;
+		}
+		if (open && settingsDialog.targetSetting) {
+			highlightedSetting = settingsDialog.targetSetting;
+			// Clear highlight after a delay
+			setTimeout(() => {
+				highlightedSetting = null;
+				settingsDialog.clearTarget();
+			}, 2000);
 		}
 	});
 
@@ -92,11 +111,18 @@
 									{#each category.settings as setting}
 										{@const value = configuration.get(setting.key)}
 										{@const SettingComponent = settingComponents[setting.type]}
-										<SettingComponent
-											{setting}
-											{value}
-											onChange={(newValue) => handleSettingChange(setting.key, newValue)}
-										/>
+										<div
+											class="rounded-lg transition-all duration-300 {highlightedSetting ===
+											setting.key
+												? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900'
+												: ''}"
+										>
+											<SettingComponent
+												{setting}
+												{value}
+												onChange={(newValue) => handleSettingChange(setting.key, newValue)}
+											/>
+										</div>
 									{/each}
 								</div>
 							</div>

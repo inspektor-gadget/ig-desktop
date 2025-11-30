@@ -1,5 +1,6 @@
 import { instances } from '$lib/shared/instances.svelte';
 import { currentSessionStore } from '$lib/stores/current-session.svelte';
+import { configuration } from '$lib/stores/configuration.svelte';
 
 /**
  * Buffer for gadget events to improve performance by batching updates.
@@ -37,10 +38,11 @@ class EventBuffer {
 			usedInstances[msg.instanceID] = true;
 		});
 
-		// Trim events to max 100 per instance
+		// Trim events to configured max per instance
+		const maxEvents = (configuration.get('maxEventsPerGadget') as number) || 500;
 		Object.keys(usedInstances).forEach((instanceID) => {
-			if (instances[instanceID].events.length > 100) {
-				instances[instanceID].events = instances[instanceID].events.slice(0, 100);
+			if (instances[instanceID].events.length > maxEvents) {
+				instances[instanceID].events = instances[instanceID].events.slice(0, maxEvents);
 			}
 		});
 
