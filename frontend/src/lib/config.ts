@@ -55,6 +55,22 @@ export const configurationSchema: ConfigurationSchema = {
 					max: 10000,
 					step: 10,
 					default: 500
+				},
+				{
+					key: 'searchModeFilter',
+					title: 'Search mode: Filter entries',
+					description:
+						'When enabled, search filters out non-matching entries. When disabled, search highlights matching entries instead.',
+					type: 'toggle',
+					default: true
+				},
+				{
+					key: 'searchHighlightInFilterMode',
+					title: 'Highlight matches in filter mode',
+					description:
+						'When enabled, matching text is also highlighted when using filter mode. May impact performance with large datasets.',
+					type: 'toggle',
+					default: false
 				}
 			]
 		},

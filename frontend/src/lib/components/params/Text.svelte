@@ -25,10 +25,17 @@
 
 	const isMultiline = $derived(param.tags?.find((tag) => tag === 'multiline'));
 
+	// Initialize from existing config value, or leave empty (placeholder shows default)
 	let value = $state(config.get(param) || '');
 
 	$effect(() => {
-		config.set(param, value);
+		// Only set value if it differs from the default
+		if (value !== '' && value !== param.defaultValue) {
+			config.set(param, value);
+		} else {
+			// Remove from values if it matches the default or is empty
+			config.set(param, '');
+		}
 	});
 </script>
 

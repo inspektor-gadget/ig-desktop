@@ -7,10 +7,12 @@
 		title?: string;
 		description?: string;
 		possibleValues: string[];
+		defaultValue?: string;
 	}
 
 	interface Config {
-		values: Record<string, string>;
+		get: (param: Param) => string;
+		set: (param: Param, value: string) => void;
 	}
 
 	interface Props {
@@ -28,11 +30,18 @@
 		}))
 	);
 
-	// Ensure value is never undefined
-	let value = $state(config.values[param.key] || '');
+	// Initialize from existing config value, or use default
+	const existingValue = config.get(param);
+	let value = $state(existingValue !== undefined ? existingValue : param.defaultValue || '');
 
 	$effect(() => {
-		config.values[param.key] = value;
+		// Only set value if it differs from the default
+		if (value !== (param.defaultValue || '') && value !== '') {
+			config.set(param, value);
+		} else {
+			// Remove from values if it matches the default or is empty
+			config.set(param, '');
+		}
 	});
 </script>
 

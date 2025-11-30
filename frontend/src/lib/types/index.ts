@@ -1,5 +1,7 @@
 // Common TypeScript interfaces for the IG Frontend
 
+import type { EventRingBuffer } from '$lib/utils/ring-buffer';
+
 export interface Environment {
 	id: string;
 	name: string;
@@ -50,12 +52,21 @@ export interface SessionInfo {
 	isNew: boolean;
 }
 
+export interface GadgetInstanceData {
+	name: string;
+	running: boolean;
+	gadgetInfo: any;
+	events: EventRingBuffer<any>;
+	logs: any[];
+	environment: string;
+	startTime: number;
+	eventCount: number;
+	session?: SessionInfo;
+	[key: string]: any;
+}
+
 export interface Instances {
-	[key: string]: {
-		name: string;
-		session?: SessionInfo;
-		[key: string]: any;
-	};
+	[key: string]: GadgetInstanceData;
 }
 
 export type DeploymentStatus = 'configuring' | 'deploying' | 'success' | 'error';

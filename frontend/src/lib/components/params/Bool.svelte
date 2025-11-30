@@ -6,6 +6,7 @@
 		key: string;
 		title?: string;
 		description?: string;
+		defaultValue?: string;
 	}
 
 	interface Config {
@@ -20,10 +21,21 @@
 
 	let { param, config }: Props = $props();
 
-	let checked = $state(config.get(param) === 'true');
+	// Parse default value - treat 'true' as true, everything else as false
+	const defaultChecked = param.defaultValue === 'true';
+
+	// Initialize from existing config value, or use default
+	const existingValue = config.get(param);
+	let checked = $state(existingValue !== undefined ? existingValue === 'true' : defaultChecked);
 
 	$effect(() => {
-		config.set(param, '' + checked);
+		// Only set value if it differs from the default
+		if (checked !== defaultChecked) {
+			config.set(param, '' + checked);
+		} else {
+			// Remove from values if it matches the default
+			config.set(param, '');
+		}
 	});
 </script>
 

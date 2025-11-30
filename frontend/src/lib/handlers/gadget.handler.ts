@@ -1,9 +1,22 @@
 import { instances } from '$lib/shared/instances.svelte';
 import { currentSessionStore } from '$lib/stores/current-session.svelte';
 import { configuration } from '$lib/stores/configuration.svelte';
+import { EventRingBuffer } from '$lib/utils/ring-buffer';
+
+/** Default max events if not configured */
+const DEFAULT_MAX_EVENTS = 10000;
+
+/**
+ * Get the configured max events per gadget.
+ * Ring buffer capacity is set once at creation time.
+ */
+function getMaxEvents(): number {
+	return (configuration.get('maxEventsPerGadget') as number) || DEFAULT_MAX_EVENTS;
+}
 
 /**
  * Buffer for gadget events to improve performance by batching updates.
+ * Events are collected for 25ms then flushed to the ring buffer in one go.
  */
 class EventBuffer {
 	private buffer: any[] = [];
@@ -12,9 +25,10 @@ class EventBuffer {
 
 	/**
 	 * Add an event to the buffer and schedule a flush.
+	 * Uses push() instead of unshift() for O(1) performance.
 	 */
 	addEvent(msg: any): void {
-		this.buffer.unshift(msg);
+		this.buffer.push(msg);
 		if (!this.timer) {
 			this.timer = setTimeout(() => {
 				this.flush();
@@ -23,28 +37,22 @@ class EventBuffer {
 	}
 
 	/**
-	 * Flush all buffered events to their respective instances.
+	 * Flush all buffered events to their respective instances' ring buffers.
+	 * Ring buffer automatically handles trimming - no manual slice needed.
 	 */
 	private flush(): void {
 		this.timer = null;
-		const usedInstances: Record<string, boolean> = {};
 
-		this.buffer.forEach((msg) => {
+		// Process buffer in reverse order since we used push() but want newest first
+		for (let i = this.buffer.length - 1; i >= 0; i--) {
+			const msg = this.buffer[i];
 			if (!instances[msg.instanceID] || !instances[msg.instanceID].events) {
-				return;
+				continue;
 			}
-			instances[msg.instanceID].events.unshift(msg.data);
+			// Ring buffer push() is O(1) and auto-trims
+			instances[msg.instanceID].events.push(msg.data);
 			instances[msg.instanceID].eventCount++;
-			usedInstances[msg.instanceID] = true;
-		});
-
-		// Trim events to configured max per instance
-		const maxEvents = (configuration.get('maxEventsPerGadget') as number) || 500;
-		Object.keys(usedInstances).forEach((instanceID) => {
-			if (instances[instanceID].events.length > maxEvents) {
-				instances[instanceID].events = instances[instanceID].events.slice(0, maxEvents);
-			}
-		});
+		}
 
 		this.buffer = [];
 	}
@@ -62,6 +70,7 @@ const eventBuffer = new EventBuffer();
 /**
  * Handle new gadget info (type 2).
  * Creates a new instance entry when a gadget starts.
+ * Uses EventRingBuffer for O(1) event storage with automatic trimming.
  */
 export function handleGadgetInfo(msg: any): void {
 	const sessionInfo = msg.sessionInfo;
@@ -70,7 +79,7 @@ export function handleGadgetInfo(msg: any): void {
 		name: msg.data?.imageName || 'Unknown Gadget',
 		running: true,
 		gadgetInfo: msg.data,
-		events: [],
+		events: new EventRingBuffer(getMaxEvents()),
 		logs: [],
 		environment: msg.environmentID,
 		startTime: Date.now(),
@@ -115,13 +124,18 @@ export function handleGadgetQuit(msg: any): void {
 /**
  * Handle bulk gadget event data (type 6).
  * Processes an array of events at once instead of individually.
+ * Creates a new ring buffer and populates it with the provided events.
  */
 export function handleGadgetArrayData(msg: any): void {
-	if (instances[msg.instanceID]) {
-		instances[msg.instanceID].events = msg.data.map((evt: any) => {
-			evt.msgID = eventBuffer.getNextMsgID();
-			return evt;
-		});
-		instances[msg.instanceID].eventCount += msg.data.length;
+	if (!instances[msg.instanceID]) return;
+	// Create new ring buffer and push all events
+	const buffer = new EventRingBuffer<any>(getMaxEvents());
+	const events = msg.data as any[];
+	// Push in reverse order so newest ends up at index 0
+	for (let i = events.length - 1; i >= 0; i--) {
+		events[i].msgID = eventBuffer.getNextMsgID();
+		buffer.push(events[i]);
 	}
+	instances[msg.instanceID].events = buffer;
+	instances[msg.instanceID].eventCount += events.length;
 }

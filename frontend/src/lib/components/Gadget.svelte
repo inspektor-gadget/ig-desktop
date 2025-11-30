@@ -5,9 +5,10 @@
 	import Log from './Gadget/Log.svelte';
 	import Input from './forms/Input.svelte';
 
-	import Play from '$lib/icons/play.svg?raw';
-	import Stop from '$lib/icons/stop.svg?raw';
+	import Play from '$lib/icons/play-small.svg?raw';
+	import Stop from '$lib/icons/stop-small.svg?raw';
 	import Cog from '$lib/icons/cog.svg?raw';
+	import FilterIcon from '$lib/icons/filter-small.svg?raw';
 	import { instances } from '$lib/shared/instances.svelte';
 	import { environments } from '$lib/shared/environments.svelte';
 	import { getContext, setContext } from 'svelte';
@@ -79,10 +80,124 @@
 	const gadget = $state<any>({});
 	setContext('gadget', gadget);
 
+	// Update gadget context with gadget info when available
+	$effect(() => {
+		if (gadgetInfo) {
+			gadget.info = gadgetInfo;
+		}
+	});
+
 	const api: any = getContext('api');
 
-	// Search/filter state (placeholder for future implementation)
+	// Search/filter state with debouncing
+	let searchInput = $state('');
 	let searchQuery = $state('');
+	let searchInputRef: { focus: (selectAll?: boolean) => void } | undefined = $state();
+
+	$effect(() => {
+		// Track searchInput for reactivity
+		const currentInput = searchInput;
+		const timer = setTimeout(() => {
+			searchQuery = currentInput;
+		}, 150);
+		return () => clearTimeout(timer);
+	});
+
+	const searchModeFilter = $derived((configuration.get('searchModeFilter') as boolean) ?? true);
+	const searchHighlightInFilterMode = $derived(
+		(configuration.get('searchHighlightInFilterMode') as boolean) ?? false
+	);
+
+	// Match navigation state
+	let matchCount = $state(0);
+	let totalCount = $state(0);
+	let matchIndices = $state<number[]>([]);
+	let currentMatchIndex = $state(-1);
+	let scrollToIndex: ((index: number) => void) | null = $state(null);
+
+	// Reset to first match when search query changes
+	$effect(() => {
+		searchQuery; // track dependency
+		currentMatchIndex = -1;
+	});
+
+	function handleMatchInfo(info: {
+		matchCount: number;
+		totalCount: number;
+		matchIndices: number[];
+	}) {
+		matchCount = info.matchCount;
+		totalCount = info.totalCount;
+		matchIndices = info.matchIndices;
+		// Reset current match when matches change
+		if (info.matchCount > 0 && currentMatchIndex >= info.matchCount) {
+			currentMatchIndex = 0;
+		} else if (info.matchCount === 0) {
+			currentMatchIndex = -1;
+		}
+	}
+
+	function handleScrollToIndex(fn: (index: number) => void) {
+		scrollToIndex = fn;
+	}
+
+	function goToNextMatch() {
+		if (matchCount === 0) return;
+		currentMatchIndex = (currentMatchIndex + 1) % matchCount;
+		if (scrollToIndex && matchIndices[currentMatchIndex] !== undefined) {
+			scrollToIndex(matchIndices[currentMatchIndex]);
+		}
+	}
+
+	function goToPrevMatch() {
+		if (matchCount === 0) return;
+		currentMatchIndex = currentMatchIndex <= 0 ? matchCount - 1 : currentMatchIndex - 1;
+		if (scrollToIndex && matchIndices[currentMatchIndex] !== undefined) {
+			scrollToIndex(matchIndices[currentMatchIndex]);
+		}
+	}
+
+	function handleSearchKeydown(e: KeyboardEvent) {
+		// Only handle Enter in highlight mode (non-filter mode)
+		if (e.key !== 'Enter' || searchModeFilter) return;
+
+		e.preventDefault();
+		if (e.shiftKey) {
+			goToPrevMatch();
+		} else {
+			goToNextMatch();
+		}
+	}
+
+	function toggleSearchMode() {
+		configuration.set('searchModeFilter', !searchModeFilter);
+	}
+
+	function toggleHighlightInFilterMode() {
+		configuration.set('searchHighlightInFilterMode', !searchHighlightInFilterMode);
+	}
+
+	function openSearchModeSettings() {
+		settingsDialog.openTo('general', 'searchModeFilter');
+	}
+
+	function openHighlightSettings() {
+		settingsDialog.openTo('general', 'searchHighlightInFilterMode');
+	}
+
+	// Global keyboard shortcut for search (Cmd+F on Mac, Ctrl+F on Windows/Linux)
+	$effect(() => {
+		function handleGlobalKeydown(e: KeyboardEvent) {
+			// Check for Cmd+F (Mac) or Ctrl+F (Windows/Linux)
+			if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
+				e.preventDefault();
+				searchInputRef?.focus(true);
+			}
+		}
+
+		window.addEventListener('keydown', handleGlobalKeydown);
+		return () => window.removeEventListener('keydown', handleGlobalKeydown);
+	});
 
 	const instance = $derived(instances[instanceID]);
 	const environmentName = $derived(
@@ -136,16 +251,28 @@
 			<div class="flex grow flex-col overflow-hidden">
 				<div class="flex flex-row items-center justify-between p-2">
 					<div class="flex flex-row items-center gap-2">
-						<div class="flex flex-row items-center pr-2">
-							{#if instance.running}
-								<button
-									onclick={() => {
-										stopInstance(instanceID);
-									}}>{@html Play}</button
+						<div class="flex flex-row items-center">
+							<!-- Play/Stop button group -->
+							<div class="flex">
+								<div
+									class="flex h-8 w-8 items-center justify-center rounded-l border transition-colors {instance.running
+										? 'border-green-600 bg-green-600 text-white'
+										: 'border-gray-600 bg-transparent text-gray-500'}"
+									title={instance.running ? 'Running' : 'Stopped'}
 								>
-							{:else}
-								{@html Stop}
-							{/if}
+									{@html Play}
+								</div>
+								<button
+									onclick={() => stopInstance(instanceID)}
+									disabled={!instance.running}
+									class="flex h-8 w-8 items-center justify-center rounded-r border border-l-0 transition-colors {instance.running
+										? 'border-gray-600 bg-transparent text-red-500 hover:bg-red-600 hover:text-white cursor-pointer'
+										: 'border-red-800 bg-red-800 text-white cursor-default'}"
+									title={instance.running ? 'Stop gadget' : 'Stopped'}
+								>
+									{@html Stop}
+								</button>
+							</div>
 						</div>
 						<div>
 							{#if instance.running}
@@ -193,9 +320,104 @@
 					{#if elapsedTime}<div class="px-2 font-mono text-sm text-gray-400">
 							{elapsedTime}
 						</div>{/if}
-					<div class="px-2">
-						<Input bind:value={searchQuery} placeholder="Search..." class="text-sm" />
+					<div class="flex items-center px-2">
+						<Input
+							bind:this={searchInputRef}
+							bind:value={searchInput}
+							placeholder="Search..."
+							class="text-sm rounded-r-none"
+							onkeydown={handleSearchKeydown}
+						/>
+						<button
+							onclick={toggleSearchMode}
+							ondblclick={openSearchModeSettings}
+							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-800 transition-colors {searchModeFilter
+								? 'bg-blue-600 text-white hover:bg-blue-500'
+								: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
+							title={searchModeFilter
+								? 'Filter mode: hiding non-matching entries (click to switch to highlight mode, double-click to open settings)'
+								: 'Highlight mode: showing all entries with matches highlighted (click to switch to filter mode, double-click to open settings)'}
+						>
+							{@html FilterIcon}
+						</button>
+						<button
+							onclick={toggleHighlightInFilterMode}
+							ondblclick={openHighlightSettings}
+							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-800 transition-colors {searchHighlightInFilterMode
+								? 'bg-yellow-600 text-white hover:bg-yellow-500'
+								: 'bg-gray-700 text-gray-300 hover:bg-gray-600'} {!searchModeFilter && searchQuery
+								? ''
+								: 'rounded-r-lg'}"
+							title={searchHighlightInFilterMode
+								? 'Text highlighting enabled (click to disable, double-click to open settings)'
+								: 'Text highlighting disabled (click to enable, double-click to open settings)'}
+						>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="currentColor"
+							>
+								<path
+									d="M15.243 3.172a4 4 0 0 1 5.657 5.656l-8.486 8.486a2 2 0 0 1-.578.39l-4.243 1.768a1 1 0 0 1-1.287-1.287l1.768-4.243a2 2 0 0 1 .39-.578l8.486-8.486zM3 20h4a1 1 0 1 1 0 2H3a1 1 0 1 1 0-2z"
+								/>
+							</svg>
+						</button>
+						{#if !searchModeFilter && searchQuery}
+							<button
+								onclick={goToPrevMatch}
+								disabled={matchCount === 0}
+								class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-800 bg-gray-700 text-gray-300 transition-colors hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+								title="Previous match (wraps around)"
+							>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
+									<polyline points="15 18 9 12 15 6"></polyline>
+								</svg>
+							</button>
+							<button
+								onclick={goToNextMatch}
+								disabled={matchCount === 0}
+								class="flex h-[38px] w-8 items-center justify-center rounded-r-lg border border-l-0 border-gray-800 bg-gray-700 text-gray-300 transition-colors hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+								title="Next match (wraps around)"
+							>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
+									<polyline points="9 18 15 12 9 6"></polyline>
+								</svg>
+							</button>
+						{/if}
 					</div>
+					{#if searchQuery}
+						<div class="px-2 font-mono text-sm text-gray-400">
+							{#if searchModeFilter}
+								{matchCount} of {totalCount}
+							{:else if matchCount > 0}
+								{currentMatchIndex + 1}/{matchCount}
+							{:else}
+								0 matches
+							{/if}
+						</div>
+					{/if}
 					<button
 						class="cursor-pointer"
 						onclick={() => {
@@ -209,7 +431,17 @@
 							{#if ds.annotations?.['metrics.realtime'] === 'true'}
 								<DatasourceChart {ds} dsID={id}></DatasourceChart>
 							{:else}
-								<DatasourceTable {ds} {events}></DatasourceTable>
+								<DatasourceTable
+									{ds}
+									{events}
+									eventVersion={eventCount}
+									{searchQuery}
+									{searchModeFilter}
+									{searchHighlightInFilterMode}
+									onMatchInfo={handleMatchInfo}
+									{currentMatchIndex}
+									onScrollToIndex={handleScrollToIndex}
+								></DatasourceTable>
 							{/if}
 						{/if}
 					{/each}
@@ -255,7 +487,7 @@
 		class="flex flex-1 items-center justify-center bg-gray-900 align-middle font-mono text-gray-100"
 	>
 		<div>
-			<div class="text-xl">Gadget Instance not found</div>
+			<div class="text-xl">Gadget Instance not found (yet)</div>
 		</div>
 	</div>
 {/if}

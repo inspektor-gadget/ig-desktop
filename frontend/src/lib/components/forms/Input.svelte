@@ -32,6 +32,8 @@
 		required?: boolean;
 		/** Input handler */
 		oninput?: (e: Event) => void;
+		/** Keydown handler */
+		onkeydown?: (e: KeyboardEvent) => void;
 		/** Additional CSS classes */
 		class?: string;
 	}
@@ -46,8 +48,24 @@
 		description,
 		required = false,
 		oninput,
+		onkeydown,
 		class: className = ''
 	}: Props = $props();
+
+	// Reference to the input element for focus control
+	let inputElement: HTMLInputElement | undefined = $state();
+
+	/**
+	 * Focus the input element and optionally select all text
+	 */
+	export function focus(selectAll = false) {
+		if (inputElement) {
+			inputElement.focus();
+			if (selectAll && typeof value === 'string') {
+				inputElement.select();
+			}
+		}
+	}
 
 	/**
 	 * Compute input classes based on state
@@ -81,7 +99,17 @@
 		<p class="text-xs text-gray-500">{description}</p>
 	{/if}
 
-	<input {type} {placeholder} {disabled} {required} bind:value {oninput} class={inputClasses} />
+	<input
+		bind:this={inputElement}
+		{type}
+		{placeholder}
+		{disabled}
+		{required}
+		bind:value
+		{oninput}
+		{onkeydown}
+		class={inputClasses}
+	/>
 
 	{#if error}
 		<p class="text-xs text-red-400">{error}</p>

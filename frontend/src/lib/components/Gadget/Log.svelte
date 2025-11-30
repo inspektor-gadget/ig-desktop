@@ -1,9 +1,9 @@
 <script lang="ts">
-    import Bug from '$lib/icons/bug.svg?raw';
-    import Filter from '$lib/icons/filter-small.svg?raw';
-    import {preferences} from '$lib/shared/preferences.svelte';
+	import Bug from '$lib/icons/bug.svg?raw';
+	import Filter from '$lib/icons/filter-small.svg?raw';
+	import { preferences } from '$lib/shared/preferences.svelte';
 
-    interface LogEntry {
+	interface LogEntry {
 		msg: string;
 		severity: number | string;
 		timestamp?: string;
