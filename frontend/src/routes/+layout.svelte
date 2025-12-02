@@ -1,7 +1,6 @@
 <script lang="js">
 	import '../app.css';
-	import { Application, Window } from '@wailsio/runtime';
-	import { setContext } from 'svelte';
+	import { setContext, onMount } from 'svelte';
 
 	import Logo from '$lib/components/Logo.svelte';
 	import BrandIcon from '$lib/icons/ig/small.svg?raw';
@@ -34,6 +33,7 @@
 	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
+	import { environment } from '$lib/services/environment.service.svelte';
 	import Lock from '$lib/icons/fa/lock.svg?raw';
 	import LockOpen from '$lib/icons/fa/lock-open.svg?raw';
 	import Cog from '$lib/icons/cog.svg?raw';
@@ -152,23 +152,50 @@
 	let gradientEnabled = $derived(configuration.get('gradientEnabled') !== false);
 
 	let modalError = $state(null);
+
 	function handleError(err) {
-		modalError = err;
-	}
+		// Extract meaningful error message from various error types
+		let message;
 
-	// Initialize WebSocket and message routing
-	const isWailsApp = true; // Could be dynamic based on environment detection
-	websocketService.initialize(isWailsApp, (message) => {
-		messageRouter.route(message);
-	});
-
-	// Set up legacy appState.api for browser mode compatibility
-	if (!isWailsApp) {
-		const ws = websocketService.getWebSocket();
-		if (ws) {
-			appState.api.setWs(ws);
+		if (err instanceof ErrorEvent) {
+			// From window.onerror - extract the message
+			message = err.message || 'Unknown error';
+		} else if (err instanceof Error) {
+			message = err.message;
+		} else if (typeof err === 'string') {
+			message = err;
+		} else if (err && typeof err === 'object' && 'message' in err) {
+			message = String(err.message);
+		} else {
+			message = String(err);
 		}
+
+		// Filter out Wails initialization race condition errors (not actionable)
+		if (message.includes('dispatchWailsEvent is not a function')) {
+			console.warn('Wails initialization race condition (can be ignored):', message);
+			return;
+		}
+
+		modalError = message;
 	}
+
+	// Initialize WebSocket and message routing on mount (after Wails globals are ready)
+	onMount(() => {
+		const isWailsApp = environment.isApp;
+		console.log('Environment detected:', isWailsApp ? 'wails' : 'browser');
+
+		websocketService.initialize(isWailsApp, (message) => {
+			messageRouter.route(message);
+		});
+
+		// Set up legacy appState.api for browser mode compatibility
+		if (!isWailsApp) {
+			const ws = websocketService.getWebSocket();
+			if (ws) {
+				appState.api.setWs(ws);
+			}
+		}
+	});
 
 	// Provide API context for child components
 	setContext('api', {
@@ -194,6 +221,7 @@
 
 	let isMaximized = $state(false);
 	async function toggleMaximize() {
+		const { Window } = await import('@wailsio/runtime');
 		if (isMaximized) {
 			isMaximized = false;
 			Window.ToggleMaximise();
@@ -203,6 +231,11 @@
 		}
 	}
 
+	async function quitApp() {
+		const { Application } = await import('@wailsio/runtime');
+		Application.Quit();
+	}
+
 	window.onunhandledrejection = (err) => {
 		handleError(err.reason);
 	};
@@ -210,7 +243,7 @@
 
 <svelte:window onerror={handleError} />
 <div class="flex h-screen flex-col" class:bg-gradient-overlay={gradientEnabled}>
-	{#if websocketService.isApp}
+	{#if environment.hasWindowControls}
 		<div
 			role="banner"
 			ondblclick={() => {
@@ -248,7 +281,7 @@
 					type="button"
 					class="hover:text-white"
 					onclick={() => {
-						Application.Quit();
+						quitApp();
 					}}
 					aria-label="Close window"
 				>
@@ -263,19 +296,13 @@
 				class="scrollbar-hide flex flex-col justify-between space-y-2 overflow-y-scroll border-r border-r-gray-700 bg-gray-900/60 p-3 backdrop-blur-md"
 			>
 				<div class="flex flex-col select-none">
-					{#if !websocketService.isApp}
-						<a href="https://inspektor-gadget.io" target="_blank">
-							<Logo />
-						</a>
-						<hr class="mx-2 my-4 rounded border-t-2 border-t-white/[.3]" />
-					{/if}
 					<NavbarLink href="/" title="Home">{@html BrandIconLarge}</NavbarLink>
-					{#each Object.entries(environments) as [id, environment]}
-						<NavbarLink href="/env/{id}" title={environment.name}>
-							<div class="grid" title={environment.name}>
+					{#each Object.entries(environments) as [id, env]}
+						<NavbarLink href="/env/{id}" title={env.name}>
+							<div class="grid" title={env.name}>
 								<div class="col-start-1 row-start-1 text-gray-600 opacity-80">{@html Gadget}</div>
 								<div class="z-10 col-start-1 row-start-1 flex justify-center text-lg shadow">
-									{environment.name.substring(0, 3)}
+									{env.name.substring(0, 3)}
 								</div>
 							</div>
 						</NavbarLink>
@@ -371,7 +398,7 @@
 				class="flex flex-col gap-8 rounded-xl border border-gray-700 bg-gray-900/90 p-16 backdrop-blur-lg"
 			>
 				<div class="text-lg text-gray-400">An error occurred</div>
-				<div>{JSON.stringify(modalError)}</div>
+				<div class="text-red-400">{modalError}</div>
 				<div class="flex flex-row justify-end">
 					<button
 						onclick={() => {

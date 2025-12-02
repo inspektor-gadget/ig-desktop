@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Browser } from '@wailsio/runtime';
+	import { openExternalURL } from '$lib/utils/external-links';
 	import { environments } from '$lib/shared/environments.svelte.js';
 	import { goto } from '$app/navigation';
 	import type { GadgetRunRequest } from '$lib/types';
@@ -188,7 +188,7 @@
 								Otherwise, check out the
 								<button
 									onclick={() =>
-										Browser.OpenURL('https://inspektor-gadget.io/docs/latest/quick-start')}
+										openExternalURL('https://inspektor-gadget.io/docs/latest/quick-start')}
 									class="text-blue-400 underline hover:text-blue-300"
 								>
 									Quickstart Guide
@@ -196,7 +196,7 @@
 								to deploy Inspektor Gadget to your
 								<button
 									onclick={() =>
-										Browser.OpenURL(
+										openExternalURL(
 											'https://inspektor-gadget.io/docs/latest/quick-start#kubernetes'
 										)}
 									class="text-blue-400 underline hover:text-blue-300"
@@ -206,7 +206,7 @@
 								or run it as a
 								<button
 									onclick={() =>
-										Browser.OpenURL('https://inspektor-gadget.io/docs/latest/quick-start#linux')}
+										openExternalURL('https://inspektor-gadget.io/docs/latest/quick-start#linux')}
 									class="text-blue-400 underline hover:text-blue-300"
 								>
 									daemon on your Linux machine
@@ -377,7 +377,7 @@
 					{#each selectedTips as tip}
 						<button
 							onclick={() => {
-								Browser.OpenURL(tip.url);
+								openExternalURL(tip.url);
 							}}
 							class="group/tip flex gap-2 rounded-lg border border-transparent bg-gray-800 p-4 text-left shadow-sm shadow-gray-950/90 transition-all hover:border-gray-700 hover:bg-gray-900/50"
 						>
@@ -411,7 +411,7 @@
 					</h3>
 					<div class="flex flex-col gap-2">
 						<button
-							onclick={() => Browser.OpenURL('https://inspektor-gadget.io/')}
+							onclick={() => openExternalURL('https://inspektor-gadget.io/')}
 							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
@@ -426,7 +426,7 @@
 						</button>
 
 						<button
-							onclick={() => Browser.OpenURL('https://inspektor-gadget.io/blog')}
+							onclick={() => openExternalURL('https://inspektor-gadget.io/blog')}
 							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
@@ -441,7 +441,7 @@
 						</button>
 
 						<button
-							onclick={() => Browser.OpenURL('https://inspektor-gadget.io/docs/latest/quick-start')}
+							onclick={() => openExternalURL('https://inspektor-gadget.io/docs/latest/quick-start')}
 							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
@@ -457,7 +457,7 @@
 
 						<button
 							onclick={() =>
-								Browser.OpenURL('https://inspektor-gadget.io/docs/latest/gadget-devel/')}
+								openExternalURL('https://inspektor-gadget.io/docs/latest/gadget-devel/')}
 							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
@@ -483,7 +483,7 @@
 					</h3>
 					<div class="flex flex-col gap-2">
 						<button
-							onclick={() => Browser.OpenURL('https://discord.gg/HbapduTjj9')}
+							onclick={() => openExternalURL('https://discord.gg/HbapduTjj9')}
 							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
@@ -501,7 +501,7 @@
 						</button>
 
 						<button
-							onclick={() => Browser.OpenURL('https://kubernetes.slack.com/archives/CSYL75LF6')}
+							onclick={() => openExternalURL('https://kubernetes.slack.com/archives/CSYL75LF6')}
 							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">

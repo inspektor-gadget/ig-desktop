@@ -38,3 +38,23 @@ tasks:
     cmds:
       - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
 
+  igd:
+    summary: Builds the standalone web server (no Wails dependencies)
+    cmds:
+      - task: frontend:build
+      - mkdir -p {{.BIN_DIR}}
+      - go build -ldflags "{{.VERSION_LDFLAGS}}" -tags production,withoutebpf -o {{.BIN_DIR}}/igd ./cmd/igd
+
+  igd:dev:
+    summary: Runs the web server in development mode
+    deps:
+      - frontend:build
+    cmds:
+      - go run ./cmd/igd --listen :8080 --assets frontend/build
+
+  frontend:build:
+    summary: Builds the frontend
+    dir: frontend
+    cmds:
+      - npm run build
+

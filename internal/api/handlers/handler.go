@@ -20,9 +20,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/wailsapp/wails/v3/pkg/application"
-
 	"ig-frontend/internal/api"
+	"ig-frontend/internal/api/transport"
 	"ig-frontend/internal/artifacthub"
 	"ig-frontend/internal/environment"
 	"ig-frontend/internal/gadget"
@@ -110,13 +109,15 @@ func (h *Handler) Handlers() []api.CommandHandler {
 	}
 }
 
-// Register registers all event handlers with the Wails application
-func (h *Handler) Register(app *application.App) {
+// Register registers all event handlers with the given transport.
+// The transport abstracts the communication layer (Wails events, WebSocket, etc.)
+func (h *Handler) Register(t transport.Transport) {
 	h.send = func(ev any) {
-		d, _ := json.Marshal(ev)
 		h.mu.Lock()
 		defer h.mu.Unlock()
-		app.Event.Emit("client", string(d))
+		if err := t.Send(ev); err != nil {
+			log.Printf("handler: failed to send message: %v", err)
+		}
 	}
 
 	// Set the send function on the gadget service
@@ -130,24 +131,18 @@ func (h *Handler) Register(app *application.App) {
 		handlerMap[handler.Command()] = handler
 	}
 
-	app.Event.On("server", func(event *application.CustomEvent) {
+	// Set up message handler for incoming commands
+	t.OnMessage(func(message string) {
 		ev := &api.Event{}
 
-		log.Printf("message: %s", event.Data)
+		log.Printf("handler: received message: %s", message)
 
-		str, ok := event.Data.(string)
-		if !ok {
-			log.Printf("message not of type string")
-			return
-		}
-
-		log.Printf("msg <%s>", str)
-		err := json.Unmarshal([]byte(str), &ev)
+		err := json.Unmarshal([]byte(message), &ev)
 		if err != nil {
-			log.Println(err)
+			log.Printf("handler: failed to unmarshal message: %v", err)
 			return
 		}
-		log.Printf("%+v", ev)
+		log.Printf("handler: parsed event: %+v", ev)
 
 		ev.Type = api.TypeCommandResponse
 
@@ -155,7 +150,12 @@ func (h *Handler) Register(app *application.App) {
 		if handler, ok := handlerMap[ev.Command]; ok {
 			handler.Handle(ev)
 		} else {
-			log.Printf("unknown command: %s", ev.Command)
+			log.Printf("handler: unknown command: %s", ev.Command)
 		}
 	})
+
+	// Start listening for messages
+	if err := t.Start(); err != nil {
+		log.Printf("handler: failed to start transport: %v", err)
+	}
 }

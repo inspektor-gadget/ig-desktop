@@ -1,5 +1,3 @@
-import { Events } from '@wailsio/runtime';
-
 type WebSocketLike = {
 	send: (data: string) => void;
 };
@@ -34,7 +32,10 @@ export class WebSocketService {
 	/**
 	 * Initialize WebSocket for Wails environment using Events API.
 	 */
-	private initializeWails(): void {
+	private async initializeWails(): Promise<void> {
+		// Dynamic import to avoid loading Wails runtime in browser mode
+		const { Events } = await import('@wailsio/runtime');
+
 		this.connected = true;
 		this.ws = {
 			send: (msg: string) => {
@@ -66,6 +67,8 @@ export class WebSocketService {
 
 		ws.addEventListener('open', () => {
 			this.connected = true;
+			// Send handshake to trigger backend to load environments
+			this.send(JSON.stringify({ cmd: 'helo' }));
 		});
 
 		ws.addEventListener('close', () => {

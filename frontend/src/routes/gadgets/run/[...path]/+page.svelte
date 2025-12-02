@@ -18,7 +18,7 @@
 	import Title from '$lib/components/params/Title.svelte';
 	import Select from '$lib/components/forms/Select.svelte';
 	import type { GadgetInfo, GadgetRunRequest } from '$lib/types';
-	import { Clipboard } from '@wailsio/runtime';
+	import { copyToClipboard } from '$lib/utils/clipboard';
 	import {
 		saveK8sRecent,
 		saveGadgetURLRecent,
@@ -301,11 +301,11 @@
 	}
 
 	async function copyCommand() {
-		await Clipboard.SetText(command);
+		await copyToClipboard(command);
 	}
 
 	async function copyManifest() {
-		await Clipboard.SetText(manifest);
+		await copyToClipboard(manifest);
 	}
 </script>
 

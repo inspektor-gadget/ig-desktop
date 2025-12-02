@@ -1,7 +1,7 @@
 <script>
 	import { marked } from 'marked';
 	import { getContext } from 'svelte';
-	import { Browser } from '@wailsio/runtime';
+	import { openExternalURL } from '$lib/utils/external-links';
 	import Panel from '$lib/components/Panel.svelte';
 	import ArtifactHub from '$lib/icons/artifacthub.svg?raw';
 	import Play from '$lib/icons/play-circle.svg?raw';
@@ -71,7 +71,7 @@
 					const urlObj = new URL(url);
 					// Only allow http and https protocols
 					if (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') {
-						Browser.OpenURL(url);
+						openExternalURL(url);
 					} else {
 						console.warn('Blocked non-HTTP(S) URL:', url);
 					}
@@ -200,7 +200,7 @@
 						<!-- Repository Link -->
 						{#if pkg.repository?.url}
 							<button
-								onclick={() => Browser.OpenURL(pkg.repository.url)}
+								onclick={() => openExternalURL(pkg.repository.url)}
 								class="flex items-center gap-2 text-blue-400 transition-colors hover:text-blue-300"
 							>
 								<div>{@html Link}</div>
@@ -211,7 +211,7 @@
 						<!-- ArtifactHub Link -->
 						<button
 							onclick={() =>
-								Browser.OpenURL(
+								openExternalURL(
 									`https://artifacthub.io/packages/ig-gadget/${pkg.repository?.name}/${pkg.normalized_name}`
 								)}
 							class="flex items-center gap-2 text-purple-400 transition-colors hover:text-purple-300"

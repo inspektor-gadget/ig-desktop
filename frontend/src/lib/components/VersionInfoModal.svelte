@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Browser } from '@wailsio/runtime';
+	import { openExternalURL } from '$lib/utils/external-links';
 	import BaseModal from './BaseModal.svelte';
 	import Button from './Button.svelte';
 	import { apiService } from '$lib/services/api.service.svelte';
@@ -67,7 +67,7 @@
 	}
 
 	function openReleasesPage() {
-		Browser.OpenURL(versionData.releasesUrl);
+		openExternalURL(versionData.releasesUrl);
 	}
 </script>
 

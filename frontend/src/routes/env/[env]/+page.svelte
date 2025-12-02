@@ -155,6 +155,9 @@
 	}
 
 	async function deleteEnvironment() {
+		// Capture id before any async operations (env becomes undefined after delete)
+		const envId = env.id;
+
 		const confirmed = await confirmationModal.confirm({
 			title: 'Delete Environment',
 			message: 'Do you really want to delete this environment?',
@@ -162,10 +165,10 @@
 			cancelLabel: 'Cancel'
 		});
 		if (!confirmed) return;
-		const res = await api.request({ cmd: 'deleteEnvironment', data: { id: env.id } });
+		await api.request({ cmd: 'deleteEnvironment', data: { id: envId } });
 
 		// Clean up all environment-scoped preferences
-		cleanupEnvironment(env.id);
+		cleanupEnvironment(envId);
 
 		goto('/');
 	}

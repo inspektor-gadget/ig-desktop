@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
-	import { Browser } from '@wailsio/runtime';
+	import { openExternalURL } from '$lib/utils/external-links';
 
 	interface Props {
 		href?: string | null;
@@ -38,7 +38,7 @@
 			return true;
 		}
 		if (href) {
-			Browser.OpenURL(href);
+			openExternalURL(href);
 		}
 		ev.preventDefault();
 		return false;
