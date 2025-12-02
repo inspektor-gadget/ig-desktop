@@ -284,13 +284,20 @@
 						</div>
 						{#if instance.isReplay}
 							<div class="flex items-center gap-2 text-sm text-gray-400">
-								<span
-									class="rounded border border-blue-700 bg-blue-900/50 px-2 py-0.5 text-xs font-semibold text-blue-300"
-								>
-									REPLAY
-								</span>
-								{#if instance.running}
-									<span class="animate-pulse">Playing...</span>
+								{#if instance.replayMode === 'snapshot'}
+									<span
+										class="rounded border border-purple-700 bg-purple-900/50 px-2 py-0.5 text-xs font-semibold text-purple-300"
+									>
+										SNAPSHOT
+									</span>
+								{:else}
+									<span
+										class="rounded border border-blue-700 bg-blue-900/50 px-2 py-0.5 text-xs font-semibold text-blue-300 {instance.running
+											? 'animate-pulse'
+											: ''}"
+									>
+										REPLAY
+									</span>
 								{/if}
 							</div>
 						{/if}

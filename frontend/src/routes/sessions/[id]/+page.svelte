@@ -5,6 +5,8 @@
 	import type { SessionWithRuns } from '$lib/types';
 	import { instances } from '$lib/shared/instances.svelte';
 	import { ReplayService } from '$lib/services/replay.service';
+	import { EventRingBuffer } from '$lib/utils/ring-buffer';
+	import { configuration } from '$lib/stores/configuration.svelte';
 	import Gadget from '$lib/components/Gadget.svelte';
 	import Play from '$lib/icons/play-small.svg?raw';
 	import Eye from '$lib/icons/fa/eye.svg?raw';
@@ -62,17 +64,27 @@
 		loadedRuns.add(runId);
 	}
 
-	function createReplayInstance(instanceId: string, run: any, environmentId: string) {
+	function getMaxEvents(): number {
+		return (configuration.get('maxEventsPerGadget') as number) || 10000;
+	}
+
+	function createReplayInstance(
+		instanceId: string,
+		run: any,
+		environmentId: string,
+		mode: 'snapshot' | 'replay'
+	) {
 		instances[instanceId] = {
 			name: run.gadgetImage,
-			running: false,
+			running: mode === 'replay',
 			gadgetInfo: run.gadgetInfo,
-			events: [],
+			events: new EventRingBuffer(getMaxEvents()),
 			logs: [],
 			environment: environmentId,
 			startTime: run.startedAt,
 			eventCount: run.eventCount,
 			isReplay: true,
+			replayMode: mode,
 			runId: run.id
 		};
 	}
@@ -90,6 +102,7 @@
 		}
 
 		const instanceId = `replay-${runId}`;
+		const replayMode = mode === 'instant' ? 'snapshot' : 'replay';
 
 		// Stop any current playback
 		replayService.stop();
@@ -97,14 +110,18 @@
 
 		// Clear previous events if reloading, or create new instance
 		if (instances[instanceId]) {
-			instances[instanceId].events = [];
+			instances[instanceId].events.clear();
 			instances[instanceId].logs = [];
+			instances[instanceId].eventCount = 0;
+			instances[instanceId].replayMode = replayMode;
+			instances[instanceId].running = replayMode === 'replay';
 		} else {
-			createReplayInstance(instanceId, run, session.environmentId);
+			createReplayInstance(instanceId, run, session.environmentId, replayMode);
 		}
 
 		// Handle empty runs
 		if (run.eventCount === 0) {
+			instances[instanceId].running = false;
 			return;
 		}
 
@@ -121,6 +138,9 @@
 			mode,
 			onComplete: () => {
 				isPlaying = false;
+				if (instances[instanceId]) {
+					instances[instanceId].running = false;
+				}
 			},
 			onProgress: (current, total) => {
 				const progress = Math.round((current / total) * 100);
@@ -134,6 +154,10 @@
 	function stopPlayback() {
 		replayService.stop();
 		isPlaying = false;
+		// Mark current replay instance as stopped
+		if (activeRunId && instances[`replay-${activeRunId}`]) {
+			instances[`replay-${activeRunId}`].running = false;
+		}
 	}
 
 	// Clean up replay instances when component unmounts
