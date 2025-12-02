@@ -520,6 +520,70 @@
 		const snapshot = { fields: $state.snapshot(ds.fields), entry: $state.snapshot(data) };
 		gadgetContext.inspect = snapshot;
 	}
+
+	/**
+	 * Handle copy event from VirtualTableBody.
+	 * Formats selected rows as CSV or JSON based on settings and copies to clipboard.
+	 */
+	function handleCopy(event: {
+		items: any[];
+		indices: number[];
+		columns: { key: string; label: string }[];
+		excludeHeaders: boolean;
+	}) {
+		const format = (configuration.get('copyFormat') as string) || 'csv';
+		const fieldNames = visibleFields.map((f: any) => f.fullName);
+
+		let text: string;
+
+		if (format === 'json') {
+			// JSON format: array of objects with only visible fields
+			const data = event.items.map((item) => {
+				const obj: Record<string, any> = {};
+				for (const fieldName of fieldNames) {
+					obj[fieldName] = item[fieldName];
+				}
+				return obj;
+			});
+			text = JSON.stringify(data, null, 2);
+		} else {
+			// CSV format: Excel/Google Sheets compatible
+			const rows: string[] = [];
+
+			// Add header row unless Alt was held
+			if (!event.excludeHeaders) {
+				rows.push(fieldNames.map(escapeCSVField).join('\t'));
+			}
+
+			// Add data rows
+			for (const item of event.items) {
+				const values = fieldNames.map((fieldName: string) => {
+					const value = item[fieldName];
+					return escapeCSVField(value == null ? '' : String(value));
+				});
+				rows.push(values.join('\t'));
+			}
+
+			text = rows.join('\n');
+		}
+
+		navigator.clipboard.writeText(text).catch((err) => {
+			console.error('Failed to copy to clipboard:', err);
+		});
+	}
+
+	/**
+	 * Escape a field value for CSV format.
+	 * Uses tab-separated values for better Excel/Sheets compatibility.
+	 * Quotes fields containing tabs, newlines, or quotes.
+	 */
+	function escapeCSVField(value: string): string {
+		// If value contains tab, newline, or double quote, wrap in quotes and escape quotes
+		if (value.includes('\t') || value.includes('\n') || value.includes('"')) {
+			return '"' + value.replace(/"/g, '""') + '"';
+		}
+		return value;
+	}
 </script>
 
 <div class="gadget-table flex h-full flex-col overflow-hidden border-t-1 border-gray-500">
@@ -583,6 +647,7 @@
 				}}
 				onrowclick={(entry) => inspect(entry)}
 				onVisibleRangeChange={handleVisibleRangeChange}
+				oncopy={handleCopy}
 			>
 				{#snippet header(cols, { startResize, resizingIndex, setHeaderRow })}
 					<tr class="bg-gray-950" use:setHeaderRow>

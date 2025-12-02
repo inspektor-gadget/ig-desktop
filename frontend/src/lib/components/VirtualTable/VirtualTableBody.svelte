@@ -48,6 +48,17 @@
 	// Default character width if not specified
 	const DEFAULT_CHAR_WIDTH = 16;
 
+	interface CopyEvent {
+		/** The selected items being copied */
+		items: T[];
+		/** The selected indices */
+		indices: number[];
+		/** Column definitions */
+		columns: Column[];
+		/** Whether Alt key was held (exclude headers) */
+		excludeHeaders: boolean;
+	}
+
 	interface Props {
 		/** Array of items to display */
 		items: T[];
@@ -83,6 +94,12 @@
 		onfocus?: (item: T, index: number) => void;
 		/** Optional callback when selection changes (provides all selected indices) */
 		onselectionchange?: (selectedIndices: number[]) => void;
+		/**
+		 * Optional callback when user copies selection (Ctrl/Cmd+C).
+		 * Receives selected items, indices, columns, and whether Alt was held.
+		 * Hold Alt to exclude headers from the copy.
+		 */
+		oncopy?: (event: CopyEvent) => void;
 	}
 
 	let {
@@ -97,7 +114,8 @@
 		onrowclick,
 		onVisibleRangeChange,
 		onfocus,
-		onselectionchange
+		onselectionchange,
+		oncopy
 	}: Props = $props();
 
 	// ===========================================
@@ -463,16 +481,18 @@
 		if (event.metaKey || event.ctrlKey) return; // Let click handler deal with toggle
 
 		isDragging = true;
-		dragStartIndex = index;
 		dragCurrentIndex = index;
 
 		// Determine drag mode based on shift key and whether start row is selected
 		if (event.shiftKey) {
-			// Shift+drag: add or remove based on start row's selection state
-			dragModifyMode = isIndexSelected(index) ? 'remove' : 'add';
-			selectionBeforeDrag = [...selectionEntries];
+			// Shift+click/drag: use existing anchor as start point for range selection
+			// This allows shift+click to extend from previous selection anchor
+			dragStartIndex = anchorIndex >= 0 ? anchorIndex : index;
+			dragModifyMode = 'replace';
+			selectionBeforeDrag = [];
 		} else {
-			// Normal drag: replace selection
+			// Normal drag: replace selection starting from clicked row
+			dragStartIndex = index;
 			dragModifyMode = 'replace';
 			selectionBeforeDrag = [];
 		}
@@ -666,6 +686,22 @@
 					}
 					notifySelectionChange();
 					event.preventDefault();
+				}
+				return;
+			case 'c':
+				// Ctrl/Meta+C: Copy selection
+				if ((event.metaKey || event.ctrlKey) && oncopy) {
+					const sortedIndices = Array.from(selectedIndices).sort((a, b) => a - b);
+					if (sortedIndices.length > 0) {
+						const selectedItems = sortedIndices.map((i) => items[i]);
+						oncopy({
+							items: selectedItems,
+							indices: sortedIndices,
+							columns,
+							excludeHeaders: event.altKey
+						});
+						event.preventDefault();
+					}
 				}
 				return;
 			default:

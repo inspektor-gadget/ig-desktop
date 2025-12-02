@@ -68,9 +68,21 @@ export const configurationSchema: ConfigurationSchema = {
 					key: 'searchHighlightInFilterMode',
 					title: 'Highlight matches in filter mode',
 					description:
-						'When enabled, matching text is also highlighted when using filter mode. May impact performance with large datasets.',
+						'When enabled, matching text is also highlighted when using filter mode. May impact performance.',
 					type: 'toggle',
 					default: false
+				},
+				{
+					key: 'copyFormat',
+					title: 'Copy format for rows',
+					description:
+						'Format used when copying selected rows to clipboard. CSV format is compatible with Excel and Google Sheets. Hold Alt while copying to exclude headers.',
+					type: 'select',
+					options: {
+						csv: 'CSV (Excel/Sheets compatible)',
+						json: 'JSON'
+					},
+					default: 'csv'
 				}
 			]
 		},
