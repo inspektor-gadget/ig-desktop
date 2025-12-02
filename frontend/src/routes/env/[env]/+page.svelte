@@ -25,6 +25,7 @@
 	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
 	import ChevronRight from '$lib/icons/chevron-right.svg?raw';
 	import Grid from '$lib/icons/grid-small.svg?raw';
+	import Refresh from '$lib/icons/refresh-small.svg?raw';
 	import { preferences } from '$lib/shared/preferences.svelte';
 	import { formatAbsoluteTime, formatRelativeTime } from '$lib/utils/time';
 	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
@@ -475,6 +476,12 @@
 					bodyPadding="large"
 				>
 					{#snippet headerActions()}
+						<button
+							onclick={() => getList(currentEnvId)}
+							title="Refresh"
+							class="cursor-pointer text-gray-400 transition-all hover:text-blue-400"
+							>{@html Refresh}</button
+						>
 						<a
 							href="https://inspektor-gadget.io/docs/latest/reference/headless"
 							title="Documentation"
