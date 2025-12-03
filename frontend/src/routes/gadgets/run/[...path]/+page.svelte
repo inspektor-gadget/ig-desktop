@@ -62,8 +62,11 @@
 	);
 
 	// Initialize recordGadgetRun from alwaysRecord setting on mount
+	// Also reset when detached mode is enabled (session recording doesn't make sense for detached)
 	$effect(() => {
-		if (sessionRecordingEnabled && alwaysRecord) {
+		if (detached) {
+			recordGadgetRun = false;
+		} else if (sessionRecordingEnabled && alwaysRecord) {
 			recordGadgetRun = true;
 		} else if (!sessionRecordingEnabled) {
 			recordGadgetRun = false;
@@ -514,8 +517,8 @@
 					{/if}
 				</div>
 
-				<!-- Session recording settings (experimental) -->
-				{#if sessionRecordingEnabled}
+				<!-- Session recording settings (experimental) - not available for detached instances -->
+				{#if sessionRecordingEnabled && !detached}
 					<div
 						class="main-gradient flex flex-col gap-4 rounded-xl border border-gray-700 bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 					>
