@@ -668,7 +668,7 @@
 				</div>
 			</Panel>
 
-			<Panel title="Manifest" icon={File} color="purple">
+			<Panel title="Gadget Manifest" icon={File} color="purple">
 				{#snippet headerActions()}
 					<button
 						onclick={copyManifest}
