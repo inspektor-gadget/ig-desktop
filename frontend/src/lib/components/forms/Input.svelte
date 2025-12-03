@@ -34,6 +34,8 @@
 		oninput?: (e: Event) => void;
 		/** Keydown handler */
 		onkeydown?: (e: KeyboardEvent) => void;
+		/** Blur handler */
+		onblur?: (e: FocusEvent) => void;
 		/** Additional CSS classes */
 		class?: string;
 	}
@@ -49,6 +51,7 @@
 		required = false,
 		oninput,
 		onkeydown,
+		onblur,
 		class: className = ''
 	}: Props = $props();
 
@@ -108,6 +111,7 @@
 		bind:value
 		{oninput}
 		{onkeydown}
+		{onblur}
 		class={inputClasses}
 	/>
 

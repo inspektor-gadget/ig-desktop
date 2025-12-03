@@ -31,6 +31,8 @@
 		required?: boolean;
 		/** Input handler */
 		oninput?: (e: Event) => void;
+		/** Blur handler */
+		onblur?: (e: FocusEvent) => void;
 		/** Additional CSS classes */
 		class?: string;
 	}
@@ -45,6 +47,7 @@
 		description,
 		required = false,
 		oninput,
+		onblur,
 		class: className = ''
 	}: Props = $props();
 
@@ -80,7 +83,15 @@
 		<p class="text-xs text-gray-500">{description}</p>
 	{/if}
 
-	<textarea {rows} {placeholder} {disabled} {required} bind:value {oninput} class={textareaClasses}
+	<textarea
+		{rows}
+		{placeholder}
+		{disabled}
+		{required}
+		bind:value
+		{oninput}
+		{onblur}
+		class={textareaClasses}
 	></textarea>
 
 	{#if error}

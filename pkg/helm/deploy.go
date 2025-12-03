@@ -32,6 +32,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"ig-frontend/internal/config"
 )
 
 const (
@@ -39,6 +41,20 @@ const (
 	inspektorGadgetRepoURL  = "https://inspektor-gadget.github.io/charts"
 	inspektorGadgetChart    = "gadget/gadget"
 )
+
+// newIsolatedSettings creates Helm CLI settings using an isolated directory
+// within the app's config folder, avoiding interference with any existing Helm installation.
+func newIsolatedSettings() (*cli.EnvSettings, error) {
+	helmDir, err := config.GetDir("helm")
+	if err != nil {
+		return nil, fmt.Errorf("getting helm config directory: %w", err)
+	}
+
+	settings := cli.New()
+	settings.RepositoryConfig = filepath.Join(helmDir, "repositories.yaml")
+	settings.RepositoryCache = filepath.Join(helmDir, "cache")
+	return settings, nil
+}
 
 type DeployConfig struct {
 	Namespace    string
@@ -62,8 +78,11 @@ type Deployer struct {
 	progressChan chan DeployProgress
 }
 
-func NewDeployer(config *DeployConfig) *Deployer {
-	settings := cli.New()
+func NewDeployer(config *DeployConfig) (*Deployer, error) {
+	settings, err := newIsolatedSettings()
+	if err != nil {
+		return nil, err
+	}
 	if config.KubeConfig != "" {
 		settings.KubeConfig = config.KubeConfig
 	}
@@ -72,7 +91,7 @@ func NewDeployer(config *DeployConfig) *Deployer {
 		config:       config,
 		settings:     settings,
 		progressChan: make(chan DeployProgress, 100),
-	}
+	}, nil
 }
 
 func (d *Deployer) GetProgressChan() <-chan DeployProgress {
@@ -239,12 +258,17 @@ func (d *Deployer) uninstall(ctx context.Context) error {
 	return err
 }
 
-func (d *Deployer) addRepo(ctx context.Context) error {
-	repoFile := d.settings.RepositoryConfig
+// ensureRepoExists ensures the Inspektor Gadget Helm repository is configured
+// and the index file is cached. Returns true if the repo config already existed.
+func ensureRepoExists(settings *cli.EnvSettings) (bool, error) {
+	repoFile := settings.RepositoryConfig
 
-	// Ensure the repository directory exists
+	// Ensure the repository and cache directories exist
 	if err := os.MkdirAll(filepath.Dir(repoFile), 0755); err != nil {
-		return err
+		return false, err
+	}
+	if err := os.MkdirAll(settings.RepositoryCache, 0755); err != nil {
+		return false, err
 	}
 
 	// Load existing repositories
@@ -252,38 +276,65 @@ func (d *Deployer) addRepo(ctx context.Context) error {
 	if _, err := os.Stat(repoFile); err == nil {
 		repoFileContent, err = repo.LoadFile(repoFile)
 		if err != nil {
-			return err
+			return false, err
 		}
 	} else {
 		repoFileContent = repo.NewFile()
 	}
 
-	// Check if repo already exists
+	// Check if repo already exists in config
+	var existingEntry *repo.Entry
 	for _, r := range repoFileContent.Repositories {
 		if r.Name == inspektorGadgetRepoName {
-			log.Infof("Repository %s already exists", inspektorGadgetRepoName)
-			return nil
+			existingEntry = r
+			break
 		}
 	}
 
-	// Add new repository
-	entry := &repo.Entry{
-		Name: inspektorGadgetRepoName,
-		URL:  inspektorGadgetRepoURL,
+	repoExisted := existingEntry != nil
+
+	// Use existing entry or create new one
+	entry := existingEntry
+	if entry == nil {
+		entry = &repo.Entry{
+			Name: inspektorGadgetRepoName,
+			URL:  inspektorGadgetRepoURL,
+		}
 	}
 
-	chartRepo, err := repo.NewChartRepository(entry, getter.All(d.settings))
+	chartRepo, err := repo.NewChartRepository(entry, getter.All(settings))
+	if err != nil {
+		return repoExisted, err
+	}
+
+	// Set cache path to our isolated directory
+	chartRepo.CachePath = settings.RepositoryCache
+
+	// Always download/update index file to ensure cache is populated
+	if _, err := chartRepo.DownloadIndexFile(); err != nil {
+		return repoExisted, err
+	}
+
+	// Save repo config if it's new
+	if !repoExisted {
+		repoFileContent.Update(entry)
+		if err := repoFileContent.WriteFile(repoFile, 0644); err != nil {
+			return false, err
+		}
+	}
+
+	return repoExisted, nil
+}
+
+func (d *Deployer) addRepo(ctx context.Context) error {
+	existed, err := ensureRepoExists(d.settings)
 	if err != nil {
 		return err
 	}
-
-	// Download index file
-	if _, err := chartRepo.DownloadIndexFile(); err != nil {
-		return err
+	if existed {
+		log.Infof("Repository %s already exists", inspektorGadgetRepoName)
 	}
-
-	repoFileContent.Update(entry)
-	return repoFileContent.WriteFile(repoFile, 0644)
+	return nil
 }
 
 func (d *Deployer) updateRepo(ctx context.Context) error {
@@ -299,6 +350,7 @@ func (d *Deployer) updateRepo(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+			chartRepo.CachePath = d.settings.RepositoryCache
 			if _, err := chartRepo.DownloadIndexFile(); err != nil {
 				return err
 			}
@@ -531,4 +583,50 @@ func getKubeConfig(kubeconfig string, kubeContext string) (*rest.Config, error) 
 
 func getKubernetesClient(config *rest.Config) (*kubernetes.Clientset, error) {
 	return kubernetes.NewForConfig(config)
+}
+
+// GetChartValues fetches the default values.yaml from the Inspektor Gadget Helm chart
+func GetChartValues(chartVersion string) (string, error) {
+	settings, err := newIsolatedSettings()
+	if err != nil {
+		return "", fmt.Errorf("creating helm settings: %w", err)
+	}
+
+	// Ensure repo exists
+	if _, err := ensureRepoExists(settings); err != nil {
+		return "", fmt.Errorf("ensuring repo exists: %w", err)
+	}
+
+	// Create action configuration
+	actionConfig := new(action.Configuration)
+	if err := actionConfig.Init(nil, "", os.Getenv("HELM_DRIVER"), log.Debugf); err != nil {
+		return "", fmt.Errorf("failed to init action config: %w", err)
+	}
+
+	// Create a temporary install client just to locate the chart
+	client := action.NewInstall(actionConfig)
+	if chartVersion != "" {
+		client.Version = chartVersion
+	}
+
+	// Locate chart
+	chartPath, err := client.ChartPathOptions.LocateChart(inspektorGadgetChart, settings)
+	if err != nil {
+		return "", fmt.Errorf("failed to locate chart: %w", err)
+	}
+
+	// Load chart
+	chart, err := loader.Load(chartPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to load chart: %w", err)
+	}
+
+	// Get raw values from the chart
+	for _, file := range chart.Raw {
+		if file.Name == "values.yaml" {
+			return string(file.Data), nil
+		}
+	}
+
+	return "", fmt.Errorf("values.yaml not found in chart")
 }

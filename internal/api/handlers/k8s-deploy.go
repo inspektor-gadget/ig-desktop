@@ -53,6 +53,14 @@ type DeploymentStatusRequest struct {
 	DeploymentID string `json:"deploymentId"`
 }
 
+type GetChartValuesRequest struct {
+	ChartVersion string `json:"chartVersion,omitempty"`
+}
+
+type GetChartValuesResponse struct {
+	Values string `json:"values"`
+}
+
 // HandleCheckIGDeployment checks if Inspektor Gadget is deployed in the cluster
 func (h *Handler) HandleCheckIGDeployment(ev *api.Event) {
 	req := &CheckIGDeploymentRequest{}
@@ -133,7 +141,21 @@ func (h *Handler) HandleDeployIG(ev *api.Event) {
 // performDeployment runs the actual Helm deployment and streams progress
 func (h *Handler) performDeployment(deploymentID string, config *helm.DeployConfig, redeploy bool, undeploy bool) {
 	log.Infof("[Deploy %s] Starting deployment with config: %+v, redeploy: %v, undeploy: %v", deploymentID, config, redeploy, undeploy)
-	deployer := helm.NewDeployer(config)
+	deployer, err := helm.NewDeployer(config)
+	if err != nil {
+		log.Errorf("[Deploy %s] Failed to create deployer: %v", deploymentID, err)
+		errorData := map[string]interface{}{
+			"deploymentId": deploymentID,
+			"error":        fmt.Sprintf("Failed to initialize Helm: %v", err),
+			"progress":     0,
+		}
+		data, _ := json.Marshal(errorData)
+		h.send(&api.GadgetEvent{
+			Type: api.TypeDeploymentError,
+			Data: data,
+		})
+		return
+	}
 	progressChan := deployer.GetProgressChan()
 
 	// Create a context with timeout
@@ -249,4 +271,26 @@ func (h *Handler) performDeployment(deploymentID string, config *helm.DeployConf
 			log.Infof("[Deploy %s] Deployment succeeded, waiting for final progress events", deploymentID)
 		}
 	}
+}
+
+// HandleGetChartValues fetches the default values.yaml from the Helm chart
+func (h *Handler) HandleGetChartValues(ev *api.Event) {
+	req := &GetChartValuesRequest{}
+	if len(ev.Data) > 0 {
+		if err := json.Unmarshal(ev.Data, req); err != nil {
+			h.send(ev.SetError(err))
+			return
+		}
+	}
+
+	values, err := helm.GetChartValues(req.ChartVersion)
+	if err != nil {
+		h.send(ev.SetError(fmt.Errorf("failed to get chart values: %w", err)))
+		return
+	}
+
+	response := &GetChartValuesResponse{
+		Values: values,
+	}
+	h.send(ev.SetData(response))
 }
