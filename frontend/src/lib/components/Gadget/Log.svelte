@@ -1,7 +1,9 @@
 <script lang="ts">
 	import Bug from '$lib/icons/bug.svg?raw';
 	import Filter from '$lib/icons/filter-small.svg?raw';
+	import Trash from '$lib/icons/trash-small.svg?raw';
 	import { preferences } from '$lib/shared/preferences.svelte';
+	import { instances } from '$lib/shared/instances.svelte';
 
 	interface LogEntry {
 		msg: string;
@@ -10,7 +12,13 @@
 		msgID?: string;
 	}
 
-	let { log }: { log: LogEntry[] } = $props();
+	let { log, instanceID }: { log: LogEntry[]; instanceID?: string } = $props();
+
+	function clearLogs() {
+		if (instanceID && instances[instanceID]) {
+			instances[instanceID].logs = [];
+		}
+	}
 
 	let element: HTMLDivElement;
 	let dropdownOpen = $state(false);
@@ -210,6 +218,14 @@
 				placeholder="Search logs..."
 				bind:value={search}
 			/>
+			<!-- Clear Logs Button -->
+			<button
+				onclick={clearLogs}
+				class="flex items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900/50 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:border-red-700 hover:bg-red-900/30 hover:text-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none"
+				title="Clear logs"
+			>
+				<span class="h-4 w-4">{@html Trash}</span>
+			</button>
 		</div>
 	{/if}
 </div>

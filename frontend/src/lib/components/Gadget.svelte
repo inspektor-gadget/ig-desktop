@@ -465,7 +465,7 @@
 				class="flex flex-col overflow-hidden"
 				style={logCollapsed ? 'flex: 0 0 auto' : `flex: 0 0 ${logHeight}px`}
 			>
-				<Log log={logs} />
+				<Log log={logs} {instanceID} />
 			</div>
 		</div>
 		{#if showInspector}
