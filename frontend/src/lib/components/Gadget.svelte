@@ -455,6 +455,7 @@
 									onMatchInfo={handleMatchInfo}
 									{currentMatchIndex}
 									onScrollToIndex={handleScrollToIndex}
+									isRunning={instance.running}
 								></DatasourceTable>
 							{/if}
 						{/if}

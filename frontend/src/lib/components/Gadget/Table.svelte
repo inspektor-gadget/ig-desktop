@@ -27,7 +27,8 @@
 		onMatchInfo,
 		currentMatchIndex = -1,
 		onScrollToIndex,
-		hookRegistry = null
+		hookRegistry = null,
+		isRunning = true
 	}: {
 		ds: any;
 		events: EventRingBuffer<any> | undefined;
@@ -43,6 +44,7 @@
 		currentMatchIndex?: number;
 		onScrollToIndex?: (scrollFn: (index: number) => void) => void;
 		hookRegistry?: TableHookRegistry | null;
+		isRunning?: boolean;
 	} = $props();
 
 	// Get gadget info from context
@@ -52,6 +54,31 @@
 	// Column visibility menu state
 	let menuOpen = $state(false);
 	let menuButton: HTMLButtonElement | undefined = $state();
+
+	// Sorting state (only active when gadget is stopped)
+	let sortColumn = $state<string | null>(null);
+	let sortDirection = $state<'asc' | 'desc'>('asc');
+
+	// Handle column header click for sorting
+	function handleColumnSort(fieldName: string) {
+		if (isRunning) return; // Only allow sorting when stopped
+		if (sortColumn === fieldName) {
+			// Toggle direction if clicking same column
+			sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+		} else {
+			// New column, start with ascending
+			sortColumn = fieldName;
+			sortDirection = 'asc';
+		}
+	}
+
+	// Reset sorting when gadget starts running
+	$effect(() => {
+		if (isRunning) {
+			sortColumn = null;
+			sortDirection = 'asc';
+		}
+	});
 
 	// Configuration key for column visibility (per gadget + datasource)
 	const columnVisibilityKey = $derived(
@@ -276,13 +303,48 @@
 	// When not filtering, get array from ring buffer; when filtering, use worker results
 	// eventVersion prop is a reactive signal from parent that changes when events are added
 	// While waiting for first filter result, show unfiltered events to avoid blank screen
-	const displayEvents = $derived.by(() => {
+	const unsortedEvents = $derived.by(() => {
 		// Access eventVersion to create dependency - this is updated by parent when events change
 		const _version = eventVersion;
 		if (needsFiltering && hasReceivedFilterResult) {
 			return workerFilteredEvents;
 		}
 		return events?.toArray() ?? [];
+	});
+
+	// Apply sorting when gadget is stopped and a sort column is selected
+	const displayEvents = $derived.by(() => {
+		if (!sortColumn || isRunning) {
+			return unsortedEvents;
+		}
+
+		// Create a sorted copy
+		const sorted = [...unsortedEvents];
+		const col = sortColumn;
+		const dir = sortDirection;
+
+		sorted.sort((a, b) => {
+			const aVal = a[col];
+			const bVal = b[col];
+
+			// Handle null/undefined
+			if (aVal == null && bVal == null) return 0;
+			if (aVal == null) return dir === 'asc' ? -1 : 1;
+			if (bVal == null) return dir === 'asc' ? 1 : -1;
+
+			// Compare based on type
+			if (typeof aVal === 'number' && typeof bVal === 'number') {
+				return dir === 'asc' ? aVal - bVal : bVal - aVal;
+			}
+
+			// String comparison (case-insensitive)
+			const aStr = String(aVal).toLowerCase();
+			const bStr = String(bVal).toLowerCase();
+			const cmp = aStr.localeCompare(bStr);
+			return dir === 'asc' ? cmp : -cmp;
+		});
+
+		return sorted;
 	});
 
 	// matchIndices from worker (only meaningful in highlight mode)
@@ -652,14 +714,53 @@
 				{#snippet header(cols, { startResize, resizingIndex, setHeaderRow })}
 					<tr class="bg-gray-950" use:setHeaderRow>
 						{#each visibleFields as field, i}
+							{@const isSorted = sortColumn === field.fullName}
 							<th
 								class="relative border-r border-r-gray-600 p-2 text-xs font-normal last:border-r-0 overflow-hidden"
+								class:cursor-pointer={!isRunning}
+								class:hover:bg-gray-800={!isRunning}
+								onclick={() => handleColumnSort(field.fullName)}
 							>
 								<div
-									title={field.annotations?.description}
-									class="uppercase overflow-hidden text-ellipsis whitespace-nowrap"
+									title={isRunning
+										? field.annotations?.description
+										: `${field.annotations?.description || field.fullName} (click to sort)`}
+									class="uppercase overflow-hidden text-ellipsis whitespace-nowrap flex items-center gap-1"
 								>
-									{field.fullName}
+									<span class="overflow-hidden text-ellipsis">{field.fullName}</span>
+									{#if isSorted && !isRunning}
+										<span class="text-blue-400 flex-shrink-0">
+											{#if sortDirection === 'asc'}
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													width="12"
+													height="12"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													stroke-width="2"
+													stroke-linecap="round"
+													stroke-linejoin="round"
+												>
+													<polyline points="18 15 12 9 6 15"></polyline>
+												</svg>
+											{:else}
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													width="12"
+													height="12"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													stroke-width="2"
+													stroke-linecap="round"
+													stroke-linejoin="round"
+												>
+													<polyline points="6 9 12 15 18 9"></polyline>
+												</svg>
+											{/if}
+										</span>
+									{/if}
 								</div>
 								{#if i < visibleFields.length - 1}
 									<div
