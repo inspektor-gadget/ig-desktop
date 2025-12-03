@@ -12,23 +12,21 @@
 	import File from '$lib/icons/file.svg?raw';
 	import Server from '$lib/icons/server.svg?raw';
 	import { environments } from '$lib/shared/environments.svelte';
-	import { preferences } from '$lib/shared/preferences.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Title from '$lib/components/params/Title.svelte';
 	import Select from '$lib/components/forms/Select.svelte';
-	import type { GadgetInfo, GadgetRunRequest } from '$lib/types';
+	import type { GadgetInfo, GadgetRunRequest, SessionItem } from '$lib/types';
 	import { copyToClipboard } from '$lib/utils/clipboard';
 	import {
-		saveK8sRecent,
+		addGadgetToHistory,
 		saveGadgetURLRecent,
-		addGadgetToHistory
+		saveK8sRecent
 	} from '$lib/utils/env-preferences';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { analyticsService } from '$lib/services/analytics.service.svelte';
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import { currentSessionStore } from '$lib/stores/current-session.svelte';
-	import type { SessionItem } from '$lib/types';
 
 	let { data }: { data: any } = $props();
 
@@ -93,7 +91,7 @@
 		const env = environments[environmentID];
 		if (env) {
 			// Set to kubectl if runtime contains 'kubernetes', otherwise ig
-			commandType = env.runtime && env.runtime.includes('kubernetes') ? 'kubectl' : 'ig';
+			commandType = env.runtime && env.runtime.toLowerCase().includes('k8s') ? 'kubectl' : 'ig';
 		}
 	});
 
