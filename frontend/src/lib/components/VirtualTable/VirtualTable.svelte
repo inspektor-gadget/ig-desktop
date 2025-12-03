@@ -64,8 +64,10 @@
 
 		const resizeObserver = new ResizeObserver((entries) => {
 			for (const entry of entries) {
-				// Update viewport height when container is resized
-				viewportHeight = entry.contentRect.height;
+				// Wrap in rAF to avoid "ResizeObserver loop" warning
+				requestAnimationFrame(() => {
+					viewportHeight = entry.contentRect.height;
+				});
 			}
 		});
 

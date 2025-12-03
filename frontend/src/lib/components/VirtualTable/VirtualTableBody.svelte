@@ -312,10 +312,11 @@
 
 		const resizeObserver = new ResizeObserver((entries) => {
 			for (const entry of entries) {
-				// Update viewport height from content rect
-				viewportHeight = entry.contentRect.height;
-				// Update scrollbar width (may change when scrollbar appears/disappears)
-				scrollbarWidth = el.offsetWidth - el.clientWidth;
+				// Wrap in rAF to avoid "ResizeObserver loop" warning
+				requestAnimationFrame(() => {
+					viewportHeight = entry.contentRect.height;
+					scrollbarWidth = el.offsetWidth - el.clientWidth;
+				});
 			}
 		});
 
