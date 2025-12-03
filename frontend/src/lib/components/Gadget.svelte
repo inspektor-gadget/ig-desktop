@@ -265,12 +265,19 @@
 								<button
 									onclick={() => stopInstance(instanceID)}
 									disabled={!instance.running}
-									class="flex h-8 w-8 items-center justify-center rounded-r border border-l-0 transition-colors {instance.running
+									class="flex h-8 items-center justify-center gap-1 rounded-r border border-l-0 px-2 transition-colors {instance.running
 										? 'border-gray-600 bg-transparent text-red-500 hover:bg-red-600 hover:text-white cursor-pointer'
 										: 'border-red-800 bg-red-800 text-white cursor-default'}"
-									title={instance.running ? 'Stop gadget' : 'Stopped'}
+									title={instance.running
+										? instance.attached
+											? 'Detach from gadget (keeps running)'
+											: 'Stop gadget'
+										: 'Stopped'}
 								>
 									{@html Stop}
+									{#if instance.running && instance.attached}
+										<span class="text-sm">Detach</span>
+									{/if}
 								</button>
 							</div>
 						</div>

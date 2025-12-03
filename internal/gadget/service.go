@@ -278,6 +278,7 @@ func (s *Service) Attach(ctx context.Context, req AttachRequest) (string, error)
 			EnvironmentID: req.EnvironmentID,
 			InstanceID:    instanceID,
 			Data:          gid,
+			Attached:      true,
 		})
 
 		return s.subscribeToDataSources(gadgetCtx, instanceID, false)

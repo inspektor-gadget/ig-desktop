@@ -84,7 +84,8 @@ export function handleGadgetInfo(msg: any): void {
 		environment: msg.environmentID,
 		startTime: Date.now(),
 		eventCount: 0,
-		session: sessionInfo
+		session: sessionInfo,
+		attached: msg.attached || false
 	};
 
 	// Store session for single-session-per-start mode

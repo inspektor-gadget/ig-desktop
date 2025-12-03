@@ -55,6 +55,7 @@ type GadgetEvent struct {
 	Data          json.RawMessage `json:"data"`
 	DatasourceID  string          `json:"datasourceID,omitempty"`
 	SessionInfo   *SessionInfo    `json:"sessionInfo,omitempty"`
+	Attached      bool            `json:"attached,omitempty"`
 }
 
 // SessionInfo sent to frontend when recording is enabled
