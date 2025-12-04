@@ -31,6 +31,9 @@
 		onchange
 	}: Props = $props();
 
+	// Generate a unique ID for the checkbox element
+	const checkboxId = `checkbox-${Math.random().toString(36).slice(2, 9)}`;
+
 	/**
 	 * Handle checkbox change
 	 */
@@ -43,6 +46,7 @@
 
 <div class="flex items-start gap-3">
 	<input
+		id={checkboxId}
 		type="checkbox"
 		bind:checked
 		{disabled}
@@ -53,7 +57,7 @@
 	{#if label || description}
 		<div class="flex flex-col gap-0.5">
 			{#if label}
-				<label class="text-sm font-medium text-gray-300">
+				<label for={checkboxId} class="text-sm font-medium text-gray-300">
 					{label}
 				</label>
 			{/if}

@@ -90,14 +90,20 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
 		onclick={handleBackdropClick}
+		onkeydown={handleKeydown}
+		role="presentation"
 	>
 		<div
 			class="flex w-full {sizeClasses[
 				size
 			]} flex-col rounded-2xl border border-gray-800 {background} shadow-2xl"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby={title ? 'modal-title' : undefined}
 		>
 			<!-- Header -->
 			{#if header}
@@ -110,7 +116,7 @@
 						</div>
 					{/if}
 					{#if title}
-						<h2 class="flex-1 text-xl font-semibold text-gray-100">
+						<h2 id="modal-title" class="flex-1 text-xl font-semibold text-gray-100">
 							{title}
 						</h2>
 					{/if}

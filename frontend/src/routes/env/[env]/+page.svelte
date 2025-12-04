@@ -480,7 +480,7 @@
 				>
 					{#snippet headerActions()}
 						<button
-							onclick={() => getList(currentEnvId)}
+							onclick={() => currentEnvId && getList(currentEnvId)}
 							title="Refresh"
 							class="cursor-pointer text-gray-400 transition-all hover:text-blue-400"
 							>{@html Refresh}</button
@@ -608,7 +608,7 @@
 			<div class="flex flex-col gap-6">
 				<!-- Environment Name -->
 				<div class="flex flex-col gap-2">
-					<label class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Name</label>
+					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Name</span>
 					<div class="rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-gray-200">
 						{env.name}
 					</div>
@@ -616,7 +616,7 @@
 
 				<!-- Environment ID -->
 				<div class="flex flex-col gap-2">
-					<label class="text-sm font-semibold tracking-wide text-gray-500 uppercase">ID</label>
+					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">ID</span>
 					<div
 						class="rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 font-mono text-sm text-gray-400"
 					>
@@ -626,7 +626,7 @@
 
 				<!-- Runtime -->
 				<div class="flex flex-col gap-2">
-					<label class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Runtime</label>
+					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Runtime</span>
 					<div class="rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-gray-200">
 						{env.runtime}
 					</div>
@@ -635,8 +635,8 @@
 				<!-- Parameters -->
 				{#if env.params && Object.keys(env.params).length > 0}
 					<div class="flex flex-col gap-2">
-						<label class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
-							>Configuration</label
+						<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
+							>Configuration</span
 						>
 						<div class="flex flex-col gap-2 rounded-lg border border-gray-800 bg-gray-900/50 p-4">
 							{#each Object.entries(env.params) as [key, value]}

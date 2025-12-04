@@ -32,6 +32,9 @@
 		onchange
 	}: Props = $props();
 
+	// Generate a unique ID for the toggle element
+	const toggleId = `toggle-${Math.random().toString(36).slice(2, 9)}`;
+
 	/**
 	 * Handle toggle change
 	 */
@@ -68,6 +71,7 @@
 
 <div class="flex items-center gap-3">
 	<button
+		id={toggleId}
 		type="button"
 		role="switch"
 		aria-checked={checked}
@@ -81,7 +85,7 @@
 	{#if label || description}
 		<div class="flex flex-col gap-0.5">
 			{#if label}
-				<label class="text-sm font-medium text-gray-300">
+				<label for={toggleId} class="text-sm font-medium text-gray-300">
 					{label}
 				</label>
 			{/if}

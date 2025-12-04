@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
 	import Gadget from '$lib/components/Gadget.svelte';
 	import { page } from '$app/state';
 </script>
 
-<Gadget instanceID={page.params.instanceID} />
+{#if page.params.instanceID}
+	<Gadget instanceID={page.params.instanceID} />
+{/if}

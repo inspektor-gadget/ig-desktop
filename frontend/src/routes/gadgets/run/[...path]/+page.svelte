@@ -617,7 +617,7 @@
 						</div>
 					{/snippet}
 
-					<Params params={gadgetInfo.params} {values} {showAdvanced} />
+					<Params params={gadgetInfo.params ?? []} {values} {showAdvanced} />
 				</Panel>
 			{/if}
 		</div>

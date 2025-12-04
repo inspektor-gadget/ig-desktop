@@ -50,6 +50,9 @@
 		class: className = ''
 	}: Props = $props();
 
+	// Generate a unique ID for the select element
+	const selectId = `select-${Math.random().toString(36).slice(2, 9)}`;
+
 	/**
 	 * Compute select classes based on state
 	 */
@@ -70,7 +73,7 @@
 
 <div class="flex flex-col gap-1.5">
 	{#if label}
-		<label class="text-sm font-medium text-gray-300">
+		<label for={selectId} class="text-sm font-medium text-gray-300">
 			{label}
 			{#if required}
 				<span class="text-red-400">*</span>
@@ -98,7 +101,7 @@
 		</svg>
 
 		<!-- Select element -->
-		<select bind:value {disabled} {required} {onchange} class={selectClasses}>
+		<select id={selectId} bind:value {disabled} {required} {onchange} class={selectClasses}>
 			{#if placeholder}
 				<option value="" disabled selected>{placeholder}</option>
 			{/if}

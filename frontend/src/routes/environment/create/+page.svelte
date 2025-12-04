@@ -195,6 +195,7 @@
 
 								<!-- Kubernetes Context Selector -->
 								{#if rt.key === 'grpc-k8s' && rt.contexts && rt.contexts.length > 0}
+									<!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
 									<div class="flex flex-col gap-1.5" onclick={(e) => e.stopPropagation()}>
 										<Select
 											bind:value={selectedContext}

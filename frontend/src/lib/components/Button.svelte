@@ -30,6 +30,8 @@
 		type?: 'button' | 'submit' | 'reset';
 		/** Click handler */
 		onclick?: (e: MouseEvent) => void;
+		/** Additional CSS classes */
+		class?: string;
 		/** Button content */
 		children?: Snippet;
 	}
@@ -42,6 +44,7 @@
 		fullWidth = false,
 		type = 'button',
 		onclick,
+		class: className = '',
 		children
 	}: Props = $props();
 
@@ -77,7 +80,8 @@
 			'disabled:cursor-not-allowed disabled:opacity-50',
 			variantClasses[variant],
 			sizeClasses[size],
-			fullWidth ? 'w-full' : ''
+			fullWidth ? 'w-full' : '',
+			className
 		]
 			.filter(Boolean)
 			.join(' ')

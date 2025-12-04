@@ -55,6 +55,9 @@
 		class: className = ''
 	}: Props = $props();
 
+	// Generate a unique ID for the input element
+	const inputId = `input-${Math.random().toString(36).slice(2, 9)}`;
+
 	// Reference to the input element for focus control
 	let inputElement: HTMLInputElement | undefined = $state();
 
@@ -90,7 +93,7 @@
 
 <div class="flex flex-col gap-1.5">
 	{#if label}
-		<label class="text-sm font-medium text-gray-300">
+		<label for={inputId} class="text-sm font-medium text-gray-300">
 			{label}
 			{#if required}
 				<span class="text-red-400">*</span>
@@ -104,6 +107,7 @@
 
 	<input
 		bind:this={inputElement}
+		id={inputId}
 		{type}
 		{placeholder}
 		{disabled}

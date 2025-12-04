@@ -45,6 +45,9 @@
 		allowCustom = true
 	}: Props = $props();
 
+	// Generate a unique ID for the input element
+	const inputId = `autocomplete-${Math.random().toString(36).slice(2, 9)}`;
+
 	let searchQuery = $state('');
 	let isOpen = $state(false);
 	let highlightedIndex = $state(0);
@@ -259,7 +262,7 @@
 
 <div class="flex flex-col gap-1 {className}">
 	{#if label}
-		<label class="text-sm font-medium text-gray-200">
+		<label for={inputId} class="text-sm font-medium text-gray-200">
 			{label}
 			{#if required}
 				<span class="text-red-500">*</span>
@@ -308,6 +311,7 @@
 
 			<input
 				bind:this={inputRef}
+				id={inputId}
 				type="text"
 				value={displayValue()}
 				{placeholder}

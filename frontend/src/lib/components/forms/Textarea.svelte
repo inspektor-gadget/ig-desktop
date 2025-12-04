@@ -51,6 +51,9 @@
 		class: className = ''
 	}: Props = $props();
 
+	// Generate a unique ID for the textarea element
+	const textareaId = `textarea-${Math.random().toString(36).slice(2, 9)}`;
+
 	/**
 	 * Compute textarea classes based on state
 	 */
@@ -71,7 +74,7 @@
 
 <div class="flex flex-col gap-1.5">
 	{#if label}
-		<label class="text-sm font-medium text-gray-300">
+		<label for={textareaId} class="text-sm font-medium text-gray-300">
 			{label}
 			{#if required}
 				<span class="text-red-400">*</span>
@@ -84,6 +87,7 @@
 	{/if}
 
 	<textarea
+		id={textareaId}
 		{rows}
 		{placeholder}
 		{disabled}
