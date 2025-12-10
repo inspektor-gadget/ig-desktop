@@ -16,6 +16,13 @@
 	import type { EventRingBuffer } from '$lib/utils/ring-buffer';
 	import { entryMatchesSearch } from '$lib/utils/search-match';
 
+	// Interface for exposing column visibility controls to parent components
+	export interface TableMenuController {
+		toggleableFields: any[];
+		isColumnVisible: (fieldName: string) => boolean;
+		toggleColumnVisibility: (fieldName: string) => void;
+	}
+
 	let {
 		ds,
 		events,
@@ -31,7 +38,8 @@
 		isRunning = true,
 		showHeader = true,
 		onSortChange,
-		sortReset = 0
+		sortReset = 0,
+		onMenuController
 	}: {
 		ds: any;
 		events?: EventRingBuffer<any> | undefined;
@@ -55,6 +63,8 @@
 		onSortChange?: (sortColumn: string | null) => void;
 		/** Trigger to reset sorting - increment to reset */
 		sortReset?: number;
+		/** Callback to expose menu controller for external rendering */
+		onMenuController?: (controller: TableMenuController) => void;
 	} = $props();
 
 	// Get gadget info from context
@@ -401,8 +411,29 @@
 		return sorted;
 	});
 
-	// matchIndices from worker (only meaningful in highlight mode)
-	const matchIndices = $derived(searchModeFilter || !searchQuery ? [] : computedMatchIndices);
+	// matchIndices: in filter mode from worker, in highlight mode computed locally
+	// In filter mode: worker provides indices (all filtered events are matches, so indices are 0,1,2,...)
+	// In highlight mode: we need to compute which rows in displayEvents match the query
+	const matchIndices = $derived.by(() => {
+		// No query = no matches
+		if (!searchQuery) return [];
+
+		// Filter mode: use worker's computed indices
+		if (searchModeFilter) return computedMatchIndices;
+
+		// Highlight mode: compute match indices locally
+		// Scan displayEvents to find which indices match the search query
+		const indices: number[] = [];
+		const query = lowerSearchQuery;
+		const fields = visibleFieldNames;
+		const len = displayEvents.length;
+		for (let i = 0; i < len; i++) {
+			if (entryMatchesSearch(displayEvents[i], query, fields)) {
+				indices.push(i);
+			}
+		}
+		return indices;
+	});
 
 	// Notify parent of match info changes
 	$effect(() => {
@@ -604,6 +635,17 @@
 	const visibleFields = $derived(
 		toggleableFields.filter((field: any) => isColumnVisible(field.fullName))
 	);
+
+	// Expose menu controller to parent when callback is provided
+	$effect(() => {
+		if (onMenuController) {
+			onMenuController({
+				toggleableFields,
+				isColumnVisible,
+				toggleColumnVisibility
+			});
+		}
+	});
 
 	// Field names for search matching (cached for performance)
 	const visibleFieldNames = $derived(visibleFields.map((f: any) => f.fullName));

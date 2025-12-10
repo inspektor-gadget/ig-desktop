@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Table from './Table.svelte';
+	import Table, { type TableMenuController } from './Table.svelte';
 	import Chart from './Chart.svelte';
 	import SnapshotTimeline from './SnapshotTimeline.svelte';
 	import TableIcon from '$lib/icons/table-column.svg?raw';
@@ -75,6 +75,29 @@
 	// Track custom sorting state (for showing warning about partial results)
 	let customSortColumn = $state<string | null>(null);
 	let sortResetTrigger = $state(0);
+
+	// Column visibility menu state
+	let menuOpen = $state(false);
+	let menuButton: HTMLButtonElement | undefined = $state();
+	let tableMenuController = $state<TableMenuController | null>(null);
+
+	// Close menu when clicking outside
+	function handleClickOutside(event: MouseEvent) {
+		if (menuOpen && menuButton && !menuButton.contains(event.target as Node)) {
+			const menu = document.getElementById('column-menu');
+			if (menu && !menu.contains(event.target as Node)) {
+				menuOpen = false;
+			}
+		}
+	}
+
+	// Set up click outside listener
+	$effect(() => {
+		if (menuOpen) {
+			document.addEventListener('click', handleClickOutside);
+			return () => document.removeEventListener('click', handleClickOutside);
+		}
+	});
 
 	function handleSortChange(column: string | null) {
 		customSortColumn = column;
@@ -355,7 +378,54 @@
 			</div>
 		{/if}
 
-		<button class="pl-2 text-gray-500 hover:text-gray-300">{@html Dots}</button>
+		<div class="relative">
+			<button
+				bind:this={menuButton}
+				class="pl-2 hover:text-white transition-colors"
+				class:text-gray-500={activeTab !== 'table'}
+				class:hover:text-gray-300={activeTab !== 'table'}
+				onclick={() => (menuOpen = !menuOpen)}
+				title="Column visibility"
+				aria-label="Toggle column visibility menu"
+				aria-haspopup="menu"
+				aria-expanded={menuOpen}
+				aria-controls="column-menu"
+				disabled={activeTab !== 'table'}
+			>
+				{@html Dots}
+			</button>
+			{#if menuOpen && activeTab === 'table' && tableMenuController}
+				<div
+					id="column-menu"
+					role="menu"
+					aria-label="Column visibility options"
+					class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-lg border border-gray-700 bg-gray-900 shadow-xl"
+				>
+					<div
+						class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase border-b border-gray-700"
+					>
+						Columns
+					</div>
+					<div class="py-1" role="group" aria-label="Column toggles">
+						{#each tableMenuController.toggleableFields as field (field.fullName)}
+							<label
+								class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-800 cursor-pointer text-sm"
+								role="menuitemcheckbox"
+								aria-checked={tableMenuController.isColumnVisible(field.fullName)}
+							>
+								<input
+									type="checkbox"
+									checked={tableMenuController.isColumnVisible(field.fullName)}
+									onchange={() => tableMenuController?.toggleColumnVisibility(field.fullName)}
+									class="rounded border-gray-600 bg-gray-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+								/>
+								<span class="text-gray-200 truncate" title={field.fullName}>{field.fullName}</span>
+							</label>
+						{/each}
+					</div>
+				</div>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Snapshot timeline and navigation (for array datasources in table view) -->
@@ -489,6 +559,7 @@
 			showHeader={false}
 			onSortChange={handleSortChange}
 			sortReset={sortResetTrigger}
+			onMenuController={(ctrl) => (tableMenuController = ctrl)}
 		/>
 	</div>
 </div>
