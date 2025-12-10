@@ -113,7 +113,7 @@ export function handleGadgetInfo(msg: GadgetInfoMessage): void {
 	const sessionInfo = msg.sessionInfo;
 
 	instances[msg.instanceID] = {
-		name: msg.data?.imageName || 'Unknown Gadget',
+		name: msg.instanceName || msg.data?.imageName || 'Unknown Gadget',
 		running: true,
 		gadgetInfo: msg.data,
 		events: new EventRingBuffer(getMaxEvents()),

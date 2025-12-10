@@ -193,6 +193,7 @@ export interface GadgetMessageBase {
 	environmentID?: string;
 	sessionInfo?: SessionInfo;
 	attached?: boolean;
+	instanceName?: string;
 }
 
 /**

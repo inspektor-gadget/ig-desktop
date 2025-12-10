@@ -21,13 +21,21 @@
 		const instance = instances[instanceID];
 		const instanceName =
 			instance?.name || instance?.gadgetInfo?.imageName || instanceID.substring(0, 8);
+		const isAttached = instance?.attached;
+		const wasRunning = instance?.running;
 
 		try {
 			const res = await api.request({ cmd: 'stopInstance', data: { id: instanceID } });
 			console.log('stopped');
 
-			// Show success toast
-			toastStore.success(`Instance "${instanceName}" stopped successfully`);
+			// Only show toast if we actually stopped/detached (was still running)
+			if (wasRunning) {
+				if (isAttached) {
+					toastStore.success(`Detached from "${instanceName}" successfully`);
+				} else {
+					toastStore.success(`Instance "${instanceName}" stopped successfully`);
+				}
+			}
 
 			if (page.params.instanceID && page.params.instanceID === instanceID) {
 				// Page is currently open, move to env
@@ -37,7 +45,8 @@
 		} catch (err: any) {
 			// Show error toast
 			const errorMessage = err?.message || err?.toString() || 'Unknown error';
-			toastStore.error(`Failed to stop instance "${instanceName}": ${errorMessage}`, 7000, {
+			const action = isAttached ? 'detach from' : 'stop';
+			toastStore.error(`Failed to ${action} instance "${instanceName}": ${errorMessage}`, 7000, {
 				label: 'Retry',
 				onClick: () => closeInstance(instanceID)
 			});

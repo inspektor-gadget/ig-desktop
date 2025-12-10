@@ -56,6 +56,7 @@ type GadgetEvent struct {
 	DatasourceID  string          `json:"datasourceID,omitempty"`
 	SessionInfo   *SessionInfo    `json:"sessionInfo,omitempty"`
 	Attached      bool            `json:"attached,omitempty"`
+	InstanceName  string          `json:"instanceName,omitempty"`
 }
 
 // SessionInfo sent to frontend when recording is enabled

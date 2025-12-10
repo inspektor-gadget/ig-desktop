@@ -273,7 +273,9 @@
 										? instance.attached
 											? 'Detach from gadget (keeps running)'
 											: 'Stop gadget'
-										: 'Stopped'}
+										: instance.attached
+											? 'Detached'
+											: 'Stopped'}
 								>
 									{@html Stop}
 									{#if instance.running && instance.attached}
@@ -287,7 +289,7 @@
 								Running
 								{#if environmentName}{` on ${environmentName}`}{/if}
 							{:else}
-								Stopped
+								{instance.attached ? 'Detached' : 'Stopped'}
 							{/if}
 						</div>
 						{#if instance.isReplay}

@@ -176,7 +176,7 @@
 	async function attachInstance(instance: GadgetInstance) {
 		const res = await api.request({
 			cmd: 'attachInstance',
-			data: { environmentID: env.id, image: instance.id }
+			data: { environmentID: env.id, image: instance.id, instanceName: instance.name }
 		});
 		goto('/env/' + env.id + '/running/' + res.id);
 	}
