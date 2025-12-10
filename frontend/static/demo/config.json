@@ -1,0 +1,11 @@
+{
+  "environment": {
+    "id": "demo-env",
+    "name": "Demo Environment",
+    "runtime": "demo",
+    "params": {}
+  },
+  "sessions": [
+    "full.json"
+  ]
+}

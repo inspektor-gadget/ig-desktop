@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, setContext } from 'svelte';
+	import { getContext, setContext, onMount } from 'svelte';
 	import Params from '$lib/components/Params.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
@@ -27,6 +27,14 @@
 	import { analyticsService } from '$lib/services/analytics.service.svelte';
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import { currentSessionStore } from '$lib/stores/current-session.svelte';
+	import { features } from '$lib/config/app-mode';
+
+	// Redirect to home if running gadgets is not allowed (demo mode)
+	onMount(() => {
+		if (!features.canRunGadgets) {
+			goto('/');
+		}
+	});
 
 	let { data }: { data: any } = $props();
 

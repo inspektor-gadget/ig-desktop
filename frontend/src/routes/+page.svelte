@@ -6,6 +6,7 @@
 	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
 	import { getEnvPref } from '$lib/utils/env-preferences';
 	import { onMount } from 'svelte';
+	import { features } from '$lib/config/app-mode';
 
 	import Panel from '$lib/components/Panel.svelte';
 	import Server from '$lib/icons/fa/server.svg?raw';
@@ -22,6 +23,16 @@
 	// Clear current environment when on home page
 	$effect(() => {
 		currentEnvironment.clear();
+	});
+
+	// In single-env or demo mode, redirect to the environment page
+	$effect(() => {
+		if (features.isSingleEnvironment || features.isDemoMode) {
+			const envIds = Object.keys(environments);
+			if (envIds.length > 0) {
+				goto(`/env/${envIds[0]}`);
+			}
+		}
 	});
 
 	// Helper function to load all histories
@@ -159,63 +170,65 @@
 			</div>
 
 			<!-- Get Started Panel -->
-			<div class="mx-auto mb-16 max-w-3xl">
-				<Panel title="Get Started" icon={CirclePlus} color="blue" bodyPadding="large">
-					<div class="flex flex-col gap-6">
-						<div class="flex flex-col gap-3">
-							<h3 class="text-xl font-semibold text-gray-200">Create Your First Environment</h3>
-							<p class="text-gray-400">
-								Connect to a Kubernetes cluster or Linux host to start running gadgets. Use the
-								button in the upper left or click below.
-							</p>
-						</div>
+			{#if features.canCreateEnvironment}
+				<div class="mx-auto mb-16 max-w-3xl">
+					<Panel title="Get Started" icon={CirclePlus} color="blue" bodyPadding="large">
+						<div class="flex flex-col gap-6">
+							<div class="flex flex-col gap-3">
+								<h3 class="text-xl font-semibold text-gray-200">Create Your First Environment</h3>
+								<p class="text-gray-400">
+									Connect to a Kubernetes cluster or Linux host to start running gadgets. Use the
+									button in the upper left or click below.
+								</p>
+							</div>
 
-						<a
-							href="/environment/create"
-							class="group/btn flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-all hover:bg-blue-500"
-						>
-							<div class="h-5 w-5">{@html CirclePlus}</div>
-							<span>Create New Environment</span>
-						</a>
+							<a
+								href="/environment/create"
+								class="group/btn flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-all hover:bg-blue-500"
+							>
+								<div class="h-5 w-5">{@html CirclePlus}</div>
+								<span>Create New Environment</span>
+							</a>
 
-						<div class="flex flex-col gap-2 border-t border-gray-800 pt-4">
-							<p class="text-sm text-gray-400">Haven't installed Inspektor Gadget yet?</p>
-							<p class="text-sm text-gray-500">
-								For Kubernetes, you can use a 1-click installation directly from IG Desktop. Just
-								follow the step above and create a new environment.
-							</p>
-							<p class="text-sm text-gray-500">
-								Otherwise, check out the
-								<button
-									onclick={() =>
-										openExternalURL('https://inspektor-gadget.io/docs/latest/quick-start')}
-									class="text-blue-400 underline hover:text-blue-300"
-								>
-									Quickstart Guide
-								</button>
-								to deploy Inspektor Gadget to your
-								<button
-									onclick={() =>
-										openExternalURL(
-											'https://inspektor-gadget.io/docs/latest/quick-start#kubernetes'
-										)}
-									class="text-blue-400 underline hover:text-blue-300"
-								>
-									Kubernetes cluster
-								</button>
-								or run it as a
-								<button
-									onclick={() =>
-										openExternalURL('https://inspektor-gadget.io/docs/latest/quick-start#linux')}
-									class="text-blue-400 underline hover:text-blue-300"
-								>
-									daemon on your Linux machine
-								</button>.
-							</p>
+							<div class="flex flex-col gap-2 border-t border-gray-800 pt-4">
+								<p class="text-sm text-gray-400">Haven't installed Inspektor Gadget yet?</p>
+								<p class="text-sm text-gray-500">
+									For Kubernetes, you can use a 1-click installation directly from IG Desktop. Just
+									follow the step above and create a new environment.
+								</p>
+								<p class="text-sm text-gray-500">
+									Otherwise, check out the
+									<button
+										onclick={() =>
+											openExternalURL('https://inspektor-gadget.io/docs/latest/quick-start')}
+										class="text-blue-400 underline hover:text-blue-300"
+									>
+										Quickstart Guide
+									</button>
+									to deploy Inspektor Gadget to your
+									<button
+										onclick={() =>
+											openExternalURL(
+												'https://inspektor-gadget.io/docs/latest/quick-start#kubernetes'
+											)}
+										class="text-blue-400 underline hover:text-blue-300"
+									>
+										Kubernetes cluster
+									</button>
+									or run it as a
+									<button
+										onclick={() =>
+											openExternalURL('https://inspektor-gadget.io/docs/latest/quick-start#linux')}
+										class="text-blue-400 underline hover:text-blue-300"
+									>
+										daemon on your Linux machine
+									</button>.
+								</p>
+							</div>
 						</div>
-					</div>
-				</Panel>
-			</div>
+					</Panel>
+				</div>
+			{/if}
 		</div>
 	{:else}
 		<!-- Main content when environments exist -->
@@ -233,7 +246,10 @@
 			</div>
 
 			<!-- Action Panels Grid -->
-			<div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+			<div
+				class="grid grid-cols-1 gap-6 lg:grid-cols-2"
+				class:xl:grid-cols-3={features.canBrowseArtifactHub}
+			>
 				<!-- Environments Panel -->
 				<Panel
 					title="Environments"
@@ -307,63 +323,65 @@
 				</Panel>
 
 				<!-- Discover Gadgets Panel -->
-				<Panel title="Discover Gadgets" icon={Grid} color="green">
-					<p class="mb-2 text-sm text-gray-400">Explore the Artifact Hub gadget gallery</p>
+				{#if features.canBrowseArtifactHub}
+					<Panel title="Discover Gadgets" icon={Grid} color="green">
+						<p class="mb-2 text-sm text-gray-400">Explore the Artifact Hub gadget gallery</p>
 
-					<!-- Featured categories -->
-					<div class="flex flex-col gap-2">
-						<a
-							href="/browse/artifacthub"
-							class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
-						>
-							<div class="flex flex-col gap-1">
-								<div class="font-medium text-gray-200">All Gadgets</div>
-								<div class="text-xs text-gray-400">Browse complete collection</div>
-							</div>
-							<div
-								class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
+						<!-- Featured categories -->
+						<div class="flex flex-col gap-2">
+							<a
+								href="/browse/artifacthub"
+								class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
 							>
-								{@html ChevronRight}
-							</div>
-						</a>
+								<div class="flex flex-col gap-1">
+									<div class="font-medium text-gray-200">All Gadgets</div>
+									<div class="text-xs text-gray-400">Browse complete collection</div>
+								</div>
+								<div
+									class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
+								>
+									{@html ChevronRight}
+								</div>
+							</a>
 
-						<a
-							href="/browse/artifacthub"
-							class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
-						>
-							<div class="flex flex-col gap-1">
-								<div class="font-medium text-gray-200">Security</div>
-								<div class="text-xs text-gray-400">Security monitoring gadgets</div>
-							</div>
-							<div
-								class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
+							<a
+								href="/browse/artifacthub"
+								class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
 							>
-								{@html ChevronRight}
-							</div>
-						</a>
+								<div class="flex flex-col gap-1">
+									<div class="font-medium text-gray-200">Security</div>
+									<div class="text-xs text-gray-400">Security monitoring gadgets</div>
+								</div>
+								<div
+									class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
+								>
+									{@html ChevronRight}
+								</div>
+							</a>
 
-						<a
-							href="/browse/artifacthub"
-							class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
-						>
-							<div class="flex flex-col gap-1">
-								<div class="font-medium text-gray-200">Networking</div>
-								<div class="text-xs text-gray-400">Network analysis tools</div>
-							</div>
-							<div
-								class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
+							<a
+								href="/browse/artifacthub"
+								class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
 							>
-								{@html ChevronRight}
-							</div>
-						</a>
-					</div>
+								<div class="flex flex-col gap-1">
+									<div class="font-medium text-gray-200">Networking</div>
+									<div class="text-xs text-gray-400">Network analysis tools</div>
+								</div>
+								<div
+									class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
+								>
+									{@html ChevronRight}
+								</div>
+							</a>
+						</div>
 
-					<!-- Artifact Hub branding -->
-					<div class="mt-auto flex items-center gap-2 pt-4 text-xs text-gray-600">
-						<div class="h-4 w-4">{@html ArtifactHub}</div>
-						<span>Powered by Artifact Hub</span>
-					</div>
-				</Panel>
+						<!-- Artifact Hub branding -->
+						<div class="mt-auto flex items-center gap-2 pt-4 text-xs text-gray-600">
+							<div class="h-4 w-4">{@html ArtifactHub}</div>
+							<span>Powered by Artifact Hub</span>
+						</div>
+					</Panel>
+				{/if}
 			</div>
 
 			<!-- Quick Tips -->

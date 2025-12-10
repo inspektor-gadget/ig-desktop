@@ -14,6 +14,7 @@
 	import BaseModal from '$lib/components/BaseModal.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import SessionItemComponent from '$lib/components/SessionItem.svelte';
+	import { features } from '$lib/config/app-mode';
 
 	import Browser from '$lib/icons/fa/browser.svg?raw';
 	import Trash from '$lib/icons/fa/trash.svg?raw';
@@ -321,45 +322,49 @@
 
 			<!-- Content Grid -->
 			<div class="grid grid-cols-1 gap-6">
-				<!-- Run Gadget Card -->
-				<Panel title="Run Gadget" icon={PlaySmall} color="blue" bodyPadding="large">
-					<p class="mb-2 text-sm text-gray-400">
-						Enter a gadget image URL or discover gadgets from ArtifactHub
-					</p>
-					<div class="flex flex-col gap-2 md:flex-row">
-						<a
-							href="/browse/artifacthub?env={env.id}"
-							title="Discover Gadgets"
-							class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-900 md:w-auto md:justify-start"
-						>
-							<span class="text-blue-400">{@html Grid}</span>
-							<span class="text-gray-200">Discover</span>
-						</a>
-						<div class="grow">
-							<AutocompleteInput
-								bind:value={gadgetURL}
-								options={gadgetURLOptions()}
-								placeholder="ghcr.io/inspektor-gadget/gadget/trace_open:latest"
-								allowCustom={true}
-								onSelect={(val) => {
-									if (typeof val === 'string') {
-										gadgetURL = val;
-									}
-								}}
-								onEnter={runInstance}
-							/>
+				<!-- Run Gadget Card (hidden in demo mode) -->
+				{#if features.canRunGadgets}
+					<Panel title="Run Gadget" icon={PlaySmall} color="blue" bodyPadding="large">
+						<p class="mb-2 text-sm text-gray-400">
+							Enter a gadget image URL or discover gadgets from ArtifactHub
+						</p>
+						<div class="flex flex-col gap-2 md:flex-row">
+							{#if features.canBrowseArtifactHub}
+								<a
+									href="/browse/artifacthub?env={env.id}"
+									title="Discover Gadgets"
+									class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-900 md:w-auto md:justify-start"
+								>
+									<span class="text-blue-400">{@html Grid}</span>
+									<span class="text-gray-200">Discover</span>
+								</a>
+							{/if}
+							<div class="grow">
+								<AutocompleteInput
+									bind:value={gadgetURL}
+									options={gadgetURLOptions()}
+									placeholder="ghcr.io/inspektor-gadget/gadget/trace_open:latest"
+									allowCustom={true}
+									onSelect={(val) => {
+										if (typeof val === 'string') {
+											gadgetURL = val;
+										}
+									}}
+									onEnter={runInstance}
+								/>
+							</div>
+							<button
+								disabled={!validURL}
+								onclick={runInstance}
+								title="Run Gadget"
+								class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-blue-800 bg-blue-900/20 px-4 py-2 text-sm text-blue-400 transition-all hover:border-blue-500/50 hover:bg-blue-900/40 disabled:cursor-not-allowed disabled:border-gray-800 disabled:bg-gray-900/20 disabled:text-gray-600 md:w-auto"
+							>
+								<span>{@html PlaySmall}</span>
+								<span>Run</span>
+							</button>
 						</div>
-						<button
-							disabled={!validURL}
-							onclick={runInstance}
-							title="Run Gadget"
-							class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-blue-800 bg-blue-900/20 px-4 py-2 text-sm text-blue-400 transition-all hover:border-blue-500/50 hover:bg-blue-900/40 disabled:cursor-not-allowed disabled:border-gray-800 disabled:bg-gray-900/20 disabled:text-gray-600 md:w-auto"
-						>
-							<span>{@html PlaySmall}</span>
-							<span>Run</span>
-						</button>
-					</div>
-				</Panel>
+					</Panel>
+				{/if}
 
 				<!-- Recently Run Gadgets Card -->
 				{#if history.length > 0}
@@ -649,17 +654,21 @@
 					</div>
 				{/if}
 
-				<!-- Danger Zone -->
-				<div class="mt-4 flex flex-col gap-4 rounded-lg border border-red-800/50 bg-red-900/10 p-4">
-					<div class="flex flex-col gap-1">
-						<h3 class="font-semibold text-red-400">Danger Zone</h3>
-						<p class="text-sm text-gray-400">Irreversible actions for this environment</p>
+				<!-- Danger Zone (hidden in single-env and demo mode) -->
+				{#if features.canDeleteEnvironment}
+					<div
+						class="mt-4 flex flex-col gap-4 rounded-lg border border-red-800/50 bg-red-900/10 p-4"
+					>
+						<div class="flex flex-col gap-1">
+							<h3 class="font-semibold text-red-400">Danger Zone</h3>
+							<p class="text-sm text-gray-400">Irreversible actions for this environment</p>
+						</div>
+						<Button variant="danger" onclick={() => deleteEnvironment()} class="justify-center">
+							<span>{@html Trash}</span>
+							<span>Delete Environment</span>
+						</Button>
 					</div>
-					<Button variant="danger" onclick={() => deleteEnvironment()} class="justify-center">
-						<span>{@html Trash}</span>
-						<span>Delete Environment</span>
-					</Button>
-				</div>
+				{/if}
 			</div>
 		</BaseModal>
 	</div>

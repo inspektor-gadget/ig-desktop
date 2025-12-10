@@ -37,6 +37,8 @@
 	import Lock from '$lib/icons/fa/lock.svg?raw';
 	import LockOpen from '$lib/icons/fa/lock-open.svg?raw';
 	import Cog from '$lib/icons/cog.svg?raw';
+	import { APP_MODE, features } from '$lib/config/app-mode';
+	import { loadSingleEnvConfig } from '$lib/services/config-loader.service';
 
 	let { children } = $props();
 
@@ -180,9 +182,20 @@
 	}
 
 	// Initialize WebSocket and message routing on mount (after Wails globals are ready)
-	onMount(() => {
+	onMount(async () => {
 		const isWailsApp = environment.isApp;
 		console.log('Environment detected:', isWailsApp ? 'wails' : 'browser');
+		console.log('App mode:', APP_MODE);
+
+		// Handle single-env mode: load environment from config before connecting
+		if (APP_MODE === 'single-env') {
+			const config = await loadSingleEnvConfig();
+			if (config?.environment) {
+				// Pre-populate the environment so it's available immediately
+				environments[config.environment.id] = config.environment;
+				console.log('Single-env mode: loaded environment', config.environment.name);
+			}
+		}
 
 		websocketService.initialize(isWailsApp, (message) => {
 			messageRouter.route(message);
@@ -296,24 +309,39 @@
 				class="scrollbar-hide flex flex-col justify-between space-y-2 overflow-y-scroll border-r border-r-gray-700 bg-gray-900/60 p-3 backdrop-blur-md"
 			>
 				<div class="flex flex-col select-none">
-					<NavbarLink href="/" title="Home">{@html BrandIconLarge}</NavbarLink>
-					{#each Object.entries(environments) as [id, env]}
-						<NavbarLink href="/env/{id}" title={env.name}>
-							<div class="grid" title={env.name}>
-								<div class="col-start-1 row-start-1 text-gray-600 opacity-80">{@html Gadget}</div>
-								<div class="z-10 col-start-1 row-start-1 flex justify-center text-lg shadow">
-									{env.name.substring(0, 3)}
+					{#if features.isSingleEnvironment}
+						<!-- Single-env mode: show Home button that links to the single environment -->
+						{#each Object.entries(environments) as [id, env]}
+							<NavbarLink href="/env/{id}" title="Home">
+								{@html BrandIconLarge}
+							</NavbarLink>
+						{/each}
+					{:else}
+						<!-- Full mode: show brand logo linking to home page -->
+						<NavbarLink href="/" title="Home">{@html BrandIconLarge}</NavbarLink>
+						{#each Object.entries(environments) as [id, env]}
+							<NavbarLink href="/env/{id}" title={env.name}>
+								<div class="grid" title={env.name}>
+									<div class="col-start-1 row-start-1 text-gray-600 opacity-80">{@html Gadget}</div>
+									<div class="z-10 col-start-1 row-start-1 flex justify-center text-lg shadow">
+										{env.name.substring(0, 3)}
+									</div>
 								</div>
-							</div>
-						</NavbarLink>
-					{/each}
-					<!--					<NavbarLink href="/k">{@html Kubernetes}</NavbarLink>-->
-					<NavbarLink href="/environment/create" title="Create environment">{@html Plus}</NavbarLink
-					>
+							</NavbarLink>
+						{/each}
+						<!--					<NavbarLink href="/k">{@html Kubernetes}</NavbarLink>-->
+						{#if features.canCreateEnvironment}
+							<NavbarLink href="/environment/create" title="Create environment"
+								>{@html Plus}</NavbarLink
+							>
+						{/if}
+					{/if}
 				</div>
 				<div class="flex grow flex-col"></div>
 				<div class="flex flex-col">
-					<NavbarLink href="/browse/artifacthub">{@html ArtifactHub}</NavbarLink>
+					{#if features.canBrowseArtifactHub}
+						<NavbarLink href="/browse/artifacthub">{@html ArtifactHub}</NavbarLink>
+					{/if}
 					<NavbarLink href="https://inspektor-gadget.io/docs/latest/" target="_blank"
 						>{@html Book}</NavbarLink
 					>

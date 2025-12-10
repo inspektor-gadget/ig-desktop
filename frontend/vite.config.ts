@@ -3,6 +3,9 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+	define: {
+		'import.meta.env.VITE_APP_MODE': JSON.stringify(process.env.VITE_APP_MODE || 'full')
+	},
 	server: {
 		host: '0.0.0.0',
 		proxy: {
