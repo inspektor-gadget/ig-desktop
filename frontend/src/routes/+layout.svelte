@@ -244,6 +244,11 @@
 		}
 	}
 
+	async function minimize() {
+		const { Window } = await import('@wailsio/runtime');
+		Window.Minimise();
+	}
+
 	async function quitApp() {
 		const { Application } = await import('@wailsio/runtime');
 		Application.Quit();
@@ -274,7 +279,7 @@
 					type="button"
 					class="hover:text-white"
 					onclick={() => {
-						window.runtime.WindowMinimise();
+						minimize();
 					}}
 					aria-label="Minimize window"
 				>
