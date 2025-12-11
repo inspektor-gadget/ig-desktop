@@ -126,24 +126,53 @@
 		gadgetImage ? `columnVisibility:${gadgetImage}:${ds.name}` : ''
 	);
 
-	// Get hidden columns from configuration
+	// Get fields that are hidden by default (have the hidden flag 0x0004)
+	const defaultHiddenFields = $derived(
+		new Set(
+			ds.fields
+				.filter((field: any) => (field.flags & 0x0004) !== 0)
+				.map((field: any) => field.fullName)
+		)
+	);
+
+	// Get hidden columns from configuration, starting with default-hidden fields
+	// Configuration stores user overrides: toggled columns are added/removed from default state
 	const hiddenColumns = $derived.by(() => {
-		if (!columnVisibilityKey) return new Set<string>();
+		if (!columnVisibilityKey) return new Set(defaultHiddenFields);
 		const stored = configuration.get(columnVisibilityKey) as string[] | undefined;
-		return new Set(stored || []);
+		if (!stored) return new Set(defaultHiddenFields);
+
+		// Start with default hidden fields, then apply user overrides
+		// Stored values represent columns whose visibility differs from default
+		const result = new Set(defaultHiddenFields);
+		for (const fieldName of stored) {
+			if (result.has(fieldName)) {
+				// Field was default-hidden but user showed it
+				result.delete(fieldName);
+			} else {
+				// Field was default-visible but user hid it
+				result.add(fieldName);
+			}
+		}
+		return result;
 	});
 
 	// Toggle column visibility
+	// Stores user overrides: fields whose visibility differs from default
 	function toggleColumnVisibility(fieldName: string) {
 		if (!columnVisibilityKey) return;
+		const stored = configuration.get(columnVisibilityKey) as string[] | undefined;
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Local Set for O(1) operations, immediately converted to array
-		const current = new Set(hiddenColumns);
-		if (current.has(fieldName)) {
-			current.delete(fieldName);
+		const overrides = new Set(stored || []);
+
+		// Toggle the override: if field is in overrides, remove it (revert to default)
+		// If not in overrides, add it (deviate from default)
+		if (overrides.has(fieldName)) {
+			overrides.delete(fieldName);
 		} else {
-			current.add(fieldName);
+			overrides.add(fieldName);
 		}
-		configuration.set(columnVisibilityKey, Array.from(current));
+		configuration.set(columnVisibilityKey, Array.from(overrides));
 	}
 
 	// Check if a column is visible
