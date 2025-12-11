@@ -9,11 +9,15 @@ import (
 //go:embed all:frontend/build
 var assets embed.FS
 
+//go:embed build/appicon.png
+var appIcon []byte
+
 func main() {
 	igApp := NewApp()
 
 	app := application.New(application.Options{
 		Name: "Inspektor Gadget Desktop",
+		Icon: appIcon,
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
 		},
