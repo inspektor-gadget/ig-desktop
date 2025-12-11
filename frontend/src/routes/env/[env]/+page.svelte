@@ -4,6 +4,7 @@
 	import { environments } from '$lib/shared/environments.svelte';
 	import { instances } from '$lib/shared/instances.svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import type { GadgetInstance, GadgetRunRequest, SessionItem } from '$lib/types';
 	import Panel from '$lib/components/Panel.svelte';
 	import { confirmationModal } from '$lib/stores/confirmation-modal.svelte';
@@ -171,7 +172,7 @@
 		// Clean up all environment-scoped preferences
 		cleanupEnvironment(envId);
 
-		goto('/');
+		goto(resolve('/'));
 	}
 
 	async function attachInstance(instance: GadgetInstance) {
@@ -179,7 +180,7 @@
 			cmd: 'attachInstance',
 			data: { environmentID: env.id, image: instance.id, instanceName: instance.name }
 		});
-		goto('/env/' + env.id + '/running/' + res.id);
+		goto(resolve(`/env/${env.id}/running/${res.id}`));
 	}
 
 	async function removeInstance(instance: GadgetInstance) {
@@ -218,7 +219,7 @@
 		if (env?.id && gadgetURL) {
 			saveGadgetURLRecent(env.id, gadgetURL);
 		}
-		goto('/gadgets/run/' + gadgetURL + '?env=' + env.id);
+		goto(resolve(`/gadgets/run/${gadgetURL}?env=${env.id}`));
 	}
 
 	async function runGadget(gadgetRunRequest: GadgetRunRequest) {
@@ -257,7 +258,7 @@
 				toastStore.info(`Starting headless instance "${displayName}"...`, 3000);
 				getList(env.id);
 			} else {
-				goto('/env/' + env.id + '/running/' + res.id);
+				goto(resolve(`/env/${env.id}/running/${res.id}`));
 			}
 		} catch (err: any) {
 			// Show error toast
@@ -322,16 +323,16 @@
 
 			<!-- Content Grid -->
 			<div class="grid grid-cols-1 gap-6">
-				<!-- Run Gadget Card (hidden in demo mode) -->
-				{#if features.canRunGadgets}
-					<Panel title="Run Gadget" icon={PlaySmall} color="blue" bodyPadding="large">
+				<!-- Run Gadget Card -->
+				<Panel title="Run Gadget" icon={PlaySmall} color="blue" bodyPadding="large">
+					{#if features.canRunGadgets}
 						<p class="mb-2 text-sm text-gray-400">
 							Enter a gadget image URL or discover gadgets from ArtifactHub
 						</p>
 						<div class="flex flex-col gap-2 md:flex-row">
 							{#if features.canBrowseArtifactHub}
 								<a
-									href="/browse/artifacthub?env={env.id}"
+									href={resolve(`/browse/artifacthub?env=${env.id}`)}
 									title="Discover Gadgets"
 									class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-900 md:w-auto md:justify-start"
 								>
@@ -363,8 +364,12 @@
 								<span>Run</span>
 							</button>
 						</div>
-					</Panel>
-				{/if}
+					{:else}
+						<div class="flex flex-col items-center justify-center gap-3 py-4 text-center">
+							<p class="text-sm text-gray-500">Unavailable in Demo Environment</p>
+						</div>
+					{/if}
+				</Panel>
 
 				<!-- Recently Run Gadgets Card -->
 				{#if history.length > 0}
@@ -443,24 +448,26 @@
 												setEnvPref(env.id, 'gadget-history', history);
 											}}>{@html Trash}</button
 										>
-										<button
-											class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-gray-200"
-											title="Configure and run"
-											onclick={() => {
-												const params = new URLSearchParams();
-												params.set('env', env.id);
-												if (entry.params) {
-													params.set('params', JSON.stringify(entry.params));
-												}
-												if (entry.detached !== undefined) {
-													params.set('detached', String(entry.detached));
-												}
-												if (entry.instanceName) {
-													params.set('instanceName', entry.instanceName);
-												}
-												goto('/gadgets/run/' + entry.image + '?' + params.toString());
-											}}>{@html Cog}</button
-										>
+										{#if !features.isDemoMode}
+											<button
+												class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-gray-200"
+												title="Configure and run"
+												onclick={() => {
+													const params = new URLSearchParams();
+													params.set('env', env.id);
+													if (entry.params) {
+														params.set('params', JSON.stringify(entry.params));
+													}
+													if (entry.detached !== undefined) {
+														params.set('detached', String(entry.detached));
+													}
+													if (entry.instanceName) {
+														params.set('instanceName', entry.instanceName);
+													}
+													goto(resolve(`/gadgets/run/${entry.image}?${params.toString()}`));
+												}}>{@html Cog}</button
+											>
+										{/if}
 										<button
 											class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-purple-400"
 											title="Run again"

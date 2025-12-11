@@ -5,6 +5,7 @@
 	import { instances } from '$lib/shared/instances.svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import type { Snippet } from 'svelte';
 	import { getContext } from 'svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
@@ -39,7 +40,7 @@
 
 			if (page.params.instanceID && page.params.instanceID === instanceID) {
 				// Page is currently open, move to env
-				goto(`/env/${page.params.env}`);
+				goto(resolve(`/env/${page.params.env}`));
 			}
 			delete instances[instanceID];
 		} catch (err: any) {
@@ -56,9 +57,9 @@
 
 <div class="flex min-w-0 flex-1 flex-col bg-gray-900/90">
 	<div class="nowrap flex w-full flex-row items-center overscroll-x-auto text-sm text-gray-500">
-		<Tab href="/env/{page.params.env}" shrink={true} exact={true}>{@html List}</Tab>
+		<Tab href={resolve(`/env/${page.params.env}`)} shrink={true} exact={true}>{@html List}</Tab>
 		{#each instanceKeys as instanceKey}
-			<Tab href="/env/{page.params.env}/running/{instanceKey}" shrink={false} exact={true}
+			<Tab href={resolve(`/env/${page.params.env}/running/${instanceKey}`)} shrink={false} exact={true}
 				><div class="flex flex-row items-center gap-2">
 					<button
 						class="small-icon rounded-4xl p-0.5 hover:bg-gray-700"

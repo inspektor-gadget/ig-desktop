@@ -13,6 +13,7 @@
 	import Server from '$lib/icons/server.svg?raw';
 	import { environments } from '$lib/shared/environments.svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import Title from '$lib/components/params/Title.svelte';
 	import Select from '$lib/components/forms/Select.svelte';
@@ -32,7 +33,7 @@
 	// Redirect to home if running gadgets is not allowed (demo mode)
 	onMount(() => {
 		if (!features.canRunGadgets) {
-			goto('/');
+			goto(resolve('/'));
 		}
 	});
 
@@ -291,9 +292,9 @@
 				// Show info toast for headless instances (success confirmed when instance appears in list)
 				const displayName = instanceName || 'Unnamed instance';
 				toastStore.info(`Starting headless instance "${displayName}"...`, 3000);
-				goto('/env/' + environmentID);
+				goto(resolve(`/env/${environmentID}`));
 			} else {
-				goto('/env/' + environmentID + '/running/' + res.id);
+				goto(resolve(`/env/${environmentID}/running/${res.id}`));
 			}
 		} catch (err: any) {
 			// Show error toast

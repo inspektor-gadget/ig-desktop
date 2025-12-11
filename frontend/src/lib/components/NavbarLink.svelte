@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
+	import { base, resolve } from '$app/paths';
 	import { openExternalURL } from '$lib/utils/external-links';
 
 	interface Props {
@@ -22,11 +23,15 @@
 	// Check if this link should be highlighted via query param (for visual purposes only)
 	const highlightEnvId = $derived(page.url.searchParams.get('highlightEnvironment'));
 
+	// The home path is the base path (e.g., '/igd-demo' or '/' or '')
+	const homePath = $derived(base || '/');
+	const isHomePath = $derived(href === homePath || href === `${base}/`);
+
 	const active = $derived(
 		href &&
 			(page.url.pathname === href ||
-				(href !== '/' && page.url.pathname.startsWith(href)) ||
-				(highlightEnvId && href === `/env/${highlightEnvId}`))
+				(!isHomePath && page.url.pathname.startsWith(href)) ||
+				(highlightEnvId && href === resolve(`/env/${highlightEnvId}`)))
 	);
 
 	const handleClick = (ev: MouseEvent) => {

@@ -8,6 +8,7 @@
 		"build": "vite build",
 		"build:single-env": "VITE_APP_MODE=single-env vite build",
 		"build:demo": "VITE_APP_MODE=demo vite build",
+		"build:demo:subdir": "VITE_APP_MODE=demo VITE_BASE_PATH=/igd-demo vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

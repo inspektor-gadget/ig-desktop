@@ -2,11 +2,13 @@
 	import { openExternalURL } from '$lib/utils/external-links';
 	import { environments } from '$lib/shared/environments.svelte.js';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import type { GadgetRunRequest } from '$lib/types';
 	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
 	import { getEnvPref } from '$lib/utils/env-preferences';
-	import { onMount } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 	import { features } from '$lib/config/app-mode';
+	import { toastStore } from '$lib/stores/toast.svelte';
 
 	import Panel from '$lib/components/Panel.svelte';
 	import Server from '$lib/icons/fa/server.svg?raw';
@@ -20,19 +22,11 @@
 	import Link from '$lib/icons/link.svg?raw';
 	import CirclePlus from '$lib/icons/circle-plus.svg?raw';
 
+	const api: any = getContext('api');
+
 	// Clear current environment when on home page
 	$effect(() => {
 		currentEnvironment.clear();
-	});
-
-	// In single-env or demo mode, redirect to the environment page
-	$effect(() => {
-		if (features.isSingleEnvironment || features.isDemoMode) {
-			const envIds = Object.keys(environments);
-			if (envIds.length > 0) {
-				goto(`/env/${envIds[0]}`);
-			}
-		}
 	});
 
 	// Helper function to load all histories
@@ -107,9 +101,23 @@
 		return lastPart.split(':')[0];
 	}
 
-	function runGadget(gadget: GadgetRunRequest, envId: string) {
-		const gadgetName = getGadgetName(gadget.image);
-		goto(`/gadgets/run/${gadgetName}?env=${envId}&image=${encodeURIComponent(gadget.image)}`);
+	async function runGadget(gadget: GadgetRunRequest, envId: string) {
+		try {
+			const res = await api.request({
+				cmd: 'runGadget',
+				data: {
+					...gadget,
+					environmentID: envId
+				}
+			});
+			goto(resolve(`/env/${envId}/running/${res.id}`));
+		} catch (err: any) {
+			const errorMessage = err?.message || err?.toString() || 'Unknown error';
+			toastStore.error(`Failed to run gadget: ${errorMessage}`, 7000, {
+				label: 'Retry',
+				onClick: () => runGadget(gadget, envId)
+			});
+		}
 	}
 
 	// Random tips
@@ -183,7 +191,7 @@
 							</div>
 
 							<a
-								href="/environment/create"
+								href={resolve('/environment/create')}
 								class="group/btn flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-all hover:bg-blue-500"
 							>
 								<div class="h-5 w-5">{@html CirclePlus}</div>
@@ -248,42 +256,45 @@
 			<!-- Action Panels Grid -->
 			<div
 				class="grid grid-cols-1 gap-6 lg:grid-cols-2"
-				class:xl:grid-cols-3={features.canBrowseArtifactHub}
+				class:xl:grid-cols-3={features.canBrowseArtifactHub && !features.isSingleEnvironment && !features.isDemoMode}
 			>
-				<!-- Environments Panel -->
-				<Panel
-					title="Environments"
-					icon={Server}
-					color="blue"
-					badge={Object.keys(environments).length}
-				>
-					<p class="mb-2 text-sm text-gray-400">Select an environment to manage and run gadgets</p>
-					<div class="flex flex-col gap-2">
-						{#each Object.values(environments).slice(0, 4) as env}
-							<button
-								onclick={() => goto(`/env/${env.id}`)}
-								class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-900"
-							>
-								<div class="flex flex-col gap-1">
-									<div class="font-medium text-gray-200">{env.name}</div>
-									<div class="text-xs text-gray-400">{env.runtime}</div>
-								</div>
-								<div
-									class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-blue-400"
+				<!-- Environments Panel (hidden in single-env and demo modes) -->
+				{#if !features.isSingleEnvironment && !features.isDemoMode}
+					<Panel
+						title="Environments"
+						icon={Server}
+						color="blue"
+						badge={Object.keys(environments).length}
+					>
+						<p class="mb-2 text-sm text-gray-400">Select an environment to manage and run gadgets</p>
+						<div class="flex flex-col gap-2">
+							{#each Object.values(environments).slice(0, 4) as env}
+								<button
+									onclick={() => goto(resolve(`/env/${env.id}`))}
+									class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-900"
 								>
-									{@html ChevronRight}
-								</div>
-							</button>
-						{/each}
-					</div>
-					{#if Object.keys(environments).length > 4}
-						<div class="mt-2 text-center text-xs text-gray-500">
-							+{Object.keys(environments).length - 4} more
+									<div class="flex flex-col gap-1">
+										<div class="font-medium text-gray-200">{env.name}</div>
+										<div class="text-xs text-gray-400">{env.runtime}</div>
+									</div>
+									<div
+										class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-blue-400"
+									>
+										{@html ChevronRight}
+									</div>
+								</button>
+							{/each}
 						</div>
-					{/if}
-				</Panel>
+						{#if Object.keys(environments).length > 4}
+							<div class="mt-2 text-center text-xs text-gray-500">
+								+{Object.keys(environments).length - 4} more
+							</div>
+						{/if}
+					</Panel>
+				{/if}
 
 				<!-- Recent Gadgets Panel -->
+				<div class:lg:col-span-2={features.isSingleEnvironment || features.isDemoMode}>
 				<Panel title="Recent Activity" icon={History} color="purple">
 					{#if allHistories.length > 0}
 						<p class="mb-2 text-sm text-gray-400">Quick access to recently run gadgets</p>
@@ -321,6 +332,7 @@
 						</div>
 					{/if}
 				</Panel>
+				</div>
 
 				<!-- Discover Gadgets Panel -->
 				{#if features.canBrowseArtifactHub}
@@ -330,7 +342,7 @@
 						<!-- Featured categories -->
 						<div class="flex flex-col gap-2">
 							<a
-								href="/browse/artifacthub"
+								href={resolve('/browse/artifacthub')}
 								class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">
@@ -345,7 +357,7 @@
 							</a>
 
 							<a
-								href="/browse/artifacthub"
+								href={resolve('/browse/artifacthub')}
 								class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">
@@ -360,7 +372,7 @@
 							</a>
 
 							<a
-								href="/browse/artifacthub"
+								href={resolve('/browse/artifacthub')}
 								class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">

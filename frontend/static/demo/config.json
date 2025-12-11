@@ -7,5 +7,12 @@
   },
   "sessions": [
     "full.json"
+  ],
+  "recents": [
+    "trace_open.json",
+    "top_process.json"
+  ],
+  "instances": [
+    "process-monitor.json"
   ]
 }

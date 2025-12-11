@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Panel from '$lib/components/Panel.svelte';
 	import Params from '$lib/components/Params.svelte';
 	import K8sDeployModal from '$lib/components/K8sDeployModal.svelte';
@@ -109,7 +110,7 @@
 		});
 		// TODO: Feedback
 		console.log('env', res);
-		goto('/env/' + res.id);
+		goto(resolve(`/env/${res.id}`));
 	}
 
 	let isRedeploy = $state(false);

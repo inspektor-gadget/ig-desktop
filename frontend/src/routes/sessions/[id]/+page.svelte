@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { page } from '$app/stores';
+	import { resolve } from '$app/paths';
 	import { formatAbsoluteTime, formatRelativeTime } from '$lib/utils/time';
 	import type { SessionWithRuns } from '$lib/types';
 	import { instances } from '$lib/shared/instances.svelte';
@@ -178,7 +179,7 @@
 {:else if error}
 	<div class="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
 		<p class="text-red-400">Error: {error}</p>
-		<a href="/" class="text-blue-400 underline hover:text-blue-300">Return home</a>
+		<a href={resolve('/')} class="text-blue-400 underline hover:text-blue-300">Return home</a>
 	</div>
 {:else if session}
 	<div class="flex flex-1 flex-col overflow-auto">
@@ -186,7 +187,7 @@
 			<div class="flex w-full items-center justify-between">
 				<div class="flex items-center gap-3">
 					<a
-						href="/env/{session.environmentId}"
+						href={resolve(`/env/${session.environmentId}`)}
 						class="flex cursor-pointer items-center rounded bg-gray-800 p-1.5 hover:bg-gray-700"
 						title="Back to Environment"
 					>

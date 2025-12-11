@@ -39,6 +39,7 @@
 	import Cog from '$lib/icons/cog.svg?raw';
 	import { APP_MODE, features } from '$lib/config/app-mode';
 	import { loadSingleEnvConfig } from '$lib/services/config-loader.service';
+	import { resolve } from '$app/paths';
 
 	let { children } = $props();
 
@@ -317,15 +318,15 @@
 					{#if features.isSingleEnvironment}
 						<!-- Single-env mode: show Home button that links to the single environment -->
 						{#each Object.entries(environments) as [id, env]}
-							<NavbarLink href="/env/{id}" title="Home">
+							<NavbarLink href={resolve(`/env/${id}`)} title="Home">
 								{@html BrandIconLarge}
 							</NavbarLink>
 						{/each}
 					{:else}
 						<!-- Full mode: show brand logo linking to home page -->
-						<NavbarLink href="/" title="Home">{@html BrandIconLarge}</NavbarLink>
+						<NavbarLink href={resolve('/')} title="Home">{@html BrandIconLarge}</NavbarLink>
 						{#each Object.entries(environments) as [id, env]}
-							<NavbarLink href="/env/{id}" title={env.name}>
+							<NavbarLink href={resolve(`/env/${id}`)} title={env.name}>
 								<div class="grid" title={env.name}>
 									<div class="col-start-1 row-start-1 text-gray-600 opacity-80">{@html Gadget}</div>
 									<div class="z-10 col-start-1 row-start-1 flex justify-center text-lg shadow">
@@ -336,7 +337,7 @@
 						{/each}
 						<!--					<NavbarLink href="/k">{@html Kubernetes}</NavbarLink>-->
 						{#if features.canCreateEnvironment}
-							<NavbarLink href="/environment/create" title="Create environment"
+							<NavbarLink href={resolve('/environment/create')} title="Create environment"
 								>{@html Plus}</NavbarLink
 							>
 						{/if}
@@ -345,7 +346,7 @@
 				<div class="flex grow flex-col"></div>
 				<div class="flex flex-col">
 					{#if features.canBrowseArtifactHub}
-						<NavbarLink href="/browse/artifacthub">{@html ArtifactHub}</NavbarLink>
+						<NavbarLink href={resolve('/browse/artifacthub')}>{@html ArtifactHub}</NavbarLink>
 					{/if}
 					<NavbarLink href="https://inspektor-gadget.io/docs/latest/" target="_blank"
 						>{@html Book}</NavbarLink
@@ -358,7 +359,7 @@
 					>
 						{@html Cog}
 					</NavbarLink>
-					<NavbarLink href="/info">{@html Info}</NavbarLink>
+					<NavbarLink href={resolve('/info')}>{@html Info}</NavbarLink>
 				</div>
 			</div>
 			{@render children()}

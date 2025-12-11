@@ -14,6 +14,7 @@
 	import Star from '$lib/icons/star-sharp.svg?raw';
 	import Link from '$lib/icons/href.svg?raw';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 
 	let { data } = $props();
 
@@ -244,7 +245,7 @@
 						<div class="flex flex-col gap-3">
 							{#each pkg.containers_images as image}
 								<a
-									href="/gadgets/run/{image.image}{environmentID ? `?env=${environmentID}` : ''}"
+									href={resolve(`/gadgets/run/${image.image}${environmentID ? `?env=${environmentID}` : ''}`)}
 									class="group"
 								>
 									<div
