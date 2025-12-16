@@ -166,7 +166,7 @@
 				<Input bind:value={filter.value} placeholder={param.defaultValue} class="text-sm" />
 			</div>
 			<button
-				class="flex cursor-pointer flex-row items-center gap-2 rounded bg-red-900 px-2 py-1 hover:bg-red-800"
+				class="flex cursor-pointer flex-row items-center gap-2 rounded bg-red-200 dark:bg-red-900 text-red-800 dark:text-red-100 px-2 py-1 hover:bg-red-300 dark:hover:bg-red-800"
 				onclick={() => removeFilter(idx)}
 			>
 				<span>{@html Delete}</span>
@@ -175,7 +175,7 @@
 	{/each}
 	<div>
 		<button
-			class="flex cursor-pointer flex-row items-center gap-2 rounded bg-gray-800 px-2 py-1 hover:bg-gray-700"
+			class="flex cursor-pointer flex-row items-center gap-2 rounded bg-gray-100 dark:bg-gray-800 px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-700"
 			onclick={addFilter}
 		>
 			<span>Add Filter</span>

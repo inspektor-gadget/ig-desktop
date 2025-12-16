@@ -262,7 +262,7 @@
 
 <div class="flex flex-col gap-1 {className}">
 	{#if label}
-		<label for={inputId} class="text-sm font-medium text-gray-200">
+		<label for={inputId} class="text-sm font-medium text-gray-800 dark:text-gray-200">
 			{label}
 			{#if required}
 				<span class="text-red-500">*</span>
@@ -271,29 +271,29 @@
 	{/if}
 
 	{#if description}
-		<p class="text-sm text-gray-400">{description}</p>
+		<p class="text-sm text-gray-600 dark:text-gray-400">{description}</p>
 	{/if}
 
 	<div class="relative">
 		<!-- Input container with tags for multi-select -->
 		<div
-			class="flex min-h-[42px] flex-wrap items-center gap-2 rounded-lg border bg-gray-900 px-3 py-2 transition-colors {error
+			class="flex min-h-[42px] flex-wrap items-center gap-2 rounded-lg border bg-gray-100 dark:bg-gray-900 px-3 py-2 transition-colors {error
 				? 'border-red-500'
-				: 'border-gray-700 focus-within:border-gray-600 focus-within:ring-2 focus-within:ring-blue-500/20'} {disabled
+				: 'border-gray-300 dark:border-gray-700 focus-within:border-gray-400 dark:focus-within:border-gray-600 focus-within:ring-2 focus-within:ring-blue-500/20'} {disabled
 				? 'cursor-not-allowed opacity-50'
 				: ''}"
 		>
 			{#if multiSelect}
 				{#each selectedValues as tag}
 					<span
-						class="inline-flex items-center gap-1 rounded border border-gray-700 bg-gray-800 px-2 py-1 text-sm text-gray-200"
+						class="inline-flex items-center gap-1 rounded border border-gray-300 bg-gray-200 dark:border-gray-700 dark:bg-gray-800 px-2 py-1 text-sm text-gray-800 dark:text-gray-200"
 					>
 						{getLabel(tag)}
 						{#if !disabled}
 							<button
 								type="button"
 								onclick={() => removeTag(tag)}
-								class="text-gray-400 transition-colors hover:text-gray-200"
+								class="text-gray-500 dark:text-gray-400 transition-colors hover:text-gray-800 dark:hover:text-gray-200"
 							>
 								<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
@@ -322,7 +322,7 @@
 				onfocus={handleFocus}
 				onblur={handleBlur}
 				onclick={handleInputClick}
-				class="min-w-[100px] flex-1 border-none bg-transparent text-gray-200 placeholder-gray-500 outline-none"
+				class="min-w-[100px] flex-1 border-none bg-transparent text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 outline-none"
 				autocomplete="off"
 			/>
 
@@ -330,7 +330,7 @@
 				<button
 					type="button"
 					onclick={clearSelection}
-					class="flex-shrink-0 text-gray-400 transition-colors hover:text-gray-200"
+					class="flex-shrink-0 text-gray-500 dark:text-gray-400 transition-colors hover:text-gray-800 dark:hover:text-gray-200"
 					title="Clear selection"
 				>
 					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,7 +367,7 @@
 		{#if isOpen && !disabled && filteredOptions().length > 0}
 			<div
 				bind:this={dropdownRef}
-				class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-700 bg-gray-900 shadow-lg"
+				class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-300 bg-white dark:border-gray-700 dark:bg-gray-900 shadow-lg"
 			>
 				{#each filteredOptions() as option, index}
 					{@const isSelected = multiSelect
@@ -382,8 +382,8 @@
 							selectOption(option.value);
 						}}
 						class="w-full px-4 py-2 text-left transition-colors {isHighlighted
-							? 'bg-gray-800'
-							: 'hover:bg-gray-800'} {isSelected ? 'text-blue-400' : 'text-gray-200'}"
+							? 'bg-gray-100 dark:bg-gray-800'
+							: 'hover:bg-gray-100 dark:hover:bg-gray-800'} {isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-800 dark:text-gray-200'}"
 					>
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2">

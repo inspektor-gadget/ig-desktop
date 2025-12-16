@@ -92,6 +92,19 @@ export const configurationSchema: ConfigurationSchema = {
 			icon: '🎨',
 			settings: [
 				{
+					key: 'theme',
+					title: 'Theme',
+					description:
+						'Choose your preferred color scheme. System follows your OS preference.',
+					type: 'select',
+					options: {
+						dark: 'Dark',
+						light: 'Light',
+						system: 'System'
+					},
+					default: 'dark'
+				},
+				{
 					key: 'gradientEnabled',
 					title: 'Use gradients in design',
 					description: 'Enable gradient background effect in the application',

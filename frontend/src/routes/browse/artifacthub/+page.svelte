@@ -75,13 +75,13 @@
 	getList();
 </script>
 
-<div class="flex flex-1 flex-col overflow-hidden bg-gray-950/80">
+<div class="flex flex-1 flex-col overflow-hidden bg-gray-50/80 dark:bg-gray-950/80">
 	<div class="z-1 flex flex-col shadow-lg">
-		<div class="flex flex-row justify-between bg-gray-950 p-4">
+		<div class="flex flex-row justify-between bg-white dark:bg-gray-950 p-4">
 			<div class="flex flex-row items-center gap-4">
 				<button
 					onclick={() => history.back()}
-					class="flex cursor-pointer items-center rounded bg-gray-800 p-1.5 hover:bg-gray-700"
+					class="flex cursor-pointer items-center rounded bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
 					title="Go back"
 				>
 					{@html ChevronLeft}
@@ -93,15 +93,15 @@
 				<div>{@html ArtifactHub}</div>
 			</div>
 		</div>
-		<div class="flex flex-row justify-between bg-gray-800 p-4">
+		<div class="flex flex-row justify-between bg-gray-200 dark:bg-gray-800 p-4">
 			<div></div>
 			<div class="relative">
 				<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-					<span class="h-4 w-4 text-gray-400">{@html Search}</span>
+					<span class="h-4 w-4 text-gray-600 dark:text-gray-400">{@html Search}</span>
 				</div>
 				<input
 					bind:value={search}
-					class="w-64 rounded-lg border border-gray-700 bg-gray-900 py-2 pr-4 pl-10 text-sm placeholder-gray-500 transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+					class="w-64 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 py-2 pr-4 pl-10 text-sm placeholder-gray-500 transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 					type="search"
 					placeholder="Search gadgets..."
 				/>
@@ -114,7 +114,7 @@
 				<Spinner />
 				<div class="text-center">
 					<div class="text-xl">Loading gadgets...</div>
-					<div class="text-sm text-gray-400">Fetching packages from ArtifactHub</div>
+					<div class="text-sm text-gray-600 dark:text-gray-400">Fetching packages from ArtifactHub</div>
 				</div>
 			</div>
 		</div>
@@ -129,7 +129,7 @@
 							.name}/{entry.normalized_name}/{entry.version}{environmentID
 							? `?env=${environmentID}`
 							: ''}"
-						class="group relative flex flex-col justify-between gap-3 rounded-xl border border-gray-800 bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 p-5 shadow-lg shadow-gray-950/50 transition-all hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
+						class="group relative flex flex-col justify-between gap-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 p-5 shadow-lg shadow-gray-200/50 dark:shadow-gray-950/50 transition-all hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 					>
 						{#if entry.official}
 							<div class="ribbon-official text-xs">Official</div>
@@ -143,21 +143,21 @@
 						<div class="relative z-10">
 							<div>
 								<span class="text-lg font-semibold">{entry.name}</span>
-								<span class="ml-2 rounded-full bg-gray-800 px-2 py-0.5 text-xs text-gray-400"
+								<span class="ml-2 rounded-full bg-gray-200 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-600 dark:text-gray-400"
 									>{entry.version}</span
 								>
 							</div>
-							<div class="mb-4 text-xs text-gray-400">
+							<div class="mb-4 text-xs text-gray-600 dark:text-gray-400">
 								<span class="mr-1">by</span>
-								<span class="font-medium text-gray-300"
+								<span class="font-medium text-gray-700 dark:text-gray-300"
 									>{entry.repository.organization_display_name || entry.repository.user_alias}</span
 								>
 							</div>
-							<div class="line-clamp-3 text-sm leading-relaxed text-gray-400">
+							<div class="line-clamp-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
 								{entry.description}
 							</div>
 						</div>
-						<div class="relative z-10 flex flex-col gap-3 border-t border-gray-800/50 pt-3">
+						<div class="relative z-10 flex flex-col gap-3 border-t border-gray-200/50 dark:border-gray-800/50 pt-3">
 							<div class="flex flex-row items-center justify-between">
 								<div class="flex flex-row items-center gap-3">
 									<div
@@ -165,21 +165,21 @@
 										title={entry.signed ? 'Signed' : 'Not Signed'}
 									>
 										{#if entry.signed}
-											<div class="text-green-400">{@html Signed}</div>
+											<div class="text-green-600 dark:text-green-400">{@html Signed}</div>
 										{:else}
 											<div class="text-gray-500">{@html Unsigned}</div>
 										{/if}
 									</div>
 									<div class="flex flex-row items-center gap-1.5" title="Stars">
-										<div class="text-yellow-400">{@html Star}</div>
-										<div class="text-sm font-medium text-gray-300">{entry.stars}</div>
+										<div class="text-yellow-500 dark:text-yellow-400">{@html Star}</div>
+										<div class="text-sm font-medium text-gray-700 dark:text-gray-300">{entry.stars}</div>
 									</div>
 								</div>
 								<div
 									class="flex items-center gap-2 rounded-lg bg-blue-600/10 px-3 py-1.5 transition-all group-hover:bg-blue-600/20"
 								>
-									<span class="text-xs font-medium text-blue-400">Run</span>
-									<div class="text-blue-400">
+									<span class="text-xs font-medium text-blue-600 dark:text-blue-400">Run</span>
+									<div class="text-blue-600 dark:text-blue-400">
 										{@html Play}
 									</div>
 								</div>
@@ -193,7 +193,7 @@
 		<div class="flex flex-1 items-center justify-center">
 			<div class="text-center">
 				<div class="text-xl">No gadgets found</div>
-				<div class="text-sm text-gray-400">
+				<div class="text-sm text-gray-600 dark:text-gray-400">
 					{#if search}
 						No gadgets match your search term "{search}"
 					{:else}

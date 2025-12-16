@@ -22,6 +22,7 @@
 	import AnalyticsOptInModal from '$lib/components/AnalyticsOptInModal.svelte';
 	import VersionInfoModal from '$lib/components/VersionInfoModal.svelte';
 	import { analyticsService } from '$lib/services/analytics.service.svelte';
+	import { themeService } from '$lib/services/theme.service.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import { appState } from './state.svelte.js';
 	import { environments } from '$lib/shared/environments.svelte.js';
@@ -154,6 +155,11 @@
 	// Get gradient setting from configuration store
 	let gradientEnabled = $derived(configuration.get('gradientEnabled') !== false);
 
+	// Apply theme changes reactively
+	$effect(() => {
+		themeService.applyTheme();
+	});
+
 	let modalError = $state(null);
 
 	function handleError(err) {
@@ -269,16 +275,16 @@
 				toggleMaximize();
 			}}
 			style="--wails-draggable: drag"
-			class="flex flex-row items-center justify-between border-b border-b-gray-800 bg-gray-950/80 backdrop-blur-sm select-none"
+			class="flex flex-row items-center justify-between border-b border-b-gray-200 bg-white/80 dark:border-b-gray-800 dark:bg-gray-950/80 backdrop-blur-sm select-none"
 		>
-			<div class="flex flex-row gap-2 px-2 py-2 text-xs text-gray-600 uppercase">
+			<div class="flex flex-row gap-2 px-2 py-2 text-xs text-gray-500 dark:text-gray-600 uppercase">
 				<div>{@html BrandIcon}</div>
 				<div>Inspektor Gadget Desktop</div>
 			</div>
-			<div style="--wails-draggable: no-drag" class="flex flex-row gap-2 px-2 py-1 text-gray-600">
+			<div style="--wails-draggable: no-drag" class="flex flex-row gap-2 px-2 py-1 text-gray-500 dark:text-gray-600">
 				<button
 					type="button"
-					class="hover:text-white"
+					class="hover:text-gray-900 dark:hover:text-white"
 					onclick={() => {
 						minimize();
 					}}
@@ -288,7 +294,7 @@
 				</button>
 				<button
 					type="button"
-					class="hover:text-white"
+					class="hover:text-gray-900 dark:hover:text-white"
 					onclick={() => {
 						toggleMaximize();
 					}}
@@ -298,7 +304,7 @@
 				</button>
 				<button
 					type="button"
-					class="hover:text-white"
+					class="hover:text-gray-900 dark:hover:text-white"
 					onclick={() => {
 						quitApp();
 					}}
@@ -310,9 +316,9 @@
 		</div>
 	{/if}
 	{#if websocketService.connected}
-		<div class="flex flex-1 overflow-hidden text-gray-100">
+		<div class="flex flex-1 overflow-hidden text-gray-900 dark:text-gray-100">
 			<div
-				class="scrollbar-hide flex flex-col justify-between space-y-2 overflow-y-scroll border-r border-r-gray-700 bg-gray-900/60 p-3 backdrop-blur-md"
+				class="scrollbar-hide flex flex-col justify-between space-y-2 overflow-y-scroll border-r border-r-gray-200 bg-gray-100/60 dark:border-r-gray-700 dark:bg-gray-900/60 p-3 backdrop-blur-md"
 			>
 				<div class="flex flex-col select-none">
 					{#if features.isSingleEnvironment}
@@ -328,7 +334,7 @@
 						{#each Object.entries(environments) as [id, env]}
 							<NavbarLink href={resolve(`/env/${id}`)} title={env.name}>
 								<div class="grid" title={env.name}>
-									<div class="col-start-1 row-start-1 text-gray-600 opacity-80">{@html Gadget}</div>
+									<div class="col-start-1 row-start-1 text-gray-200 dark:text-gray-600 opacity-80">{@html Gadget}</div>
 									<div class="z-10 col-start-1 row-start-1 flex justify-center text-lg shadow">
 										{env.name.substring(0, 3)}
 									</div>
@@ -365,7 +371,7 @@
 			{@render children()}
 		</div>
 		<div
-			class="flex flex-row justify-between gap-2 border-t border-t-gray-700 bg-gray-900/70 p-1 px-2 text-xs text-gray-500 backdrop-blur-md"
+			class="flex flex-row justify-between gap-2 border-t border-t-gray-200 bg-gray-100/70 dark:border-t-gray-700 dark:bg-gray-900/70 p-1 px-2 text-xs text-gray-500 backdrop-blur-md"
 		>
 			<div class="flex items-center gap-4">
 				<div class="flex items-center gap-1.5">
@@ -400,7 +406,7 @@
 						onclick={() => {
 							versionInfoModalOpen = true;
 						}}
-						class="hover:text-gray-300"
+						class="hover:text-gray-700 dark:hover:text-gray-300"
 						title="Click for version details"
 					>
 						Version {version}
@@ -410,12 +416,12 @@
 		</div>
 	{:else}
 		<div
-			class="flex flex-1 items-center justify-center bg-gray-950 align-middle font-mono text-gray-100"
+			class="flex flex-1 items-center justify-center bg-gray-50 dark:bg-gray-950 align-middle font-mono text-gray-900 dark:text-gray-100"
 		>
 			Calling the Inspektor...
 		</div>
 		<div
-			class="border-t border-t-gray-700 bg-gray-900/70 p-1 pl-2 text-xs text-gray-500 backdrop-blur-md"
+			class="border-t border-t-gray-200 bg-gray-100/70 dark:border-t-gray-700 dark:bg-gray-900/70 p-1 pl-2 text-xs text-gray-500 backdrop-blur-md"
 		>
 			Disconnected
 		</div>
@@ -423,22 +429,22 @@
 </div>
 {#if modalError}
 	<div
-		class="fixed top-0 left-0 z-100 flex h-full w-full flex-row justify-between bg-gray-900/90 text-white"
+		class="fixed top-0 left-0 z-100 flex h-full w-full flex-row justify-between bg-gray-100/90 dark:bg-gray-900/90 text-gray-900 dark:text-white"
 	>
 		<div></div>
 		<div class="flex max-w-1/3 flex-col justify-between">
 			<div></div>
 			<div
-				class="flex flex-col gap-8 rounded-xl border border-gray-700 bg-gray-900/90 p-16 backdrop-blur-lg"
+				class="flex flex-col gap-8 rounded-xl border border-gray-300 bg-white/90 dark:border-gray-700 dark:bg-gray-900/90 p-16 backdrop-blur-lg"
 			>
-				<div class="text-lg text-gray-400">An error occurred</div>
-				<div class="text-red-400">{modalError}</div>
+				<div class="text-lg text-gray-600 dark:text-gray-400">An error occurred</div>
+				<div class="text-red-600 dark:text-red-400">{modalError}</div>
 				<div class="flex flex-row justify-end">
 					<button
 						onclick={() => {
 							modalError = null;
 						}}
-						class="flex cursor-pointer flex-row items-center gap-2 rounded bg-red-900 px-2 py-1 hover:bg-red-800"
+						class="flex cursor-pointer flex-row items-center gap-2 rounded bg-red-600 dark:bg-red-900 px-2 py-1 text-white hover:bg-red-500 dark:hover:bg-red-800"
 						>Close
 					</button>
 				</div>

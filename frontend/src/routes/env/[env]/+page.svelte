@@ -299,11 +299,11 @@
 
 {#if !env}
 	<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-		<div class="text-gray-600">{@html Server}</div>
+		<div class="text-gray-400 dark:text-gray-600">{@html Server}</div>
 		<div class="text-sm text-gray-500">Environment not found</div>
 	</div>
 {:else}
-	<div class="flex flex-1 flex-col gap-8 overflow-auto p-8 text-gray-100">
+	<div class="flex flex-1 flex-col gap-8 overflow-auto p-8 text-gray-900 dark:text-gray-100">
 		<div class="mx-auto w-full max-w-7xl">
 			<!-- Page Header -->
 			<div class="mb-8 flex items-start justify-between gap-6">
@@ -314,7 +314,7 @@
 				</div>
 				<button
 					onclick={() => (settingsModalOpen = true)}
-					class="cursor-pointer rounded-lg border border-gray-800 bg-gray-900/50 p-3 text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-900 hover:text-blue-400"
+					class="cursor-pointer rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-3 text-gray-600 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-blue-400"
 					title="Environment Settings"
 				>
 					{@html Cog}
@@ -326,7 +326,7 @@
 				<!-- Run Gadget Card -->
 				<Panel title="Run Gadget" icon={PlaySmall} color="blue" bodyPadding="large">
 					{#if features.canRunGadgets}
-						<p class="mb-2 text-sm text-gray-400">
+						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
 							Enter a gadget image URL or discover gadgets from ArtifactHub
 						</p>
 						<div class="flex flex-col gap-2 md:flex-row">
@@ -334,10 +334,10 @@
 								<a
 									href={resolve(`/browse/artifacthub?env=${env.id}`)}
 									title="Discover Gadgets"
-									class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-900 md:w-auto md:justify-start"
+									class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 md:w-auto md:justify-start"
 								>
 									<span class="text-blue-400">{@html Grid}</span>
-									<span class="text-gray-200">Discover</span>
+									<span class="text-gray-800 dark:text-gray-200">Discover</span>
 								</a>
 							{/if}
 							<div class="grow">
@@ -358,7 +358,7 @@
 								disabled={!validURL}
 								onclick={runInstance}
 								title="Run Gadget"
-								class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-blue-800 bg-blue-900/20 px-4 py-2 text-sm text-blue-400 transition-all hover:border-blue-500/50 hover:bg-blue-900/40 disabled:cursor-not-allowed disabled:border-gray-800 disabled:bg-gray-900/20 disabled:text-gray-600 md:w-auto"
+								class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-blue-300 dark:border-blue-800 bg-blue-100/20 dark:bg-blue-900/20 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 transition-all hover:border-blue-500/50 hover:bg-blue-100/40 dark:hover:bg-blue-900/40 disabled:cursor-not-allowed disabled:border-gray-300 dark:disabled:border-gray-800 disabled:bg-gray-100/20 dark:disabled:bg-gray-900/20 disabled:text-gray-400 dark:disabled:text-gray-600 md:w-auto"
 							>
 								<span>{@html PlaySmall}</span>
 								<span>Run</span>
@@ -384,7 +384,7 @@
 							<button
 								onclick={() => currentPage--}
 								disabled={currentPage === 0}
-								class="cursor-pointer text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-700"
+								class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-300 dark:disabled:text-gray-700"
 								title="Previous page"
 							>
 								{@html ChevronLeft}
@@ -393,7 +393,7 @@
 							<button
 								onclick={() => currentPage++}
 								disabled={currentPage >= totalPages - 1}
-								class="cursor-pointer text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-700"
+								class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-300 dark:disabled:text-gray-700"
 								title="Next page"
 							>
 								{@html ChevronRight}
@@ -402,12 +402,12 @@
 
 						{#each paginatedHistory as entry, idx}
 							<div
-								class="group/item flex flex-col gap-2 rounded-lg border border-gray-800 bg-gray-900/50 p-4 transition-all hover:border-purple-500/50 hover:bg-gray-900"
+								class="group/item flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4 transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
 								<div class="flex flex-row items-start justify-between gap-4">
 									<div class="flex flex-1 flex-col gap-2">
 										<div class="flex flex-row items-center gap-2 font-mono text-sm">
-											<span class="font-medium text-gray-200">{entry.image}</span>
+											<span class="font-medium text-gray-800 dark:text-gray-200">{entry.image}</span>
 											{#if entry.detached}
 												<span class="rounded bg-blue-500/20 px-2 py-0.5 text-xs text-blue-400"
 													>detached</span
@@ -430,9 +430,9 @@
 											<div class="flex flex-row flex-wrap gap-2 text-xs">
 												{#each Object.entries(entry.params) as [key, value]}
 													<span
-														class="rounded-lg border border-gray-800 bg-gray-950/50 px-2 py-1 font-mono"
+														class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-950/50 px-2 py-1 font-mono"
 														><span class="text-gray-500">{key}:</span>
-														<span class="text-gray-300">{value}</span></span
+														<span class="text-gray-700 dark:text-gray-300">{value}</span></span
 													>
 												{/each}
 											</div>
@@ -440,7 +440,7 @@
 									</div>
 									<div class="flex flex-row items-start gap-1">
 										<button
-											class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-red-400"
+											class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
 											title="Remove from list"
 											onclick={() => {
 												const actualIdx = currentPage * ITEMS_PER_PAGE + idx;
@@ -450,7 +450,7 @@
 										>
 										{#if !features.isDemoMode}
 											<button
-												class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-gray-200"
+												class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
 												title="Configure and run"
 												onclick={() => {
 													const params = new URLSearchParams();
@@ -469,7 +469,7 @@
 											>
 										{/if}
 										<button
-											class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-purple-400"
+											class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-purple-400"
 											title="Run again"
 											onclick={() => {
 												runGadget(entry);
@@ -494,14 +494,14 @@
 						<button
 							onclick={() => currentEnvId && getList(currentEnvId)}
 							title="Refresh"
-							class="cursor-pointer text-gray-400 transition-all hover:text-blue-400"
+							class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400"
 							>{@html Refresh}</button
 						>
 						<a
 							href="https://inspektor-gadget.io/docs/latest/reference/headless"
 							title="Documentation"
 							target="_blank"
-							class="text-gray-400 transition-all hover:text-blue-400">{@html Info}</a
+							class="text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400">{@html Info}</a
 						>
 					{/snippet}
 
@@ -509,7 +509,7 @@
 						<div class="overflow-x-auto">
 							<table class="w-full min-w-full">
 								<thead>
-									<tr class="border-b border-gray-800">
+									<tr class="border-b border-gray-200 dark:border-gray-800">
 										<th
 											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
 											>ID</th
@@ -532,27 +532,27 @@
 								<tbody>
 									{#each detachedInstances as instance}
 										<tr
-											class="group/item border-b border-gray-800 transition-all last:border-b-0 hover:bg-gray-900/50"
+											class="group/item border-b border-gray-200 dark:border-gray-800 transition-all last:border-b-0 hover:bg-gray-100/50 dark:hover:bg-gray-900/50"
 										>
-											<td class="px-4 py-3 font-mono text-sm text-gray-400"
+											<td class="px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-400"
 												>{instance.id?.substring(0, 12)}</td
 											>
-											<td class="px-4 py-3 text-sm text-gray-300">{instance.name}</td>
+											<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{instance.name}</td>
 											<td class="px-4 py-3 font-mono text-xs text-gray-500">{instance.tags}</td>
-											<td class="px-4 py-3 font-mono text-xs text-gray-400"
+											<td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400"
 												>{instance.gadgetConfig?.imageName}</td
 											>
 											<td class="px-4 py-3">
 												<div class="flex flex-row justify-end gap-1">
 													<button
-														class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-blue-400"
+														class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-blue-400"
 														title="Attach"
 														onclick={() => {
 															attachInstance(instance);
 														}}>{@html Browser}</button
 													>
 													<button
-														class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-800 hover:text-red-400"
+														class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
 														title="Delete"
 														onclick={() => {
 															removeInstance(instance);
@@ -567,7 +567,7 @@
 						</div>
 					{:else}
 						<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-							<div class="text-gray-600">{@html Server}</div>
+							<div class="text-gray-400 dark:text-gray-600">{@html Server}</div>
 							<div class="text-sm text-gray-500">No running instances found</div>
 						</div>
 					{/if}
@@ -584,12 +584,12 @@
 					>
 						{#if loadingSessions}
 							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-								<div class="text-gray-600">{@html History}</div>
+								<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
 								<div class="text-sm text-gray-500">Loading sessions...</div>
 							</div>
 						{:else if sessions.length === 0}
 							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-								<div class="text-gray-600">{@html History}</div>
+								<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
 								<div class="text-sm text-gray-500">
 									No sessions yet. Enable session recording when running a gadget to capture runs.
 								</div>
@@ -621,7 +621,7 @@
 				<!-- Environment Name -->
 				<div class="flex flex-col gap-2">
 					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Name</span>
-					<div class="rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-gray-200">
+					<div class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200">
 						{env.name}
 					</div>
 				</div>
@@ -630,7 +630,7 @@
 				<div class="flex flex-col gap-2">
 					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">ID</span>
 					<div
-						class="rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 font-mono text-sm text-gray-400"
+						class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-400"
 					>
 						{env.id}
 					</div>
@@ -639,7 +639,7 @@
 				<!-- Runtime -->
 				<div class="flex flex-col gap-2">
 					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Runtime</span>
-					<div class="rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-gray-200">
+					<div class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200">
 						{env.runtime}
 					</div>
 				</div>
@@ -650,11 +650,11 @@
 						<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
 							>Configuration</span
 						>
-						<div class="flex flex-col gap-2 rounded-lg border border-gray-800 bg-gray-900/50 p-4">
+						<div class="flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4">
 							{#each Object.entries(env.params) as [key, value]}
 								<div class="flex flex-col gap-1">
 									<div class="text-xs font-medium text-gray-500">{key}</div>
-									<div class="font-mono text-sm text-gray-300">{value}</div>
+									<div class="font-mono text-sm text-gray-700 dark:text-gray-300">{value}</div>
 								</div>
 							{/each}
 						</div>
@@ -664,11 +664,11 @@
 				<!-- Danger Zone (hidden in single-env and demo mode) -->
 				{#if features.canDeleteEnvironment}
 					<div
-						class="mt-4 flex flex-col gap-4 rounded-lg border border-red-800/50 bg-red-900/10 p-4"
+						class="mt-4 flex flex-col gap-4 rounded-lg border border-red-300/50 dark:border-red-800/50 bg-red-100/10 dark:bg-red-900/10 p-4"
 					>
 						<div class="flex flex-col gap-1">
-							<h3 class="font-semibold text-red-400">Danger Zone</h3>
-							<p class="text-sm text-gray-400">Irreversible actions for this environment</p>
+							<h3 class="font-semibold text-red-600 dark:text-red-400">Danger Zone</h3>
+							<p class="text-sm text-gray-600 dark:text-gray-400">Irreversible actions for this environment</p>
 						</div>
 						<Button variant="danger" onclick={() => deleteEnvironment()} class="justify-center">
 							<span>{@html Trash}</span>

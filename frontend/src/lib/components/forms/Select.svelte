@@ -58,11 +58,11 @@
 	 */
 	const selectClasses = $derived(
 		[
-			'col-start-1 row-start-1 w-full appearance-none rounded-lg border px-4 py-2 pr-10 text-gray-200 transition-colors',
+			'col-start-1 row-start-1 w-full appearance-none rounded-lg border px-4 py-2 pr-10 text-gray-800 dark:text-gray-200 transition-colors',
 			'focus:outline-none focus:ring-2',
 			error
 				? 'border-red-500 bg-red-500/10 focus:border-red-500 focus:ring-red-500/20'
-				: 'border-gray-800 bg-gray-900/50 focus:border-blue-500 focus:ring-blue-500/20',
+				: 'border-gray-300 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50 focus:border-blue-500 focus:ring-blue-500/20',
 			disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
 			className
 		]
@@ -73,7 +73,7 @@
 
 <div class="flex flex-col gap-1.5">
 	{#if label}
-		<label for={selectId} class="text-sm font-medium text-gray-300">
+		<label for={selectId} class="text-sm font-medium text-gray-700 dark:text-gray-300">
 			{label}
 			{#if required}
 				<span class="text-red-400">*</span>

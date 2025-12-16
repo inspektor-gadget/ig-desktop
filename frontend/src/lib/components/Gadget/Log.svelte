@@ -133,12 +133,12 @@
 
 <svelte:document onclick={handleClickOutside} />
 
-<div class="sticky left-0 flex flex-row items-center justify-between bg-gray-950 px-2 py-1.5">
+<div class="sticky left-0 flex flex-row items-center justify-between bg-white dark:bg-gray-950 px-2 py-1.5">
 	<div class="flex flex-row items-center">
 		<!-- Collapse/Expand Chevron -->
 		<button
 			onclick={toggleCollapsed}
-			class="mr-1 rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-800 hover:text-gray-200"
+			class="mr-1 rounded p-0.5 text-gray-500 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
 			aria-label={collapsed ? 'Expand logs' : 'Collapse logs'}
 		>
 			<svg
@@ -178,7 +178,7 @@
 				<button
 					bind:this={dropdownButton}
 					onclick={() => (dropdownOpen = !dropdownOpen)}
-					class="flex items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900/50 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:border-gray-700 hover:bg-gray-800/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+					class="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 transition-colors hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
 				>
 					<span class="h-4 w-4">{@html Filter}</span>
 					<span>Severity</span>
@@ -193,19 +193,19 @@
 				{#if dropdownOpen}
 					<div
 						id="severity-dropdown"
-						class="absolute right-0 z-50 mt-1 w-48 rounded-lg border border-gray-800 bg-gray-900 py-1 shadow-xl"
+						class="absolute right-0 z-50 mt-1 w-48 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-1 shadow-xl"
 					>
 						{#each severityLevels as level}
 							<label
-								class="flex cursor-pointer items-center gap-3 px-3 py-1.5 hover:bg-gray-800/50"
+								class="flex cursor-pointer items-center gap-3 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800/50"
 							>
 								<input
 									type="checkbox"
 									checked={enabledSeverities.has(level.key)}
 									onchange={() => toggleSeverity(level.key)}
-									class="h-4 w-4 cursor-pointer rounded border-gray-700 bg-gray-800 text-blue-500 transition-colors focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0"
+									class="h-4 w-4 cursor-pointer rounded border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-blue-500 transition-colors focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0"
 								/>
-								<span class="text-sm text-gray-300">{level.label}</span>
+								<span class="text-sm text-gray-700 dark:text-gray-300">{level.label}</span>
 							</label>
 						{/each}
 					</div>
@@ -213,7 +213,7 @@
 			</div>
 			<!-- Search Input -->
 			<input
-				class="w-48 rounded-lg border border-gray-800 bg-gray-900/50 px-3 py-1.5 text-sm text-gray-200 transition-colors placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+				class="w-48 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-3 py-1.5 text-sm text-gray-800 dark:text-gray-200 transition-colors placeholder:text-gray-500 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
 				type="text"
 				placeholder="Search logs..."
 				bind:value={search}
@@ -221,7 +221,7 @@
 			<!-- Clear Logs Button -->
 			<button
 				onclick={clearLogs}
-				class="flex items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900/50 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:border-red-700 hover:bg-red-900/30 hover:text-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none"
+				class="flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 transition-colors hover:border-red-400 dark:hover:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none"
 				title="Clear logs"
 			>
 				<span class="h-4 w-4">{@html Trash}</span>
@@ -230,10 +230,10 @@
 	{/if}
 </div>
 {#if !collapsed}
-	<div bind:this={element} class="shrink grow overflow-auto bg-gray-900 p-2 font-mono text-xs">
+	<div bind:this={element} class="shrink grow overflow-auto bg-gray-50 dark:bg-gray-900 p-2 font-mono text-xs">
 		{#each entries as entry, i (entry.msgID ?? i)}
 			<div class={getSeverityClass(entry.severity)}>
-				<span class="text-gray-500">{formatTimestamp(entry.timestamp)}</span>
+				<span class="text-gray-500 dark:text-gray-500">{formatTimestamp(entry.timestamp)}</span>
 				{entry.msg}
 			</div>
 		{/each}

@@ -17,7 +17,7 @@
 	<div class="">{param.title || param.key}</div>
 	{#if param.description}
 		<div
-			class="mb-2 max-h-24 overflow-hidden text-xs overflow-ellipsis whitespace-pre-wrap text-gray-500"
+			class="mb-2 max-h-24 overflow-hidden text-xs overflow-ellipsis whitespace-pre-wrap text-gray-500 dark:text-gray-500"
 		>
 			{param.description}
 		</div>

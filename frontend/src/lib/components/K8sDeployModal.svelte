@@ -373,7 +373,7 @@
 {#if open}
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 text-white"
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 text-gray-900 dark:text-white"
 		onclick={handleBackdropClick}
 		onkeydown={(e) => e.key === 'Escape' && closeModal()}
 		role="dialog"
@@ -382,10 +382,10 @@
 		tabindex="-1"
 	>
 		<div
-			class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-800 bg-gray-950"
+			class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950"
 		>
 			<!-- Modal Header -->
-			<div class="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-6 py-4">
+			<div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-6 py-4">
 				<div class="flex items-center gap-3">
 					<div class:text-blue-400={!undeploy} class:text-red-400={undeploy}>{@html Server}</div>
 					<h2 id="deploy-modal-title" class="text-lg font-semibold">
@@ -395,7 +395,7 @@
 				</div>
 				<button
 					onclick={() => closeModal(true)}
-					class="cursor-pointer rounded p-1 text-gray-500 transition-all hover:bg-gray-800 hover:text-gray-200"
+					class="cursor-pointer rounded p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
 					title="Close (Force)"
 				>
 					<svg
@@ -416,7 +416,7 @@
 				{#if isConfiguring}
 					<!-- Configuration Form -->
 					<div class="flex flex-col gap-6">
-						<p class="text-sm text-gray-400">
+						<p class="text-sm text-gray-600 dark:text-gray-400">
 							{#if undeploy}
 								Configure the undeployment for Inspektor Gadget. The existing deployment will be
 								completely removed from your cluster.
@@ -456,7 +456,7 @@
 
 							<!-- Loading indicator -->
 							{#if loadingChartValues}
-								<div class="flex items-center gap-2 text-sm text-gray-400">
+								<div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
 									<Spinner />
 									<span>Loading chart values...</span>
 								</div>
@@ -465,7 +465,7 @@
 							<!-- Chart values error -->
 							{#if chartValuesError}
 								<div
-									class="rounded-lg border border-yellow-800/50 bg-yellow-900/20 p-3 text-sm text-yellow-400"
+									class="rounded-lg border border-yellow-300 dark:border-yellow-800/50 bg-yellow-100 dark:bg-yellow-900/20 p-3 text-sm text-yellow-700 dark:text-yellow-400"
 								>
 									Failed to load chart values: {chartValuesError}
 								</div>
@@ -474,9 +474,9 @@
 							<!-- Exposed Settings -->
 							{#if chartValuesLoaded}
 								<div
-									class="flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/50 p-4"
+									class="flex flex-col gap-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4"
 								>
-									<h3 class="text-sm font-semibold text-gray-300">Configuration</h3>
+									<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Configuration</h3>
 									<Toggle
 										checked={verifyImageSignatures}
 										onchange={handleVerifyImageChange}
@@ -487,16 +487,16 @@
 
 								<!-- OpenTelemetry Configuration -->
 								<div
-									class="flex flex-col gap-3 rounded-lg border border-gray-800 bg-gray-900/50 p-4"
+									class="flex flex-col gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4"
 								>
-									<h3 class="text-sm font-semibold text-gray-300">OpenTelemetry</h3>
+									<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">OpenTelemetry</h3>
 									<button
 										onclick={() => (otelLogsModalOpen = true)}
-										class="flex cursor-pointer items-center justify-between rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-800"
+										class="flex cursor-pointer items-center justify-between rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-200 dark:hover:bg-gray-800"
 									>
 										<div class="flex flex-col gap-0.5">
-											<span class="text-sm font-medium text-gray-200">Log Exporters</span>
-											<span class="text-xs text-gray-500">
+											<span class="text-sm font-medium text-gray-800 dark:text-gray-200">Log Exporters</span>
+											<span class="text-xs text-gray-500 dark:text-gray-500">
 												{#if otelLogsExporterCount > 0}
 													{otelLogsExporterCount} exporter{otelLogsExporterCount !== 1 ? 's' : ''} configured
 												{:else}
@@ -504,15 +504,15 @@
 												{/if}
 											</span>
 										</div>
-										<span class="text-gray-400">{@html ChevronRight}</span>
+										<span class="text-gray-500 dark:text-gray-400">{@html ChevronRight}</span>
 									</button>
 									<button
 										onclick={() => (otelMetricsModalOpen = true)}
-										class="flex cursor-pointer items-center justify-between rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-800"
+										class="flex cursor-pointer items-center justify-between rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-200 dark:hover:bg-gray-800"
 									>
 										<div class="flex flex-col gap-0.5">
-											<span class="text-sm font-medium text-gray-200">Metric Exporters</span>
-											<span class="text-xs text-gray-500">
+											<span class="text-sm font-medium text-gray-800 dark:text-gray-200">Metric Exporters</span>
+											<span class="text-xs text-gray-500 dark:text-gray-500">
 												{#if otelMetricsExporterCount > 0}
 													{otelMetricsExporterCount} exporter{otelMetricsExporterCount !== 1
 														? 's'
@@ -522,11 +522,11 @@
 												{/if}
 											</span>
 										</div>
-										<span class="text-gray-400">{@html ChevronRight}</span>
+										<span class="text-gray-500 dark:text-gray-400">{@html ChevronRight}</span>
 									</button>
 
 									<!-- Prometheus Listener -->
-									<div class="mt-2 border-t border-gray-800 pt-3">
+									<div class="mt-2 border-t border-gray-200 dark:border-gray-800 pt-3">
 										<Toggle
 											checked={otelMetricsListen}
 											onchange={handleOtelMetricsListenChange}
@@ -586,7 +586,7 @@
 						<button
 							disabled={!isValid}
 							onclick={startDeployment}
-							class="flex cursor-pointer items-center justify-center gap-2 rounded-lg px-6 py-3 text-white transition-all disabled:cursor-not-allowed disabled:text-gray-500"
+							class="flex cursor-pointer items-center justify-center gap-2 rounded-lg px-6 py-3 text-white transition-all disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500"
 							class:bg-green-800={!undeploy}
 							class:hover:bg-green-700={!undeploy}
 							class:disabled:bg-green-950={!undeploy}
@@ -607,7 +607,7 @@
 								<div class="text-lg font-semibold">
 									{undeploy ? 'Undeploying' : redeploy ? 'Redeploying' : 'Deploying'} Inspektor Gadget
 								</div>
-								<div class="text-sm text-gray-400">
+								<div class="text-sm text-gray-600 dark:text-gray-400">
 									{currentDeployment?.currentStep || 'Initializing...'}
 								</div>
 							</div>
@@ -616,12 +616,12 @@
 						<!-- Progress Bar -->
 						<div class="flex flex-col gap-2">
 							<div class="flex items-center justify-between text-sm">
-								<span class="text-gray-400">Progress</span>
-								<span class="font-semibold text-blue-400">
+								<span class="text-gray-600 dark:text-gray-400">Progress</span>
+								<span class="font-semibold text-blue-600 dark:text-blue-400">
 									{currentDeployment?.progress || 0}%
 								</span>
 							</div>
-							<div class="h-2 overflow-hidden rounded-full bg-gray-800">
+							<div class="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
 								<div
 									class="h-full bg-blue-500 transition-all duration-500"
 									style="width: {currentDeployment?.progress || 0}%"
@@ -632,7 +632,7 @@
 						<!-- Debug Console Toggle -->
 						<button
 							onclick={() => (showDebugConsole = !showDebugConsole)}
-							class="flex items-center gap-2 text-sm text-gray-400 transition-all hover:text-gray-300"
+							class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 transition-all hover:text-gray-700 dark:hover:text-gray-300"
 						>
 							<div class="transition-transform duration-200" class:rotate-180={showDebugConsole}>
 								{@html ChevronDown}
@@ -644,10 +644,10 @@
 						{#if showDebugConsole && currentDeployment?.debugLogs && currentDeployment.debugLogs.length > 0}
 							<div class="flex flex-col gap-2">
 								<div
-									class="max-h-64 overflow-y-auto rounded-lg border border-gray-700 bg-gray-900 p-3 font-mono text-xs"
+									class="max-h-64 overflow-y-auto rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3 font-mono text-xs"
 								>
 									{#each currentDeployment.debugLogs as log}
-										<div class="text-gray-400">{log}</div>
+										<div class="text-gray-600 dark:text-gray-400">{log}</div>
 									{/each}
 								</div>
 							</div>
@@ -660,10 +660,10 @@
 									Deployment Logs
 								</span>
 								<div
-									class="max-h-64 overflow-y-auto rounded-lg border border-gray-800 bg-gray-900/50 p-4 font-mono text-xs"
+									class="max-h-64 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 font-mono text-xs"
 								>
 									{#each currentDeployment.logs as log}
-										<div class="text-gray-400">{log}</div>
+										<div class="text-gray-600 dark:text-gray-400">{log}</div>
 									{/each}
 								</div>
 							</div>
@@ -672,10 +672,10 @@
 				{:else if hasError}
 					<!-- Error State -->
 					<div class="flex flex-col items-center gap-4 text-center">
-						<div class="text-red-400">{@html ExclamationCircle}</div>
+						<div class="text-red-500 dark:text-red-400">{@html ExclamationCircle}</div>
 						<div>
-							<h3 class="text-lg font-semibold text-red-400">Deployment Failed</h3>
-							<p class="mt-2 text-sm text-gray-400">
+							<h3 class="text-lg font-semibold text-red-500 dark:text-red-400">Deployment Failed</h3>
+							<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 								{currentDeployment?.error || 'An unknown error occurred'}
 							</p>
 						</div>
@@ -684,10 +684,10 @@
 						{#if currentDeployment?.logs && currentDeployment.logs.length > 0}
 							<div class="w-full">
 								<div
-									class="max-h-48 overflow-y-auto rounded-lg border border-red-800/50 bg-red-900/10 p-4 text-left font-mono text-xs"
+									class="max-h-48 overflow-y-auto rounded-lg border border-red-300 dark:border-red-800/50 bg-red-50 dark:bg-red-900/10 p-4 text-left font-mono text-xs"
 								>
 									{#each currentDeployment.logs as log}
-										<div class="text-gray-400">{log}</div>
+										<div class="text-gray-600 dark:text-gray-400">{log}</div>
 									{/each}
 								</div>
 							</div>
@@ -698,7 +698,7 @@
 								if (deploymentId) deployments.remove(deploymentId);
 								deploymentId = undefined;
 							}}
-							class="mt-4 rounded-lg border border-gray-800 bg-gray-900/50 px-6 py-2 transition-all hover:border-blue-500/50 hover:bg-gray-900"
+							class="mt-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-6 py-2 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							Try Again
 						</button>
@@ -706,24 +706,26 @@
 				{:else if isSuccess}
 					<!-- Success State -->
 					<div class="flex flex-col items-center gap-4 text-center">
-						<div class:text-green-400={!undeploy} class:text-red-400={undeploy}>
+						<div class:text-green-500={!undeploy} class:dark:text-green-400={!undeploy} class:text-red-500={undeploy} class:dark:text-red-400={undeploy}>
 							{@html Certificate}
 						</div>
 						<div>
 							<h3
 								class="text-lg font-semibold"
-								class:text-green-400={!undeploy}
-								class:text-red-400={undeploy}
+								class:text-green-500={!undeploy}
+								class:dark:text-green-400={!undeploy}
+								class:text-red-500={undeploy}
+								class:dark:text-red-400={undeploy}
 							>
 								{undeploy ? 'Undeployment' : redeploy ? 'Redeployment' : 'Deployment'} Successful!
 							</h3>
-							<p class="mt-2 text-sm text-gray-400">
+							<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 								Inspektor Gadget has been successfully {undeploy
 									? 'undeployed from'
 									: redeploy
 										? 'redeployed to'
 										: 'deployed to'} namespace
-								<span class="font-mono text-blue-400">{currentDeployment?.config.namespace}</span>
+								<span class="font-mono text-blue-600 dark:text-blue-400">{currentDeployment?.config.namespace}</span>
 							</p>
 						</div>
 

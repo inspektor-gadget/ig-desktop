@@ -224,7 +224,7 @@
 {#if open}
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 text-white"
+		class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 text-gray-900 dark:text-white"
 		onclick={handleBackdropClick}
 		onkeydown={handleKeydown}
 		role="dialog"
@@ -234,19 +234,19 @@
 	>
 		<!-- Stop propagation to prevent backdrop click from closing modal -->
 		<div
-			class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-800 bg-gray-950"
+			class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="document"
 		>
 			<!-- Modal Header -->
-			<div class="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-6 py-4">
+			<div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-6 py-4">
 				<h2 id="otel-modal-title" class="text-lg font-semibold">
 					OpenTelemetry {typeLabel} Exporters
 				</h2>
 				<button
 					onclick={() => onClose()}
-					class="cursor-pointer rounded p-1 text-gray-500 transition-all hover:bg-gray-800 hover:text-gray-200"
+					class="cursor-pointer rounded p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
 					title="Close"
 				>
 					<svg
@@ -270,31 +270,31 @@
 						<div class="flex flex-col gap-2">
 							{#each Object.entries(exporters) as [name, config] (name)}
 								<div
-									class="flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3"
+									class="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-4 py-3"
 								>
 									<div class="flex flex-col gap-1">
-										<span class="font-medium text-gray-200">{name}</span>
-										<span class="text-xs text-gray-500">
+										<span class="font-medium text-gray-800 dark:text-gray-200">{name}</span>
+										<span class="text-xs text-gray-500 dark:text-gray-500">
 											{config.exporter} → {config.endpoint}
 											{#if config.insecure}
-												<span class="text-yellow-500">(insecure)</span>
+												<span class="text-yellow-600 dark:text-yellow-500">(insecure)</span>
 											{/if}
 											{#if isMetrics && config.interval}
-												<span class="text-blue-400">every {config.interval}</span>
+												<span class="text-blue-600 dark:text-blue-400">every {config.interval}</span>
 											{/if}
 										</span>
 									</div>
 									<div class="flex items-center gap-2">
 										<button
 											onclick={() => openEditForm(name)}
-											class="cursor-pointer rounded p-1.5 text-gray-400 transition-all hover:bg-gray-800 hover:text-blue-400"
+											class="cursor-pointer rounded p-1.5 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
 											title="Edit"
 										>
 											{@html Edit}
 										</button>
 										<button
 											onclick={() => deleteExporter(name)}
-											class="cursor-pointer rounded p-1.5 text-gray-400 transition-all hover:bg-gray-800 hover:text-red-400"
+											class="cursor-pointer rounded p-1.5 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-600 dark:hover:text-red-400"
 											title="Delete"
 										>
 											{@html Trash}
@@ -304,15 +304,15 @@
 							{/each}
 						</div>
 					{:else}
-						<div class="rounded-lg border border-gray-800 bg-gray-900/30 p-6 text-center">
-							<p class="text-sm text-gray-500">No {typeLabel.toLowerCase()} exporters configured</p>
+						<div class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30 p-6 text-center">
+							<p class="text-sm text-gray-500 dark:text-gray-500">No {typeLabel.toLowerCase()} exporters configured</p>
 						</div>
 					{/if}
 
 					<!-- Add Button -->
 					<button
 						onclick={openAddForm}
-						class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-700 px-4 py-3 text-sm text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-900/50 hover:text-blue-400"
+						class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 px-4 py-3 text-sm text-gray-500 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900/50 hover:text-blue-600 dark:hover:text-blue-400"
 					>
 						<span class="h-4 w-4">{@html Plus}</span>
 						<span>Add {typeLabel} Exporter</span>
@@ -322,11 +322,11 @@
 
 			<!-- Modal Footer -->
 			<div
-				class="flex items-center justify-end gap-3 border-t border-gray-800 bg-gray-900/50 px-6 py-4"
+				class="flex items-center justify-end gap-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-6 py-4"
 			>
 				<button
 					onclick={() => onClose()}
-					class="cursor-pointer rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 transition-all hover:border-gray-600 hover:bg-gray-800"
+					class="cursor-pointer rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 transition-all hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-800"
 				>
 					Cancel
 				</button>
@@ -345,7 +345,7 @@
 {#if formModalOpen}
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 text-white"
+		class="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 text-gray-900 dark:text-white"
 		onclick={handleFormBackdropClick}
 		onkeydown={handleFormKeydown}
 		role="dialog"
@@ -354,21 +354,21 @@
 		tabindex="-1"
 	>
 		<div
-			class="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-gray-700 bg-gray-900 shadow-2xl"
+			class="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="document"
 		>
 			<!-- Form Modal Header -->
 			<div
-				class="flex items-center justify-between border-b border-gray-800 bg-gray-800/50 px-5 py-3"
+				class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-5 py-3"
 			>
 				<h3 id="form-modal-title" class="text-base font-semibold">
 					{editingName ? `Edit "${editingName}"` : `Add ${typeLabel} Exporter`}
 				</h3>
 				<button
 					onclick={closeFormModal}
-					class="cursor-pointer rounded p-1 text-gray-500 transition-all hover:bg-gray-700 hover:text-gray-200"
+					class="cursor-pointer rounded p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200"
 					title="Close"
 				>
 					<svg
@@ -455,11 +455,11 @@
 
 			<!-- Form Modal Footer -->
 			<div
-				class="flex items-center justify-end gap-3 border-t border-gray-800 bg-gray-800/50 px-5 py-3"
+				class="flex items-center justify-end gap-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-5 py-3"
 			>
 				<button
 					onclick={closeFormModal}
-					class="cursor-pointer rounded-lg border border-gray-600 px-4 py-2 text-sm text-gray-300 transition-all hover:border-gray-500 hover:bg-gray-700"
+					class="cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 transition-all hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700"
 				>
 					Cancel
 				</button>

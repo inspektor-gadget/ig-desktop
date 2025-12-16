@@ -79,15 +79,15 @@
 	<!-- Content area with sidebar and panel -->
 	<div class="-mx-6 -my-6 flex h-[500px] gap-0">
 		<!-- Left Sidebar - Categories -->
-		<div class="w-48 border-r border-gray-800 bg-gray-900/50">
+		<div class="w-48 border-r border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50">
 			<nav class="p-2">
 				{#each visibleCategories as category}
 					<button
 						onclick={() => (activeCategory = category.id)}
 						class="mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all {activeCategory ===
 						category.id
-							? 'bg-blue-500/10 text-blue-400'
-							: 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-300'}"
+							? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+							: 'text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-800/50 hover:text-gray-800 dark:hover:text-gray-300'}"
 					>
 						<span class="text-base">{category.name}</span>
 					</button>
@@ -103,7 +103,7 @@
 					{#if activeCategory === category.id}
 						<div class="space-y-6">
 							<div>
-								<h3 class="mb-4 text-base font-semibold text-gray-200">
+								<h3 class="mb-4 text-base font-semibold text-gray-800 dark:text-gray-200">
 									{category.name} Settings
 								</h3>
 
@@ -114,7 +114,7 @@
 										<div
 											class="rounded-lg transition-all duration-300 {highlightedSetting ===
 											setting.key
-												? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900'
+												? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900'
 												: ''}"
 										>
 											<SettingComponent

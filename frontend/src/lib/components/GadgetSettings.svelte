@@ -27,7 +27,7 @@
 	let Component = $derived(tabs[tabIndex].class);
 </script>
 
-<div class="flex flex-row bg-gray-950">
+<div class="flex flex-row bg-white dark:bg-gray-950">
 	{#each tabs as tab, id}
 		<button
 			title={tab.name}
@@ -35,17 +35,17 @@
 				tabIndex = id;
 			}}
 			class={tabIndex === id
-				? 'cursor-pointer border-t border-r border-b border-t-gray-500 border-r-gray-700 border-b-transparent bg-gray-900 p-2'
-				: 'cursor-pointer border-t border-r border-b border-t-transparent border-r-gray-700 border-b-gray-700 p-2'}
+				? 'cursor-pointer border-t border-r border-b border-t-gray-400 dark:border-t-gray-500 border-r-gray-300 dark:border-r-gray-700 border-b-transparent bg-gray-50 dark:bg-gray-900 p-2'
+				: 'cursor-pointer border-t border-r border-b border-t-transparent border-r-gray-300 dark:border-r-gray-700 border-b-gray-300 dark:border-b-gray-700 p-2'}
 			>{@html tab.icon}</button
 		>
 	{/each}
-	<div class="flex-1 border-b border-b-gray-700"></div>
-	<button class="cursor-pointer border-b border-b-gray-700 p-2" onclick={onclose}
+	<div class="flex-1 border-b border-b-gray-300 dark:border-b-gray-700"></div>
+	<button class="cursor-pointer border-b border-b-gray-300 dark:border-b-gray-700 p-2" onclick={onclose}
 		>{@html Close}</button
 	>
 </div>
 
-<div class="flex flex-1 flex-col overflow-auto bg-gray-900">
+<div class="flex flex-1 flex-col overflow-auto bg-gray-50 dark:bg-gray-900">
 	<Component {gadgetInfo} />
 </div>

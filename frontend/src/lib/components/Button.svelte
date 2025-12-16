@@ -55,10 +55,10 @@
 		primary:
 			'bg-blue-500 text-white hover:bg-blue-400 focus:ring-blue-500/50 disabled:bg-blue-500/50',
 		secondary:
-			'bg-gray-900/50 text-gray-300 border border-gray-800 hover:bg-gray-900 hover:border-gray-700 focus:ring-gray-500/50 disabled:bg-gray-900/30 disabled:text-gray-500',
+			'bg-gray-100/50 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-800 hover:bg-gray-200 dark:hover:bg-gray-900 hover:border-gray-400 dark:hover:border-gray-700 focus:ring-gray-500/50 disabled:bg-gray-100/30 dark:disabled:bg-gray-900/30 disabled:text-gray-400 dark:disabled:text-gray-500',
 		danger: 'bg-red-500 text-white hover:bg-red-400 focus:ring-red-500/50 disabled:bg-red-500/50',
 		ghost:
-			'bg-transparent text-gray-300 hover:bg-gray-800 focus:ring-gray-500/50 disabled:text-gray-600'
+			'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 focus:ring-gray-500/50 disabled:text-gray-400 dark:disabled:text-gray-600'
 	};
 
 	/**

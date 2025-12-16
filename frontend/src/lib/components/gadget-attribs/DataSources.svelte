@@ -19,7 +19,7 @@
 <ul>
 	{#each gadgetInfo.dataSources as ds}
 		<li class="">
-			<div class="sticky top-0 flex cursor-pointer flex-row bg-gray-950 px-2 py-1">
+			<div class="sticky top-0 flex cursor-pointer flex-row bg-white dark:bg-gray-950 px-2 py-1">
 				<div class="flex-1">{ds.name}</div>
 				<!--				<div class="">{@html ChevDown}</div>-->
 			</div>
@@ -35,38 +35,38 @@
 						<div class="flex flex-1 flex-col gap-0.5">
 							<div class="font-mono text-sm">{field.name}</div>
 							{#if field.annotations?.description}
-								<div class="pl-2 text-xs text-gray-400">{field.annotations?.description}</div>
+								<div class="pl-2 text-xs text-gray-600 dark:text-gray-400">{field.annotations?.description}</div>
 							{/if}
 							{#if preferences.get('inspector.show-annotations')}
 								<div class="flex flex-col gap-1 pl-2">
-									<div class="flex flex-row flex-wrap gap-1 text-xs text-gray-200">
+									<div class="flex flex-row flex-wrap gap-1 text-xs text-gray-800 dark:text-gray-200">
 										{#each field.tags as tag}
-											<div class="rounded bg-gray-700 px-1 py-0.5">{tag}</div>
+											<div class="rounded bg-gray-200 dark:bg-gray-700 px-1 py-0.5">{tag}</div>
 										{/each}
 									</div>
-									<div class="text-xs text-gray-200">
+									<div class="text-xs text-gray-800 dark:text-gray-200">
 										{#each Object.entries(field.annotations) as [key, annotation] (key)}
 											<div>{key}: {annotation}</div>
 										{/each}
 									</div>
-									<div class="flex flex-row flex-wrap gap-1 text-xs text-gray-200">
+									<div class="flex flex-row flex-wrap gap-1 text-xs text-gray-800 dark:text-gray-200">
 										{#if (field.flags & 0x01) !== 0}
-											<div class="rounded bg-gray-500/60 px-1 py-0.5">empty</div>
+											<div class="rounded bg-gray-300/60 dark:bg-gray-500/60 px-1 py-0.5">empty</div>
 										{/if}
 										{#if (field.flags & 0x02) !== 0}
-											<div class="rounded bg-green-800/60 px-1 py-0.5">container</div>
+											<div class="rounded bg-green-200/60 dark:bg-green-800/60 px-1 py-0.5">container</div>
 										{/if}
 										{#if (field.flags & 0x04) !== 0}
-											<div class="rounded bg-gray-700/60 px-1 py-0.5">hidden</div>
+											<div class="rounded bg-gray-200/60 dark:bg-gray-700/60 px-1 py-0.5">hidden</div>
 										{/if}
 										{#if (field.flags & 0x08) !== 0}
-											<div class="rounded bg-blue-800/60 px-1 py-0.5">w-parent</div>
+											<div class="rounded bg-blue-200/60 dark:bg-blue-800/60 px-1 py-0.5">w-parent</div>
 										{/if}
 										{#if (field.flags & 0x10) !== 0}
-											<div class="rounded bg-orange-800/60 px-1 py-0.5">static</div>
+											<div class="rounded bg-orange-200/60 dark:bg-orange-800/60 px-1 py-0.5">static</div>
 										{/if}
 										{#if (field.flags & 0x20) !== 0}
-											<div class="rounded bg-red-800/60 px-1 py-0.5">unref</div>
+											<div class="rounded bg-red-200/60 dark:bg-red-800/60 px-1 py-0.5">unref</div>
 										{/if}
 									</div>
 								</div>

@@ -174,27 +174,27 @@
 
 {#if loading}
 	<div class="flex flex-1 items-center justify-center p-8">
-		<span class="text-gray-400">Loading session...</span>
+		<span class="text-gray-600 dark:text-gray-400">Loading session...</span>
 	</div>
 {:else if error}
 	<div class="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-		<p class="text-red-400">Error: {error}</p>
-		<a href={resolve('/')} class="text-blue-400 underline hover:text-blue-300">Return home</a>
+		<p class="text-red-600 dark:text-red-400">Error: {error}</p>
+		<a href={resolve('/')} class="text-blue-600 dark:text-blue-400 underline hover:text-blue-500 dark:hover:text-blue-300">Return home</a>
 	</div>
 {:else if session}
 	<div class="flex flex-1 flex-col overflow-auto">
-		<header class="border-b border-gray-800 bg-gray-950/50 p-4">
+		<header class="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-950/50 p-4">
 			<div class="flex w-full items-center justify-between">
 				<div class="flex items-center gap-3">
 					<a
 						href={resolve(`/env/${session.environmentId}`)}
-						class="flex cursor-pointer items-center rounded bg-gray-800 p-1.5 hover:bg-gray-700"
+						class="flex cursor-pointer items-center rounded bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
 						title="Back to Environment"
 					>
 						{@html ChevronLeft}
 					</a>
 					<div>
-						<h1 class="text-xl font-bold text-gray-100">
+						<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">
 							{session.name || 'Unnamed Session'}
 						</h1>
 						<p class="text-sm text-gray-500">
@@ -208,10 +208,10 @@
 				</div>
 				{#if isPlaying}
 					<div class="flex items-center gap-4">
-						<span class="text-sm text-gray-400">Playing...</span>
+						<span class="text-sm text-gray-600 dark:text-gray-400">Playing...</span>
 						<button
 							onclick={stopPlayback}
-							class="rounded border border-red-800 px-3 py-1.5 text-sm text-red-400 transition-colors hover:bg-red-900/20 hover:text-red-300"
+							class="rounded border border-red-300 dark:border-red-800 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-100/20 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-300"
 						>
 							Stop Playback
 						</button>
@@ -222,16 +222,16 @@
 
 		<!-- Run panels -->
 		{#if session.runs.length > 0}
-			<div class="flex gap-2 overflow-x-auto border-b border-gray-800 bg-gray-950/60 px-2 py-2">
+			<div class="flex gap-2 overflow-x-auto border-b border-gray-200 dark:border-gray-800 bg-gray-100/60 dark:bg-gray-950/60 px-2 py-2">
 				{#each session.runs as run}
 					<div
 						class="flex items-center gap-3 rounded-lg border px-4 py-2 whitespace-nowrap transition-colors
 							   {activeRunId === run.id
-							? 'border-blue-500/50 bg-blue-900/20'
-							: 'border-gray-700 bg-gray-800/50'}"
+							? 'border-blue-500/50 bg-blue-100/20 dark:bg-blue-900/20'
+							: 'border-gray-300 dark:border-gray-700 bg-gray-200/50 dark:bg-gray-800/50'}"
 					>
 						<div class="flex flex-col">
-							<div class="text-sm font-medium text-gray-200">{getGadgetName(run.gadgetImage)}</div>
+							<div class="text-sm font-medium text-gray-800 dark:text-gray-200">{getGadgetName(run.gadgetImage)}</div>
 							<div class="text-xs text-gray-500">{run.eventCount} events</div>
 						</div>
 						<div class="flex items-center gap-1">
@@ -247,14 +247,14 @@
 			</div>
 
 			<!-- Run content -->
-			<div class="flex flex-1 flex-col overflow-hidden bg-gray-950/80">
+			<div class="flex flex-1 flex-col overflow-hidden bg-gray-50/80 dark:bg-gray-950/80">
 				{#if activeRunId}
 					{@const instanceId = `replay-${activeRunId}`}
 					{#if instances[instanceId]}
 						<Gadget instanceID={instanceId} />
 					{:else}
 						<div class="flex flex-1 items-center justify-center p-8">
-							<span class="text-gray-400">Loading run...</span>
+							<span class="text-gray-600 dark:text-gray-400">Loading run...</span>
 						</div>
 					{/if}
 				{:else}

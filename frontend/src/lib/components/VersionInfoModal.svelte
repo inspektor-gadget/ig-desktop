@@ -92,14 +92,14 @@
 			</div>
 		{:else}
 			<div class="space-y-3">
-				<div class="flex justify-between rounded-lg bg-gray-900/50 px-4 py-3">
-					<span class="text-gray-400">Current Version</span>
-					<span class="font-mono text-gray-200">{versionData.currentVersion}</span>
+				<div class="flex justify-between rounded-lg bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
+					<span class="text-gray-600 dark:text-gray-400">Current Version</span>
+					<span class="font-mono text-gray-800 dark:text-gray-200">{versionData.currentVersion}</span>
 				</div>
 
-				<div class="flex justify-between rounded-lg bg-gray-900/50 px-4 py-3">
-					<span class="text-gray-400">Latest Version</span>
-					<span class="font-mono text-gray-200">
+				<div class="flex justify-between rounded-lg bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
+					<span class="text-gray-600 dark:text-gray-400">Latest Version</span>
+					<span class="font-mono text-gray-800 dark:text-gray-200">
 						{#if versionData.latestVersion}
 							<button
 								onclick={openReleasesPage}
@@ -109,33 +109,33 @@
 								{versionData.latestVersion}
 							</button>
 							{#if versionData.updateAvailable}
-								<span class="ml-2 rounded bg-blue-500/20 px-2 py-0.5 text-xs text-blue-400">
+								<span class="ml-2 rounded bg-blue-500/20 px-2 py-0.5 text-xs text-blue-600 dark:text-blue-400">
 									Update available
 								</span>
 							{/if}
 						{:else if error}
-							<span class="text-gray-500">Unable to fetch</span>
+							<span class="text-gray-500 dark:text-gray-500">Unable to fetch</span>
 						{:else}
-							<span class="text-gray-500">Checking...</span>
+							<span class="text-gray-500 dark:text-gray-500">Checking...</span>
 						{/if}
 					</span>
 				</div>
 
-				<div class="flex justify-between rounded-lg bg-gray-900/50 px-4 py-3">
-					<span class="text-gray-400">Inspektor Gadget Library</span>
-					<span class="font-mono text-gray-200">{versionData.igLibraryVersion}</span>
+				<div class="flex justify-between rounded-lg bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
+					<span class="text-gray-600 dark:text-gray-400">Inspektor Gadget Library</span>
+					<span class="font-mono text-gray-800 dark:text-gray-200">{versionData.igLibraryVersion}</span>
 				</div>
 			</div>
 
 			{#if error}
-				<div class="rounded-lg bg-red-900/20 px-4 py-3 text-sm text-red-400">
+				<div class="rounded-lg bg-red-100 dark:bg-red-900/20 px-4 py-3 text-sm text-red-600 dark:text-red-400">
 					{error}
 				</div>
 			{/if}
 
 			{#if versionData.updateAvailable}
-				<div class="rounded-lg bg-blue-900/20 px-4 py-3">
-					<p class="text-sm text-blue-300">
+				<div class="rounded-lg bg-blue-100 dark:bg-blue-900/20 px-4 py-3">
+					<p class="text-sm text-blue-700 dark:text-blue-300">
 						A new version is available! Click the button below to visit the releases page.
 					</p>
 				</div>

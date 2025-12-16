@@ -27,7 +27,7 @@
 	size="sm"
 	onClose={() => confirmationModal.handleCancel()}
 >
-	<p class="text-gray-300">{confirmationModal.message}</p>
+	<p class="text-gray-700 dark:text-gray-300">{confirmationModal.message}</p>
 
 	{#snippet footer()}
 		<Button variant="secondary" onclick={() => confirmationModal.handleCancel()}>

@@ -348,9 +348,9 @@
 						<button
 							onclick={toggleSearchMode}
 							ondblclick={openSearchModeSettings}
-							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-800 transition-colors {searchModeFilter
+							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-300 dark:border-gray-800 transition-colors {searchModeFilter
 								? 'bg-blue-600 text-white hover:bg-blue-500'
-								: 'bg-gray-700 text-gray-300 hover:bg-gray-600'}"
+								: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}"
 							title={searchModeFilter
 								? 'Filter mode: hiding non-matching entries (click to switch to highlight mode, double-click to open settings)'
 								: 'Highlight mode: showing all entries with matches highlighted (click to switch to filter mode, double-click to open settings)'}
@@ -360,9 +360,9 @@
 						<button
 							onclick={toggleHighlightInFilterMode}
 							ondblclick={openHighlightSettings}
-							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-800 transition-colors {searchHighlightInFilterMode
+							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-300 dark:border-gray-800 transition-colors {searchHighlightInFilterMode
 								? 'bg-yellow-600 text-white hover:bg-yellow-500'
-								: 'bg-gray-700 text-gray-300 hover:bg-gray-600'} {!searchModeFilter && searchQuery
+								: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'} {!searchModeFilter && searchQuery
 								? ''
 								: 'rounded-r-lg'}"
 							title={searchHighlightInFilterMode
@@ -385,7 +385,7 @@
 							<button
 								onclick={goToPrevMatch}
 								disabled={matchCount === 0}
-								class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-800 bg-gray-700 text-gray-300 transition-colors hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+								class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-300 dark:border-gray-800 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
 								title="Previous match (wraps around)"
 							>
 								<svg
@@ -405,7 +405,7 @@
 							<button
 								onclick={goToNextMatch}
 								disabled={matchCount === 0}
-								class="flex h-[38px] w-8 items-center justify-center rounded-r-lg border border-l-0 border-gray-800 bg-gray-700 text-gray-300 transition-colors hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+								class="flex h-[38px] w-8 items-center justify-center rounded-r-lg border border-l-0 border-gray-300 dark:border-gray-800 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
 								title="Next match (wraps around)"
 							>
 								<svg

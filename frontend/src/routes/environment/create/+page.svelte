@@ -148,7 +148,7 @@
 </script>
 
 <div class="z-1 flex flex-col shadow-lg">
-	<div class="flex flex-row justify-between bg-gray-950 p-4">
+	<div class="flex flex-row justify-between bg-white dark:bg-gray-950 p-4">
 		<div class="text-xl">Create Environment</div>
 	</div>
 </div>
@@ -158,7 +158,7 @@
 		<Panel title="Environment Name" icon={Plus} color="gray">
 			<div class="flex flex-row items-center gap-4">
 				<div
-					class="group-hover:bg-brand flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-gray-700 text-gray-100 transition-all duration-200 group-hover:rounded-2xl group-hover:text-white"
+					class="group-hover:bg-brand flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200 group-hover:rounded-2xl group-hover:text-white"
 				>
 					<div class="grid" title={name}>
 						<div class="z-10 col-start-1 row-start-1 flex justify-center text-lg shadow">
@@ -174,7 +174,7 @@
 
 		<Panel title="Runtime" icon={Code} color="gray">
 			<div class="flex flex-col gap-3">
-				<div class="text-sm text-gray-400">Select your target runtime</div>
+				<div class="text-sm text-gray-600 dark:text-gray-400">Select your target runtime</div>
 				<div class="grid grid-cols-2 gap-3">
 					{#if runtimes}
 						{#each runtimes as rt}
@@ -184,14 +184,16 @@
 									if (e.target instanceof HTMLSelectElement) return;
 									setRuntime(rt.key);
 								}}
-								class="flex cursor-pointer flex-col gap-3 rounded-lg border-2 bg-gray-900 p-4 transition-all select-none hover:bg-gray-800"
-								class:border-gray-700={selectedRuntime !== rt.key}
+								class="flex cursor-pointer flex-col gap-3 rounded-lg border-2 bg-gray-100 dark:bg-gray-900 p-4 transition-all select-none hover:bg-gray-200 dark:hover:bg-gray-800"
+								class:border-gray-300={selectedRuntime !== rt.key}
+								class:dark:border-gray-700={selectedRuntime !== rt.key}
 								class:border-purple-600={selectedRuntime === rt.key}
-								class:bg-gray-800={selectedRuntime === rt.key}
+								class:bg-gray-200={selectedRuntime === rt.key}
+								class:dark:bg-gray-800={selectedRuntime === rt.key}
 							>
 								<div class="flex flex-col gap-1">
 									<div class="font-medium">{rt.title}</div>
-									<div class="text-sm text-gray-400">{rt.description}</div>
+									<div class="text-sm text-gray-600 dark:text-gray-400">{rt.description}</div>
 								</div>
 
 								<!-- Kubernetes Context Selector -->
@@ -220,18 +222,18 @@
 			{#if checkingDeployment}
 				<!-- Checking Deployment Status -->
 				<div
-					class="flex items-center justify-center gap-4 rounded-lg border border-gray-700 bg-gray-900/50 p-8"
+					class="flex items-center justify-center gap-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100/50 dark:bg-gray-900/50 p-8"
 				>
 					<Spinner />
-					<div class="text-gray-400">Checking Inspektor Gadget deployment status...</div>
+					<div class="text-gray-600 dark:text-gray-400">Checking Inspektor Gadget deployment status...</div>
 				</div>
 			{:else if deploymentStatus?.deployed}
 				<!-- IG Detected -->
 				<div
-					class="flex flex-col justify-between gap-4 rounded-lg border border-green-800/50 bg-green-900/10 p-4 md:flex-row"
+					class="flex flex-col justify-between gap-4 rounded-lg border border-green-300/50 dark:border-green-800/50 bg-green-100/10 dark:bg-green-900/10 p-4 md:flex-row"
 				>
 					<div class="flex gap-3">
-						<div class="text-green-400">
+						<div class="text-green-600 dark:text-green-400">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								fill="none"
@@ -248,18 +250,18 @@
 							</svg>
 						</div>
 						<div class="flex-1">
-							<h3 class="font-semibold text-green-400">Inspektor Gadget Detected</h3>
-							<div class="mt-1 flex flex-col gap-1 text-sm text-gray-400">
+							<h3 class="font-semibold text-green-600 dark:text-green-400">Inspektor Gadget Detected</h3>
+							<div class="mt-1 flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-400">
 								<p>Inspektor Gadget is deployed and ready to use.</p>
 								<div class="mt-1 flex gap-4 text-xs">
 									<span>
 										<span class="text-gray-500">Namespace:</span>
-										<span class="font-mono text-green-400">{deploymentStatus.namespace}</span>
+										<span class="font-mono text-green-600 dark:text-green-400">{deploymentStatus.namespace}</span>
 									</span>
 									{#if deploymentStatus.version}
 										<span>
 											<span class="text-gray-500">Version:</span>
-											<span class="font-mono text-green-400">{deploymentStatus.version}</span>
+											<span class="font-mono text-green-600 dark:text-green-400">{deploymentStatus.version}</span>
 										</span>
 									{/if}
 								</div>
@@ -269,14 +271,14 @@
 					<div class="flex flex-col gap-2">
 						<button
 							onclick={openRedeployModal}
-							class="flex items-center justify-center gap-2 rounded-lg border border-purple-600 bg-purple-900/20 px-4 py-2.5 text-sm text-purple-400 transition-all hover:bg-purple-900/50"
+							class="flex items-center justify-center gap-2 rounded-lg border border-purple-600 bg-purple-100/20 dark:bg-purple-900/20 px-4 py-2.5 text-sm text-purple-600 dark:text-purple-400 transition-all hover:bg-purple-100/50 dark:hover:bg-purple-900/50"
 						>
 							<span>{@html Refresh}</span>
 							<span>Redeploy Inspektor Gadget</span>
 						</button>
 						<button
 							onclick={openUndeployModal}
-							class="flex items-center justify-center gap-2 rounded-lg border border-red-600 bg-red-900/20 px-4 py-2.5 text-sm text-red-400 transition-all hover:bg-red-900/50"
+							class="flex items-center justify-center gap-2 rounded-lg border border-red-600 bg-red-100/20 dark:bg-red-900/20 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 transition-all hover:bg-red-100/50 dark:hover:bg-red-900/50"
 						>
 							<span>{@html Trash}</span>
 							<span>Undeploy Inspektor Gadget</span>
@@ -285,17 +287,17 @@
 				</div>
 			{:else}
 				<!-- IG Not Detected -->
-				<div class="flex flex-col gap-4 rounded-lg border border-blue-800/50 bg-blue-900/10 p-4">
+				<div class="flex flex-col gap-4 rounded-lg border border-blue-300/50 dark:border-blue-800/50 bg-blue-100/10 dark:bg-blue-900/10 p-4">
 					<div class="flex items-start gap-3">
-						<div class="text-blue-400">{@html Info}</div>
+						<div class="text-blue-600 dark:text-blue-400">{@html Info}</div>
 						<div class="flex-1">
-							<h3 class="font-semibold text-blue-400">Inspektor Gadget Not Detected</h3>
-							<p class="mt-1 text-sm text-gray-400">
+							<h3 class="font-semibold text-blue-600 dark:text-blue-400">Inspektor Gadget Not Detected</h3>
+							<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
 								Inspektor Gadget does not appear to be deployed in your Kubernetes cluster. You can
 								deploy it now using the official Helm chart.
 							</p>
 							{#if deploymentStatus?.error}
-								<p class="mt-2 text-xs text-red-400">
+								<p class="mt-2 text-xs text-red-600 dark:text-red-400">
 									Note: {deploymentStatus.error}
 								</p>
 							{/if}
@@ -303,7 +305,7 @@
 					</div>
 					<button
 						onclick={openDeployModal}
-						class="flex items-center justify-center gap-2 rounded-lg bg-blue-800 px-4 py-2.5 text-sm text-white transition-all hover:bg-blue-700"
+						class="flex items-center justify-center gap-2 rounded-lg bg-blue-600 dark:bg-blue-800 px-4 py-2.5 text-sm text-white transition-all hover:bg-blue-500 dark:hover:bg-blue-700"
 					>
 						<span>{@html Server}</span>
 						<span>Deploy Inspektor Gadget</span>
@@ -329,12 +331,12 @@
 	kubeContext={selectedContext}
 />
 
-<div class="flex flex-row justify-between bg-gray-950 p-4">
+<div class="flex flex-row justify-between bg-white dark:bg-gray-950 p-4">
 	<div></div>
 	<div>
 		<button
 			disabled={!validated}
-			class="flex cursor-pointer flex-row gap-2 rounded bg-green-800 px-4 py-2 hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-950 disabled:text-gray-500"
+			class="flex cursor-pointer flex-row gap-2 rounded bg-green-600 dark:bg-green-800 px-4 py-2 text-white hover:bg-green-500 dark:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-200 dark:disabled:bg-green-950 disabled:text-gray-500"
 			onclick={createEnvironment}
 		>
 			<span>{@html Plus}</span>

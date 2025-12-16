@@ -139,7 +139,7 @@
 			{#each items as param}
 				<div
 					class:pl-4={key}
-					class="flex flex-row gap-4 border-b-gray-900 py-2 text-sm last:border-b-0"
+					class="flex flex-row gap-4 border-b-gray-200 dark:border-b-gray-800 py-2 text-sm last:border-b-0"
 					class:border-b={showDescriptions}
 				>
 					<param.component {config} {param} {values} />

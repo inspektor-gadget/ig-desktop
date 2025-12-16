@@ -776,11 +776,11 @@
 	}
 </script>
 
-<div class="gadget-table flex h-full flex-col overflow-hidden border-t-1 border-gray-500">
+<div class="gadget-table flex h-full flex-col overflow-hidden border-t-1 border-gray-300 dark:border-gray-500">
 	<!-- Datasource header (name + menu) -->
 	{#if showHeader}
 		<div
-			class="flex h-10 flex-row items-center bg-gray-950 p-2 text-base font-normal flex-shrink-0"
+			class="flex h-10 flex-row items-center bg-white dark:bg-gray-950 p-2 text-base font-normal flex-shrink-0"
 		>
 			<div class="pr-2">{@html Table}</div>
 			<h2 class="px-2">{ds.name}</h2>
@@ -788,7 +788,7 @@
 			<div class="relative">
 				<button
 					bind:this={menuButton}
-					class="pl-2 hover:text-white transition-colors"
+					class="pl-2 hover:text-gray-900 dark:hover:text-white transition-colors"
 					onclick={() => (menuOpen = !menuOpen)}
 					title="Column visibility"
 					aria-label="Toggle column visibility menu"
@@ -803,17 +803,17 @@
 						id="column-menu"
 						role="menu"
 						aria-label="Column visibility options"
-						class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-lg border border-gray-700 bg-gray-900 shadow-xl"
+						class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl"
 					>
 						<div
-							class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase border-b border-gray-700"
+							class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-200 dark:border-gray-700"
 						>
 							Columns
 						</div>
 						<div class="py-1" role="group" aria-label="Column toggles">
 							{#each toggleableFields as field}
 								<label
-									class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-800 cursor-pointer text-sm"
+									class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-sm"
 									role="menuitemcheckbox"
 									aria-checked={isColumnVisible(field.fullName)}
 								>
@@ -821,9 +821,9 @@
 										type="checkbox"
 										checked={isColumnVisible(field.fullName)}
 										onchange={() => toggleColumnVisibility(field.fullName)}
-										class="rounded border-gray-600 bg-gray-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+										class="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
 									/>
-									<span class="text-gray-200 truncate" title={field.fullName}>{field.fullName}</span
+									<span class="text-gray-800 dark:text-gray-200 truncate" title={field.fullName}>{field.fullName}</span
 									>
 								</label>
 							{/each}
@@ -846,20 +846,21 @@
 				rowClass={(entry, index, isFocused, isSelected) => {
 					const isCurrent = isCurrentMatch(index);
 					const isMatch = isRowMatch(entry);
-					return `cursor-pointer hover:bg-gray-800 ${isCurrent ? 'search-current-match' : isMatch ? 'search-highlight-row' : ''}`;
+					return `cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 ${isCurrent ? 'search-current-match' : isMatch ? 'search-highlight-row' : ''}`;
 				}}
 				onrowclick={(entry) => inspect(entry)}
 				onVisibleRangeChange={handleVisibleRangeChange}
 				oncopy={handleCopy}
 			>
 				{#snippet header(cols, { startResize, resizingIndex, setHeaderRow })}
-					<tr class="bg-gray-950" use:setHeaderRow>
+					<tr class="bg-white dark:bg-gray-950" use:setHeaderRow>
 						{#each visibleFields as field, i}
 							{@const isSorted = sortColumn === field.fullName}
 							<th
-								class="relative border-r border-r-gray-600 p-2 text-xs font-normal last:border-r-0 overflow-hidden"
+								class="relative border-r border-r-gray-300 dark:border-r-gray-600 p-2 text-xs font-normal last:border-r-0 overflow-hidden"
 								class:cursor-pointer={canSort}
-								class:hover:bg-gray-800={canSort}
+								class:hover:bg-gray-100={canSort}
+								class:dark:hover:bg-gray-800={canSort}
 								onclick={() => handleColumnSort(field.fullName)}
 							>
 								<div
@@ -870,7 +871,7 @@
 								>
 									<span class="overflow-hidden text-ellipsis">{field.fullName}</span>
 									{#if isSorted && canSort}
-										<span class="text-blue-400 flex-shrink-0">
+										<span class="text-blue-600 dark:text-blue-400 flex-shrink-0">
 											{#if sortDirection === 'asc'}
 												<svg
 													xmlns="http://www.w3.org/2000/svg"
@@ -918,7 +919,7 @@
 					{#each visibleFields as field, i}
 						{@const cellValue = renderCellValue(entry, field, allColumns[i])}
 						<td
-							class="border-r border-r-gray-600 px-2 py-0 text-nowrap text-ellipsis last:border-r-0 font-mono text-xs text-gray-200"
+							class="border-r border-r-gray-300 dark:border-r-gray-600 px-2 py-0 text-nowrap text-ellipsis last:border-r-0 font-mono text-xs text-gray-800 dark:text-gray-200"
 							class:text-right={columns[i]?.align === 'right'}
 							class:text-center={columns[i]?.align === 'center'}
 						>

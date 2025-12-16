@@ -179,7 +179,7 @@
 </script>
 
 <div
-	class="snapshot-timeline w-full border-t border-gray-700 bg-gray-900 select-none"
+	class="snapshot-timeline w-full border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 select-none"
 	class:cursor-crosshair={onRangeSelect}
 	bind:clientWidth={containerWidth}
 >

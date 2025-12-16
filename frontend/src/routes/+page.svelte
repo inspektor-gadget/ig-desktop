@@ -157,7 +157,7 @@
 	});
 </script>
 
-<div class="flex flex-1 flex-col gap-8 overflow-auto bg-gray-950/80 p-8 text-gray-100">
+<div class="flex flex-1 flex-col gap-8 overflow-auto bg-gray-50/80 dark:bg-gray-950/80 p-8 text-gray-900 dark:text-gray-100">
 	{#if !Object.keys(environments).length}
 		<!-- Welcome state when no environments exist -->
 		<div class="mx-auto w-full max-w-7xl">
@@ -169,7 +169,7 @@
 					>
 						Welcome!
 					</h1>
-					<p class="text-2xl text-gray-400">The Inspektor awaits you.</p>
+					<p class="text-2xl text-gray-600 dark:text-gray-400">The Inspektor awaits you.</p>
 				</div>
 				<p class="max-w-2xl text-lg text-gray-500">
 					Get started by setting up your first environment to begin exploring and debugging your
@@ -183,8 +183,8 @@
 					<Panel title="Get Started" icon={CirclePlus} color="blue" bodyPadding="large">
 						<div class="flex flex-col gap-6">
 							<div class="flex flex-col gap-3">
-								<h3 class="text-xl font-semibold text-gray-200">Create Your First Environment</h3>
-								<p class="text-gray-400">
+								<h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200">Create Your First Environment</h3>
+								<p class="text-gray-600 dark:text-gray-400">
 									Connect to a Kubernetes cluster or Linux host to start running gadgets. Use the
 									button in the upper left or click below.
 								</p>
@@ -198,8 +198,8 @@
 								<span>Create New Environment</span>
 							</a>
 
-							<div class="flex flex-col gap-2 border-t border-gray-800 pt-4">
-								<p class="text-sm text-gray-400">Haven't installed Inspektor Gadget yet?</p>
+							<div class="flex flex-col gap-2 border-t border-gray-200 dark:border-gray-800 pt-4">
+								<p class="text-sm text-gray-600 dark:text-gray-400">Haven't installed Inspektor Gadget yet?</p>
 								<p class="text-sm text-gray-500">
 									For Kubernetes, you can use a 1-click installation directly from IG Desktop. Just
 									follow the step above and create a new environment.
@@ -244,11 +244,11 @@
 			<!-- Hero Section -->
 			<div class="mt-12 flex flex-col gap-4">
 				<h1
-					class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-5xl font-bold text-transparent"
+					class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-5xl font-bold text-transparent"
 				>
 					Ready to explore?
 				</h1>
-				<p class="text-xl text-gray-400">
+				<p class="text-xl text-gray-600 dark:text-gray-400">
 					Your environments are set up. Choose where to start your investigation.
 				</p>
 			</div>
@@ -266,19 +266,19 @@
 						color="blue"
 						badge={Object.keys(environments).length}
 					>
-						<p class="mb-2 text-sm text-gray-400">Select an environment to manage and run gadgets</p>
+						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">Select an environment to manage and run gadgets</p>
 						<div class="flex flex-col gap-2">
 							{#each Object.values(environments).slice(0, 4) as env}
 								<button
 									onclick={() => goto(resolve(`/env/${env.id}`))}
-									class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-900"
+									class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 								>
 									<div class="flex flex-col gap-1">
-										<div class="font-medium text-gray-200">{env.name}</div>
-										<div class="text-xs text-gray-400">{env.runtime}</div>
+										<div class="font-medium text-gray-800 dark:text-gray-200">{env.name}</div>
+										<div class="text-xs text-gray-600 dark:text-gray-400">{env.runtime}</div>
 									</div>
 									<div
-										class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-blue-400"
+										class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-blue-400"
 									>
 										{@html ChevronRight}
 									</div>
@@ -297,19 +297,19 @@
 				<div class:lg:col-span-2={features.isSingleEnvironment || features.isDemoMode}>
 				<Panel title="Recent Activity" icon={History} color="purple">
 					{#if allHistories.length > 0}
-						<p class="mb-2 text-sm text-gray-400">Quick access to recently run gadgets</p>
+						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">Quick access to recently run gadgets</p>
 						<div class="flex flex-col gap-2">
 							{#each allHistories as { gadget, envId, envName }}
 								<button
 									onclick={() => runGadget(gadget, envId)}
-									class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+									class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 								>
 									<div class="flex flex-1 flex-col gap-1 overflow-hidden">
-										<div class="truncate font-medium text-gray-200">
+										<div class="truncate font-medium text-gray-800 dark:text-gray-200">
 											{getGadgetName(gadget.image)}
 										</div>
 										<div class="flex items-center gap-2 text-xs">
-											<span class="text-gray-400">{envName}</span>
+											<span class="text-gray-600 dark:text-gray-400">{envName}</span>
 											{#if gadget.timestamp}
 												<span class="text-gray-500">•</span>
 												<span class="text-gray-500">{formatRelativeTime(gadget.timestamp)}</span>
@@ -317,7 +317,7 @@
 										</div>
 									</div>
 									<div
-										class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-purple-400"
+										class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-purple-400"
 									>
 										{@html ChevronRight}
 									</div>
@@ -326,9 +326,9 @@
 						</div>
 					{:else}
 						<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-							<div class="text-gray-600">{@html History}</div>
+							<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
 							<p class="text-sm text-gray-500">No gadgets run yet</p>
-							<p class="text-xs text-gray-600">Your recent activity will appear here</p>
+							<p class="text-xs text-gray-400 dark:text-gray-600">Your recent activity will appear here</p>
 						</div>
 					{/if}
 				</Panel>
@@ -337,20 +337,20 @@
 				<!-- Discover Gadgets Panel -->
 				{#if features.canBrowseArtifactHub}
 					<Panel title="Discover Gadgets" icon={Grid} color="green">
-						<p class="mb-2 text-sm text-gray-400">Explore the Artifact Hub gadget gallery</p>
+						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">Explore the Artifact Hub gadget gallery</p>
 
 						<!-- Featured categories -->
 						<div class="flex flex-col gap-2">
 							<a
 								href={resolve('/browse/artifacthub')}
-								class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
+								class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">
-									<div class="font-medium text-gray-200">All Gadgets</div>
-									<div class="text-xs text-gray-400">Browse complete collection</div>
+									<div class="font-medium text-gray-800 dark:text-gray-200">All Gadgets</div>
+									<div class="text-xs text-gray-600 dark:text-gray-400">Browse complete collection</div>
 								</div>
 								<div
-									class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
+									class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
 								>
 									{@html ChevronRight}
 								</div>
@@ -358,14 +358,14 @@
 
 							<a
 								href={resolve('/browse/artifacthub')}
-								class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
+								class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">
-									<div class="font-medium text-gray-200">Security</div>
-									<div class="text-xs text-gray-400">Security monitoring gadgets</div>
+									<div class="font-medium text-gray-800 dark:text-gray-200">Security</div>
+									<div class="text-xs text-gray-600 dark:text-gray-400">Security monitoring gadgets</div>
 								</div>
 								<div
-									class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
+									class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
 								>
 									{@html ChevronRight}
 								</div>
@@ -373,14 +373,14 @@
 
 							<a
 								href={resolve('/browse/artifacthub')}
-								class="group/item flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-900"
+								class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">
-									<div class="font-medium text-gray-200">Networking</div>
-									<div class="text-xs text-gray-400">Network analysis tools</div>
+									<div class="font-medium text-gray-800 dark:text-gray-200">Networking</div>
+									<div class="text-xs text-gray-600 dark:text-gray-400">Network analysis tools</div>
 								</div>
 								<div
-									class="text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
+									class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
 								>
 									{@html ChevronRight}
 								</div>
@@ -388,7 +388,7 @@
 						</div>
 
 						<!-- Artifact Hub branding -->
-						<div class="mt-auto flex items-center gap-2 pt-4 text-xs text-gray-600">
+						<div class="mt-auto flex items-center gap-2 pt-4 text-xs text-gray-400 dark:text-gray-600">
 							<div class="h-4 w-4">{@html ArtifactHub}</div>
 							<span>Powered by Artifact Hub</span>
 						</div>
@@ -398,9 +398,9 @@
 
 			<!-- Quick Tips -->
 			<div
-				class="rounded-xl border border-gray-800 bg-gray-900/30 p-6 shadow-sm shadow-gray-950/90"
+				class="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-100/30 dark:bg-gray-900/30 p-6 shadow-sm shadow-gray-200/90 dark:shadow-gray-950/90"
 			>
-				<h3 class="mb-4 text-sm font-semibold tracking-wide text-gray-400 uppercase">
+				<h3 class="mb-4 text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 uppercase">
 					Did You Know?
 				</h3>
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -409,12 +409,12 @@
 							onclick={() => {
 								openExternalURL(tip.url);
 							}}
-							class="group/tip flex gap-2 rounded-lg border border-transparent bg-gray-800 p-4 text-left shadow-sm shadow-gray-950/90 transition-all hover:border-gray-700 hover:bg-gray-900/50"
+							class="group/tip flex gap-2 rounded-lg border border-transparent bg-gray-200 dark:bg-gray-800 p-4 text-left shadow-sm shadow-gray-200/90 dark:shadow-gray-950/90 transition-all hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-100/50 dark:hover:bg-gray-900/50"
 						>
 							<div class="text-{tip.color}-400">{@html tip.icon}</div>
 							<div>
-								<div class="mb-1 text-sm font-medium text-gray-300">{tip.title}</div>
-								<div class="text-xs text-gray-400">{tip.description}</div>
+								<div class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">{tip.title}</div>
+								<div class="text-xs text-gray-600 dark:text-gray-400">{tip.description}</div>
 							</div>
 						</button>
 					{/each}
@@ -434,7 +434,7 @@
 				<!-- Documentation Section -->
 				<div class="flex flex-col gap-3">
 					<h3
-						class="flex items-center gap-2 text-sm font-semibold tracking-wide text-gray-400 uppercase"
+						class="flex items-center gap-2 text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 uppercase"
 					>
 						<div class="h-4 w-4">{@html BookSmall}</div>
 						Documentation
@@ -442,14 +442,14 @@
 					<div class="flex flex-col gap-2">
 						<button
 							onclick={() => openExternalURL('https://inspektor-gadget.io/')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Link}</div>
-								<span class="text-gray-200">Website</span>
+								<span class="text-gray-800 dark:text-gray-200">Website</span>
 							</div>
 							<div
-								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
 								{@html ChevronRight}
 							</div>
@@ -457,14 +457,14 @@
 
 						<button
 							onclick={() => openExternalURL('https://inspektor-gadget.io/blog')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Link}</div>
-								<span class="text-gray-200">Blog</span>
+								<span class="text-gray-800 dark:text-gray-200">Blog</span>
 							</div>
 							<div
-								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
 								{@html ChevronRight}
 							</div>
@@ -472,14 +472,14 @@
 
 						<button
 							onclick={() => openExternalURL('https://inspektor-gadget.io/docs/latest/quick-start')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Book}</div>
-								<span class="text-gray-200">Quickstart Guide</span>
+								<span class="text-gray-800 dark:text-gray-200">Quickstart Guide</span>
 							</div>
 							<div
-								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
 								{@html ChevronRight}
 							</div>
@@ -488,14 +488,14 @@
 						<button
 							onclick={() =>
 								openExternalURL('https://inspektor-gadget.io/docs/latest/gadget-devel/')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Book}</div>
-								<span class="text-gray-200">Gadget Development Guide</span>
+								<span class="text-gray-800 dark:text-gray-200">Gadget Development Guide</span>
 							</div>
 							<div
-								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
 								{@html ChevronRight}
 							</div>
@@ -506,7 +506,7 @@
 				<!-- Community Section -->
 				<div class="flex flex-col gap-3">
 					<h3
-						class="flex items-center gap-2 text-sm font-semibold tracking-wide text-gray-400 uppercase"
+						class="flex items-center gap-2 text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 uppercase"
 					>
 						<div class="h-4 w-4">{@html GridSmall}</div>
 						Community
@@ -514,17 +514,17 @@
 					<div class="flex flex-col gap-2">
 						<button
 							onclick={() => openExternalURL('https://discord.gg/HbapduTjj9')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html GridSmall}</div>
 								<div class="flex flex-col">
-									<span class="text-gray-200">Discord</span>
+									<span class="text-gray-800 dark:text-gray-200">Discord</span>
 									<span class="text-xs text-gray-500">Join our Discord community</span>
 								</div>
 							</div>
 							<div
-								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
 								{@html ChevronRight}
 							</div>
@@ -532,25 +532,25 @@
 
 						<button
 							onclick={() => openExternalURL('https://kubernetes.slack.com/archives/CSYL75LF6')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html GridSmall}</div>
 								<div class="flex flex-col">
-									<span class="text-gray-200">Slack</span>
+									<span class="text-gray-800 dark:text-gray-200">Slack</span>
 									<span class="text-xs text-gray-500">Connect on Slack</span>
 								</div>
 							</div>
 							<div
-								class="text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
+								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
 								{@html ChevronRight}
 							</div>
 						</button>
 					</div>
 
-					<div class="rounded-lg border border-gray-800 bg-gray-900/30 p-4">
-						<p class="text-sm text-gray-400">
+					<div class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/30 dark:bg-gray-900/30 p-4">
+						<p class="text-sm text-gray-600 dark:text-gray-400">
 							Have questions or want to contribute? Join our community to connect with other users
 							and the Inspektor Gadget team.
 						</p>

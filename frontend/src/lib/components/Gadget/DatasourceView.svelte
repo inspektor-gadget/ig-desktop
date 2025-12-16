@@ -333,7 +333,7 @@
 <div class="flex h-full flex-col">
 	<!-- Header with tabs -->
 	<div
-		class="sticky top-0 left-0 z-20 flex h-10 flex-shrink-0 flex-row items-center border-t border-gray-600 bg-gray-950 px-2 text-base font-normal"
+		class="sticky top-0 left-0 z-20 flex h-10 flex-shrink-0 flex-row items-center border-t border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 text-base font-normal"
 	>
 		{#if hasMetrics}
 			<div class="flex h-6 w-6 items-center justify-center pr-2">
@@ -352,13 +352,16 @@
 		<div class="flex-1"></div>
 
 		{#if hasMetrics}
-			<div class="flex flex-row rounded-md bg-gray-900 p-0.5">
+			<div class="flex flex-row rounded-md bg-gray-100 dark:bg-gray-900 p-0.5">
 				<button
 					class="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors"
-					class:bg-gray-700={activeTab === 'chart'}
-					class:text-gray-200={activeTab === 'chart'}
+					class:bg-gray-300={activeTab === 'chart'}
+					class:dark:bg-gray-700={activeTab === 'chart'}
+					class:text-gray-800={activeTab === 'chart'}
+					class:dark:text-gray-200={activeTab === 'chart'}
 					class:text-gray-500={activeTab !== 'chart'}
-					class:hover:text-gray-300={activeTab !== 'chart'}
+					class:hover:text-gray-700={activeTab !== 'chart'}
+					class:dark:hover:text-gray-300={activeTab !== 'chart'}
 					onclick={() => setTab('chart')}
 				>
 					{@html ChartIcon}
@@ -366,10 +369,13 @@
 				</button>
 				<button
 					class="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors"
-					class:bg-gray-700={activeTab === 'table'}
-					class:text-gray-200={activeTab === 'table'}
+					class:bg-gray-300={activeTab === 'table'}
+					class:dark:bg-gray-700={activeTab === 'table'}
+					class:text-gray-800={activeTab === 'table'}
+					class:dark:text-gray-200={activeTab === 'table'}
 					class:text-gray-500={activeTab !== 'table'}
-					class:hover:text-gray-300={activeTab !== 'table'}
+					class:hover:text-gray-700={activeTab !== 'table'}
+					class:dark:hover:text-gray-300={activeTab !== 'table'}
 					onclick={() => setTab('table')}
 				>
 					{@html TableIcon}
@@ -381,9 +387,10 @@
 		<div class="relative">
 			<button
 				bind:this={menuButton}
-				class="pl-2 hover:text-white transition-colors"
+				class="pl-2 hover:text-gray-900 dark:hover:text-white transition-colors"
 				class:text-gray-500={activeTab !== 'table'}
-				class:hover:text-gray-300={activeTab !== 'table'}
+				class:hover:text-gray-700={activeTab !== 'table'}
+				class:dark:hover:text-gray-300={activeTab !== 'table'}
 				onclick={() => (menuOpen = !menuOpen)}
 				title="Column visibility"
 				aria-label="Toggle column visibility menu"
@@ -399,17 +406,17 @@
 					id="column-menu"
 					role="menu"
 					aria-label="Column visibility options"
-					class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-lg border border-gray-700 bg-gray-900 shadow-xl"
+					class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl"
 				>
 					<div
-						class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase border-b border-gray-700"
+						class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-200 dark:border-gray-700"
 					>
 						Columns
 					</div>
 					<div class="py-1" role="group" aria-label="Column toggles">
 						{#each tableMenuController.toggleableFields as field (field.fullName)}
 							<label
-								class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-800 cursor-pointer text-sm"
+								class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-sm"
 								role="menuitemcheckbox"
 								aria-checked={tableMenuController.isColumnVisible(field.fullName)}
 							>
@@ -417,9 +424,9 @@
 									type="checkbox"
 									checked={tableMenuController.isColumnVisible(field.fullName)}
 									onchange={() => tableMenuController?.toggleColumnVisibility(field.fullName)}
-									class="rounded border-gray-600 bg-gray-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+									class="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
 								/>
-								<span class="text-gray-200 truncate" title={field.fullName}>{field.fullName}</span>
+								<span class="text-gray-800 dark:text-gray-200 truncate" title={field.fullName}>{field.fullName}</span>
 							</label>
 						{/each}
 					</div>
@@ -440,7 +447,7 @@
 
 		<!-- Navigation bar -->
 		<div
-			class="flex flex-shrink-0 items-center justify-between border-t border-gray-700 bg-gray-900 px-2 py-1 text-xs"
+			class="flex flex-shrink-0 items-center justify-between border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-2 py-1 text-xs"
 		>
 			<div class="flex items-center gap-2">
 				<!-- Back/forth navigation for single selection -->
@@ -448,23 +455,29 @@
 					<div class="flex items-center gap-1">
 						<button
 							class="rounded p-0.5 transition-colors disabled:opacity-30"
-							class:text-gray-400={singleSelectedIndex > 0}
-							class:hover:bg-gray-700={singleSelectedIndex > 0}
-							class:hover:text-gray-200={singleSelectedIndex > 0}
+							class:text-gray-500={singleSelectedIndex > 0}
+							class:dark:text-gray-400={singleSelectedIndex > 0}
+							class:hover:bg-gray-200={singleSelectedIndex > 0}
+							class:dark:hover:bg-gray-700={singleSelectedIndex > 0}
+							class:hover:text-gray-800={singleSelectedIndex > 0}
+							class:dark:hover:text-gray-200={singleSelectedIndex > 0}
 							disabled={singleSelectedIndex === 0}
 							onclick={goToNewerSnapshot}
 							title="Newer snapshot"
 						>
 							{@html ChevronLeft}
 						</button>
-						<span class="min-w-16 text-center text-gray-400">
+						<span class="min-w-16 text-center text-gray-500 dark:text-gray-400">
 							{singleSelectedIndex + 1} / {snapshotCount}
 						</span>
 						<button
 							class="rounded p-0.5 transition-colors disabled:opacity-30"
-							class:text-gray-400={singleSelectedIndex < snapshotCount - 1}
-							class:hover:bg-gray-700={singleSelectedIndex < snapshotCount - 1}
-							class:hover:text-gray-200={singleSelectedIndex < snapshotCount - 1}
+							class:text-gray-500={singleSelectedIndex < snapshotCount - 1}
+							class:dark:text-gray-400={singleSelectedIndex < snapshotCount - 1}
+							class:hover:bg-gray-200={singleSelectedIndex < snapshotCount - 1}
+							class:dark:hover:bg-gray-700={singleSelectedIndex < snapshotCount - 1}
+							class:hover:text-gray-800={singleSelectedIndex < snapshotCount - 1}
+							class:dark:hover:text-gray-200={singleSelectedIndex < snapshotCount - 1}
 							disabled={singleSelectedIndex >= snapshotCount - 1}
 							onclick={goToOlderSnapshot}
 							title="Older snapshot"
@@ -474,7 +487,7 @@
 					</div>
 				{:else}
 					<!-- Multi-selection info -->
-					<span class="text-gray-400">
+					<span class="text-gray-500 dark:text-gray-400">
 						{selectedSnapshotIndices.size} of {snapshotCount} snapshots
 					</span>
 				{/if}
@@ -482,7 +495,7 @@
 				<!-- Select all button -->
 				{#if selectedSnapshotIndices.size < snapshotCount}
 					<button
-						class="rounded bg-gray-700 px-2 py-0.5 text-gray-300 transition-colors hover:bg-gray-600 hover:text-gray-100"
+						class="rounded bg-gray-200 dark:bg-gray-700 px-2 py-0.5 text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-300 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
 						onclick={selectAll}
 						title="Select all snapshots (merge all data)"
 					>
@@ -495,13 +508,13 @@
 			<div class="mx-2 min-w-0 flex-1 overflow-hidden text-center">
 				{#if customSortColumn}
 					<div
-						class="inline-flex items-center gap-1.5 rounded bg-amber-900/50 px-2 py-0.5 text-amber-200"
+						class="inline-flex items-center gap-1.5 rounded bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 text-amber-800 dark:text-amber-200"
 						title="Server-side filtering may have limited the results. The sorted view shows only the events received, not necessarily all matching events."
 					>
 						<span class="h-3.5 w-3.5 flex-shrink-0">{@html InfoIcon}</span>
 						<span class="truncate">Sorted locally (results may be partial)</span>
 						<button
-							class="ml-1 rounded px-1.5 py-0.5 text-xs font-medium text-amber-100 transition-colors hover:bg-amber-800/50"
+							class="ml-1 rounded px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-100 transition-colors hover:bg-amber-200 dark:hover:bg-amber-800/50"
 							onclick={resetSort}
 							title="Reset sorting to default order"
 						>
@@ -509,11 +522,11 @@
 						</button>
 					</div>
 				{:else if selectedSnapshotIndices.size === 1}
-					<span class="truncate text-gray-600"> Drag to select range, Ctrl+click to toggle </span>
+					<span class="truncate text-gray-500 dark:text-gray-600"> Drag to select range, Ctrl+click to toggle </span>
 				{/if}
 			</div>
 
-			<div class="flex flex-shrink-0 items-center gap-2 text-gray-500">
+			<div class="flex flex-shrink-0 items-center gap-2 text-gray-500 dark:text-gray-500">
 				<!-- Event count info -->
 				<span>
 					{selectedEventCount} events

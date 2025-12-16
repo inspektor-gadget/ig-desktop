@@ -55,15 +55,15 @@
 		<div
 			class={`${
 				active ? 'h-10' : 'h-5 scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100'
-			} w-1 origin-left rounded-r bg-white transition-all duration-200`}
+			} w-1 origin-left rounded-r bg-gray-900 dark:bg-white transition-all duration-200`}
 		></div>
 	</div>
 	<div class="group-active:translate-y-px">
 		<div
 			class={`${
 				!active
-					? 'bg-brand rounded-2xl text-white'
-					: 'group-hover:bg-brand rounded-3xl bg-gray-700 text-gray-100 group-hover:rounded-2xl group-hover:text-white'
+					? 'bg-brand rounded-2xl text-gray-900 dark:text-white'
+					: 'group-hover:bg-brand rounded-3xl bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 group-hover:rounded-2xl group-hover:text-gray-900 dark:group-hover:text-white'
 			} flex h-12 w-12 items-center justify-center overflow-hidden transition-all duration-200`}
 		>
 			{@render children()}

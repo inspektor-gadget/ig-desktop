@@ -161,7 +161,7 @@
 					></path>
 				</svg>
 				<select
-					class="col-start-1 row-start-1 appearance-none rounded bg-gray-800 p-1.5 pr-8 pl-3"
+					class="col-start-1 row-start-1 appearance-none rounded bg-gray-100 dark:bg-gray-800 p-1.5 pr-8 pl-3"
 					bind:value={entry.field}
 				>
 					{#each fields as field (field.display)}
@@ -173,13 +173,13 @@
 				<button
 					title={sortOperations[entry.sorting].title}
 					onclick={() => toggleSortDirection(entry)}
-					class="cursor-pointer rounded bg-gray-800 p-2 hover:bg-gray-700"
+					class="cursor-pointer rounded bg-gray-100 dark:bg-gray-800 p-2 hover:bg-gray-200 dark:hover:bg-gray-700"
 				>
 					{@html sortOperations[entry.sorting].icon}
 				</button>
 			</div>
 			<button
-				class="flex cursor-pointer flex-row items-center gap-2 rounded bg-red-900 px-2 py-1 hover:bg-red-800"
+				class="flex cursor-pointer flex-row items-center gap-2 rounded bg-red-200 dark:bg-red-900 text-red-800 dark:text-red-100 px-2 py-1 hover:bg-red-300 dark:hover:bg-red-800"
 				onclick={() => removeSortEntry(idx)}
 			>
 				<span>{@html Delete}</span>
@@ -188,7 +188,7 @@
 	{/each}
 	<div>
 		<button
-			class="flex cursor-pointer flex-row items-center gap-2 rounded bg-gray-800 px-2 py-1 hover:bg-gray-700"
+			class="flex cursor-pointer flex-row items-center gap-2 rounded bg-gray-100 dark:bg-gray-800 px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-700"
 			onclick={addSortEntry}
 		>
 			<span>Add Sorting</span>

@@ -47,18 +47,18 @@
 	// Compute color classes based on the color prop
 	const colorClasses = $derived({
 		border: `hover:border-${color}-500/50`,
-		shadow: `hover:shadow-${color}-500/10 shadow-gray-950/90`,
-		icon: `text-${color}-400`,
-		badge: `bg-${color}-500/20 text-${color}-400`
+		shadow: `hover:shadow-${color}-500/10 shadow-gray-200/90 dark:shadow-gray-950/90`,
+		icon: `text-${color}-500 dark:text-${color}-400`,
+		badge: `bg-${color}-500/20 text-${color}-600 dark:text-${color}-400`
 	});
 </script>
 
 <div
-	class="group main-gradient flex flex-col rounded-xl border border-gray-700 bg-gray-950 transition-all {colorClasses.border} shadow-sm hover:shadow-lg {colorClasses.shadow}"
+	class="group main-gradient flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 transition-all {colorClasses.border} shadow-sm hover:shadow-lg {colorClasses.shadow}"
 >
 	<!-- Header -->
 	<div
-		class="flex items-center gap-3 rounded-t-2xl border-b border-gray-800 bg-gray-900/50 px-6 py-4"
+		class="flex items-center gap-3 rounded-t-2xl border-b border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50 px-6 py-4"
 	>
 		<div class="flex flex-1 items-center gap-3">
 			{#if icon}

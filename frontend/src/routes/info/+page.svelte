@@ -1,5 +1,5 @@
 <div
-	class="flex flex-1 items-center justify-center bg-gray-950/90 align-middle font-mono text-gray-100"
+	class="flex flex-1 items-center justify-center bg-gray-50/90 dark:bg-gray-950/90 align-middle font-mono text-gray-900 dark:text-gray-100"
 >
 	<div>
 		<div class="text-xl">Inspektor Gadget</div>

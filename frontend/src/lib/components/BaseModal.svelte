@@ -27,7 +27,7 @@
 		showCloseButton?: boolean;
 		/** Modal size variant */
 		size?: 'sm' | 'md' | 'lg' | 'xl';
-		/** Background color class for modal container (default: 'bg-gray-950') */
+		/** Background color class for modal container (default: 'bg-white dark:bg-gray-950') */
 		background?: string;
 		/** Header slot for custom header content */
 		header?: Snippet;
@@ -44,7 +44,7 @@
 		icon,
 		showCloseButton = true,
 		size = 'md',
-		background = 'bg-gray-950',
+		background = 'bg-white dark:bg-gray-950',
 		header,
 		footer,
 		children
@@ -100,7 +100,7 @@
 		<div
 			class="flex w-full {sizeClasses[
 				size
-			]} flex-col rounded-2xl border border-gray-800 {background} shadow-2xl"
+			]} flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 {background} shadow-2xl"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby={title ? 'modal-title' : undefined}
@@ -109,21 +109,21 @@
 			{#if header}
 				{@render header()}
 			{:else if title || icon}
-				<div class="flex items-center gap-3 border-b border-gray-800 bg-gray-900/50 px-6 py-4">
+				<div class="flex items-center gap-3 border-b border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50 px-6 py-4 rounded-t-2xl">
 					{#if icon}
 						<div class="flex-shrink-0 text-blue-500">
 							{@html icon}
 						</div>
 					{/if}
 					{#if title}
-						<h2 id="modal-title" class="flex-1 text-xl font-semibold text-gray-100">
+						<h2 id="modal-title" class="flex-1 text-xl font-semibold text-gray-900 dark:text-gray-100">
 							{title}
 						</h2>
 					{/if}
 					{#if showCloseButton}
 						<button
 							onclick={closeModal}
-							class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-gray-200"
+							class="rounded-lg p-2 text-gray-500 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200"
 							aria-label="Close modal"
 						>
 							<svg
@@ -153,7 +153,7 @@
 			<!-- Footer -->
 			{#if footer}
 				<div
-					class="flex items-center justify-end gap-3 border-t border-gray-800 bg-gray-900/50 px-6 py-4"
+					class="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50 px-6 py-4 rounded-b-2xl"
 				>
 					{@render footer()}
 				</div>
