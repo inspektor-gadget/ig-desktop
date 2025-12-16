@@ -11,7 +11,7 @@ require (
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.41
 	golang.org/x/exp v0.0.0-20251125195548-87e1e737ad39
 	google.golang.org/grpc v1.77.0
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.19.3
 	k8s.io/api v0.34.3
