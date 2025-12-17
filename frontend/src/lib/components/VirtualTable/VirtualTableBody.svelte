@@ -720,6 +720,10 @@
 			} else {
 				// Normal navigation: Move focus and select single row
 				selectSingle(newIndex);
+				// Update inspector with the newly focused row
+				if (onrowclick) {
+					onrowclick(items[newIndex], newIndex, event as unknown as MouseEvent);
+				}
 			}
 			setFocus(newIndex);
 			scrollRowIntoView(newIndex);
