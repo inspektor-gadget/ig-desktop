@@ -741,40 +741,45 @@
 
 <div class="virtual-table-container {className}">
 	<!-- Header table (stays fixed at top, scrolls horizontally with body) -->
-	<div
-		class="virtual-table-header"
-		bind:this={headerWrapper}
-		style={scrollbarWidth > 0 ? `padding-right: ${scrollbarWidth}px;` : ''}
-	>
-		<table class="virtual-table" style={totalTableWidth > 0 ? `width: ${totalTableWidth}px;` : ''}>
-			{#if columnWidths.length > 0}
-				<colgroup>
-					{#each columnWidths as width}
-						<col style="width: {width}px;" />
-					{/each}
-				</colgroup>
-			{/if}
-			<thead>
-				{#if header}
-					{@render header(columns, { startResize, resizingIndex, setHeaderRow })}
-				{:else}
-					<tr bind:this={headerRow}>
-						{#each columns as column, i}
-							<th style={column.width ? `width: ${column.width};` : ''} class="relative">
-								{column.label}
-								{#if i < columns.length - 1}
-									<div
-										class="resize-handle"
-										class:active={resizingIndex === i}
-										onpointerdown={(e) => startResize(e, i)}
-									></div>
-								{/if}
-							</th>
+	<div class="virtual-table-header" bind:this={headerWrapper}>
+		<div class="header-scroll-content">
+			<table
+				class="virtual-table"
+				style={totalTableWidth > 0 ? `width: ${totalTableWidth}px;` : ''}
+			>
+				{#if columnWidths.length > 0}
+					<colgroup>
+						{#each columnWidths as width}
+							<col style="width: {width}px;" />
 						{/each}
-					</tr>
+					</colgroup>
 				{/if}
-			</thead>
-		</table>
+				<thead>
+					{#if header}
+						{@render header(columns, { startResize, resizingIndex, setHeaderRow })}
+					{:else}
+						<tr bind:this={headerRow}>
+							{#each columns as column, i}
+								<th style={column.width ? `width: ${column.width};` : ''} class="relative">
+									{column.label}
+									{#if i < columns.length - 1}
+										<div
+											class="resize-handle"
+											class:active={resizingIndex === i}
+											onpointerdown={(e) => startResize(e, i)}
+										></div>
+									{/if}
+								</th>
+							{/each}
+						</tr>
+					{/if}
+				</thead>
+			</table>
+			<!-- Spacer to compensate for body's vertical scrollbar width -->
+			{#if scrollbarWidth > 0}
+				<div class="scrollbar-spacer" style="width: {scrollbarWidth}px;"></div>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Scrollable body container -->
@@ -842,15 +847,18 @@
 
 	.virtual-table-header {
 		flex-shrink: 0;
-		/* Use auto to allow programmatic scrollLeft, hide scrollbar visually */
-		overflow-x: auto;
+		/* Use hidden to prevent user-initiated scrolling (trackpad/wheel).
+		   Programmatic scrollLeft still works for syncing with body. */
+		overflow-x: hidden;
 		overflow-y: hidden;
-		scrollbar-width: none;
-		-ms-overflow-style: none;
 	}
 
-	.virtual-table-header::-webkit-scrollbar {
-		display: none;
+	.header-scroll-content {
+		display: flex;
+	}
+
+	.scrollbar-spacer {
+		flex-shrink: 0;
 	}
 
 	.virtual-table-body {
