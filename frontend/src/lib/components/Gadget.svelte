@@ -516,7 +516,7 @@
 	</div>
 {:else}
 	<div
-		class="flex flex-1 items-center justify-center bg-gray-900 align-middle font-mono text-gray-100"
+		class="flex flex-1 items-center justify-center bg-gray-50 dark:bg-gray-950 align-middle font-mono text-gray-900 dark:text-gray-100"
 	>
 		<div>
 			<div class="text-xl">Gadget Instance not found (yet)</div>
