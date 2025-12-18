@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"runtime"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -26,12 +27,13 @@ func main() {
 		},
 	})
 
-	app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:  "Inspektor Gadget Desktop",
-		Width:  1280,
-		Height: 900,
-		// macOS: Use native titlebar with transparent appearance (native traffic lights work)
-		// Windows/Linux: Use frameless with custom window controls in frontend
+	// macOS: Use native titlebar with transparent appearance (native traffic lights work)
+	// Windows/Linux: Use frameless with custom window controls in frontend
+	windowOptions := application.WebviewWindowOptions{
+		Title:     "Inspektor Gadget Desktop",
+		Width:     1280,
+		Height:    900,
+		Frameless: runtime.GOOS != "darwin", // Frameless on Windows/Linux only
 		Mac: application.MacWindow{
 			TitleBar: application.MacTitleBar{
 				AppearsTransparent: true,
@@ -40,13 +42,9 @@ func main() {
 			},
 			InvisibleTitleBarHeight: 52,
 		},
-		Windows: application.WindowsWindow{
-			// Windows uses custom frameless controls
-		},
-		Linux: application.LinuxWindow{
-			// Linux uses custom frameless controls
-		},
-	})
+	}
+
+	app.Window.NewWithOptions(windowOptions)
 
 	igApp.Run(app)
 
