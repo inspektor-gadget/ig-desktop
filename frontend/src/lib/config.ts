@@ -149,6 +149,14 @@ export const configurationSchema: ConfigurationSchema = {
 						'Enable session recording feature to capture and replay gadget runs. This feature is still being developed.',
 					type: 'toggle',
 					default: false
+				},
+				{
+					key: 'experimentalGadgetWizard',
+					title: 'Gadget Wizard',
+					description:
+						'Enable the Gadget Wizard to help you choose the right gadget for your use case. This feature is not fully working yet.',
+					type: 'toggle',
+					default: false
 				}
 			]
 		}

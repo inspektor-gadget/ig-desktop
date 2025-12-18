@@ -56,6 +56,11 @@
 		configuration.get('experimentalSessionRecording') === true
 	);
 
+	// Experimental feature flag for gadget wizard
+	const gadgetWizardEnabled = $derived(
+		configuration.get('experimentalGadgetWizard') === true
+	);
+
 	let detachedInstances = $state<GadgetInstance[]>([]);
 
 	let targetState = $state(0);
@@ -342,7 +347,7 @@
 					</h1>
 				</div>
 				<div class="flex flex-row items-center gap-2">
-					{#if !wizardVisible && features.canRunGadgets}
+					{#if !wizardVisible && features.canRunGadgets && gadgetWizardEnabled}
 						<button
 							onclick={showWizard}
 							class="flex cursor-pointer items-center gap-2 rounded-lg border border-orange-300 dark:border-orange-800 bg-orange-100/20 dark:bg-orange-900/20 px-3 py-2 text-sm text-orange-600 dark:text-orange-400 transition-all hover:border-orange-500/50 hover:bg-orange-100/40 dark:hover:bg-orange-900/40"
@@ -365,7 +370,7 @@
 			<!-- Content Grid -->
 			<div class="grid grid-cols-1 gap-6">
 				<!-- Gadget Wizard Panel -->
-				{#if wizardVisible && features.canRunGadgets}
+				{#if wizardVisible && features.canRunGadgets && gadgetWizardEnabled}
 					<GadgetWizard
 						treeConfig={wizardTreeConfig as WizardTreeConfig}
 						{env}
