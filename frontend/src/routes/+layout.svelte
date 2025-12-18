@@ -253,7 +253,7 @@
 
 	async function minimize() {
 		const { Window } = await import('@wailsio/runtime');
-		Window.Minimise();
+		await Window.Minimise();
 	}
 
 	async function quitApp() {
@@ -270,49 +270,26 @@
 <div class="flex h-screen flex-col" class:bg-gradient-overlay={gradientEnabled}>
 	{#if environment.hasWindowControls}
 		{#if environment.isMac}
-			<!-- macOS-style title bar with traffic light buttons on the left -->
+			<!-- macOS-style title bar - native traffic lights are provided by the OS -->
 			<div
 				role="banner"
 				ondblclick={() => {
 					toggleMaximize();
 				}}
 				style="--wails-draggable: drag"
-				class="relative flex flex-row items-center border-b border-b-gray-200 bg-white/80 dark:border-b-gray-800 dark:bg-gray-950/80 backdrop-blur-sm select-none py-3"
+				class="relative flex flex-row items-center border-b border-b-gray-200 bg-white/80 dark:border-b-gray-800 dark:bg-gray-950/80 backdrop-blur-sm select-none"
 			>
-				<!-- Traffic light buttons on the left -->
-				<div style="--wails-draggable: no-drag" class="flex flex-row items-center gap-2 px-4">
-					<button
-						type="button"
-						onclick={() => {
-							quitApp();
-						}}
-						aria-label="Close window"
-						class="h-3 w-3 rounded-full bg-[#ff5f57] hover:bg-[#ff4136] transition-colors"
-					></button>
-					<button
-						type="button"
-						onclick={() => {
-							minimize();
-						}}
-						aria-label="Minimize window"
-						class="h-3 w-3 rounded-full bg-[#febc2e] hover:bg-[#ffb000] transition-colors"
-					></button>
-					<button
-						type="button"
-						onclick={() => {
-							toggleMaximize();
-						}}
-						aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
-						class="h-3 w-3 rounded-full bg-[#28c840] hover:bg-[#1db82f] transition-colors"
-					></button>
-				</div>
+				<!-- Spacer for native traffic light buttons (approx 78px) -->
+				<div class="w-20 shrink-0"></div>
 				<!-- Centered title -->
-				<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+				<div class="flex-1 flex items-center justify-center py-2">
 					<div class="flex flex-row items-center gap-2 text-xs text-gray-500 dark:text-gray-400 uppercase">
 						<div class="flex">{@html BrandIcon}</div>
 						<div class="leading-none pt-px">Inspektor Gadget Desktop</div>
 					</div>
 				</div>
+				<!-- Right spacer for balance -->
+				<div class="w-20 shrink-0"></div>
 			</div>
 		{:else}
 			<!-- Windows/Linux-style title bar with buttons on the right -->

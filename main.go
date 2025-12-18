@@ -27,10 +27,25 @@ func main() {
 	})
 
 	app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:     "Inspektor Gadget Desktop",
-		Width:     1280,
-		Height:    900,
-		Frameless: true,
+		Title:  "Inspektor Gadget Desktop",
+		Width:  1280,
+		Height: 900,
+		// macOS: Use native titlebar with transparent appearance (native traffic lights work)
+		// Windows/Linux: Use frameless with custom window controls in frontend
+		Mac: application.MacWindow{
+			TitleBar: application.MacTitleBar{
+				AppearsTransparent: true,
+				HideTitle:          true,
+				FullSizeContent:    true,
+			},
+			InvisibleTitleBarHeight: 52,
+		},
+		Windows: application.WindowsWindow{
+			// Windows uses custom frameless controls
+		},
+		Linux: application.LinuxWindow{
+			// Linux uses custom frameless controls
+		},
 	})
 
 	igApp.Run(app)
