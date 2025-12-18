@@ -5,6 +5,7 @@
  */
 
 type EnvironmentMode = 'wails' | 'browser';
+type Platform = 'mac' | 'windows' | 'linux' | 'unknown';
 
 /**
  * Detects the current runtime environment.
@@ -51,6 +52,30 @@ function detectEnvironment(): EnvironmentMode {
 }
 
 /**
+ * Detects the current operating system platform.
+ */
+function detectPlatform(): Platform {
+	if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+		return 'unknown';
+	}
+
+	const userAgent = navigator.userAgent.toLowerCase();
+	const platform = navigator.platform?.toLowerCase() || '';
+
+	if (platform.includes('mac') || userAgent.includes('macintosh')) {
+		return 'mac';
+	}
+	if (platform.includes('win') || userAgent.includes('windows')) {
+		return 'windows';
+	}
+	if (platform.includes('linux') || userAgent.includes('linux')) {
+		return 'linux';
+	}
+
+	return 'unknown';
+}
+
+/**
  * Environment service singleton that provides reactive environment detection
  * and feature availability flags.
  */
@@ -58,8 +83,20 @@ class EnvironmentService {
 	/** The detected runtime environment mode */
 	readonly mode: EnvironmentMode = $state(detectEnvironment());
 
+	/** The detected operating system platform */
+	readonly platform: Platform = $state(detectPlatform());
+
 	/** True if running in Wails desktop app */
 	readonly isApp = $derived(this.mode === 'wails');
+
+	/** True if running on macOS */
+	readonly isMac = $derived(this.platform === 'mac');
+
+	/** True if running on Windows */
+	readonly isWindows = $derived(this.platform === 'windows');
+
+	/** True if running on Linux */
+	readonly isLinux = $derived(this.platform === 'linux');
 
 	/** True if running in browser */
 	readonly isBrowser = $derived(this.mode === 'browser');
