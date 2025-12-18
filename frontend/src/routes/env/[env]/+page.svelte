@@ -39,6 +39,10 @@
 		setEnvPref
 	} from '$lib/utils/env-preferences';
 	import AutocompleteInput from '$lib/components/forms/AutocompleteInput.svelte';
+	import GadgetWizard from '$lib/components/wizard/GadgetWizard.svelte';
+	import wizardTreeConfig from '$lib/data/gadget-wizard-tree.json';
+	import type { WizardTreeConfig } from '$lib/components/wizard/wizard-types';
+	import GadgetIcon from '$lib/icons/gadget.svg?raw';
 
 	const api: any = getContext('api');
 
@@ -68,6 +72,31 @@
 	});
 
 	let settingsModalOpen = $state(false);
+
+	// Wizard visibility state - persisted per environment
+	let wizardVisible = $state(true);
+
+	// Load wizard visibility preference when environment changes
+	$effect(() => {
+		if (env?.id) {
+			const hidden = getEnvPref<boolean>(env.id, 'wizard-hidden');
+			wizardVisible = !hidden;
+		}
+	});
+
+	function hideWizard() {
+		wizardVisible = false;
+		if (env?.id) {
+			setEnvPref(env.id, 'wizard-hidden', true);
+		}
+	}
+
+	function showWizard() {
+		wizardVisible = true;
+		if (env?.id) {
+			setEnvPref(env.id, 'wizard-hidden', false);
+		}
+	}
 
 	$effect(() => {
 		if (!env) {
@@ -312,17 +341,39 @@
 						{env.name}
 					</h1>
 				</div>
-				<button
-					onclick={() => (settingsModalOpen = true)}
-					class="cursor-pointer rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-3 text-gray-600 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-blue-400"
-					title="Environment Settings"
-				>
-					{@html Cog}
-				</button>
+				<div class="flex flex-row items-center gap-2">
+					{#if !wizardVisible && features.canRunGadgets}
+						<button
+							onclick={showWizard}
+							class="flex cursor-pointer items-center gap-2 rounded-lg border border-orange-300 dark:border-orange-800 bg-orange-100/20 dark:bg-orange-900/20 px-3 py-2 text-sm text-orange-600 dark:text-orange-400 transition-all hover:border-orange-500/50 hover:bg-orange-100/40 dark:hover:bg-orange-900/40"
+							title="Show Gadget Wizard"
+						>
+							<span>{@html GadgetIcon}</span>
+							<span>Wizard</span>
+						</button>
+					{/if}
+					<button
+						onclick={() => (settingsModalOpen = true)}
+						class="cursor-pointer rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-3 text-gray-600 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-blue-400"
+						title="Environment Settings"
+					>
+						{@html Cog}
+					</button>
+				</div>
 			</div>
 
 			<!-- Content Grid -->
 			<div class="grid grid-cols-1 gap-6">
+				<!-- Gadget Wizard Panel -->
+				{#if wizardVisible && features.canRunGadgets}
+					<GadgetWizard
+						treeConfig={wizardTreeConfig as WizardTreeConfig}
+						{env}
+						onRun={runGadget}
+						onHide={hideWizard}
+					/>
+				{/if}
+
 				<!-- Run Gadget Card -->
 				<Panel title="Run Gadget" icon={PlaySmall} color="blue" bodyPadding="large">
 					{#if features.canRunGadgets}

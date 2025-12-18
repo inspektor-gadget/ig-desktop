@@ -1,0 +1,167 @@
+{
+	"title": "Gadget Wizard",
+	"question": "What do you want to do?",
+	"gadgetPrefix": "ghcr.io/inspektor-gadget/gadget/",
+	"nodes": {
+		"root": {
+			"type": "branch",
+			"children": ["debug", "telemetry"]
+		},
+		"debug": {
+			"type": "branch",
+			"label": "Debug an issue",
+			"icon": "bug",
+			"description": "Investigate problems with network, processes, or I/O",
+			"detached": false,
+			"children": ["debug_network", "debug_processes", "debug_io"]
+		},
+		"telemetry": {
+			"type": "branch",
+			"label": "Setting up telemetry",
+			"icon": "chart",
+			"description": "Create persistent monitoring instances",
+			"detached": true,
+			"children": ["telem_network", "telem_processes", "telem_io"]
+		},
+		"debug_network": {
+			"type": "branch",
+			"label": "Network Issues",
+			"icon": "network",
+			"description": "DNS, TCP, and packet analysis",
+			"children": ["trace_dns", "tcpdump", "trace_tcpretrans"]
+		},
+		"debug_processes": {
+			"type": "branch",
+			"label": "Process Issues",
+			"icon": "process",
+			"description": "Process execution and memory problems",
+			"children": ["snapshot_process", "trace_oomkill", "trace_exec"]
+		},
+		"debug_io": {
+			"type": "branch",
+			"label": "I/O Issues",
+			"icon": "disk",
+			"description": "Block I/O and filesystem latency",
+			"children": ["top_blockio", "trace_fsslower"]
+		},
+		"telem_network": {
+			"type": "branch",
+			"label": "Network Telemetry",
+			"icon": "network",
+			"description": "Monitor network activity",
+			"children": ["trace_dns_telem", "trace_tcp_telem"]
+		},
+		"telem_processes": {
+			"type": "branch",
+			"label": "Process Telemetry",
+			"icon": "process",
+			"description": "Monitor process activity",
+			"children": ["trace_exec_telem", "trace_oomkill_telem"]
+		},
+		"telem_io": {
+			"type": "branch",
+			"label": "I/O Telemetry",
+			"icon": "disk",
+			"description": "Monitor I/O performance",
+			"children": ["top_blockio_telem"]
+		},
+		"trace_dns": {
+			"type": "endpoint",
+			"label": "Trace DNS Traffic",
+			"description": "Monitor DNS queries and responses in real-time",
+			"gadget": "trace_dns:latest",
+			"suggestedInstanceName": "dns-trace"
+		},
+		"tcpdump": {
+			"type": "endpoint",
+			"label": "Capture Network Packets",
+			"description": "Capture and analyze network traffic like tcpdump",
+			"gadget": "tcpdump:latest",
+			"suggestedInstanceName": "packet-capture"
+		},
+		"trace_tcpretrans": {
+			"type": "endpoint",
+			"label": "Watch TCP Retransmissions",
+			"description": "Detect network reliability issues and packet loss",
+			"gadget": "trace_tcpretrans:latest",
+			"suggestedInstanceName": "tcp-retrans"
+		},
+		"snapshot_process": {
+			"type": "endpoint",
+			"label": "Show Running Processes",
+			"description": "Snapshot of all running processes with thread information",
+			"gadget": "snapshot_process:latest",
+			"params": {
+				"threads": "true"
+			},
+			"suggestedInstanceName": "process-snapshot"
+		},
+		"trace_oomkill": {
+			"type": "endpoint",
+			"label": "Watch OOM Kills",
+			"description": "Monitor for out-of-memory terminations",
+			"gadget": "trace_oomkill:latest",
+			"suggestedInstanceName": "oom-monitor"
+		},
+		"trace_exec": {
+			"type": "endpoint",
+			"label": "Trace Process Executions",
+			"description": "Monitor when new processes start",
+			"gadget": "trace_exec:latest",
+			"suggestedInstanceName": "exec-trace"
+		},
+		"top_blockio": {
+			"type": "endpoint",
+			"label": "Block I/O Activity",
+			"description": "Show top block I/O consumers in real-time",
+			"gadget": "top_blockio:latest",
+			"suggestedInstanceName": "blockio-top"
+		},
+		"trace_fsslower": {
+			"type": "endpoint",
+			"label": "Trace Slow Filesystem Ops",
+			"description": "Find slow file operations (default: >10ms)",
+			"gadget": "trace_fsslower:latest",
+			"params": {
+				"min": "10",
+				"filesystem": "ext4"
+			},
+			"suggestedInstanceName": "fs-slow"
+		},
+		"trace_dns_telem": {
+			"type": "endpoint",
+			"label": "DNS Metrics",
+			"description": "Export DNS query metrics to telemetry backends",
+			"gadget": "trace_dns:latest",
+			"suggestedInstanceName": "dns-metrics"
+		},
+		"trace_tcp_telem": {
+			"type": "endpoint",
+			"label": "TCP Connection Metrics",
+			"description": "Export TCP connection events to telemetry backends",
+			"gadget": "trace_tcp:latest",
+			"suggestedInstanceName": "tcp-metrics"
+		},
+		"trace_exec_telem": {
+			"type": "endpoint",
+			"label": "Process Execution Metrics",
+			"description": "Export process execution events to telemetry backends",
+			"gadget": "trace_exec:latest",
+			"suggestedInstanceName": "exec-metrics"
+		},
+		"trace_oomkill_telem": {
+			"type": "endpoint",
+			"label": "OOM Kill Metrics",
+			"description": "Export OOM kill events to telemetry backends",
+			"gadget": "trace_oomkill:latest",
+			"suggestedInstanceName": "oom-metrics"
+		},
+		"top_blockio_telem": {
+			"type": "endpoint",
+			"label": "Block I/O Metrics",
+			"description": "Export block I/O metrics to telemetry backends",
+			"gadget": "top_blockio:latest",
+			"suggestedInstanceName": "blockio-metrics"
+		}
+	}
+}
