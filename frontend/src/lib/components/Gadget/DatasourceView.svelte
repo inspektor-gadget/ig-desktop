@@ -1,9 +1,11 @@
 <script lang="ts">
 	import Table, { type TableMenuController } from './Table.svelte';
 	import Chart from './Chart.svelte';
+	import Flamegraph from './Flamegraph.svelte';
 	import SnapshotTimeline from './SnapshotTimeline.svelte';
 	import TableIcon from '$lib/icons/table-column.svg?raw';
 	import ChartIcon from '$lib/icons/chart.svg?raw';
+	import FlameIcon from '$lib/icons/flame.svg?raw';
 	import Dots from '$lib/icons/dots-vertical.svg?raw';
 	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
 	import ChevronRight from '$lib/icons/chevron-right.svg?raw';
@@ -11,6 +13,8 @@
 	import InfoIcon from '$lib/icons/info-small.svg?raw';
 	import { preferences } from '$lib/shared/preferences.svelte';
 	import { getArraySnapshots } from '$lib/handlers/gadget.handler.svelte';
+	import { extractFlamegraphConfig } from '$lib/utils/flamegraphConfig';
+	import { clickOutside } from '$lib/utils/click-outside';
 	import type { Datasource } from '$lib/types/charts';
 	import type { EventRingBuffer } from '$lib/utils/ring-buffer';
 
@@ -49,19 +53,30 @@
 	// Check if this datasource supports metrics visualization
 	const hasMetrics = $derived(ds.annotations?.['metrics.collect'] === 'true');
 
+	// Check if this datasource supports flamegraph visualization
+	const flamegraphConfig = $derived(extractFlamegraphConfig(ds));
+	const hasFlamegraph = $derived(flamegraphConfig.isValidFlamegraph);
+
 	// Tab state - persist per datasource
 	const prefKey = $derived(`datasource.${ds.name}.view`);
 
-	// Initialize tab based on whether metrics are available
-	// Use $state with initial value calculated from annotations
+	// Determine initial tab based on available views (priority: flamegraph > chart > table)
+	const initialFlamegraph = extractFlamegraphConfig(ds).isValidFlamegraph;
 	const initialMetrics = ds.annotations?.['metrics.collect'] === 'true';
-	let activeTab = $state<'chart' | 'table'>(
-		initialMetrics
-			? (preferences.getDefault(`datasource.${ds.name}.view`, 'chart') as 'chart' | 'table')
-			: 'table'
+
+	type ViewTab = 'flamegraph' | 'chart' | 'table';
+
+	function getDefaultTab(): ViewTab {
+		if (initialFlamegraph) return 'flamegraph';
+		if (initialMetrics) return 'chart';
+		return 'table';
+	}
+
+	let activeTab = $state<ViewTab>(
+		preferences.getDefault(`datasource.${ds.name}.view`, getDefaultTab()) as ViewTab
 	);
 
-	function setTab(tab: 'chart' | 'table') {
+	function setTab(tab: ViewTab) {
 		activeTab = tab;
 		preferences.set(prefKey, tab);
 	}
@@ -80,24 +95,6 @@
 	let menuOpen = $state(false);
 	let menuButton: HTMLButtonElement | undefined = $state();
 	let tableMenuController = $state<TableMenuController | null>(null);
-
-	// Close menu when clicking outside
-	function handleClickOutside(event: MouseEvent) {
-		if (menuOpen && menuButton && !menuButton.contains(event.target as Node)) {
-			const menu = document.getElementById('column-menu');
-			if (menu && !menu.contains(event.target as Node)) {
-				menuOpen = false;
-			}
-		}
-	}
-
-	// Set up click outside listener
-	$effect(() => {
-		if (menuOpen) {
-			document.addEventListener('click', handleClickOutside);
-			return () => document.removeEventListener('click', handleClickOutside);
-		}
-	});
 
 	function handleSortChange(column: string | null) {
 		customSortColumn = column;
@@ -335,38 +332,54 @@
 	<div
 		class="sticky top-0 left-0 z-20 flex h-10 flex-shrink-0 flex-row items-center border-t border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 text-base font-normal"
 	>
-		{#if hasMetrics}
-			<div class="flex h-6 w-6 items-center justify-center pr-2">
-				{#if activeTab === 'chart'}
-					{@html ChartIcon}
-				{:else}
-					{@html TableIcon}
-				{/if}
-			</div>
-		{:else}
-			<div class="flex h-6 w-6 items-center justify-center pr-2">{@html TableIcon}</div>
-		{/if}
+		<div class="flex h-6 w-6 items-center justify-center pr-2">
+			{#if activeTab === 'flamegraph'}
+				{@html FlameIcon}
+			{:else if activeTab === 'chart'}
+				{@html ChartIcon}
+			{:else}
+				{@html TableIcon}
+			{/if}
+		</div>
 
 		<h2 class="px-1">{ds.name}</h2>
 
 		<div class="flex-1"></div>
 
-		{#if hasMetrics}
+		{#if hasFlamegraph || hasMetrics}
 			<div class="flex flex-row rounded-md bg-gray-100 dark:bg-gray-900 p-0.5">
-				<button
-					class="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors"
-					class:bg-gray-300={activeTab === 'chart'}
-					class:dark:bg-gray-700={activeTab === 'chart'}
-					class:text-gray-800={activeTab === 'chart'}
-					class:dark:text-gray-200={activeTab === 'chart'}
-					class:text-gray-500={activeTab !== 'chart'}
-					class:hover:text-gray-700={activeTab !== 'chart'}
-					class:dark:hover:text-gray-300={activeTab !== 'chart'}
-					onclick={() => setTab('chart')}
-				>
-					{@html ChartIcon}
-					<span>Chart</span>
-				</button>
+				{#if hasFlamegraph}
+					<button
+						class="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors"
+						class:bg-gray-300={activeTab === 'flamegraph'}
+						class:dark:bg-gray-700={activeTab === 'flamegraph'}
+						class:text-gray-800={activeTab === 'flamegraph'}
+						class:dark:text-gray-200={activeTab === 'flamegraph'}
+						class:text-gray-500={activeTab !== 'flamegraph'}
+						class:hover:text-gray-700={activeTab !== 'flamegraph'}
+						class:dark:hover:text-gray-300={activeTab !== 'flamegraph'}
+						onclick={() => setTab('flamegraph')}
+					>
+						{@html FlameIcon}
+						<span>Flamegraph</span>
+					</button>
+				{/if}
+				{#if hasMetrics}
+					<button
+						class="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors"
+						class:bg-gray-300={activeTab === 'chart'}
+						class:dark:bg-gray-700={activeTab === 'chart'}
+						class:text-gray-800={activeTab === 'chart'}
+						class:dark:text-gray-200={activeTab === 'chart'}
+						class:text-gray-500={activeTab !== 'chart'}
+						class:hover:text-gray-700={activeTab !== 'chart'}
+						class:dark:hover:text-gray-300={activeTab !== 'chart'}
+						onclick={() => setTab('chart')}
+					>
+						{@html ChartIcon}
+						<span>Chart</span>
+					</button>
+				{/if}
 				<button
 					class="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors"
 					class:bg-gray-300={activeTab === 'table'}
@@ -384,7 +397,10 @@
 			</div>
 		{/if}
 
-		<div class="relative">
+		<div
+			class="relative"
+			use:clickOutside={{ enabled: menuOpen, onClickOutside: () => (menuOpen = false) }}
+		>
 			<button
 				bind:this={menuButton}
 				class="pl-2 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -435,8 +451,8 @@
 		</div>
 	</div>
 
-	<!-- Snapshot timeline and navigation (for array datasources in table view) -->
-	{#if activeTab === 'table' && hasSnapshots && snapshotCount > 1}
+	<!-- Snapshot timeline and navigation (for array datasources in table/flamegraph view) -->
+	{#if (activeTab === 'table' || activeTab === 'flamegraph') && hasSnapshots && snapshotCount > 1}
 		<!-- Mini timeline chart -->
 		<SnapshotTimeline
 			{snapshots}
@@ -551,6 +567,16 @@
 	{/if}
 
 	<!-- Content - Use hidden class instead of {#if} to avoid recreating components on tab switch -->
+	{#if hasFlamegraph}
+		<div class="min-h-0 flex-1" class:hidden={activeTab !== 'flamegraph'}>
+			<Flamegraph
+				{ds}
+				events={hasSnapshots ? undefined : events}
+				snapshotData={snapshotEvents}
+				{eventVersion}
+			/>
+		</div>
+	{/if}
 	{#if hasMetrics}
 		<div class="min-h-0 flex-1" class:hidden={activeTab !== 'chart'}>
 			<Chart {ds} {events} {eventVersion} />
