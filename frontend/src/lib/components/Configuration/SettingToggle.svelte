@@ -10,7 +10,7 @@
 	let { setting, value, onChange }: Props = $props();
 
 	// Generate a unique ID based on the setting key
-	const toggleId = `setting-toggle-${setting.key}`;
+	const toggleId = $derived(`setting-toggle-${setting.key}`);
 </script>
 
 <div class="flex items-start justify-between gap-4">

@@ -2,6 +2,9 @@
 
 import type { EventRingBuffer } from '$lib/utils/ring-buffer';
 
+// Re-export context types
+export type { ApiContext, GadgetContext, InspectSnapshot } from './context';
+
 export interface Environment {
 	id: string;
 	name: string;
@@ -99,12 +102,22 @@ export interface SessionInfo {
 	isNew: boolean;
 }
 
+/**
+ * Log entry from gadget execution.
+ */
+export interface LogEntry {
+	msg: string;
+	severity: number | string;
+	timestamp?: string;
+	msgID?: string;
+}
+
 export interface GadgetInstanceData {
 	name: string;
 	running: boolean;
 	gadgetInfo: GadgetInfo;
 	events: EventRingBuffer<Record<string, unknown>>;
-	logs: Array<string | Record<string, unknown>>;
+	logs: LogEntry[];
 	environment: string;
 	startTime: number;
 	eventCount: number;
@@ -214,7 +227,7 @@ export interface GadgetEventMessage extends GadgetMessageBase {
  * Message for gadget logs (type 4)
  */
 export interface GadgetLogMessage extends GadgetMessageBase {
-	data: string | Record<string, unknown>;
+	data: LogEntry;
 }
 
 /**

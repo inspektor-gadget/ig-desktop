@@ -18,9 +18,32 @@
 
 	let { data, groupableFields = [], activeGroupFields = new Set(), onGroupChange }: Props = $props();
 
-	// Container dimensions
+	// Container dimensions - use manual ResizeObserver with rAF to avoid loop warnings
 	let containerWidth = $state(800);
 	let containerRef: HTMLDivElement | undefined = $state();
+
+	// ResizeObserver with requestAnimationFrame to prevent "ResizeObserver loop" errors
+	$effect(() => {
+		if (!containerRef) return;
+
+		// Initialize from current width
+		containerWidth = containerRef.clientWidth || 800;
+
+		const resizeObserver = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				// Wrap in rAF to avoid "ResizeObserver loop completed with undelivered notifications"
+				requestAnimationFrame(() => {
+					containerWidth = entry.contentRect.width || 800;
+				});
+			}
+		});
+
+		resizeObserver.observe(containerRef);
+
+		return () => {
+			resizeObserver.disconnect();
+		};
+	});
 
 	// Zoom/navigation state
 	let zoomedNode = $state<FlameNode | null>(null);
@@ -34,6 +57,7 @@
 
 	// Tooltip state
 	let tooltipNode = $state<FlameNode | null>(null);
+	let tooltipDepth = $state<number>(0); // Track depth to avoid proxy comparison issues
 	let tooltipPosition = $state({ x: 0, y: 0 });
 
 	// Group by dropdown state
@@ -119,8 +143,9 @@
 	}
 
 	// Event handlers
-	function handleClick(node: FlameNode) {
-		if (node === displayRoot || node.name === 'all') return;
+	function handleClick(node: FlameNode, depth: number) {
+		// Use depth check instead of object comparison to avoid $state proxy issues
+		if (depth === 0 || node.name === 'all') return;
 		zoomHistory = [...zoomHistory, zoomedNode || data!];
 		zoomedNode = node;
 	}
@@ -132,9 +157,12 @@
 
 	function handleBack() {
 		if (zoomHistory.length > 0) {
+			// When history has only 1 entry, it's the original root (data) - return to unzoomed state
+			// This avoids comparing $state proxy with raw prop which triggers state_proxy_equality_mismatch
+			const returningToRoot = zoomHistory.length === 1;
 			const prev = zoomHistory[zoomHistory.length - 1];
 			zoomHistory = zoomHistory.slice(0, -1);
-			zoomedNode = prev === data ? null : prev;
+			zoomedNode = returningToRoot ? null : prev;
 		}
 	}
 
@@ -219,7 +247,6 @@
 <div
 	class="flex h-full w-full flex-col relative outline-none overflow-hidden focus:outline-2 focus:outline-blue-500 focus:-outline-offset-2"
 	bind:this={containerRef}
-	bind:clientWidth={containerWidth}
 	onkeydown={handleKeydown}
 	tabindex="0"
 	role="application"
@@ -306,8 +333,6 @@
 								{@const tooltipText = field.description ? `${field.fieldName}\n${field.description}` : field.fieldName}
 								<label
 									class="flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-									role="menuitemcheckbox"
-									aria-checked={activeGroupFields.has(field.fieldName)}
 									title={tooltipText}
 								>
 									<input
@@ -381,9 +406,10 @@
 						class:!cursor-default={isRoot}
 						class:opacity-35={searchRegex && !isHighlighted}
 						transform="translate({xPx}, {yPx})"
-						onclick={() => handleClick(node)}
+						onclick={() => handleClick(node, depth)}
 						onmouseenter={(e) => {
 							tooltipNode = node;
+							tooltipDepth = depth;
 							tooltipPosition = { x: e.clientX, y: e.clientY };
 						}}
 						onmousemove={(e) => {
@@ -448,7 +474,7 @@
 				{tooltipNode.value.toLocaleString()} samples
 				({getPercentage(tooltipNode.value, totalValue).toFixed(2)}%)
 			</div>
-			{#if tooltipNode !== displayRoot && tooltipNode.name !== 'all'}
+			{#if tooltipDepth !== 0 && tooltipNode.name !== 'all'}
 				<div class="text-gray-400 dark:text-gray-500 text-[10px] mt-1 italic">Click to zoom</div>
 			{/if}
 		</div>

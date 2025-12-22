@@ -21,7 +21,7 @@ import type {
 	GadgetInfo,
 	GadgetRunRequest
 } from '$lib/types';
-import { resolve } from '$app/paths';
+import { base } from '$app/paths';
 import { setEnvPref, getEnvPref } from '$lib/utils/env-preferences';
 
 /**
@@ -84,23 +84,24 @@ export class DemoBackendService {
 	async initialize(): Promise<void> {
 		try {
 			// Load demo config
-			const configResponse = await fetch(resolve(`/demo/config.json`));
+			const configResponse = await fetch(`${base}/demo/config.json`);
 			if (!configResponse.ok) {
 				console.error('Failed to load demo config:', configResponse.status);
 				return;
 			}
-			this.config = await configResponse.json();
+			const config: DemoConfig = await configResponse.json();
+			this.config = config;
 
 			// Send environment to frontend (type 100 = TypeEnvironmentCreate)
 			this.sendMessage({
 				type: 100,
-				data: this.config.environment
+				data: config.environment
 			});
 
 			// Load all session files
-			for (const sessionPath of this.config.sessions) {
+			for (const sessionPath of config.sessions) {
 				try {
-					const response = await fetch(resolve(`/demo/sessions/${sessionPath}`));
+					const response = await fetch(`${base}/demo/sessions/${sessionPath}`);
 					if (!response.ok) {
 						console.error(`Failed to load session ${sessionPath}:`, response.status);
 						continue;
@@ -113,9 +114,9 @@ export class DemoBackendService {
 			}
 
 			// Load all recent gadget files
-			for (const recentPath of this.config.recents || []) {
+			for (const recentPath of config.recents || []) {
 				try {
-					const response = await fetch(resolve(`/demo/recents/${recentPath}`));
+					const response = await fetch(`${base}/demo/recents/${recentPath}`);
 					if (!response.ok) {
 						console.error(`Failed to load recent ${recentPath}:`, response.status);
 						continue;
@@ -128,9 +129,9 @@ export class DemoBackendService {
 			}
 
 			// Load all instance files
-			for (const instancePath of this.config.instances || []) {
+			for (const instancePath of config.instances || []) {
 				try {
-					const response = await fetch(resolve(`/demo/instances/${instancePath}`));
+					const response = await fetch(`${base}/demo/instances/${instancePath}`);
 					if (!response.ok) {
 						console.error(`Failed to load instance ${instancePath}:`, response.status);
 						continue;

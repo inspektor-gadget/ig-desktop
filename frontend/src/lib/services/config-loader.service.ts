@@ -14,7 +14,7 @@
 
 import type { Environment } from '$lib/types';
 import { APP_MODE } from '$lib/config/app-mode';
-import { resolve } from '$app/paths';
+import { base } from '$app/paths';
 
 /**
  * Configuration for single-environment mode.
@@ -46,7 +46,7 @@ export async function loadSingleEnvConfig(): Promise<SingleEnvConfig | null> {
 	if (APP_MODE !== 'single-env') return null;
 
 	try {
-		const response = await fetch(resolve('/config.json'));
+		const response = await fetch(`${base}/config.json`);
 		if (!response.ok) {
 			console.error('Failed to load config.json:', response.status, response.statusText);
 			return null;
@@ -66,7 +66,7 @@ export async function loadDemoConfig(): Promise<DemoConfig | null> {
 	if (APP_MODE !== 'demo') return null;
 
 	try {
-		const response = await fetch(resolve('/demo/config.json'));
+		const response = await fetch(`${base}/demo/config.json`);
 		if (!response.ok) {
 			console.error('Failed to load demo config:', response.status, response.statusText);
 			return null;

@@ -2,12 +2,15 @@
 	import * as d3 from 'd3';
 	import type { CurveFactory } from 'd3';
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	type AccessorFn = (d: any) => number;
+
 	interface Props {
 		type?: 'line' | 'area';
 		data?: unknown[];
-		xAccessor: (d: unknown) => number;
-		yAccessor: (d: unknown) => number;
-		y0Accessor?: number | ((d: unknown) => number);
+		xAccessor: AccessorFn;
+		yAccessor: AccessorFn;
+		y0Accessor?: number | AccessorFn;
 		interpolation?: CurveFactory;
 		style?: string;
 	}
@@ -25,8 +28,13 @@
 	const lineGenerator = $derived.by(() => {
 		const generator =
 			type === 'area'
-				? d3.area().x(xAccessor).y0(y0Accessor).y1(yAccessor).curve(interpolation)
-				: d3.line().x(xAccessor).y(yAccessor).curve(interpolation);
+				? d3
+						.area<unknown>()
+						.x(xAccessor)
+						.y0(y0Accessor as number)
+						.y1(yAccessor)
+						.curve(interpolation)
+				: d3.line<unknown>().x(xAccessor).y(yAccessor).curve(interpolation);
 		return generator;
 	});
 

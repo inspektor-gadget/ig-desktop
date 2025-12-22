@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import Title from './Title.svelte';
 	import Checkbox from '$lib/components/forms/Checkbox.svelte';
 
@@ -22,11 +23,13 @@
 	let { param, config }: Props = $props();
 
 	// Parse default value - treat 'true' as true, everything else as false
-	const defaultChecked = param.defaultValue === 'true';
+	const defaultChecked = $derived(param.defaultValue === 'true');
 
 	// Initialize from existing config value, or use default
-	const existingValue = config.get(param);
-	let checked = $state(existingValue !== undefined ? existingValue === 'true' : defaultChecked);
+	// untrack() explicitly indicates this is a one-time read at mount time
+	const initialValue = untrack(() => config.get(param));
+	const initialDefault = untrack(() => param.defaultValue);
+	let checked = $state(initialValue !== undefined ? initialValue === 'true' : initialDefault === 'true');
 
 	$effect(() => {
 		// Only set value if it differs from the default

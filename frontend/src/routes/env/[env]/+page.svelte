@@ -388,7 +388,7 @@
 						<div class="flex flex-col gap-2 md:flex-row">
 							{#if features.canBrowseArtifactHub}
 								<a
-									href={resolve(`/browse/artifacthub?env=${env.id}`)}
+									href={`${resolve('/browse/artifacthub')}?env=${env.id}`}
 									title="Discover Gadgets"
 									class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 md:w-auto md:justify-start"
 								>

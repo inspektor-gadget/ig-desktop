@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import type { GadgetContext } from '$lib/types';
 
-	let gadget = getContext('gadget');
+	const gadget = getContext<GadgetContext>('gadget');
 
 	let inspect = $derived(gadget.inspect);
 </script>

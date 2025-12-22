@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Component as SvelteComponent } from 'svelte';
 	import Info from '$lib/icons/info.svg?raw';
 	import Column from '$lib/icons/column.svg?raw';
 	import Book from '$lib/icons/book.svg?raw';
@@ -9,21 +10,25 @@
 	import DataSources from './gadget-attribs/DataSources.svelte';
 	import Params from './gadget-attribs/Params.svelte';
 	import Metadata from './gadget-attribs/Metadata.svelte';
-	import GadgetInfo from './gadget-attribs/GadgetInfo.svelte';
+	import GadgetInfoComponent from './gadget-attribs/GadgetInfo.svelte';
 	import Inspect from './gadget-attribs/Inspect.svelte';
+	import type { GadgetInfo } from '$lib/types';
 
-	let { gadgetInfo, onclose = () => {} }: { gadgetInfo: any; onclose?: () => void } = $props();
+	let { gadgetInfo, onclose = () => {} }: { gadgetInfo: GadgetInfo; onclose?: () => void } =
+		$props();
 
-	const tabs = [
-		{ class: DataSources, name: 'Data Sources', icon: Column },
-		{ class: Params, name: 'Parameters', icon: Info },
-		{ class: Metadata, name: 'Metadata', icon: Book },
-		{ class: GadgetInfo, name: 'Gadget Information', icon: Bug },
-		{ class: Inspect, name: 'Inspect', icon: Layers }
-		// { class: Inspect, name: 'Inspect', icon: Adjustments }
+	// Tab components have varying props - some take gadgetInfo, some use context
+	type TabComponent = SvelteComponent<{ gadgetInfo?: GadgetInfo }>;
+
+	const tabs: Array<{ class: TabComponent; name: string; icon: string }> = [
+		{ class: DataSources as TabComponent, name: 'Data Sources', icon: Column },
+		{ class: Params as TabComponent, name: 'Parameters', icon: Info },
+		{ class: Metadata as TabComponent, name: 'Metadata', icon: Book },
+		{ class: GadgetInfoComponent as TabComponent, name: 'Gadget Information', icon: Bug },
+		{ class: Inspect as TabComponent, name: 'Inspect', icon: Layers }
 	];
 
-	let tabIndex = $state(0); // gadget.attribsPage;
+	let tabIndex = $state(0);
 	let Component = $derived(tabs[tabIndex].class);
 </script>
 

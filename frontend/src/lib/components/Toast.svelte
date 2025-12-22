@@ -50,7 +50,7 @@
 		}
 	};
 
-	const scheme = colorSchemes[toast.type];
+	const scheme = $derived(colorSchemes[toast.type]);
 </script>
 
 <div

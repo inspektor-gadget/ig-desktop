@@ -4,13 +4,7 @@
 	import Trash from '$lib/icons/trash-small.svg?raw';
 	import { preferences } from '$lib/shared/preferences.svelte';
 	import { instances } from '$lib/shared/instances.svelte';
-
-	interface LogEntry {
-		msg: string;
-		severity: number | string;
-		timestamp?: string;
-		msgID?: string;
-	}
+	import type { LogEntry } from '$lib/types';
 
 	let { log, instanceID }: { log: LogEntry[]; instanceID?: string } = $props();
 

@@ -60,21 +60,17 @@
 	// Tab state - persist per datasource
 	const prefKey = $derived(`datasource.${ds.name}.view`);
 
-	// Determine initial tab based on available views (priority: flamegraph > chart > table)
-	const initialFlamegraph = extractFlamegraphConfig(ds).isValidFlamegraph;
-	const initialMetrics = ds.annotations?.['metrics.collect'] === 'true';
-
 	type ViewTab = 'flamegraph' | 'chart' | 'table';
 
 	function getDefaultTab(): ViewTab {
-		if (initialFlamegraph) return 'flamegraph';
-		if (initialMetrics) return 'chart';
+		if (hasFlamegraph) return 'flamegraph';
+		if (hasMetrics) return 'chart';
 		return 'table';
 	}
 
-	let activeTab = $state<ViewTab>(
-		preferences.getDefault(`datasource.${ds.name}.view`, getDefaultTab()) as ViewTab
-	);
+	// Initialize active tab from preferences, falling back to default based on available views
+	const storedTab = preferences.getDefault(`datasource.${ds.name}.view`, 'table') as ViewTab;
+	let activeTab = $state<ViewTab>(storedTab !== 'table' ? storedTab : getDefaultTab());
 
 	function setTab(tab: ViewTab) {
 		activeTab = tab;
@@ -433,8 +429,6 @@
 						{#each tableMenuController.toggleableFields as field (field.fullName)}
 							<label
 								class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-sm"
-								role="menuitemcheckbox"
-								aria-checked={tableMenuController.isColumnVisible(field.fullName)}
 							>
 								<input
 									type="checkbox"

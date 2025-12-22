@@ -135,7 +135,7 @@
 			<!-- Grid lines -->
 			<Grid {xScale} {yScale} />
 
-			<Axis dimension="x" scale={xScale} formatTick={(d) => String(d)} label="" />
+			<Axis dimension="x" scale={xScale} formatTick={(d: unknown) => String(d)} label="" />
 			<Axis dimension="y" scale={yScale} formatTick={formatValue} label="" />
 
 			<!-- Bars -->

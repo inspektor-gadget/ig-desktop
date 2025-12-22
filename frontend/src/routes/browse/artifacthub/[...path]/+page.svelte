@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { marked } from 'marked';
 	import { getContext } from 'svelte';
 	import { openExternalURL } from '$lib/utils/external-links';
@@ -15,14 +15,39 @@
 	import Link from '$lib/icons/href.svg?raw';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import type { ApiContext } from '$lib/types';
+
+	interface ArtifactHubPackageDetail {
+		name: string;
+		normalized_name: string;
+		version: string;
+		description?: string;
+		readme?: string;
+		official?: boolean;
+		cncf?: boolean;
+		stars?: number;
+		signed?: boolean;
+		signatures?: string[];
+		repository?: {
+			name: string;
+			url: string;
+			organization_display_name?: string;
+			user_alias?: string;
+		};
+		containers_images: Array<{
+			name: string;
+			image: string;
+			platforms: string[];
+		}>;
+	}
 
 	let { data } = $props();
 
-	const api = getContext('api');
+	const api = getContext<ApiContext>('api');
 
 	let environmentID = $derived(page.url.searchParams.get('env') || '');
 
-	let pkg = $state(null);
+	let pkg: ArtifactHubPackageDetail | null = $state(null);
 
 	// Configure marked to intercept links and open them externally via Wails
 	const renderer = new marked.Renderer();
@@ -54,15 +79,12 @@
 	};
 
 	marked.setOptions({
-		renderer: renderer,
-		// Enable security options
-		sanitize: false, // We're handling sanitization ourselves
-		mangle: false
+		renderer: renderer
 	});
 
 	// Handle clicks on external links
-	function handleLinkClick(event) {
-		const target = event.target.closest('[data-external-link]');
+	function handleLinkClick(event: MouseEvent) {
+		const target = (event.target as HTMLElement)?.closest('[data-external-link]');
 		if (target) {
 			event.preventDefault();
 			const url = target.getAttribute('data-external-link');
@@ -85,10 +107,10 @@
 
 	async function loadPackage() {
 		const elems = data.url.split('/');
-		const res = await api.request({
+		const res = (await api.request({
 			cmd: 'getArtifactHubPackage',
 			data: { repository: elems[0], package: elems[1], version: elems[2] }
-		});
+		})) as { data: ArtifactHubPackageDetail };
 		pkg = res.data;
 	}
 
@@ -200,8 +222,9 @@
 
 						<!-- Repository Link -->
 						{#if pkg.repository?.url}
+							{@const repoUrl = pkg.repository.url}
 							<button
-								onclick={() => openExternalURL(pkg.repository.url)}
+								onclick={() => openExternalURL(repoUrl)}
 								class="flex items-center gap-2 text-blue-600 dark:text-blue-400 transition-colors hover:text-blue-500 dark:hover:text-blue-300"
 							>
 								<div>{@html Link}</div>
@@ -210,16 +233,16 @@
 						{/if}
 
 						<!-- ArtifactHub Link -->
-						<button
-							onclick={() =>
-								openExternalURL(
-									`https://artifacthub.io/packages/ig-gadget/${pkg.repository?.name}/${pkg.normalized_name}`
-								)}
-							class="flex items-center gap-2 text-purple-600 dark:text-purple-400 transition-colors hover:text-purple-500 dark:hover:text-purple-300"
-						>
-							<div>{@html Link}</div>
-							<span class="text-sm font-medium underline">ArtifactHub</span>
-						</button>
+						{#if pkg}
+							{@const artifactHubUrl = `https://artifacthub.io/packages/ig-gadget/${pkg.repository?.name ?? ''}/${pkg.normalized_name}`}
+							<button
+								onclick={() => openExternalURL(artifactHubUrl)}
+								class="flex items-center gap-2 text-purple-600 dark:text-purple-400 transition-colors hover:text-purple-500 dark:hover:text-purple-300"
+							>
+								<div>{@html Link}</div>
+								<span class="text-sm font-medium underline">ArtifactHub</span>
+							</button>
+						{/if}
 					</div>
 				</div>
 			</div>

@@ -1,23 +1,33 @@
 <script lang="ts">
 	import { scaleLinear } from 'd3-scale';
 
-	// import points from './data.js';
+	interface Point {
+		x: number;
+		y: number;
+	}
 
-	let { points = [] } = $props();
+	interface Props {
+		points?: Point[];
+	}
 
-	// const yTicks = [0, 2, 4, 6, 8];
+	let { points = [] }: Props = $props();
+
 	const xTicks = [1980, 1990, 2000, 2010];
 	const padding = { top: 20, right: 15, bottom: 20, left: 25 };
 
 	let width = $state(500);
 	let height = $state(200);
 
-	const yTicks = $derived(
-		Math.min.apply(
-			null,
-			points.map((p) => p.y)
-		)
-	);
+	// Generate y-axis ticks based on data range
+	const yTicks = $derived.by(() => {
+		if (points.length === 0) return [0];
+		const yValues = points.map((p) => p.y);
+		const minY = Math.min(...yValues);
+		const maxY = Math.max(...yValues);
+		// Generate ticks between min and max
+		const step = (maxY - minY) / 4;
+		return [minY, minY + step, minY + step * 2, minY + step * 3, maxY];
+	});
 
 	const minX = $derived(points?.[0]?.x || 0);
 	const maxX = $derived(points?.[points.length - 1]?.x || 0);
@@ -30,14 +40,14 @@
 
 	const yScale = $derived(
 		scaleLinear()
-			.domain([Math.min.apply(null, yTicks), Math.max.apply(null, yTicks)])
+			.domain([Math.min(...yTicks), Math.max(...yTicks)])
 			.range([height - padding.bottom, padding.top])
 	);
 
 	const path = $derived(`M${points.map((p) => `${xScale(p.x)},${yScale(p.y)}`).join('L')}`);
 	const area = $derived(`${path}L${xScale(maxX)},${yScale(0)}L${xScale(minX)},${yScale(0)}Z`);
 
-	function formatMobile(tick) {
+	function formatMobile(tick: number) {
 		return "'" + tick.toString().slice(-2);
 	}
 </script>

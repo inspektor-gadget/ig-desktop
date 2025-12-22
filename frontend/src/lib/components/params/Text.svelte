@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import Title from './Title.svelte';
 	import Input from '$lib/components/forms/Input.svelte';
 	import Textarea from '$lib/components/forms/Textarea.svelte';
@@ -26,7 +27,8 @@
 	const isMultiline = $derived(param.tags?.find((tag) => tag === 'multiline'));
 
 	// Initialize from existing config value, or leave empty (placeholder shows default)
-	let value = $state(config.get(param) || '');
+	// untrack() explicitly indicates this is a one-time read at mount time
+	let value = $state(untrack(() => config.get(param)) || '');
 
 	$effect(() => {
 		// Only set value if it differs from the default

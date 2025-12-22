@@ -7,6 +7,7 @@
 	import VirtualTableBody from '$lib/components/VirtualTable/VirtualTableBody.svelte';
 	import type { TableHookRegistry } from '$lib/types/table-hooks';
 	import type { TableColumn, EnrichedRow } from '$lib/types/table';
+	import type { GadgetContext } from '$lib/types';
 	import {
 		gadgetFieldToColumn,
 		wrapRowsForEnrichment,
@@ -68,7 +69,7 @@
 	} = $props();
 
 	// Get gadget info from context
-	const gadgetContext: any = getContext('gadget');
+	const gadgetContext = getContext<GadgetContext>('gadget');
 	const gadgetImage = $derived(gadgetContext?.info?.imageName || '');
 
 	// Column visibility menu state
@@ -814,8 +815,6 @@
 							{#each toggleableFields as field}
 								<label
 									class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-sm"
-									role="menuitemcheckbox"
-									aria-checked={isColumnVisible(field.fullName)}
 								>
 									<input
 										type="checkbox"

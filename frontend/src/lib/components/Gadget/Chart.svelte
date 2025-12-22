@@ -55,14 +55,17 @@
 		counterFields.length > 0 ? getCounterMode(counterFields[0]) : 'raw'
 	);
 
+	// Chart event type with required timestamp
+	type ChartEvent = Record<string, unknown> & { timestamp: Date };
+
 	// Transform events to chart-compatible format with timestamps
 	// Events come newest-first, charts need oldest-first
 	const chartData = $derived.by(() => {
 		if (!eventsArray.length) {
-			return [];
+			return [] as ChartEvent[];
 		}
 
-		let transformed = eventsArray
+		let transformed: ChartEvent[] = eventsArray
 			.map((evt) => {
 				let timestamp: Date;
 
@@ -99,7 +102,12 @@
 
 		// Apply counter rate calculation if needed
 		if (counterFields.length > 0 && counterMode !== 'raw') {
-			transformed = calculateCounterRates(transformed, keyFields, counterFields, counterMode);
+			transformed = calculateCounterRates(
+				transformed,
+				keyFields,
+				counterFields,
+				counterMode
+			) as ChartEvent[];
 		}
 
 		// Apply gap filling if enabled and we have key-based grouping
@@ -181,7 +189,6 @@
 		data={finalChartData}
 		series={seriesConfigs}
 		{groupedData}
-		{keyFields}
 		{hasKeyGrouping}
 	/>
 {/if}

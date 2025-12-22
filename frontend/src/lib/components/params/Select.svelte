@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import Title from './Title.svelte';
 	import Select from '$lib/components/forms/Select.svelte';
 
@@ -31,8 +32,10 @@
 	);
 
 	// Initialize from existing config value, or use default
-	const existingValue = config.get(param);
-	let value = $state(existingValue !== undefined ? existingValue : param.defaultValue || '');
+	// untrack() explicitly indicates this is a one-time read at mount time
+	const initialValue = untrack(() => config.get(param));
+	const defaultVal = untrack(() => param.defaultValue);
+	let value = $state(initialValue !== undefined ? initialValue : defaultVal || '');
 
 	$effect(() => {
 		// Only set value if it differs from the default

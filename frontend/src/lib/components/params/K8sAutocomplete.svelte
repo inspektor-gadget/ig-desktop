@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	import Title from './Title.svelte';
 	import AutocompleteInput from '$lib/components/forms/AutocompleteInput.svelte';
 	import { getK8sRecents } from '$lib/utils/env-preferences';
@@ -39,7 +39,9 @@
 	);
 
 	// State - simplified from 7 to 5 variables
-	let value = $state<string | string[]>(config.get(param) || (isMultiSelect ? [] : ''));
+	// untrack() explicitly indicates this is a one-time read at mount time
+	const initialMultiSelect = untrack(() => param.valueHint === 'k8s:labels' || param.valueHint === 'k8s:node-list');
+	let value = $state<string | string[]>(untrack(() => config.get(param)) || (initialMultiSelect ? [] : ''));
 	let options = $state<Array<{ value: string; label?: string; isRecent?: boolean }>>([]);
 	let loading = $state(false);
 	let recentOptions = $state<Array<{ value: string; label?: string; isRecent?: boolean }>>([]);

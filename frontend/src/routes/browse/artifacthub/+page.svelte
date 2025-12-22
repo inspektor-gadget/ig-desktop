@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import ArtifactHub from '$lib/icons/artifacthub.svg?raw';
 	import Signed from '$lib/icons/signature-locked.svg?raw';
 	import Unsigned from '$lib/icons/signature-slash.svg?raw';
@@ -9,43 +9,27 @@
 	import Search from '$lib/icons/search-small.svg?raw';
 	import { page } from '$app/state';
 
-	// {
-	// 		"package_id": "e36de540-4772-4761-a321-f8936e73dc53",
-	// 		"name": "fdpass",
-	// 		"normalized_name": "fdpass",
-	// 		"category": 4,
-	// 		"logo_image_id": "5ee48b53-35a5-4afa-adb7-5bcac28ee2ef",
-	// 		"stars": 0,
-	// 		"official": true,
-	// 		"cncf": true,
-	// 		"display_name": "fdpass",
-	// 		"description": "Trace file descriptor passing via a unix socket (SCM_RIGHTS)",
-	// 		"version": "0.36.0",
-	// 		"deprecated": false,
-	// 		"has_values_schema": false,
-	// 		"signed": true,
-	// 		"signatures": [
-	// 			"cosign"
-	// 		],
-	// 		"all_containers_images_whitelisted": false,
-	// 		"production_organizations_count": 0,
-	// 		"ts": 1736155145,
-	// 		"repository": {
-	// 			"url": "https://github.com/inspektor-gadget/inspektor-gadget/",
-	// 			"kind": 22,
-	// 			"name": "gadgets",
-	// 			"official": false,
-	// 			"display_name": "Official gadgets",
-	// 			"repository_id": "5f918783-a578-4873-8637-52c7ed102fc9",
-	// 			"scanner_disabled": false,
-	// 			"organization_name": "inspektor-gadget",
-	// 			"verified_publisher": true,
-	// 			"organization_display_name": "Inspektor Gadget"
-	// 		}
-	// }
+	interface ArtifactHubPackage {
+		package_id: string;
+		name: string;
+		normalized_name: string;
+		description: string;
+		version: string;
+		stars: number;
+		official: boolean;
+		cncf: boolean;
+		signed: boolean;
+		signatures?: string[];
+		repository: {
+			name: string;
+			url: string;
+			organization_display_name?: string;
+			user_alias?: string;
+		};
+	}
 
 	let search = $state('');
-	let list = $state([]);
+	let list: ArtifactHubPackage[] = $state([]);
 	let isLoading = $state(true);
 	let environmentID = $derived(page.url.searchParams.get('env') || '');
 

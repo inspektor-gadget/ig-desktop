@@ -37,13 +37,10 @@
 
 	<!-- Vertical grid lines -->
 	{#each xTickValues as tick (tick)}
-		<line
-			class="grid-line"
-			x1={xScale(tick)}
-			x2={xScale(tick)}
-			y1={0}
-			y2={dimensions.boundedHeight}
-		/>
+		{@const xPos = 'ticks' in xScale
+			? (xScale as ScaleTime<number, number> | ScaleLinear<number, number>)(tick as number)
+			: (xScale as ScaleBand<string>)(tick as string)}
+		<line class="grid-line" x1={xPos} x2={xPos} y1={0} y2={dimensions.boundedHeight} />
 	{/each}
 </g>
 

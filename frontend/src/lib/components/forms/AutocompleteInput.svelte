@@ -294,8 +294,9 @@
 								type="button"
 								onclick={() => removeTag(tag)}
 								class="text-gray-500 dark:text-gray-400 transition-colors hover:text-gray-800 dark:hover:text-gray-200"
+								aria-label="Remove {getLabel(tag)}"
 							>
-								<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 									<path
 										stroke-linecap="round"
 										stroke-linejoin="round"

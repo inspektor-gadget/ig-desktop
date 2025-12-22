@@ -1,4 +1,4 @@
-<script lang="js">
+<script lang="ts">
 	import '../app.css';
 	import { setContext, onMount } from 'svelte';
 
@@ -46,7 +46,7 @@
 
 	// Deployment modal state
 	let deployModalOpen = $state(false);
-	let activeDeploymentId = $state(undefined);
+	let activeDeploymentId: string | undefined = $state(undefined);
 
 	// Configuration modal state - use settingsDialog store for deep-linking support
 	let configModalOpen = $derived(settingsDialog.open);
@@ -160,9 +160,9 @@
 		themeService.applyTheme();
 	});
 
-	let modalError = $state(null);
+	let modalError: string | null = $state(null);
 
-	function handleError(err) {
+	function handleError(err: unknown) {
 		// Extract meaningful error message from various error types
 		let message;
 
@@ -219,22 +219,22 @@
 
 	// Provide API context for child components
 	setContext('api', {
-		request(cmd) {
+		request(cmd: { cmd: string; data?: unknown }) {
 			return apiService.request(cmd);
 		},
-		listSessions(environmentId) {
+		listSessions(environmentId: string) {
 			return apiService.listSessions(environmentId);
 		},
-		deleteSession(sessionId) {
+		deleteSession(sessionId: string) {
 			return apiService.deleteSession(sessionId);
 		},
-		getSession(sessionId) {
+		getSession(sessionId: string) {
 			return apiService.getSession(sessionId);
 		},
-		getRun(sessionId, runId) {
+		getRun(sessionId: string, runId: string) {
 			return apiService.getRun(sessionId, runId);
 		},
-		getRunEvents(sessionId, runId) {
+		getRunEvents(sessionId: string, runId: string) {
 			return apiService.getRunEvents(sessionId, runId);
 		}
 	});
@@ -482,13 +482,11 @@
 
 <!-- Global Deployment Indicator -->
 {#if deployments.getActive()}
-	{@const activeDeployment = deployments.getActive()}
+	{@const activeDeployment = deployments.getActive()!}
 	<button
 		onclick={() => {
-			if (activeDeployment) {
-				activeDeploymentId = activeDeployment.id;
-				deployModalOpen = true;
-			}
+			activeDeploymentId = activeDeployment.id;
+			deployModalOpen = true;
 		}}
 		class="fixed right-4 bottom-4 z-40 flex items-center gap-3 rounded-lg border border-blue-800 bg-blue-900/90 px-4 py-3 text-white shadow-lg backdrop-blur-md transition-all hover:bg-blue-800/90"
 		title="View deployment progress"

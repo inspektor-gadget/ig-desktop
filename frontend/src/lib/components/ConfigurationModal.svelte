@@ -120,7 +120,8 @@
 											<SettingComponent
 												{setting}
 												{value}
-												onChange={(newValue) => handleSettingChange(setting.key, newValue)}
+												onChange={(newValue: string | number | boolean) =>
+													handleSettingChange(setting.key, newValue)}
 											/>
 										</div>
 									{/each}

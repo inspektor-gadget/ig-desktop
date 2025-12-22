@@ -21,6 +21,18 @@
 	let events = $derived(instances[instanceID]?.events);
 	let logs = $derived(instances[instanceID]?.logs);
 
+	// Normalize datasources once when gadgetInfo changes, not on every render
+	const normalizedDataSources = $derived(
+		gadgetInfo?.dataSources?.map((ds) => ({
+			...ds,
+			fields: (ds.fields ?? []).map((f) => ({
+				...f,
+				flags: f.flags ?? 0,
+				annotations: f.annotations ?? {}
+			}))
+		})) ?? []
+	);
+
 	let logPane = $state<HTMLDivElement | null>(null);
 	let inspectorPane = $state<HTMLDivElement | null>(null);
 	let showInspector = $derived(preferences.getDefault('gadget.show-inspector', false));
@@ -460,7 +472,7 @@
 					>
 				</div>
 				<div class="flex flex-1 flex-col justify-stretch overflow-y-auto overscroll-none">
-					{#each gadgetInfo.dataSources as ds, id}
+					{#each normalizedDataSources as ds, id}
 						{#if ds.annotations?.['view.hidden'] !== 'true'}
 							<DatasourceView
 								{ds}
@@ -490,7 +502,7 @@
 				class="flex flex-col overflow-hidden"
 				style={logCollapsed ? 'flex: 0 0 auto' : `flex: 0 0 ${logHeight}px`}
 			>
-				<Log log={logs} {instanceID} />
+				<Log log={logs ?? []} {instanceID} />
 			</div>
 		</div>
 		{#if showInspector}
