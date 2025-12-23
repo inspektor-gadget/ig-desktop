@@ -21,24 +21,27 @@
 	// Container dimensions - use manual ResizeObserver with rAF to avoid loop warnings
 	let containerWidth = $state(800);
 	let containerRef: HTMLDivElement | undefined = $state();
+	let scrollContainerRef: HTMLDivElement | undefined = $state();
 
 	// ResizeObserver with requestAnimationFrame to prevent "ResizeObserver loop" errors
+	// We observe the scroll container and use clientWidth to account for scrollbar width
 	$effect(() => {
-		if (!containerRef) return;
+		if (!scrollContainerRef) return;
 
-		// Initialize from current width
-		containerWidth = containerRef.clientWidth || 800;
+		// Initialize from current width (clientWidth excludes scrollbar)
+		containerWidth = scrollContainerRef.clientWidth || 800;
 
 		const resizeObserver = new ResizeObserver((entries) => {
 			for (const entry of entries) {
 				// Wrap in rAF to avoid "ResizeObserver loop completed with undelivered notifications"
+				// Use clientWidth instead of contentRect.width to account for vertical scrollbar
 				requestAnimationFrame(() => {
-					containerWidth = entry.contentRect.width || 800;
+					containerWidth = (entry.target as HTMLElement).clientWidth || 800;
 				});
 			}
 		});
 
-		resizeObserver.observe(containerRef);
+		resizeObserver.observe(scrollContainerRef);
 
 		return () => {
 			resizeObserver.disconnect();
@@ -386,7 +389,7 @@
 
 	<!-- SVG flamegraph -->
 	{#if data && renderNodes.length > 0}
-		<div class="flex-1 overflow-auto min-h-0">
+		<div class="flex-1 overflow-auto min-h-0" bind:this={scrollContainerRef}>
 			<svg
 				width={containerWidth}
 				height={svgHeight}
