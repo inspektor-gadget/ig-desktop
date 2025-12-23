@@ -10,6 +10,8 @@ export interface DatasourceField {
 	flags: number;
 	tags?: string[];
 	annotations: Record<string, string>;
+	index?: number; // Field's own index in the datasource
+	parent?: number; // Index of parent field (for hierarchical structure)
 }
 
 export interface Datasource {
