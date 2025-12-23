@@ -379,7 +379,7 @@
 					{#if features.canBrowseArtifactHub}
 						<NavbarLink href={resolve('/browse/artifacthub')}>{@html ArtifactHub}</NavbarLink>
 					{/if}
-					<NavbarLink href="https://inspektor-gadget.io/docs/latest/" target="_blank"
+					<NavbarLink href="https://inspektor-gadget.io/docs/latest/" target="_blank" title="Documentation (external)"
 						>{@html Book}</NavbarLink
 					>
 					<NavbarLink

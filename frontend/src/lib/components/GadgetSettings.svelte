@@ -1,18 +1,17 @@
 <script lang="ts">
 	import type { Component as SvelteComponent } from 'svelte';
-	import Info from '$lib/icons/info.svg?raw';
-	import Column from '$lib/icons/column.svg?raw';
+	import Server from '$lib/icons/server.svg?raw';
 	import Book from '$lib/icons/book.svg?raw';
 	import Bug from '$lib/icons/bug.svg?raw';
 	import Layers from '$lib/icons/layers.svg?raw';
 	import Close from '$lib/icons/close-small.svg?raw';
 
 	import DataSources from './gadget-attribs/DataSources.svelte';
-	import Params from './gadget-attribs/Params.svelte';
 	import Metadata from './gadget-attribs/Metadata.svelte';
 	import GadgetInfoComponent from './gadget-attribs/GadgetInfo.svelte';
 	import Inspect from './gadget-attribs/Inspect.svelte';
 	import type { GadgetInfo } from '$lib/types';
+	import { configuration } from '$lib/stores/configuration.svelte';
 
 	let { gadgetInfo, onclose = () => {} }: { gadgetInfo: GadgetInfo; onclose?: () => void } =
 		$props();
@@ -20,16 +19,29 @@
 	// Tab components have varying props - some take gadgetInfo, some use context
 	type TabComponent = SvelteComponent<{ gadgetInfo?: GadgetInfo }>;
 
-	const tabs: Array<{ class: TabComponent; name: string; icon: string }> = [
-		{ class: DataSources as TabComponent, name: 'Data Sources', icon: Column },
-		{ class: Params as TabComponent, name: 'Parameters', icon: Info },
-		{ class: Metadata as TabComponent, name: 'Metadata', icon: Book },
-		{ class: GadgetInfoComponent as TabComponent, name: 'Gadget Information', icon: Bug },
+	const regularTabs: Array<{ class: TabComponent; name: string; icon: string }> = [
+		{ class: DataSources as TabComponent, name: 'Data Sources', icon: Server },
 		{ class: Inspect as TabComponent, name: 'Inspect', icon: Layers }
 	];
 
+	const developerTabs: Array<{ class: TabComponent; name: string; icon: string }> = [
+		{ class: Metadata as TabComponent, name: 'Gadget Metadata', icon: Book },
+		{ class: GadgetInfoComponent as TabComponent, name: 'GadgetInfo', icon: Bug }
+	];
+
+	const developerMode = $derived(configuration.get('developerMode') === true);
+	const tabs = $derived(developerMode ? [...regularTabs, ...developerTabs] : regularTabs);
+
 	let tabIndex = $state(0);
-	let Component = $derived(tabs[tabIndex].class);
+
+	// Reset tab index if it's out of bounds (e.g., when developer mode is disabled)
+	$effect(() => {
+		if (tabIndex >= tabs.length) {
+			tabIndex = 0;
+		}
+	});
+
+	let Component = $derived(tabs[tabIndex]?.class);
 </script>
 
 <div class="flex flex-row bg-white dark:bg-gray-950">

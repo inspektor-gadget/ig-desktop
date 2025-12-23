@@ -138,6 +138,21 @@ export const configurationSchema: ConfigurationSchema = {
 			]
 		},
 		{
+			id: 'developer',
+			name: 'Developer',
+			icon: '🛠️',
+			settings: [
+				{
+					key: 'developerMode',
+					title: 'Developer mode',
+					description:
+						'Show additional developer-focused information, such as raw gadget metadata and GadgetInfo JSON in the gadget inspector.',
+					type: 'toggle',
+					default: false
+				}
+			]
+		},
+		{
 			id: 'experimental',
 			name: 'Experimental',
 			icon: '🧪',
