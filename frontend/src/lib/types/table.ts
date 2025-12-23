@@ -76,3 +76,16 @@ export interface TableState {
 	/** Enriched rows with original data + hook enrichments */
 	rows: EnrichedRow[];
 }
+
+/**
+ * TableMenuController exposes column visibility controls to parent components.
+ * Used by DatasourceView to render the column toggle menu outside the Table component.
+ */
+export interface TableMenuController {
+	/** Fields that can be toggled (excludes always-visible fields) */
+	toggleableFields: Array<{ fullName: string; name: string }>;
+	/** Check if a column is currently visible */
+	isColumnVisible: (fieldName: string) => boolean;
+	/** Toggle visibility of a column */
+	toggleColumnVisibility: (fieldName: string) => void;
+}

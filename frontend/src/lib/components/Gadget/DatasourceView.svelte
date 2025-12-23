@@ -1,11 +1,6 @@
 <script lang="ts">
-	import Table, { type TableMenuController } from './Table.svelte';
-	import Chart from './Chart.svelte';
-	import Flamegraph from './Flamegraph.svelte';
+	import type { TableMenuController } from '$lib/types/table';
 	import SnapshotTimeline from './SnapshotTimeline.svelte';
-	import TableIcon from '$lib/icons/table-column.svg?raw';
-	import ChartIcon from '$lib/icons/chart.svg?raw';
-	import FlameIcon from '$lib/icons/flame.svg?raw';
 	import Dots from '$lib/icons/dots-vertical.svg?raw';
 	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
 	import ChevronRight from '$lib/icons/chevron-right.svg?raw';
@@ -13,10 +8,12 @@
 	import InfoIcon from '$lib/icons/info-small.svg?raw';
 	import { preferences } from '$lib/shared/preferences.svelte';
 	import { getArraySnapshots } from '$lib/handlers/gadget.handler.svelte';
-	import { extractFlamegraphConfig } from '$lib/utils/flamegraphConfig';
 	import { clickOutside } from '$lib/utils/click-outside';
 	import type { Datasource } from '$lib/types/charts';
 	import type { EventRingBuffer } from '$lib/utils/ring-buffer';
+	import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
+	import { resolvePluginIcon } from '$lib/utils/plugin-icons';
+	import PluginHookRenderer from '$lib/components/PluginHookRenderer.svelte';
 
 	interface Props {
 		ds: Datasource;
@@ -50,21 +47,27 @@
 		isRunning = true
 	}: Props = $props();
 
-	// Check if this datasource supports metrics visualization
-	const hasMetrics = $derived(ds.annotations?.['metrics.collect'] === 'true');
+	// Get applicable visualizers from the plugin registry
+	const applicableVisualizers = $derived(pluginRegistry.getVisualizersForDatasource(ds));
 
-	// Check if this datasource supports flamegraph visualization
-	const flamegraphConfig = $derived(extractFlamegraphConfig(ds));
-	const hasFlamegraph = $derived(flamegraphConfig.isValidFlamegraph);
+	// Get the active visualizer and its icon for the header
+	const activeVisualizer = $derived(applicableVisualizers.find((v) => v.visualizer.id === activeTab));
+	const activeVisualizerIcon = $derived(
+		resolvePluginIcon(activeVisualizer?.visualizer.icon) ||
+		applicableVisualizers.find((v) => v.visualizer.id === 'table')?.visualizer.icon || ''
+	);
 
 	// Tab state - persist per datasource
 	const prefKey = $derived(`datasource.${ds.name}.view`);
 
-	type ViewTab = 'flamegraph' | 'chart' | 'table';
+	type ViewTab = string; // Dynamic based on registered visualizers
 
 	function getDefaultTab(): ViewTab {
-		if (hasFlamegraph) return 'flamegraph';
-		if (hasMetrics) return 'chart';
+		// Use the highest priority visualizer (first in the sorted list)
+		// The registry returns visualizers sorted by priority (highest first)
+		if (applicableVisualizers.length > 0) {
+			return applicableVisualizers[0].visualizer.id;
+		}
 		return 'table';
 	}
 
@@ -321,6 +324,14 @@
 			pinnedBatchIds = newPinnedIds;
 		}
 	}
+
+	// Get selected snapshots for histogram heatmap mode
+	function getSelectedSnapshots() {
+		return Array.from(selectedSnapshotIndices)
+			.sort((a, b) => b - a) // Chronological order (higher index = older)
+			.map((i) => snapshots[i])
+			.filter(Boolean);
+	}
 </script>
 
 <div class="flex h-full flex-col">
@@ -329,67 +340,41 @@
 		class="sticky top-0 left-0 z-20 flex h-10 flex-shrink-0 flex-row items-center border-t border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 text-base font-normal"
 	>
 		<div class="flex h-6 w-6 items-center justify-center pr-2">
-			{#if activeTab === 'flamegraph'}
-				{@html FlameIcon}
-			{:else if activeTab === 'chart'}
-				{@html ChartIcon}
-			{:else}
-				{@html TableIcon}
-			{/if}
+			{@html activeVisualizerIcon}
 		</div>
 
 		<h2 class="px-1">{ds.name}</h2>
 
-		<div class="flex-1"></div>
+		<!-- Plugin hooks for header controls (e.g., wireshark filter) -->
+		<div class="flex-1 flex items-center justify-center">
+			<PluginHookRenderer
+				hookId="datasource:header"
+				scopes={['builtin']}
+				props={{ ds, activeTab }}
+			/>
+		</div>
 
-		{#if hasFlamegraph || hasMetrics}
+		{#if applicableVisualizers.length > 1}
 			<div class="flex flex-row rounded-md bg-gray-100 dark:bg-gray-900 p-0.5">
-				{#if hasFlamegraph}
+				<!-- Render tabs for all applicable visualizers from registry -->
+				{#each applicableVisualizers as visualizer (visualizer.id)}
+					{@const tabId = visualizer.visualizer.id}
+					{@const isActive = activeTab === tabId}
 					<button
 						class="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors"
-						class:bg-gray-300={activeTab === 'flamegraph'}
-						class:dark:bg-gray-700={activeTab === 'flamegraph'}
-						class:text-gray-800={activeTab === 'flamegraph'}
-						class:dark:text-gray-200={activeTab === 'flamegraph'}
-						class:text-gray-500={activeTab !== 'flamegraph'}
-						class:hover:text-gray-700={activeTab !== 'flamegraph'}
-						class:dark:hover:text-gray-300={activeTab !== 'flamegraph'}
-						onclick={() => setTab('flamegraph')}
+						class:bg-gray-300={isActive}
+						class:dark:bg-gray-700={isActive}
+						class:text-gray-800={isActive}
+						class:dark:text-gray-200={isActive}
+						class:text-gray-500={!isActive}
+						class:hover:text-gray-700={!isActive}
+						class:dark:hover:text-gray-300={!isActive}
+						onclick={() => setTab(tabId)}
 					>
-						{@html FlameIcon}
-						<span>Flamegraph</span>
+						{@html resolvePluginIcon(visualizer.visualizer.icon)}
+						<span>{visualizer.visualizer.displayName}</span>
 					</button>
-				{/if}
-				{#if hasMetrics}
-					<button
-						class="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors"
-						class:bg-gray-300={activeTab === 'chart'}
-						class:dark:bg-gray-700={activeTab === 'chart'}
-						class:text-gray-800={activeTab === 'chart'}
-						class:dark:text-gray-200={activeTab === 'chart'}
-						class:text-gray-500={activeTab !== 'chart'}
-						class:hover:text-gray-700={activeTab !== 'chart'}
-						class:dark:hover:text-gray-300={activeTab !== 'chart'}
-						onclick={() => setTab('chart')}
-					>
-						{@html ChartIcon}
-						<span>Chart</span>
-					</button>
-				{/if}
-				<button
-					class="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors"
-					class:bg-gray-300={activeTab === 'table'}
-					class:dark:bg-gray-700={activeTab === 'table'}
-					class:text-gray-800={activeTab === 'table'}
-					class:dark:text-gray-200={activeTab === 'table'}
-					class:text-gray-500={activeTab !== 'table'}
-					class:hover:text-gray-700={activeTab !== 'table'}
-					class:dark:hover:text-gray-300={activeTab !== 'table'}
-					onclick={() => setTab('table')}
-				>
-					{@html TableIcon}
-					<span>Table</span>
-				</button>
+				{/each}
 			</div>
 		{/if}
 
@@ -436,7 +421,9 @@
 									onchange={() => tableMenuController?.toggleColumnVisibility(field.fullName)}
 									class="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
 								/>
-								<span class="text-gray-800 dark:text-gray-200 truncate" title={field.fullName}>{field.fullName}</span>
+								<span class="text-gray-800 dark:text-gray-200 truncate" title={field.fullName}
+									>{field.fullName}</span
+								>
 							</label>
 						{/each}
 					</div>
@@ -445,8 +432,8 @@
 		</div>
 	</div>
 
-	<!-- Snapshot timeline and navigation (for array datasources in table/flamegraph view) -->
-	{#if (activeTab === 'table' || activeTab === 'flamegraph') && hasSnapshots && snapshotCount > 1}
+	<!-- Snapshot timeline and navigation (for array datasources in table/flamegraph/histogram view) -->
+	{#if (activeTab === 'table' || activeTab === 'flamegraph' || activeTab === 'histogram') && hasSnapshots && snapshotCount > 1}
 		<!-- Mini timeline chart -->
 		<SnapshotTimeline
 			{snapshots}
@@ -533,7 +520,9 @@
 						</button>
 					</div>
 				{:else if selectedSnapshotIndices.size === 1}
-					<span class="truncate text-gray-500 dark:text-gray-600"> Drag to select range, Ctrl+click to toggle </span>
+					<span class="truncate text-gray-500 dark:text-gray-600">
+						Drag to select range, Ctrl+click to toggle
+					</span>
 				{/if}
 			</div>
 
@@ -562,38 +551,46 @@
 	{/if}
 
 	<!-- Content - Use hidden class instead of {#if} to avoid recreating components on tab switch -->
-	{#if hasFlamegraph}
-		<div class="min-h-0 flex-1" class:hidden={activeTab !== 'flamegraph'}>
-			<Flamegraph
+	<!-- Render visualizers from registry (excludes table which is always shown separately) -->
+	{#each applicableVisualizers.filter((v) => v.visualizer.id !== 'table') as visualizer (visualizer.id)}
+		{@const tabId = visualizer.visualizer.id}
+		<div class="min-h-0 flex-1" class:hidden={activeTab !== tabId}>
+			<svelte:component
+				this={visualizer.component}
 				{ds}
 				events={hasSnapshots ? undefined : events}
 				snapshotData={snapshotEvents}
 				{eventVersion}
+				{isRunning}
+				{instanceID}
+				isActiveTab={activeTab === tabId}
+				multipleSnapshots={visualizer.visualizer.id === 'histogram' && selectedSnapshotIndices.size > 1 ? getSelectedSnapshots() : undefined}
+			/>
+		</div>
+	{/each}
+	<!-- Table is always rendered (fallback visualizer) with extended props -->
+	{#if applicableVisualizers.find((v) => v.visualizer.id === 'table')}
+		{@const tableVisualizer = applicableVisualizers.find((v) => v.visualizer.id === 'table')}
+		<div class="min-h-0 flex-1" class:hidden={activeTab !== 'table'}>
+			<svelte:component
+				this={tableVisualizer?.component}
+				{ds}
+				events={hasSnapshots ? undefined : events}
+				snapshotData={snapshotEvents}
+				{eventVersion}
+				{searchQuery}
+				{searchModeFilter}
+				{searchHighlightInFilterMode}
+				{onMatchInfo}
+				{currentMatchIndex}
+				{onScrollToIndex}
+				{isRunning}
+				{instanceID}
+				showHeader={false}
+				onSortChange={handleSortChange}
+				sortReset={sortResetTrigger}
+				onMenuController={(ctrl: TableMenuController) => (tableMenuController = ctrl)}
 			/>
 		</div>
 	{/if}
-	{#if hasMetrics}
-		<div class="min-h-0 flex-1" class:hidden={activeTab !== 'chart'}>
-			<Chart {ds} {events} {eventVersion} />
-		</div>
-	{/if}
-	<div class="min-h-0 flex-1" class:hidden={activeTab !== 'table'}>
-		<Table
-			{ds}
-			events={hasSnapshots ? undefined : events}
-			snapshotData={snapshotEvents}
-			{eventVersion}
-			{searchQuery}
-			{searchModeFilter}
-			{searchHighlightInFilterMode}
-			{onMatchInfo}
-			{currentMatchIndex}
-			{onScrollToIndex}
-			{isRunning}
-			showHeader={false}
-			onSortChange={handleSortChange}
-			sortReset={sortResetTrigger}
-			onMenuController={(ctrl) => (tableMenuController = ctrl)}
-		/>
-	</div>
 </div>

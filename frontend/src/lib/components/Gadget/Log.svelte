@@ -127,7 +127,9 @@
 
 <svelte:document onclick={handleClickOutside} />
 
-<div class="sticky left-0 flex flex-row items-center justify-between bg-white dark:bg-gray-950 px-2 py-1.5">
+<div
+	class="sticky left-0 flex flex-row items-center justify-between bg-white dark:bg-gray-950 px-2 py-1.5"
+>
 	<div class="flex flex-row items-center">
 		<!-- Collapse/Expand Chevron -->
 		<button
@@ -224,7 +226,10 @@
 	{/if}
 </div>
 {#if !collapsed}
-	<div bind:this={element} class="shrink grow overflow-auto bg-gray-50 dark:bg-gray-900 p-2 font-mono text-xs">
+	<div
+		bind:this={element}
+		class="shrink grow overflow-auto bg-gray-50 dark:bg-gray-900 p-2 font-mono text-xs"
+	>
 		{#each entries as entry, i (entry.msgID ?? i)}
 			<div class={getSeverityClass(entry.severity)}>
 				<span class="text-gray-500 dark:text-gray-500">{formatTimestamp(entry.timestamp)}</span>

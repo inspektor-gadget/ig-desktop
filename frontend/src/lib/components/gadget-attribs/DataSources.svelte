@@ -342,10 +342,7 @@
 			class="sticky h-7 overflow-hidden border-b border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-950"
 			style="top: {stickyTop}px; z-index: {zIndex};"
 		>
-			<div
-				class="flex h-full items-center gap-1"
-				style="padding-left: {depth * 16 + 8}px"
-			>
+			<div class="flex h-full items-center gap-1" style="padding-left: {depth * 16 + 8}px">
 				<!-- Collapse toggle -->
 				<button
 					class="flex h-3.5 w-3.5 shrink-0 cursor-pointer items-center justify-center text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
@@ -379,12 +376,18 @@
 						{node.field.name}
 					</span>
 					{#if node.field.kind}
-						<span class="shrink-0 text-[10px] text-gray-300 dark:text-gray-500">{node.field.kind}</span>
+						<span class="shrink-0 text-[10px] text-gray-300 dark:text-gray-500"
+							>{node.field.kind}</span
+						>
 					{/if}
 					{#if node.field.annotations?.description}
-						<span class="truncate text-[10px] text-gray-400 dark:text-gray-500">— {node.field.annotations.description}</span>
+						<span class="truncate text-[10px] text-gray-400 dark:text-gray-500"
+							>— {node.field.annotations.description}</span
+						>
 					{/if}
-					<span class="shrink-0 text-[10px] text-gray-300 dark:text-gray-500">({node.children.length})</span>
+					<span class="shrink-0 text-[10px] text-gray-300 dark:text-gray-500"
+						>({node.children.length})</span
+					>
 				</div>
 			</div>
 		</div>
@@ -439,7 +442,9 @@
 			<span class="shrink-0 text-[10px] text-gray-300 dark:text-gray-500">{node.field.kind}</span>
 		{/if}
 		{#if node.field.annotations?.description}
-			<span class="truncate text-[10px] text-gray-400 dark:text-gray-500">— {node.field.annotations.description}</span>
+			<span class="truncate text-[10px] text-gray-400 dark:text-gray-500"
+				>— {node.field.annotations.description}</span
+			>
 		{/if}
 	</div>
 
@@ -462,16 +467,23 @@
 					<span class="rounded bg-gray-300/60 px-1 py-0 text-[9px] dark:bg-gray-500/60">empty</span>
 				{/if}
 				{#if hasFlag(flags, 0x02)}
-					<span class="rounded bg-green-200/60 px-1 py-0 text-[9px] dark:bg-green-800/60">container</span>
+					<span class="rounded bg-green-200/60 px-1 py-0 text-[9px] dark:bg-green-800/60"
+						>container</span
+					>
 				{/if}
 				{#if hasFlag(flags, 0x04)}
-					<span class="rounded bg-gray-200/60 px-1 py-0 text-[9px] dark:bg-gray-700/60">hidden</span>
+					<span class="rounded bg-gray-200/60 px-1 py-0 text-[9px] dark:bg-gray-700/60">hidden</span
+					>
 				{/if}
 				{#if hasFlag(flags, 0x08)}
-					<span class="rounded bg-blue-200/60 px-1 py-0 text-[9px] dark:bg-blue-800/60">w-parent</span>
+					<span class="rounded bg-blue-200/60 px-1 py-0 text-[9px] dark:bg-blue-800/60"
+						>w-parent</span
+					>
 				{/if}
 				{#if hasFlag(flags, 0x10)}
-					<span class="rounded bg-orange-200/60 px-1 py-0 text-[9px] dark:bg-orange-800/60">static</span>
+					<span class="rounded bg-orange-200/60 px-1 py-0 text-[9px] dark:bg-orange-800/60"
+						>static</span
+					>
 				{/if}
 				{#if hasFlag(flags, 0x20)}
 					<span class="rounded bg-red-200/60 px-1 py-0 text-[9px] dark:bg-red-800/60">unref</span>

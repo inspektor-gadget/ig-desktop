@@ -15,29 +15,21 @@
 	import Select from './params/Select.svelte';
 	import Bool from './params/Bool.svelte';
 	import Number from './params/Number.svelte';
-	import Filter from './params/Filter.svelte';
-	import Annotations from './params/Annotation.svelte';
-	import Sort from './params/Sort.svelte';
-	import K8sAutocomplete from './params/K8sAutocomplete.svelte';
+	import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
+	import type { GadgetParam } from '$lib/types';
 
-	function getComponentForParam(param: any) {
-		// Check for K8s valueHint first
-		if (param.valueHint && param.valueHint.startsWith('k8s:')) {
-			return K8sAutocomplete;
+	function getComponentForParam(param: GadgetParam) {
+		// Check plugin registry first for custom param inputs
+		const plugin = pluginRegistry.getParamInputForParam(param);
+		if (plugin?.component) {
+			return plugin.component;
 		}
-		if (param.possibleValues) {
+
+		// Fallback to built-in simple types
+		if (param.possibleValues && param.possibleValues.length > 0) {
 			return Select;
 		}
-		if (param.key === 'filter') {
-			return Filter;
-		}
-		if (param.key === 'annotate') {
-			return Annotations;
-		}
-		if (param.key === 'sort') {
-			return Sort;
-		}
-		switch (param.typeHint || param.type) {
+		switch (param.typeHint) {
 			case 'bool':
 				return Bool;
 			case 'number':

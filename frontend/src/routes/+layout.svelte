@@ -41,6 +41,9 @@
 	import { APP_MODE, features } from '$lib/config/app-mode';
 	import { loadSingleEnvConfig } from '$lib/services/config-loader.service';
 	import { resolve } from '$app/paths';
+	import { registerBuiltinPlugins } from '$lib/plugins/builtin';
+	import { loadLocalPlugins } from '$lib/services/plugin-loader.service';
+	import PluginHookRenderer from '$lib/components/PluginHookRenderer.svelte';
 
 	let { children } = $props();
 
@@ -133,7 +136,7 @@
 		analyticsService.initialize();
 	}
 
-	// Fetch version when connected
+	// Fetch version and load plugins when connected
 	$effect(() => {
 		if (websocketService.connected) {
 			apiService
@@ -149,6 +152,9 @@
 
 			// Handle start count and update checks
 			handleStartCount();
+
+			// Load local plugins from backend
+			loadLocalPlugins();
 		}
 	});
 
@@ -190,6 +196,9 @@
 
 	// Initialize WebSocket and message routing on mount (after Wails globals are ready)
 	onMount(async () => {
+		// Register built-in plugins before anything else
+		registerBuiltinPlugins();
+
 		const isWailsApp = environment.isApp;
 		console.log('Environment detected:', isWailsApp ? 'wails' : 'browser');
 		console.log('App mode:', APP_MODE);
@@ -283,7 +292,9 @@
 				<div class="w-20 shrink-0"></div>
 				<!-- Centered title -->
 				<div class="flex-1 flex items-center justify-center py-2">
-					<div class="flex flex-row items-center gap-2 text-xs text-gray-500 dark:text-gray-400 uppercase">
+					<div
+						class="flex flex-row items-center gap-2 text-xs text-gray-500 dark:text-gray-400 uppercase"
+					>
 						<div class="flex">{@html BrandIcon}</div>
 						<div class="leading-none pt-px">Inspektor Gadget Desktop</div>
 					</div>
@@ -301,11 +312,16 @@
 				style="--wails-draggable: drag"
 				class="flex flex-row items-center justify-between border-b border-b-gray-200 bg-white/80 dark:border-b-gray-800 dark:bg-gray-950/80 backdrop-blur-sm select-none"
 			>
-				<div class="flex flex-row items-center gap-2 px-2 py-2 text-xs text-gray-500 dark:text-gray-600 uppercase">
+				<div
+					class="flex flex-row items-center gap-2 px-2 py-2 text-xs text-gray-500 dark:text-gray-600 uppercase"
+				>
 					<div>{@html BrandIcon}</div>
 					<div>Inspektor Gadget Desktop</div>
 				</div>
-				<div style="--wails-draggable: no-drag" class="flex flex-row gap-2 px-2 py-1 text-gray-500 dark:text-gray-600">
+				<div
+					style="--wails-draggable: no-drag"
+					class="flex flex-row gap-2 px-2 py-1 text-gray-500 dark:text-gray-600"
+				>
 					<button
 						type="button"
 						class="hover:text-gray-900 dark:hover:text-white"
@@ -359,7 +375,9 @@
 						{#each Object.entries(environments) as [id, env]}
 							<NavbarLink href={resolve(`/env/${id}`)} title={env.name}>
 								<div class="grid" title={env.name}>
-									<div class="col-start-1 row-start-1 text-gray-200 dark:text-gray-600 opacity-80">{@html Gadget}</div>
+									<div class="col-start-1 row-start-1 text-gray-200 dark:text-gray-600 opacity-80">
+										{@html Gadget}
+									</div>
 									<div class="z-10 col-start-1 row-start-1 flex justify-center text-lg shadow">
 										{env.name.substring(0, 3)}
 									</div>
@@ -374,13 +392,18 @@
 						{/if}
 					{/if}
 				</div>
-				<div class="flex grow flex-col"></div>
+				<div class="flex grow flex-col">
+					<!-- Plugin sidebar hooks -->
+					<PluginHookRenderer hookId="sidebar:navigation" scopes={['local', 'builtin']} />
+				</div>
 				<div class="flex flex-col">
 					{#if features.canBrowseArtifactHub}
 						<NavbarLink href={resolve('/browse/artifacthub')}>{@html ArtifactHub}</NavbarLink>
 					{/if}
-					<NavbarLink href="https://inspektor-gadget.io/docs/latest/" target="_blank" title="Documentation (external)"
-						>{@html Book}</NavbarLink
+					<NavbarLink
+						href="https://inspektor-gadget.io/docs/latest/"
+						target="_blank"
+						title="Documentation (external)">{@html Book}</NavbarLink
 					>
 					<NavbarLink
 						onclick={() => {

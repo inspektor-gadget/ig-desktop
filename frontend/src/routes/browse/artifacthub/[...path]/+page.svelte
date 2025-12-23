@@ -125,7 +125,9 @@
 			<Spinner />
 			<div>
 				<div class="text-xl">Loading...</div>
-				<div class="text-sm text-gray-600 dark:text-gray-400">The Inspektor is doing some research on ArtifactHub.</div>
+				<div class="text-sm text-gray-600 dark:text-gray-400">
+					The Inspektor is doing some research on ArtifactHub.
+				</div>
 			</div>
 		</div>
 	</div>
@@ -163,7 +165,8 @@
 							<h1 class="text-4xl font-bold text-gray-900 dark:text-white">
 								{pkg.name}
 							</h1>
-							<span class="rounded-full bg-gray-200 dark:bg-gray-800 px-3 py-1 text-sm text-gray-600 dark:text-gray-400"
+							<span
+								class="rounded-full bg-gray-200 dark:bg-gray-800 px-3 py-1 text-sm text-gray-600 dark:text-gray-400"
 								>{pkg.version}</span
 							>
 							{#if pkg.official}
@@ -196,11 +199,15 @@
 					{/if}
 
 					<!-- Metadata Row -->
-					<div class="flex flex-wrap items-center gap-6 border-t border-gray-200/50 dark:border-gray-800/50 pt-6">
+					<div
+						class="flex flex-wrap items-center gap-6 border-t border-gray-200/50 dark:border-gray-800/50 pt-6"
+					>
 						<!-- Stars -->
 						<div class="flex items-center gap-2">
 							<div class="text-yellow-500 dark:text-yellow-400">{@html Star}</div>
-							<span class="text-sm font-semibold text-gray-800 dark:text-gray-200">{pkg.stars || 0}</span>
+							<span class="text-sm font-semibold text-gray-800 dark:text-gray-200"
+								>{pkg.stars || 0}</span
+							>
 						</div>
 
 						<!-- Signed Status -->
@@ -208,12 +215,17 @@
 							<div class={pkg.signed ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}>
 								{@html pkg.signed ? Signed : Unsigned}
 							</div>
-							<span class="{pkg.signed ? 'text-green-600 dark:text-green-400' : 'text-gray-500'} text-sm">
+							<span
+								class="{pkg.signed
+									? 'text-green-600 dark:text-green-400'
+									: 'text-gray-500'} text-sm"
+							>
 								{pkg.signed ? 'Signed' : 'Unsigned'}
 							</span>
 							{#if pkg.signed && pkg.signatures}
 								{#each pkg.signatures as sig}
-									<span class="rounded bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs text-green-600 dark:text-green-400"
+									<span
+										class="rounded bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs text-green-600 dark:text-green-400"
 										>{sig}</span
 									>
 								{/each}
@@ -268,7 +280,9 @@
 						<div class="flex flex-col gap-3">
 							{#each pkg.containers_images as image}
 								<a
-									href={resolve(`/gadgets/run/${image.image}${environmentID ? `?env=${environmentID}` : ''}`)}
+									href={resolve(
+										`/gadgets/run/${image.image}${environmentID ? `?env=${environmentID}` : ''}`
+									)}
 									class="group"
 								>
 									<div
@@ -280,11 +294,15 @@
 											>
 												{@html Play}
 											</div>
-											<div class="flex-1 font-medium text-gray-800 dark:text-gray-200">{image.name}</div>
+											<div class="flex-1 font-medium text-gray-800 dark:text-gray-200">
+												{image.name}
+											</div>
 										</div>
 										<div class="flex flex-row flex-wrap gap-1.5">
 											{#each image.platforms as platform}
-												<div class="rounded-full bg-gray-200 dark:bg-gray-800 px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400">
+												<div
+													class="rounded-full bg-gray-200 dark:bg-gray-800 px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400"
+												>
 													{platform}
 												</div>
 											{/each}

@@ -385,7 +385,9 @@
 			class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950"
 		>
 			<!-- Modal Header -->
-			<div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-6 py-4">
+			<div
+				class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-6 py-4"
+			>
 				<div class="flex items-center gap-3">
 					<div class:text-blue-400={!undeploy} class:text-red-400={undeploy}>{@html Server}</div>
 					<h2 id="deploy-modal-title" class="text-lg font-semibold">
@@ -476,7 +478,9 @@
 								<div
 									class="flex flex-col gap-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4"
 								>
-									<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Configuration</h3>
+									<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+										Configuration
+									</h3>
 									<Toggle
 										checked={verifyImageSignatures}
 										onchange={handleVerifyImageChange}
@@ -489,13 +493,17 @@
 								<div
 									class="flex flex-col gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4"
 								>
-									<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">OpenTelemetry</h3>
+									<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+										OpenTelemetry
+									</h3>
 									<button
 										onclick={() => (otelLogsModalOpen = true)}
 										class="flex cursor-pointer items-center justify-between rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-200 dark:hover:bg-gray-800"
 									>
 										<div class="flex flex-col gap-0.5">
-											<span class="text-sm font-medium text-gray-800 dark:text-gray-200">Log Exporters</span>
+											<span class="text-sm font-medium text-gray-800 dark:text-gray-200"
+												>Log Exporters</span
+											>
 											<span class="text-xs text-gray-500 dark:text-gray-500">
 												{#if otelLogsExporterCount > 0}
 													{otelLogsExporterCount} exporter{otelLogsExporterCount !== 1 ? 's' : ''} configured
@@ -511,7 +519,9 @@
 										class="flex cursor-pointer items-center justify-between rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-200 dark:hover:bg-gray-800"
 									>
 										<div class="flex flex-col gap-0.5">
-											<span class="text-sm font-medium text-gray-800 dark:text-gray-200">Metric Exporters</span>
+											<span class="text-sm font-medium text-gray-800 dark:text-gray-200"
+												>Metric Exporters</span
+											>
 											<span class="text-xs text-gray-500 dark:text-gray-500">
 												{#if otelMetricsExporterCount > 0}
 													{otelMetricsExporterCount} exporter{otelMetricsExporterCount !== 1
@@ -674,7 +684,9 @@
 					<div class="flex flex-col items-center gap-4 text-center">
 						<div class="text-red-500 dark:text-red-400">{@html ExclamationCircle}</div>
 						<div>
-							<h3 class="text-lg font-semibold text-red-500 dark:text-red-400">Deployment Failed</h3>
+							<h3 class="text-lg font-semibold text-red-500 dark:text-red-400">
+								Deployment Failed
+							</h3>
 							<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 								{currentDeployment?.error || 'An unknown error occurred'}
 							</p>
@@ -706,7 +718,12 @@
 				{:else if isSuccess}
 					<!-- Success State -->
 					<div class="flex flex-col items-center gap-4 text-center">
-						<div class:text-green-500={!undeploy} class:dark:text-green-400={!undeploy} class:text-red-500={undeploy} class:dark:text-red-400={undeploy}>
+						<div
+							class:text-green-500={!undeploy}
+							class:dark:text-green-400={!undeploy}
+							class:text-red-500={undeploy}
+							class:dark:text-red-400={undeploy}
+						>
 							{@html Certificate}
 						</div>
 						<div>
@@ -725,7 +742,9 @@
 									: redeploy
 										? 'redeployed to'
 										: 'deployed to'} namespace
-								<span class="font-mono text-blue-600 dark:text-blue-400">{currentDeployment?.config.namespace}</span>
+								<span class="font-mono text-blue-600 dark:text-blue-400"
+									>{currentDeployment?.config.namespace}</span
+								>
 							</p>
 						</div>
 

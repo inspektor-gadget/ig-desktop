@@ -1,5 +1,17 @@
 import { websocketService } from './websocket.service.svelte';
 import type { SessionItem, SessionWithRuns, GadgetRun, RecordedEvent } from '$lib/types';
+import type { PluginManifest } from '$lib/types/plugin-manifest';
+
+export interface DiscoveredPlugin {
+	manifest: PluginManifest;
+	path: string;
+	files: Record<string, string>;
+}
+
+export interface ListPluginsResponse {
+	plugins: DiscoveredPlugin[];
+	pluginsDir: string;
+}
 
 type RequestCommand = {
 	cmd: string;
@@ -97,6 +109,23 @@ export class ApiService {
 	 */
 	async getRunEvents(sessionId: string, runId: string): Promise<RecordedEvent[]> {
 		return this.request({ cmd: 'getRunEvents', data: { sessionId, runId } });
+	}
+
+	/**
+	 * List all discovered local plugins.
+	 * @returns Promise that resolves with the list of plugins and plugins directory
+	 */
+	async listPlugins(): Promise<ListPluginsResponse> {
+		return this.request({ cmd: 'listPlugins' });
+	}
+
+	/**
+	 * Get a specific plugin by ID with its source files.
+	 * @param id - The plugin ID
+	 * @returns Promise that resolves with the plugin
+	 */
+	async getPlugin(id: string): Promise<DiscoveredPlugin> {
+		return this.request({ cmd: 'getPlugin', data: { id } });
 	}
 }
 

@@ -6,7 +6,7 @@
 	import { page } from '$app/state';
 	import VirtualTableBody from '$lib/components/VirtualTable/VirtualTableBody.svelte';
 	import type { TableHookRegistry } from '$lib/types/table-hooks';
-	import type { TableColumn, EnrichedRow } from '$lib/types/table';
+	import type { TableColumn, EnrichedRow, TableMenuController } from '$lib/types/table';
 	import type { GadgetContext } from '$lib/types';
 	import {
 		gadgetFieldToColumn,
@@ -14,51 +14,20 @@
 		getColumnAlignment
 	} from '$lib/utils/table-adapters';
 	import { configuration } from '$lib/stores/configuration.svelte';
-	import type { EventRingBuffer } from '$lib/utils/ring-buffer';
 	import { entryMatchesSearch } from '$lib/utils/search-match';
+	import type { SearchableVisualizerProps } from '$lib/types/plugin-api';
 
-	// Interface for exposing column visibility controls to parent components
-	export interface TableMenuController {
-		toggleableFields: any[];
-		isColumnVisible: (fieldName: string) => boolean;
-		toggleColumnVisibility: (fieldName: string) => void;
-	}
+	// Re-export for backwards compatibility
+	export type { TableMenuController };
 
-	let {
-		ds,
-		events,
-		snapshotData,
-		eventVersion = 0,
-		searchQuery = '',
-		searchModeFilter = true,
-		searchHighlightInFilterMode = false,
-		onMatchInfo,
-		currentMatchIndex = -1,
-		onScrollToIndex,
-		hookRegistry = null,
-		isRunning = true,
-		showHeader = true,
-		onSortChange,
-		sortReset = 0,
-		onMenuController
-	}: {
-		ds: any;
-		events?: EventRingBuffer<any> | undefined;
-		/** Direct array data from snapshots (for array datasources) */
-		snapshotData?: any[] | undefined;
-		eventVersion?: number;
-		searchQuery?: string;
-		searchModeFilter?: boolean;
+	interface Props extends SearchableVisualizerProps {
+		/** Whether to show highlight matches even in filter mode */
 		searchHighlightInFilterMode?: boolean;
-		onMatchInfo?: (info: {
-			matchCount: number;
-			totalCount: number;
-			matchIndices: number[];
-		}) => void;
-		currentMatchIndex?: number;
+		/** Callback to receive scroll function for navigating to indices */
 		onScrollToIndex?: (scrollFn: (index: number) => void) => void;
+		/** External hook registry for custom cell rendering */
 		hookRegistry?: TableHookRegistry | null;
-		isRunning?: boolean;
+		/** Whether to show the table header */
 		showHeader?: boolean;
 		/** Callback when custom sorting is applied (column name) or cleared (null) */
 		onSortChange?: (sortColumn: string | null) => void;
@@ -66,11 +35,32 @@
 		sortReset?: number;
 		/** Callback to expose menu controller for external rendering */
 		onMenuController?: (controller: TableMenuController) => void;
-	} = $props();
+	}
 
-	// Get gadget info from context
+	let {
+		ds,
+		events,
+		snapshotData,
+		eventVersion = 0,
+		isRunning = true,
+		instanceID = '',
+		context,
+		searchQuery = '',
+		searchModeFilter = true,
+		onMatchInfo,
+		currentMatchIndex = -1,
+		searchHighlightInFilterMode = false,
+		onScrollToIndex,
+		hookRegistry = null,
+		showHeader = true,
+		onSortChange,
+		sortReset = 0,
+		onMenuController
+	}: Props = $props();
+
+	// Get gadget info from context (plugin context or Svelte context fallback)
 	const gadgetContext = getContext<GadgetContext>('gadget');
-	const gadgetImage = $derived(gadgetContext?.info?.imageName || '');
+	const gadgetImage = $derived(context?.gadgetImage || gadgetContext?.info?.imageName || '');
 
 	// Column visibility menu state
 	let menuOpen = $state(false);
@@ -777,7 +767,9 @@
 	}
 </script>
 
-<div class="gadget-table flex h-full flex-col overflow-hidden border-t-1 border-gray-300 dark:border-gray-500">
+<div
+	class="gadget-table flex h-full flex-col overflow-hidden border-t-1 border-gray-300 dark:border-gray-500"
+>
 	<!-- Datasource header (name + menu) -->
 	{#if showHeader}
 		<div
@@ -822,7 +814,8 @@
 										onchange={() => toggleColumnVisibility(field.fullName)}
 										class="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
 									/>
-									<span class="text-gray-800 dark:text-gray-200 truncate" title={field.fullName}>{field.fullName}</span
+									<span class="text-gray-800 dark:text-gray-200 truncate" title={field.fullName}
+										>{field.fullName}</span
 									>
 								</label>
 							{/each}

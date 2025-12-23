@@ -56,10 +56,15 @@
 </script>
 
 <div class="flex min-w-0 flex-1 flex-col bg-gray-50/90 dark:bg-gray-900/90">
-	<div class="nowrap flex w-full flex-row items-center overscroll-x-auto text-sm text-gray-600 dark:text-gray-500">
+	<div
+		class="nowrap flex w-full flex-row items-center overscroll-x-auto text-sm text-gray-600 dark:text-gray-500"
+	>
 		<Tab href={resolve(`/env/${page.params.env}`)} shrink={true} exact={true}>{@html List}</Tab>
 		{#each instanceKeys as instanceKey}
-			<Tab href={resolve(`/env/${page.params.env}/running/${instanceKey}`)} shrink={false} exact={true}
+			<Tab
+				href={resolve(`/env/${page.params.env}/running/${instanceKey}`)}
+				shrink={false}
+				exact={true}
 				><div class="flex flex-row items-center gap-2">
 					<button
 						class="small-icon rounded-4xl p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -74,7 +79,9 @@
 				</div></Tab
 			>
 		{/each}
-		<div class="h-full flex-grow border-b border-b-gray-300 dark:border-b-gray-700 bg-white dark:bg-gray-950"></div>
+		<div
+			class="h-full flex-grow border-b border-b-gray-300 dark:border-b-gray-700 bg-white dark:bg-gray-950"
+		></div>
 	</div>
 	{@render children()}
 </div>

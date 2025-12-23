@@ -179,11 +179,17 @@
 {:else if error}
 	<div class="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
 		<p class="text-red-600 dark:text-red-400">Error: {error}</p>
-		<a href={resolve('/')} class="text-blue-600 dark:text-blue-400 underline hover:text-blue-500 dark:hover:text-blue-300">Return home</a>
+		<a
+			href={resolve('/')}
+			class="text-blue-600 dark:text-blue-400 underline hover:text-blue-500 dark:hover:text-blue-300"
+			>Return home</a
+		>
 	</div>
 {:else if session}
 	<div class="flex flex-1 flex-col overflow-auto">
-		<header class="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-950/50 p-4">
+		<header
+			class="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-950/50 p-4"
+		>
 			<div class="flex w-full items-center justify-between">
 				<div class="flex items-center gap-3">
 					<a
@@ -222,7 +228,9 @@
 
 		<!-- Run panels -->
 		{#if session.runs.length > 0}
-			<div class="flex gap-2 overflow-x-auto border-b border-gray-200 dark:border-gray-800 bg-gray-100/60 dark:bg-gray-950/60 px-2 py-2">
+			<div
+				class="flex gap-2 overflow-x-auto border-b border-gray-200 dark:border-gray-800 bg-gray-100/60 dark:bg-gray-950/60 px-2 py-2"
+			>
 				{#each session.runs as run}
 					<div
 						class="flex items-center gap-3 rounded-lg border px-4 py-2 whitespace-nowrap transition-colors
@@ -231,7 +239,9 @@
 							: 'border-gray-300 dark:border-gray-700 bg-gray-200/50 dark:bg-gray-800/50'}"
 					>
 						<div class="flex flex-col">
-							<div class="text-sm font-medium text-gray-800 dark:text-gray-200">{getGadgetName(run.gadgetImage)}</div>
+							<div class="text-sm font-medium text-gray-800 dark:text-gray-200">
+								{getGadgetName(run.gadgetImage)}
+							</div>
 							<div class="text-xs text-gray-500">{run.eventCount} events</div>
 						</div>
 						<div class="flex items-center gap-1">

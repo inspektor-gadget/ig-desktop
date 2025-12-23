@@ -225,7 +225,9 @@
 					class="flex items-center justify-center gap-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100/50 dark:bg-gray-900/50 p-8"
 				>
 					<Spinner />
-					<div class="text-gray-600 dark:text-gray-400">Checking Inspektor Gadget deployment status...</div>
+					<div class="text-gray-600 dark:text-gray-400">
+						Checking Inspektor Gadget deployment status...
+					</div>
 				</div>
 			{:else if deploymentStatus?.deployed}
 				<!-- IG Detected -->
@@ -250,18 +252,24 @@
 							</svg>
 						</div>
 						<div class="flex-1">
-							<h3 class="font-semibold text-green-600 dark:text-green-400">Inspektor Gadget Detected</h3>
+							<h3 class="font-semibold text-green-600 dark:text-green-400">
+								Inspektor Gadget Detected
+							</h3>
 							<div class="mt-1 flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-400">
 								<p>Inspektor Gadget is deployed and ready to use.</p>
 								<div class="mt-1 flex gap-4 text-xs">
 									<span>
 										<span class="text-gray-500">Namespace:</span>
-										<span class="font-mono text-green-600 dark:text-green-400">{deploymentStatus.namespace}</span>
+										<span class="font-mono text-green-600 dark:text-green-400"
+											>{deploymentStatus.namespace}</span
+										>
 									</span>
 									{#if deploymentStatus.version}
 										<span>
 											<span class="text-gray-500">Version:</span>
-											<span class="font-mono text-green-600 dark:text-green-400">{deploymentStatus.version}</span>
+											<span class="font-mono text-green-600 dark:text-green-400"
+												>{deploymentStatus.version}</span
+											>
 										</span>
 									{/if}
 								</div>
@@ -287,11 +295,15 @@
 				</div>
 			{:else}
 				<!-- IG Not Detected -->
-				<div class="flex flex-col gap-4 rounded-lg border border-blue-300/50 dark:border-blue-800/50 bg-blue-100/10 dark:bg-blue-900/10 p-4">
+				<div
+					class="flex flex-col gap-4 rounded-lg border border-blue-300/50 dark:border-blue-800/50 bg-blue-100/10 dark:bg-blue-900/10 p-4"
+				>
 					<div class="flex items-start gap-3">
 						<div class="text-blue-600 dark:text-blue-400">{@html Info}</div>
 						<div class="flex-1">
-							<h3 class="font-semibold text-blue-600 dark:text-blue-400">Inspektor Gadget Not Detected</h3>
+							<h3 class="font-semibold text-blue-600 dark:text-blue-400">
+								Inspektor Gadget Not Detected
+							</h3>
 							<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
 								Inspektor Gadget does not appear to be deployed in your Kubernetes cluster. You can
 								deploy it now using the official Helm chart.

@@ -109,14 +109,19 @@
 			{#if header}
 				{@render header()}
 			{:else if title || icon}
-				<div class="flex items-center gap-3 border-b border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50 px-6 py-4 rounded-t-2xl">
+				<div
+					class="flex items-center gap-3 border-b border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50 px-6 py-4 rounded-t-2xl"
+				>
 					{#if icon}
 						<div class="flex-shrink-0 text-blue-500">
 							{@html icon}
 						</div>
 					{/if}
 					{#if title}
-						<h2 id="modal-title" class="flex-1 text-xl font-semibold text-gray-900 dark:text-gray-100">
+						<h2
+							id="modal-title"
+							class="flex-1 text-xl font-semibold text-gray-900 dark:text-gray-100"
+						>
 							{title}
 						</h2>
 					{/if}

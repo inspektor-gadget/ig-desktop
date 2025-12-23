@@ -8,6 +8,9 @@
 	<div>
 		<div class="text-xl">Whoops!</div>
 		<div class="text-sm">The Inspektor is confused.</div>
-		<div class="mt-4 text-xs text-gray-600 dark:text-gray-400">{page.status} {page.error?.message}</div>
+		<div class="mt-4 text-xs text-gray-600 dark:text-gray-400">
+			{page.status}
+			{page.error?.message}
+		</div>
 	</div>
 </div>

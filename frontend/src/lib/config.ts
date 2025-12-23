@@ -21,7 +21,33 @@
  *   unit: '%'
  */
 
-import type { ConfigurationSchema } from './config.types';
+import type { ConfigurationSchema, Category } from './config.types';
+
+/** Plugin categories injector - set by plugin-config.service after initialization */
+let pluginCategoriesProvider: (() => Category[]) | null = null;
+
+/**
+ * Register a function that provides plugin configuration categories.
+ * Called by plugin-config.service during initialization.
+ */
+export function registerPluginCategoriesProvider(provider: () => Category[]): void {
+	pluginCategoriesProvider = provider;
+}
+
+/**
+ * Get the complete configuration schema including plugin categories.
+ */
+export function getFullConfigurationSchema(): ConfigurationSchema {
+	const pluginCategories = pluginCategoriesProvider?.() ?? [];
+
+	if (pluginCategories.length === 0) {
+		return configurationSchema;
+	}
+
+	return {
+		categories: [...configurationSchema.categories, ...pluginCategories]
+	};
+}
 
 export const configurationSchema: ConfigurationSchema = {
 	categories: [
@@ -94,8 +120,7 @@ export const configurationSchema: ConfigurationSchema = {
 				{
 					key: 'theme',
 					title: 'Theme',
-					description:
-						'Choose your preferred color scheme. System follows your OS preference.',
+					description: 'Choose your preferred color scheme. System follows your OS preference.',
 					type: 'select',
 					options: {
 						dark: 'Dark',

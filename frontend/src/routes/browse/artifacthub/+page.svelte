@@ -8,6 +8,7 @@
 	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
 	import Search from '$lib/icons/search-small.svg?raw';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 
 	interface ArtifactHubPackage {
 		package_id: string;
@@ -98,7 +99,9 @@
 				<Spinner />
 				<div class="text-center">
 					<div class="text-xl">Loading gadgets...</div>
-					<div class="text-sm text-gray-600 dark:text-gray-400">Fetching packages from ArtifactHub</div>
+					<div class="text-sm text-gray-600 dark:text-gray-400">
+						Fetching packages from ArtifactHub
+					</div>
 				</div>
 			</div>
 		</div>
@@ -109,10 +112,7 @@
 			>
 				{#each results as entry}
 					<a
-						href="artifacthub/{entry.repository
-							.name}/{entry.normalized_name}/{entry.version}{environmentID
-							? `?env=${environmentID}`
-							: ''}"
+						href={`${resolve(`/browse/artifacthub/${entry.repository.name}/${entry.normalized_name}/${entry.version}`)}${environmentID ? `?env=${environmentID}` : ''}`}
 						class="group relative flex flex-col justify-between gap-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 p-5 shadow-lg shadow-gray-200/50 dark:shadow-gray-950/50 transition-all hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 					>
 						{#if entry.official}
@@ -127,7 +127,8 @@
 						<div class="relative z-10">
 							<div>
 								<span class="text-lg font-semibold">{entry.name}</span>
-								<span class="ml-2 rounded-full bg-gray-200 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-600 dark:text-gray-400"
+								<span
+									class="ml-2 rounded-full bg-gray-200 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-600 dark:text-gray-400"
 									>{entry.version}</span
 								>
 							</div>
@@ -141,7 +142,9 @@
 								{entry.description}
 							</div>
 						</div>
-						<div class="relative z-10 flex flex-col gap-3 border-t border-gray-200/50 dark:border-gray-800/50 pt-3">
+						<div
+							class="relative z-10 flex flex-col gap-3 border-t border-gray-200/50 dark:border-gray-800/50 pt-3"
+						>
 							<div class="flex flex-row items-center justify-between">
 								<div class="flex flex-row items-center gap-3">
 									<div
@@ -156,7 +159,9 @@
 									</div>
 									<div class="flex flex-row items-center gap-1.5" title="Stars">
 										<div class="text-yellow-500 dark:text-yellow-400">{@html Star}</div>
-										<div class="text-sm font-medium text-gray-700 dark:text-gray-300">{entry.stars}</div>
+										<div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+											{entry.stars}
+										</div>
 									</div>
 								</div>
 								<div

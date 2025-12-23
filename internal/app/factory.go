@@ -26,6 +26,7 @@ import (
 	"ig-frontend/internal/config"
 	"ig-frontend/internal/environment"
 	"ig-frontend/internal/gadget"
+	"ig-frontend/internal/plugins"
 	"ig-frontend/internal/session"
 )
 
@@ -40,6 +41,7 @@ type Services struct {
 	GadgetService   *gadget.Service
 	ArtifactHub     *artifacthub.Client
 	SessionService  *session.Service
+	PluginService   *plugins.Service
 	Handler         *handlers.Handler
 }
 
@@ -71,6 +73,14 @@ func NewServices() *Services {
 		}
 	}
 
+	// Initialize plugin service
+	var pluginService *plugins.Service
+	pluginService, err = plugins.NewService()
+	if err != nil {
+		log.Printf("failed to initialize plugin service: %v (local plugins will be disabled)", err)
+		pluginService = nil
+	}
+
 	// Create handler with all dependencies (send function will be set in Register)
 	handler := handlers.New(
 		ctx,
@@ -80,6 +90,7 @@ func NewServices() *Services {
 		instanceManager,
 		artifactHubClient,
 		sessionService,
+		pluginService,
 	)
 
 	return &Services{
@@ -90,6 +101,7 @@ func NewServices() *Services {
 		GadgetService:   gadgetService,
 		ArtifactHub:     artifactHubClient,
 		SessionService:  sessionService,
+		PluginService:   pluginService,
 		Handler:         handler,
 	}
 }
@@ -102,6 +114,7 @@ type SharedServices struct {
 	runtimeFactory *environment.RuntimeFactory
 	artifactHub    *artifacthub.Client
 	sessionService *session.Service
+	pluginService  *plugins.Service
 }
 
 // NewSharedServices creates shared services for multi-client scenarios.
@@ -127,12 +140,21 @@ func NewSharedServices() *SharedServices {
 		}
 	}
 
+	// Initialize plugin service
+	var pluginService *plugins.Service
+	pluginService, err = plugins.NewService()
+	if err != nil {
+		log.Printf("failed to initialize plugin service: %v (local plugins will be disabled)", err)
+		pluginService = nil
+	}
+
 	return &SharedServices{
 		ctx:            ctx,
 		envStorage:     envStorage,
 		runtimeFactory: runtimeFactory,
 		artifactHub:    artifactHubClient,
 		sessionService: sessionService,
+		pluginService:  pluginService,
 	}
 }
 
@@ -167,6 +189,7 @@ func (s *SharedServices) NewConnectionServices() *ConnectionServices {
 		instanceManager,
 		s.artifactHub,
 		s.sessionService,
+		s.pluginService,
 	)
 
 	return &ConnectionServices{

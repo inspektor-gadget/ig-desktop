@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import FlamegraphChart from '../charts/FlamegraphChart.svelte';
+	import FlamegraphChart from './FlamegraphChart.svelte';
 	import {
 		extractFlamegraphConfig,
 		buildFlameHierarchy,
@@ -9,28 +9,26 @@
 		DEFAULT_GROUP_FIELDS
 	} from '$lib/utils/flamegraphConfig';
 	import { configuration } from '$lib/stores/configuration.svelte';
-	import type { Datasource } from '$lib/types/charts';
-	import type { EventRingBuffer } from '$lib/utils/ring-buffer';
+	import type { VisualizerPluginProps } from '$lib/types/plugin-api';
 
-	interface Props {
-		ds: Datasource;
-		events?: EventRingBuffer<Record<string, unknown>>;
-		/** Snapshot data array (when using snapshots instead of streaming events) */
-		snapshotData?: Record<string, unknown>[];
-		/** Version counter to trigger re-reads of the ring buffer */
-		eventVersion?: number;
-	}
+	type Props = VisualizerPluginProps;
 
-	let { ds, events, snapshotData, eventVersion = 0 }: Props = $props();
+	let {
+		ds,
+		events,
+		snapshotData,
+		eventVersion = 0,
+		isRunning = true,
+		instanceID = '',
+		context
+	}: Props = $props();
 
-	// Get gadget info from context for config key
+	// Get gadget info from context (plugin context or Svelte context fallback)
 	const gadgetContext: any = getContext('gadget');
-	const gadgetImage = $derived(gadgetContext?.info?.imageName || '');
+	const gadgetImage = $derived(context?.gadgetImage || gadgetContext?.info?.imageName || '');
 
 	// Configuration key for group field selection (per gadget + datasource)
-	const groupConfigKey = $derived(
-		gadgetImage ? `flamegraphGroups:${gadgetImage}:${ds.name}` : ''
-	);
+	const groupConfigKey = $derived(gadgetImage ? `flamegraphGroups:${gadgetImage}:${ds.name}` : '');
 
 	// Extract flamegraph config from annotations
 	const flamegraphConfig = $derived(extractFlamegraphConfig(ds));

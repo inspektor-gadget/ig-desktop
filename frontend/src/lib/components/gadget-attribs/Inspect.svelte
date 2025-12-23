@@ -19,7 +19,10 @@
 			<tbody>
 				{#each inspect.fields as field}
 					<tr>
-						<td class="border-r border-gray-200 dark:border-gray-800 px-2 py-1 text-gray-600 dark:text-gray-400">{field.fullName}</td>
+						<td
+							class="border-r border-gray-200 dark:border-gray-800 px-2 py-1 text-gray-600 dark:text-gray-400"
+							>{field.fullName}</td
+						>
 						<td class="px-2 py-1 text-nowrap overflow-ellipsis">{inspect.entry[field.fullName]}</td>
 					</tr>
 				{/each}

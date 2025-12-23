@@ -216,7 +216,9 @@
 		<button
 			onclick={handleConfigure}
 			class="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 transition-all hover:border-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900"
-			title={hasMultipleGadgets ? 'Configure first gadget with more options' : 'Configure and run with more options'}
+			title={hasMultipleGadgets
+				? 'Configure first gadget with more options'
+				: 'Configure and run with more options'}
 		>
 			<span>{@html CogSmall}</span>
 			<span>Configure{hasMultipleGadgets ? ` (${gadgetNames[0]})` : ''}</span>
@@ -228,7 +230,9 @@
 			<span>{@html PlaySmall}</span>
 			<span>
 				{#if hasMultipleGadgets}
-					{detached ? `Create ${gadgetSpecs.length} Instances` : `Run ${gadgetSpecs.length} Gadgets`}
+					{detached
+						? `Create ${gadgetSpecs.length} Instances`
+						: `Run ${gadgetSpecs.length} Gadgets`}
 				{:else}
 					{detached ? 'Create Instance' : 'Run Now'}
 				{/if}

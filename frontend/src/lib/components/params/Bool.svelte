@@ -29,7 +29,9 @@
 	// untrack() explicitly indicates this is a one-time read at mount time
 	const initialValue = untrack(() => config.get(param));
 	const initialDefault = untrack(() => param.defaultValue);
-	let checked = $state(initialValue !== undefined ? initialValue === 'true' : initialDefault === 'true');
+	let checked = $state(
+		initialValue !== undefined ? initialValue === 'true' : initialDefault === 'true'
+	);
 
 	$effect(() => {
 		// Only set value if it differs from the default

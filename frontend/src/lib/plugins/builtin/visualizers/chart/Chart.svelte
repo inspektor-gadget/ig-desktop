@@ -1,6 +1,6 @@
 <script lang="ts">
-	import MetricsChart from '../charts/MetricsChart.svelte';
-	import HistogramChart from '../charts/HistogramChart.svelte';
+	import MetricsChart from './MetricsChart.svelte';
+	import HistogramChart from './HistogramChart.svelte';
 	import {
 		extractMetricFields,
 		extractTimestampConfig,
@@ -11,29 +11,35 @@
 		getCounterMode,
 		aggregateByTimestamp
 	} from '$lib/utils/chartConfig';
-	import type { Datasource, ChartSeriesConfig, CounterMode } from '$lib/types/charts';
-	import type { EventRingBuffer } from '$lib/utils/ring-buffer';
+	import type { ChartSeriesConfig, CounterMode } from '$lib/types/charts';
+	import type { VisualizerPluginProps } from '$lib/types/plugin-api';
 
 	/** Default chart colors for series without explicit color annotations */
 	const DEFAULT_CHART_COLORS = ['#77bb41', '#3b82f6', '#f59e0b', '#ef4444'];
 
-	interface Props {
-		ds: Datasource;
-		events?: EventRingBuffer<Record<string, unknown>>;
-		/** Version counter to trigger re-reads of the ring buffer */
-		eventVersion?: number;
+	interface Props extends VisualizerPluginProps {
 		/** Fill gaps with zero values for missing keys (default: true) */
 		fillGaps?: boolean;
 	}
 
-	let { ds, events, eventVersion = 0, fillGaps = true }: Props = $props();
+	let {
+		ds,
+		events,
+		snapshotData,
+		eventVersion = 0,
+		isRunning = true,
+		instanceID = '',
+		context,
+		fillGaps = true
+	}: Props = $props();
 
 	// Convert ring buffer to array for chart processing
 	// eventVersion dependency triggers re-read when new events arrive
 	const eventsArray = $derived.by(() => {
 		// Track eventVersion for reactivity (intentionally read to trigger updates)
 		void eventVersion;
-		return events?.toArray() ?? [];
+		// Use snapshotData if provided, otherwise use ring buffer
+		return snapshotData ?? events?.toArray() ?? [];
 	});
 
 	// Extract key and metric fields from datasource annotations
@@ -185,10 +191,5 @@
 		{keyFields}
 	/>
 {:else}
-	<MetricsChart
-		data={finalChartData}
-		series={seriesConfigs}
-		{groupedData}
-		{hasKeyGrouping}
-	/>
+	<MetricsChart data={finalChartData} series={seriesConfigs} {groupedData} {hasKeyGrouping} />
 {/if}

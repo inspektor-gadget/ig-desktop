@@ -16,7 +16,12 @@
 		onGroupChange?: (fields: Set<string>) => void;
 	}
 
-	let { data, groupableFields = [], activeGroupFields = new Set(), onGroupChange }: Props = $props();
+	let {
+		data,
+		groupableFields = [],
+		activeGroupFields = new Set(),
+		onGroupChange
+	}: Props = $props();
 
 	// Container dimensions - use manual ResizeObserver with rAF to avoid loop warnings
 	let containerWidth = $state(800);
@@ -256,9 +261,13 @@
 	aria-label="Flamegraph visualization"
 >
 	<!-- Controls bar -->
-	<div class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+	<div
+		class="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex-shrink-0"
+	>
 		<!-- Search box -->
-		<div class="flex items-center gap-1 px-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md">
+		<div
+			class="flex items-center gap-1 px-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md"
+		>
 			<span class="w-3.5 h-3.5 text-gray-400 flex-shrink-0">{@html SearchIcon}</span>
 			<input
 				bind:this={searchInputRef}
@@ -295,9 +304,13 @@
 
 		<!-- Search match info -->
 		{#if searchRegex && totalValue > 0}
-			<span class="text-[11px] text-gray-500 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 py-0.5 px-2 rounded">
-				{formatNumber(matchedSamples)} / {formatNumber(totalValue)} samples
-				({getPercentage(matchedSamples, totalValue).toFixed(1)}%)
+			<span
+				class="text-[11px] text-gray-500 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 py-0.5 px-2 rounded"
+			>
+				{formatNumber(matchedSamples)} / {formatNumber(totalValue)} samples ({getPercentage(
+					matchedSamples,
+					totalValue
+				).toFixed(1)}%)
 			</span>
 		{/if}
 
@@ -309,7 +322,10 @@
 			>
 				<button
 					bind:this={groupMenuButton}
-					class="flex items-center gap-1 py-1 px-2 border rounded text-[11px] cursor-pointer transition-all hover:border-gray-400 {activeGroupCount > 0 ? 'bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300' : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}"
+					class="flex items-center gap-1 py-1 px-2 border rounded text-[11px] cursor-pointer transition-all hover:border-gray-400 {activeGroupCount >
+					0
+						? 'bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300'
+						: 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}"
 					onclick={() => (groupMenuOpen = !groupMenuOpen)}
 					aria-haspopup="menu"
 					aria-expanded={groupMenuOpen}
@@ -317,7 +333,9 @@
 				>
 					Group by
 					{#if activeGroupCount > 0}
-						<span class="bg-blue-500 text-white text-[9px] py-px px-1.5 rounded-full font-semibold">{activeGroupCount}</span>
+						<span class="bg-blue-500 text-white text-[9px] py-px px-1.5 rounded-full font-semibold"
+							>{activeGroupCount}</span
+						>
 					{/if}
 					<span class="w-3 h-3 opacity-60 flex items-center">{@html ChevronDown}</span>
 				</button>
@@ -328,12 +346,16 @@
 						aria-label="Group by options"
 						class="absolute top-full left-0 mt-1 min-w-52 max-h-70 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg z-50"
 					>
-						<div class="px-3 py-2 text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
+						<div
+							class="px-3 py-2 text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700"
+						>
 							Group by:
 						</div>
 						<div class="py-1" role="group" aria-label="Grouping field toggles">
 							{#each groupableFields as field (field.fieldName)}
-								{@const tooltipText = field.description ? `${field.fieldName}\n${field.description}` : field.fieldName}
+								{@const tooltipText = field.description
+									? `${field.fieldName}\n${field.description}`
+									: field.fieldName}
 								<label
 									class="flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
 									title={tooltipText}
@@ -345,8 +367,12 @@
 										class="w-3.5 h-3.5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 cursor-pointer"
 									/>
 									<div class="flex flex-col min-w-0">
-										<span class="text-xs text-gray-700 dark:text-gray-200 truncate">{field.label}</span>
-										<span class="text-[10px] text-gray-400 dark:text-gray-500 truncate">{field.fieldName}</span>
+										<span class="text-xs text-gray-700 dark:text-gray-200 truncate"
+											>{field.label}</span
+										>
+										<span class="text-[10px] text-gray-400 dark:text-gray-500 truncate"
+											>{field.fieldName}</span
+										>
 									</div>
 								</label>
 							{/each}
@@ -378,7 +404,9 @@
 		{/if}
 
 		<!-- Zoom info -->
-		<span class="text-[11px] text-gray-500 dark:text-gray-400 max-w-50 overflow-hidden text-ellipsis whitespace-nowrap">
+		<span
+			class="text-[11px] text-gray-500 dark:text-gray-400 max-w-50 overflow-hidden text-ellipsis whitespace-nowrap"
+		>
 			{#if zoomedNode}
 				Zoomed: <span class="font-mono text-gray-700 dark:text-gray-300">{zoomedNode.name}</span>
 			{:else}
@@ -464,18 +492,24 @@
 			style="left: {tooltipPosition.x}px; top: {tooltipPosition.y}px;"
 			role="tooltip"
 		>
-			<div class="font-mono break-all mb-1.5 text-gray-900 dark:text-gray-100 font-medium">{tooltipNode.name}</div>
+			<div class="font-mono break-all mb-1.5 text-gray-900 dark:text-gray-100 font-medium">
+				{tooltipNode.name}
+			</div>
 			{#if tooltipNode.source}
 				<div class="text-blue-600 dark:text-blue-400 text-[10px] mb-1">
 					{tooltipNode.source.fieldName}
 					{#if tooltipNode.source.description}
-						<span class="text-gray-400 dark:text-gray-500"> - {tooltipNode.source.description}</span>
+						<span class="text-gray-400 dark:text-gray-500">
+							- {tooltipNode.source.description}</span
+						>
 					{/if}
 				</div>
 			{/if}
 			<div class="text-gray-500 dark:text-gray-400 text-[11px]">
-				{tooltipNode.value.toLocaleString()} samples
-				({getPercentage(tooltipNode.value, totalValue).toFixed(2)}%)
+				{tooltipNode.value.toLocaleString()} samples ({getPercentage(
+					tooltipNode.value,
+					totalValue
+				).toFixed(2)}%)
 			</div>
 			{#if tooltipDepth !== 0 && tooltipNode.name !== 'all'}
 				<div class="text-gray-400 dark:text-gray-500 text-[10px] mt-1 italic">Click to zoom</div>

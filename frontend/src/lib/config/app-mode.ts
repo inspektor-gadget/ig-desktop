@@ -23,8 +23,7 @@
 export type AppMode = 'full' | 'single-env' | 'demo';
 
 // Read from build-time environment variable, default to 'full'
-export const APP_MODE: AppMode =
-	(import.meta.env.VITE_APP_MODE as AppMode) || 'full';
+export const APP_MODE: AppMode = (import.meta.env.VITE_APP_MODE as AppMode) || 'full';
 
 /**
  * Feature flags derived from the app mode.

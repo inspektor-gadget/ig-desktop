@@ -23,11 +23,7 @@ class ThemeService {
 
 	/** The actual resolved theme (dark or light) */
 	readonly resolvedTheme: ResolvedTheme = $derived(
-		this.preference === 'system'
-			? this.systemPrefersDark
-				? 'dark'
-				: 'light'
-			: this.preference
+		this.preference === 'system' ? (this.systemPrefersDark ? 'dark' : 'light') : this.preference
 	);
 
 	/** True if current theme is dark */

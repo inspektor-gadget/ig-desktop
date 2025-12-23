@@ -1,8 +1,8 @@
 <script lang="ts">
 	import * as d3 from 'd3';
-	import Chart from './Chart/Chart.svelte';
-	import Axis from './Chart/Axis.svelte';
-	import Grid from './Chart/Grid.svelte';
+	import Chart from '$lib/components/charts/Chart/Chart.svelte';
+	import Axis from '$lib/components/charts/Chart/Axis.svelte';
+	import Grid from '$lib/components/charts/Chart/Grid.svelte';
 	import { transformHistogramData, getStableColor } from '$lib/utils/chartConfig';
 	import type { ChartDimensions, DatasourceField } from '$lib/types/charts';
 

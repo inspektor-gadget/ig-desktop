@@ -64,9 +64,7 @@ export function extractFlamegraphConfig(ds: Datasource): FlamegraphConfig {
 
 	// Fallback: if no explicit count field, look for a field named "samples"
 	if (!countField) {
-		const samplesField = ds.fields.find(
-			(f) => f.fullName === 'samples' || f.name === 'samples'
-		);
+		const samplesField = ds.fields.find((f) => f.fullName === 'samples' || f.name === 'samples');
 		if (samplesField) {
 			countField = samplesField.fullName;
 		}
@@ -371,9 +369,8 @@ export function buildFlameHierarchyWithGroups(
 		});
 	}
 	// Use the first stack field as default source for all frames
-	const defaultStackSource: FlameNodeSource | undefined = config.stackFields.length > 0
-		? stackSources.get(config.stackFields[0].fieldName)
-		: undefined;
+	const defaultStackSource: FlameNodeSource | undefined =
+		config.stackFields.length > 0 ? stackSources.get(config.stackFields[0].fieldName) : undefined;
 
 	for (const event of events) {
 		// Build stack frames first to check if we should process this event

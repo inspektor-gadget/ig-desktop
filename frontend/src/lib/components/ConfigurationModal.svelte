@@ -2,7 +2,7 @@
 	import Cog from '$lib/icons/cog.svg?raw';
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import type { SettingType } from '$lib/config.types';
-	import { configurationSchema } from '$lib/config';
+	import { getFullConfigurationSchema } from '$lib/config';
 	import SettingToggle from './Configuration/SettingToggle.svelte';
 	import SettingSelect from './Configuration/SettingSelect.svelte';
 	import SettingText from './Configuration/SettingText.svelte';
@@ -12,6 +12,8 @@
 	import Button from './Button.svelte';
 	import type { Component } from 'svelte';
 	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
+	// Import to ensure plugin config service is initialized
+	import '$lib/services/plugin-config.service';
 
 	interface Props {
 		open?: boolean;
@@ -23,15 +25,18 @@
 	// Track which setting is highlighted for deep-linking
 	let highlightedSetting = $state<string | null>(null);
 
+	// Get the full schema including plugin categories (reactive)
+	const fullSchema = $derived(getFullConfigurationSchema());
+
 	// Filter categories based on requiredSetting
 	const visibleCategories = $derived(
-		configurationSchema.categories.filter((category) => {
+		fullSchema.categories.filter((category) => {
 			if (!category.requiredSetting) return true;
 			return configuration.get(category.requiredSetting) === true;
 		})
 	);
 
-	let activeCategory = $state(configurationSchema.categories[0]?.id ?? '');
+	let activeCategory = $state(fullSchema.categories[0]?.id ?? '');
 
 	// Reset to first visible category if current becomes hidden
 	$effect(() => {
@@ -79,7 +84,9 @@
 	<!-- Content area with sidebar and panel -->
 	<div class="-mx-6 -my-6 flex h-[500px] gap-0">
 		<!-- Left Sidebar - Categories -->
-		<div class="w-48 border-r border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50">
+		<div
+			class="w-48 border-r border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50"
+		>
 			<nav class="p-2">
 				{#each visibleCategories as category}
 					<button

@@ -240,7 +240,9 @@
 			role="document"
 		>
 			<!-- Modal Header -->
-			<div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-6 py-4">
+			<div
+				class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-6 py-4"
+			>
 				<h2 id="otel-modal-title" class="text-lg font-semibold">
 					OpenTelemetry {typeLabel} Exporters
 				</h2>
@@ -280,7 +282,8 @@
 												<span class="text-yellow-600 dark:text-yellow-500">(insecure)</span>
 											{/if}
 											{#if isMetrics && config.interval}
-												<span class="text-blue-600 dark:text-blue-400">every {config.interval}</span>
+												<span class="text-blue-600 dark:text-blue-400">every {config.interval}</span
+												>
 											{/if}
 										</span>
 									</div>
@@ -304,8 +307,12 @@
 							{/each}
 						</div>
 					{:else}
-						<div class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30 p-6 text-center">
-							<p class="text-sm text-gray-500 dark:text-gray-500">No {typeLabel.toLowerCase()} exporters configured</p>
+						<div
+							class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30 p-6 text-center"
+						>
+							<p class="text-sm text-gray-500 dark:text-gray-500">
+								No {typeLabel.toLowerCase()} exporters configured
+							</p>
 						</div>
 					{/if}
 

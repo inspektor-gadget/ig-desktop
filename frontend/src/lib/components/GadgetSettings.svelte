@@ -63,7 +63,9 @@
 		onclick={onclose}
 		title="Close Inspector"
 	>
-		<span class="rounded p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700">{@html Close}</span>
+		<span class="rounded p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+			>{@html Close}</span
+		>
 	</button>
 </div>
 

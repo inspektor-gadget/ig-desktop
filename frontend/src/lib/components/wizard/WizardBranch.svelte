@@ -79,9 +79,7 @@
 				<div class="flex flex-row items-center justify-between gap-3">
 					<div class="flex flex-row items-center gap-3">
 						{#if icon}
-							<span
-								class="text-gray-500 transition-colors group-hover:text-orange-500"
-							>
+							<span class="text-gray-500 transition-colors group-hover:text-orange-500">
 								{@html icon}
 							</span>
 						{/if}
@@ -89,9 +87,7 @@
 							{getNodeLabel(childNode)}
 						</span>
 					</div>
-					<span
-						class="text-gray-400 transition-colors group-hover:text-orange-500"
-					>
+					<span class="text-gray-400 transition-colors group-hover:text-orange-500">
 						{@html ChevronRight}
 					</span>
 				</div>

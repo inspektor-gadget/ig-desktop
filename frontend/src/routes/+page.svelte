@@ -157,7 +157,9 @@
 	});
 </script>
 
-<div class="flex flex-1 flex-col gap-8 overflow-auto bg-gray-50/80 dark:bg-gray-950/80 p-8 text-gray-900 dark:text-gray-100">
+<div
+	class="flex flex-1 flex-col gap-8 overflow-auto bg-gray-50/80 dark:bg-gray-950/80 p-8 text-gray-900 dark:text-gray-100"
+>
 	{#if !Object.keys(environments).length}
 		<!-- Welcome state when no environments exist -->
 		<div class="mx-auto w-full max-w-7xl">
@@ -183,7 +185,9 @@
 					<Panel title="Get Started" icon={CirclePlus} color="blue" bodyPadding="large">
 						<div class="flex flex-col gap-6">
 							<div class="flex flex-col gap-3">
-								<h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200">Create Your First Environment</h3>
+								<h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+									Create Your First Environment
+								</h3>
 								<p class="text-gray-600 dark:text-gray-400">
 									Connect to a Kubernetes cluster or Linux host to start running gadgets. Use the
 									button in the upper left or click below.
@@ -199,7 +203,9 @@
 							</a>
 
 							<div class="flex flex-col gap-2 border-t border-gray-200 dark:border-gray-800 pt-4">
-								<p class="text-sm text-gray-600 dark:text-gray-400">Haven't installed Inspektor Gadget yet?</p>
+								<p class="text-sm text-gray-600 dark:text-gray-400">
+									Haven't installed Inspektor Gadget yet?
+								</p>
 								<p class="text-sm text-gray-500">
 									For Kubernetes, you can use a 1-click installation directly from IG Desktop. Just
 									follow the step above and create a new environment.
@@ -256,7 +262,9 @@
 			<!-- Action Panels Grid -->
 			<div
 				class="grid grid-cols-1 gap-6 lg:grid-cols-2"
-				class:xl:grid-cols-3={features.canBrowseArtifactHub && !features.isSingleEnvironment && !features.isDemoMode}
+				class:xl:grid-cols-3={features.canBrowseArtifactHub &&
+					!features.isSingleEnvironment &&
+					!features.isDemoMode}
 			>
 				<!-- Environments Panel (hidden in single-env and demo modes) -->
 				{#if !features.isSingleEnvironment && !features.isDemoMode}
@@ -266,7 +274,9 @@
 						color="blue"
 						badge={Object.keys(environments).length}
 					>
-						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">Select an environment to manage and run gadgets</p>
+						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+							Select an environment to manage and run gadgets
+						</p>
 						<div class="flex flex-col gap-2">
 							{#each Object.values(environments).slice(0, 4) as env}
 								<button
@@ -295,49 +305,55 @@
 
 				<!-- Recent Gadgets Panel -->
 				<div class:lg:col-span-2={features.isSingleEnvironment || features.isDemoMode}>
-				<Panel title="Recent Activity" icon={History} color="purple">
-					{#if allHistories.length > 0}
-						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">Quick access to recently run gadgets</p>
-						<div class="flex flex-col gap-2">
-							{#each allHistories as { gadget, envId, envName }}
-								<button
-									onclick={() => runGadget(gadget, envId)}
-									class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
-								>
-									<div class="flex flex-1 flex-col gap-1 overflow-hidden">
-										<div class="truncate font-medium text-gray-800 dark:text-gray-200">
-											{getGadgetName(gadget.image)}
-										</div>
-										<div class="flex items-center gap-2 text-xs">
-											<span class="text-gray-600 dark:text-gray-400">{envName}</span>
-											{#if gadget.timestamp}
-												<span class="text-gray-500">•</span>
-												<span class="text-gray-500">{formatRelativeTime(gadget.timestamp)}</span>
-											{/if}
-										</div>
-									</div>
-									<div
-										class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-purple-400"
+					<Panel title="Recent Activity" icon={History} color="purple">
+						{#if allHistories.length > 0}
+							<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+								Quick access to recently run gadgets
+							</p>
+							<div class="flex flex-col gap-2">
+								{#each allHistories as { gadget, envId, envName }}
+									<button
+										onclick={() => runGadget(gadget, envId)}
+										class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 									>
-										{@html ChevronRight}
-									</div>
-								</button>
-							{/each}
-						</div>
-					{:else}
-						<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-							<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
-							<p class="text-sm text-gray-500">No gadgets run yet</p>
-							<p class="text-xs text-gray-400 dark:text-gray-600">Your recent activity will appear here</p>
-						</div>
-					{/if}
-				</Panel>
+										<div class="flex flex-1 flex-col gap-1 overflow-hidden">
+											<div class="truncate font-medium text-gray-800 dark:text-gray-200">
+												{getGadgetName(gadget.image)}
+											</div>
+											<div class="flex items-center gap-2 text-xs">
+												<span class="text-gray-600 dark:text-gray-400">{envName}</span>
+												{#if gadget.timestamp}
+													<span class="text-gray-500">•</span>
+													<span class="text-gray-500">{formatRelativeTime(gadget.timestamp)}</span>
+												{/if}
+											</div>
+										</div>
+										<div
+											class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-purple-400"
+										>
+											{@html ChevronRight}
+										</div>
+									</button>
+								{/each}
+							</div>
+						{:else}
+							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
+								<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
+								<p class="text-sm text-gray-500">No gadgets run yet</p>
+								<p class="text-xs text-gray-400 dark:text-gray-600">
+									Your recent activity will appear here
+								</p>
+							</div>
+						{/if}
+					</Panel>
 				</div>
 
 				<!-- Discover Gadgets Panel -->
 				{#if features.canBrowseArtifactHub}
 					<Panel title="Discover Gadgets" icon={Grid} color="green">
-						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">Explore the Artifact Hub gadget gallery</p>
+						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+							Explore the Artifact Hub gadget gallery
+						</p>
 
 						<!-- Featured categories -->
 						<div class="flex flex-col gap-2">
@@ -347,7 +363,9 @@
 							>
 								<div class="flex flex-col gap-1">
 									<div class="font-medium text-gray-800 dark:text-gray-200">All Gadgets</div>
-									<div class="text-xs text-gray-600 dark:text-gray-400">Browse complete collection</div>
+									<div class="text-xs text-gray-600 dark:text-gray-400">
+										Browse complete collection
+									</div>
 								</div>
 								<div
 									class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
@@ -362,7 +380,9 @@
 							>
 								<div class="flex flex-col gap-1">
 									<div class="font-medium text-gray-800 dark:text-gray-200">Security</div>
-									<div class="text-xs text-gray-600 dark:text-gray-400">Security monitoring gadgets</div>
+									<div class="text-xs text-gray-600 dark:text-gray-400">
+										Security monitoring gadgets
+									</div>
 								</div>
 								<div
 									class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
@@ -388,7 +408,9 @@
 						</div>
 
 						<!-- Artifact Hub branding -->
-						<div class="mt-auto flex items-center gap-2 pt-4 text-xs text-gray-400 dark:text-gray-600">
+						<div
+							class="mt-auto flex items-center gap-2 pt-4 text-xs text-gray-400 dark:text-gray-600"
+						>
 							<div class="h-4 w-4">{@html ArtifactHub}</div>
 							<span>Powered by Artifact Hub</span>
 						</div>
@@ -400,7 +422,9 @@
 			<div
 				class="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-100/30 dark:bg-gray-900/30 p-6 shadow-sm shadow-gray-200/90 dark:shadow-gray-950/90"
 			>
-				<h3 class="mb-4 text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 uppercase">
+				<h3
+					class="mb-4 text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 uppercase"
+				>
 					Did You Know?
 				</h3>
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -413,7 +437,9 @@
 						>
 							<div class="text-{tip.color}-400">{@html tip.icon}</div>
 							<div>
-								<div class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">{tip.title}</div>
+								<div class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+									{tip.title}
+								</div>
 								<div class="text-xs text-gray-600 dark:text-gray-400">{tip.description}</div>
 							</div>
 						</button>
@@ -549,7 +575,9 @@
 						</button>
 					</div>
 
-					<div class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/30 dark:bg-gray-900/30 p-4">
+					<div
+						class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/30 dark:bg-gray-900/30 p-4"
+					>
 						<p class="text-sm text-gray-600 dark:text-gray-400">
 							Have questions or want to contribute? Join our community to connect with other users
 							and the Inspektor Gadget team.

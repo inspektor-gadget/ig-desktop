@@ -394,9 +394,15 @@
 								</div>
 
 								{#if originalError}
-									<div class="mt-3 rounded border border-red-300/50 dark:border-red-800/50 bg-red-100/30 dark:bg-red-900/30 p-3">
-										<p class="text-xs font-semibold text-red-700/90 dark:text-red-300/90">Error details:</p>
-										<p class="mt-1 font-mono text-xs text-red-600/80 dark:text-red-400/80">{originalError}</p>
+									<div
+										class="mt-3 rounded border border-red-300/50 dark:border-red-800/50 bg-red-100/30 dark:bg-red-900/30 p-3"
+									>
+										<p class="text-xs font-semibold text-red-700/90 dark:text-red-300/90">
+											Error details:
+										</p>
+										<p class="mt-1 font-mono text-xs text-red-600/80 dark:text-red-400/80">
+											{originalError}
+										</p>
 									</div>
 								{/if}
 
@@ -424,7 +430,9 @@
 									class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-100/30 dark:bg-gray-900/30 p-8 text-center"
 								>
 									<div class="mb-3 text-gray-500">{@html Server}</div>
-									<p class="text-sm font-medium text-gray-600 dark:text-gray-400">No environments configured</p>
+									<p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+										No environments configured
+									</p>
 									<p class="mt-2 text-xs text-gray-500">
 										Add an environment in the Environments section to get started.
 									</p>
@@ -439,8 +447,12 @@
 											class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 										>
 											<div class="flex flex-col gap-1">
-												<div class="font-medium text-gray-800 dark:text-gray-200">{environment.name}</div>
-												<div class="text-xs text-gray-600 dark:text-gray-400">{environment.runtime}</div>
+												<div class="font-medium text-gray-800 dark:text-gray-200">
+													{environment.name}
+												</div>
+												<div class="text-xs text-gray-600 dark:text-gray-400">
+													{environment.runtime}
+												</div>
 											</div>
 											<div
 												class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-blue-400"
@@ -703,7 +715,9 @@
 					</button>
 				{/snippet}
 
-				<div class="rounded bg-gray-200 dark:bg-gray-800 p-3 font-mono text-xs whitespace-pre-wrap">{manifest}</div>
+				<div class="rounded bg-gray-200 dark:bg-gray-800 p-3 font-mono text-xs whitespace-pre-wrap">
+					{manifest}
+				</div>
 			</Panel>
 		</div>
 	</div>
@@ -714,7 +728,9 @@
 	<div>
 		<div class="flex flex-col items-end gap-2">
 			{#if sessionRecordingEnabled && recordGadgetRun && sessionMode === 'existing' && !selectedSessionId}
-				<span class="text-xs text-yellow-600 dark:text-yellow-400">Please select a session to record to</span>
+				<span class="text-xs text-yellow-600 dark:text-yellow-400"
+					>Please select a session to record to</span
+				>
 			{/if}
 			<button
 				disabled={!canRun()}

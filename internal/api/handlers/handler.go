@@ -25,6 +25,7 @@ import (
 	"ig-frontend/internal/artifacthub"
 	"ig-frontend/internal/environment"
 	"ig-frontend/internal/gadget"
+	"ig-frontend/internal/plugins"
 	"ig-frontend/internal/session"
 )
 
@@ -37,6 +38,7 @@ type Handler struct {
 	instanceManager *gadget.InstanceManager
 	artifactHub     *artifacthub.Client
 	sessionService  *session.Service
+	pluginService   *plugins.Service
 
 	mu   sync.Mutex
 	send func(any)
@@ -65,6 +67,7 @@ func New(
 	instanceManager *gadget.InstanceManager,
 	artifactHub *artifacthub.Client,
 	sessionService *session.Service,
+	pluginService *plugins.Service,
 ) *Handler {
 	return &Handler{
 		ctx:             ctx,
@@ -74,6 +77,7 @@ func New(
 		instanceManager: instanceManager,
 		artifactHub:     artifactHub,
 		sessionService:  sessionService,
+		pluginService:   pluginService,
 	}
 }
 
@@ -107,6 +111,9 @@ func (h *Handler) Handlers() []api.CommandHandler {
 		commandHandler{"getGadgetRun", h.HandleGetGadgetRun},
 		commandHandler{"getRunEvents", h.HandleGetRunEvents},
 		commandHandler{"deleteSession", h.HandleDeleteSession},
+		// Plugin handlers
+		commandHandler{"listPlugins", h.HandleListPlugins},
+		commandHandler{"getPlugin", h.HandleGetPlugin},
 	}
 }
 
@@ -159,4 +166,96 @@ func (h *Handler) Register(t transport.Transport) {
 	if err := t.Start(); err != nil {
 		log.Printf("handler: failed to start transport: %v", err)
 	}
+}
+
+// HandleListPlugins returns all discovered local plugins
+func (h *Handler) HandleListPlugins(ev *api.Event) {
+	log.Printf("handler: listing plugins")
+
+	if h.pluginService == nil {
+		ev.Error = "plugin service not available"
+		h.send(ev)
+		return
+	}
+
+	discoveredPlugins, err := h.pluginService.DiscoverPlugins()
+	if err != nil {
+		log.Printf("handler: failed to discover plugins: %v", err)
+		ev.Error = err.Error()
+		h.send(ev)
+		return
+	}
+
+	response := map[string]interface{}{
+		"plugins":    discoveredPlugins,
+		"pluginsDir": h.pluginService.PluginsDir(),
+	}
+
+	responseData, err := json.Marshal(response)
+	if err != nil {
+		log.Printf("handler: failed to marshal plugins response: %v", err)
+		ev.Error = "failed to marshal response"
+		h.send(ev)
+		return
+	}
+
+	ev.Data = responseData
+	ev.Success = true
+	h.send(ev)
+}
+
+// HandleGetPlugin returns a specific plugin by ID with its files
+func (h *Handler) HandleGetPlugin(ev *api.Event) {
+	if h.pluginService == nil {
+		ev.Error = "plugin service not available"
+		h.send(ev)
+		return
+	}
+
+	// Parse request data
+	data, err := json.Marshal(ev.Data)
+	if err != nil {
+		log.Printf("handler: failed to marshal request data: %v", err)
+		ev.Error = "invalid request"
+		h.send(ev)
+		return
+	}
+
+	var req struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(data, &req); err != nil {
+		log.Printf("handler: failed to unmarshal request: %v", err)
+		ev.Error = "invalid request format"
+		h.send(ev)
+		return
+	}
+
+	if req.ID == "" {
+		ev.Error = "plugin id required"
+		h.send(ev)
+		return
+	}
+
+	log.Printf("handler: getting plugin %s", req.ID)
+
+	plugin, err := h.pluginService.GetPlugin(req.ID)
+	if err != nil {
+		log.Printf("handler: failed to get plugin: %v", err)
+		ev.Error = err.Error()
+		h.send(ev)
+		return
+	}
+
+	pluginData, err := json.Marshal(plugin)
+	if err != nil {
+		log.Printf("handler: failed to marshal plugin: %v", err)
+		ev.Error = "failed to marshal response"
+		h.send(ev)
+		return
+	}
+
+	ev.Data = pluginData
+	ev.Success = true
+	h.send(ev)
 }

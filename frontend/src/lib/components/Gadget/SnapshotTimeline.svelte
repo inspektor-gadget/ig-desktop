@@ -40,7 +40,9 @@
 	const barSpacing = 16; // Space between bar centers
 
 	// Calculate content width based on number of snapshots
-	const contentWidth = $derived(Math.max(snapshots.length * barSpacing + margin.left + margin.right, containerWidth));
+	const contentWidth = $derived(
+		Math.max(snapshots.length * barSpacing + margin.left + margin.right, containerWidth)
+	);
 	const boundedWidth = $derived(contentWidth - margin.left - margin.right);
 
 	// Calculate time range from snapshots (oldest to newest)
@@ -270,15 +272,13 @@
 	tabindex="0"
 	role="listbox"
 	aria-label="Snapshot timeline navigation. Use left/right arrows to navigate snapshots."
-	aria-activedescendant={selectedIndices.size === 1 ? `snapshot-${selectedIndices.values().next().value}` : undefined}
+	aria-activedescendant={selectedIndices.size === 1
+		? `snapshot-${selectedIndices.values().next().value}`
+		: undefined}
 	onkeydown={handleContainerKeydown}
 	onwheel={handleWheel}
 >
-	<div
-		class="scroll-container"
-		bind:this={scrollContainer}
-		tabindex="-1"
-	>
+	<div class="scroll-container" bind:this={scrollContainer} tabindex="-1">
 		<svg
 			bind:this={svgElement}
 			{height}
@@ -288,119 +288,113 @@
 			onmouseup={handleMouseUp}
 			onmouseleave={handleMouseLeave}
 		>
-		<g transform="translate({margin.left}, {margin.top})">
-			<!-- Background grid line -->
-			<line
-				x1="0"
-				y1={boundedHeight}
-				x2={boundedWidth}
-				y2={boundedHeight}
-				stroke="#374151"
-				stroke-width="1"
-			/>
-
-			<!-- Drag selection highlight rectangle -->
-			{#if isDragging && dragRange}
-				{@const startX = xPositionForIndex(dragRange.end)}
-				{@const endX = xPositionForIndex(dragRange.start)}
-				<rect
-					x={startX - barWidth / 2 - 2}
-					y={0}
-					width={endX - startX + barWidth + 4}
-					height={boundedHeight}
-					fill="rgba(119, 187, 65, 0.15)"
-					stroke="#77bb41"
+			<g transform="translate({margin.left}, {margin.top})">
+				<!-- Background grid line -->
+				<line
+					x1="0"
+					y1={boundedHeight}
+					x2={boundedWidth}
+					y2={boundedHeight}
+					stroke="#374151"
 					stroke-width="1"
-					stroke-dasharray="4,2"
-					rx="2"
-					class="pointer-events-none"
 				/>
-			{/if}
 
-			<!-- Bars for each snapshot -->
-			{#each snapshots as snapshot, i (snapshot.batchId)}
-				{@const x = xPositionForIndex(i) - barWidth / 2}
-				{@const barHeight = boundedHeight - yScale(snapshot.data.length)}
-				{@const selected = isSelected(i)}
-				{@const inDragRange = isInDragRange(i)}
-				<g
-					class="cursor-pointer"
-					role="option"
-					id="snapshot-{i}"
-					aria-selected={selected}
-					aria-label="{snapshot.data.length} events at {formatTime(snapshot.receivedAt)}"
-					data-snapshot-index={i}
-				>
-					<!-- Transparent hit area for easier clicking on small bars -->
+				<!-- Drag selection highlight rectangle -->
+				{#if isDragging && dragRange}
+					{@const startX = xPositionForIndex(dragRange.end)}
+					{@const endX = xPositionForIndex(dragRange.start)}
 					<rect
-						{x}
+						x={startX - barWidth / 2 - 2}
 						y={0}
-						width={barWidth}
+						width={endX - startX + barWidth + 4}
 						height={boundedHeight}
-						fill="transparent"
-					/>
-					<rect
-						{x}
-						y={yScale(snapshot.data.length)}
-						width={barWidth}
-						height={barHeight}
-						fill={selected ? '#77bb41' : inDragRange ? '#9fcc6d' : '#4b5563'}
-						rx="1"
-						class="transition-colors"
-						class:hover:fill-gray-400={!selected && !inDragRange && !isDragging}
-						class:hover:fill-green-400={selected && !isDragging}
-					/>
-					<!-- Focus ring for keyboard navigation -->
-					{#if selected}
-						<rect
-							x={x - 2}
-							y={yScale(snapshot.data.length) - 2}
-							width={barWidth + 4}
-							height={barHeight + 4}
-							fill="none"
-							stroke="#77bb41"
-							stroke-width="1"
-							rx="2"
-							class="pointer-events-none"
-						/>
-					{/if}
-					<!-- Hover tooltip area (larger hit target) -->
-					<title
-						>{snapshot.data.length} events at {formatTime(snapshot.receivedAt)}{selected
-							? ' (selected)'
-							: ''}</title
-					>
-				</g>
-			{/each}
-
-			<!-- Selected indicator lines (only show when bar has no visible height) -->
-			{#each snapshots as snapshot, i (snapshot.batchId)}
-				{#if isSelected(i) && snapshot.data.length === 0}
-					{@const selectedX = xPositionForIndex(i)}
-					<line
-						x1={selectedX}
-						y1={0}
-						x2={selectedX}
-						y2={boundedHeight}
+						fill="rgba(119, 187, 65, 0.15)"
 						stroke="#77bb41"
 						stroke-width="1"
-						stroke-dasharray="2,2"
-						pointer-events="none"
+						stroke-dasharray="4,2"
+						rx="2"
+						class="pointer-events-none"
 					/>
 				{/if}
-			{/each}
-		</g>
 
-		<!-- Time labels -->
-		<g transform="translate({margin.left}, {height - 4})">
-			<text x="0" y="0" fill="#6b7280" font-size="9" text-anchor="start">
-				{formatTime(timeRange.min)}
-			</text>
-			<text x={boundedWidth} y="0" fill="#6b7280" font-size="9" text-anchor="end">
-				{formatTime(timeRange.max)}
-			</text>
-		</g>
-	</svg>
+				<!-- Bars for each snapshot -->
+				{#each snapshots as snapshot, i (snapshot.batchId)}
+					{@const x = xPositionForIndex(i) - barWidth / 2}
+					{@const barHeight = boundedHeight - yScale(snapshot.data.length)}
+					{@const selected = isSelected(i)}
+					{@const inDragRange = isInDragRange(i)}
+					<g
+						class="cursor-pointer"
+						role="option"
+						id="snapshot-{i}"
+						aria-selected={selected}
+						aria-label="{snapshot.data.length} events at {formatTime(snapshot.receivedAt)}"
+						data-snapshot-index={i}
+					>
+						<!-- Transparent hit area for easier clicking on small bars -->
+						<rect {x} y={0} width={barWidth} height={boundedHeight} fill="transparent" />
+						<rect
+							{x}
+							y={yScale(snapshot.data.length)}
+							width={barWidth}
+							height={barHeight}
+							fill={selected ? '#77bb41' : inDragRange ? '#9fcc6d' : '#4b5563'}
+							rx="1"
+							class="transition-colors"
+							class:hover:fill-gray-400={!selected && !inDragRange && !isDragging}
+							class:hover:fill-green-400={selected && !isDragging}
+						/>
+						<!-- Focus ring for keyboard navigation -->
+						{#if selected}
+							<rect
+								x={x - 2}
+								y={yScale(snapshot.data.length) - 2}
+								width={barWidth + 4}
+								height={barHeight + 4}
+								fill="none"
+								stroke="#77bb41"
+								stroke-width="1"
+								rx="2"
+								class="pointer-events-none"
+							/>
+						{/if}
+						<!-- Hover tooltip area (larger hit target) -->
+						<title
+							>{snapshot.data.length} events at {formatTime(snapshot.receivedAt)}{selected
+								? ' (selected)'
+								: ''}</title
+						>
+					</g>
+				{/each}
+
+				<!-- Selected indicator lines (only show when bar has no visible height) -->
+				{#each snapshots as snapshot, i (snapshot.batchId)}
+					{#if isSelected(i) && snapshot.data.length === 0}
+						{@const selectedX = xPositionForIndex(i)}
+						<line
+							x1={selectedX}
+							y1={0}
+							x2={selectedX}
+							y2={boundedHeight}
+							stroke="#77bb41"
+							stroke-width="1"
+							stroke-dasharray="2,2"
+							pointer-events="none"
+						/>
+					{/if}
+				{/each}
+			</g>
+
+			<!-- Time labels -->
+			<g transform="translate({margin.left}, {height - 4})">
+				<text x="0" y="0" fill="#6b7280" font-size="9" text-anchor="start">
+					{formatTime(timeRange.min)}
+				</text>
+				<text x={boundedWidth} y="0" fill="#6b7280" font-size="9" text-anchor="end">
+					{formatTime(timeRange.max)}
+				</text>
+			</g>
+		</svg>
 	</div>
 </div>
 

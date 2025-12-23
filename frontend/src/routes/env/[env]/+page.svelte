@@ -57,9 +57,7 @@
 	);
 
 	// Experimental feature flag for gadget wizard
-	const gadgetWizardEnabled = $derived(
-		configuration.get('experimentalGadgetWizard') === true
-	);
+	const gadgetWizardEnabled = $derived(configuration.get('experimentalGadgetWizard') === true);
 
 	let detachedInstances = $state<GadgetInstance[]>([]);
 
@@ -463,7 +461,8 @@
 								<div class="flex flex-row items-start justify-between gap-4">
 									<div class="flex flex-1 flex-col gap-2">
 										<div class="flex flex-row items-center gap-2 font-mono text-sm">
-											<span class="font-medium text-gray-800 dark:text-gray-200">{entry.image}</span>
+											<span class="font-medium text-gray-800 dark:text-gray-200">{entry.image}</span
+											>
 											{#if entry.detached}
 												<span class="rounded bg-blue-500/20 px-2 py-0.5 text-xs text-blue-400"
 													>detached</span
@@ -557,7 +556,8 @@
 							href="https://inspektor-gadget.io/docs/latest/reference/headless"
 							title="Documentation"
 							target="_blank"
-							class="text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400">{@html Info}</a
+							class="text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400"
+							>{@html Info}</a
 						>
 					{/snippet}
 
@@ -593,7 +593,9 @@
 											<td class="px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-400"
 												>{instance.id?.substring(0, 12)}</td
 											>
-											<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{instance.name}</td>
+											<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300"
+												>{instance.name}</td
+											>
 											<td class="px-4 py-3 font-mono text-xs text-gray-500">{instance.tags}</td>
 											<td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400"
 												>{instance.gadgetConfig?.imageName}</td
@@ -677,7 +679,9 @@
 				<!-- Environment Name -->
 				<div class="flex flex-col gap-2">
 					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Name</span>
-					<div class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200">
+					<div
+						class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200"
+					>
 						{env.name}
 					</div>
 				</div>
@@ -695,7 +699,9 @@
 				<!-- Runtime -->
 				<div class="flex flex-col gap-2">
 					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Runtime</span>
-					<div class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200">
+					<div
+						class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200"
+					>
 						{env.runtime}
 					</div>
 				</div>
@@ -706,7 +712,9 @@
 						<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
 							>Configuration</span
 						>
-						<div class="flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4">
+						<div
+							class="flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4"
+						>
 							{#each Object.entries(env.params) as [key, value]}
 								<div class="flex flex-col gap-1">
 									<div class="text-xs font-medium text-gray-500">{key}</div>
@@ -724,7 +732,9 @@
 					>
 						<div class="flex flex-col gap-1">
 							<h3 class="font-semibold text-red-600 dark:text-red-400">Danger Zone</h3>
-							<p class="text-sm text-gray-600 dark:text-gray-400">Irreversible actions for this environment</p>
+							<p class="text-sm text-gray-600 dark:text-gray-400">
+								Irreversible actions for this environment
+							</p>
 						</div>
 						<Button variant="danger" onclick={() => deleteEnvironment()} class="justify-center">
 							<span>{@html Trash}</span>

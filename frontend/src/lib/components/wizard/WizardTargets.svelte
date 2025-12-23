@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { setContext } from 'svelte';
-	import K8sAutocomplete from '$lib/components/params/K8sAutocomplete.svelte';
+	import K8sAutocomplete from '$lib/plugins/builtin/params/k8s-autocomplete/K8sAutocomplete.svelte';
 	import AutocompleteInput from '$lib/components/forms/AutocompleteInput.svelte';
 	import type { WizardTargetParams } from './wizard-types';
 
@@ -106,7 +106,7 @@
 			</div>
 			<div class="grow">
 				<AutocompleteInput
-					value={values.containername as string || ''}
+					value={(values.containername as string) || ''}
 					onSelect={(val) => {
 						if (typeof val === 'string') values.containername = val;
 					}}
@@ -129,7 +129,9 @@
 					<input
 						type="checkbox"
 						checked={values.host === 'true'}
-						onchange={(e) => { values.host = e.currentTarget.checked ? 'true' : ''; }}
+						onchange={(e) => {
+							values.host = e.currentTarget.checked ? 'true' : '';
+						}}
 						class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 					/>
 					<span class="text-sm text-gray-700 dark:text-gray-300">Show host data</span>

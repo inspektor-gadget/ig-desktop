@@ -20,7 +20,9 @@
 			class="flex flex-1 flex-col gap-2"
 		>
 			<div class="flex flex-row items-center gap-2">
-				<span class="font-medium text-gray-800 dark:text-gray-200">{session.name || 'Unnamed Session'}</span>
+				<span class="font-medium text-gray-800 dark:text-gray-200"
+					>{session.name || 'Unnamed Session'}</span
+				>
 				<span class="rounded bg-green-500/20 px-2 py-0.5 text-xs text-green-600 dark:text-green-400"
 					>{session.runCount} {session.runCount === 1 ? 'run' : 'runs'}</span
 				>

@@ -11,7 +11,9 @@
 </script>
 
 <div class="mb-4">
-	<label for={setting.key} class="mb-2 block text-sm text-gray-700 dark:text-gray-300">{setting.title}</label>
+	<label for={setting.key} class="mb-2 block text-sm text-gray-700 dark:text-gray-300"
+		>{setting.title}</label
+	>
 	{#if setting.description}
 		<p class="mb-2 text-xs text-gray-500">{setting.description}</p>
 	{/if}

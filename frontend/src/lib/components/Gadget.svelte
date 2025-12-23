@@ -368,7 +368,17 @@
 									class="absolute right-2 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
 									title="Clear search"
 								>
-									<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="14"
+										height="14"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
 										<line x1="18" y1="6" x2="6" y2="18"></line>
 										<line x1="6" y1="6" x2="18" y2="18"></line>
 									</svg>
@@ -392,7 +402,8 @@
 							ondblclick={openHighlightSettings}
 							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-300 dark:border-gray-800 transition-colors {searchHighlightInFilterMode
 								? 'bg-yellow-600 text-white hover:bg-yellow-500'
-								: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'} {!searchModeFilter && searchQuery
+								: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'} {!searchModeFilter &&
+							searchQuery
 								? ''
 								: 'rounded-r-lg'}"
 							title={searchHighlightInFilterMode
@@ -473,7 +484,9 @@
 						}}
 					>
 						{@html Adjustments}
-						<span class="flex items-center text-gray-400">{@html showInspector ? ChevronLeft : ChevronRight}</span>
+						<span class="flex items-center text-gray-400"
+							>{@html showInspector ? ChevronLeft : ChevronRight}</span
+						>
 					</button>
 				</div>
 				<div class="flex flex-1 flex-col justify-stretch overflow-y-auto overscroll-none">
