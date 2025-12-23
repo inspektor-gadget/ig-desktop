@@ -5,7 +5,7 @@
 	import Book from '$lib/icons/book.svg?raw';
 	import Bug from '$lib/icons/bug.svg?raw';
 	import Layers from '$lib/icons/layers.svg?raw';
-	import Close from '$lib/icons/close.svg?raw';
+	import Close from '$lib/icons/close-small.svg?raw';
 
 	import DataSources from './gadget-attribs/DataSources.svelte';
 	import Params from './gadget-attribs/Params.svelte';
@@ -46,9 +46,13 @@
 		>
 	{/each}
 	<div class="flex-1 border-b border-b-gray-300 dark:border-b-gray-700"></div>
-	<button class="cursor-pointer border-b border-b-gray-300 dark:border-b-gray-700 p-2" onclick={onclose}
-		>{@html Close}</button
+	<button
+		class="flex cursor-pointer items-center justify-center border-b border-b-gray-300 px-3 text-gray-500 transition-colors hover:text-gray-700 dark:border-b-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+		onclick={onclose}
+		title="Close Inspector"
 	>
+		<span class="rounded p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700">{@html Close}</span>
+	</button>
 </div>
 
 <div class="flex flex-1 flex-col overflow-auto bg-gray-50 dark:bg-gray-900">

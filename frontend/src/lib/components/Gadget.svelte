@@ -6,7 +6,9 @@
 
 	import Play from '$lib/icons/play-small.svg?raw';
 	import Stop from '$lib/icons/stop-small.svg?raw';
-	import Cog from '$lib/icons/cog.svg?raw';
+	import Adjustments from '$lib/icons/adjustments-small.svg?raw';
+	import ChevronLeft from '$lib/icons/chevron-left-small.svg?raw';
+	import ChevronRight from '$lib/icons/chevron-right-small.svg?raw';
 	import FilterIcon from '$lib/icons/filter-small.svg?raw';
 	import { instances } from '$lib/shared/instances.svelte';
 	import { environments } from '$lib/shared/environments.svelte';
@@ -261,7 +263,7 @@
 	<div class="flex flex-1 flex-row overflow-hidden">
 		<div class="flex flex-1 flex-col overflow-hidden">
 			<div class="flex grow flex-col overflow-hidden">
-				<div class="flex flex-row items-center justify-between p-2">
+				<div class="flex flex-row items-center justify-between py-2 pl-2">
 					<div class="flex flex-row items-center gap-2">
 						<div class="flex flex-row items-center">
 							<!-- Play/Stop button group -->
@@ -464,11 +466,15 @@
 						</div>
 					{/if}
 					<button
-						class="cursor-pointer"
+						class="flex cursor-pointer items-center gap-1.5 rounded-l-md border border-r-0 border-gray-300 bg-gray-100 py-1.5 pl-2 pr-1 transition-colors hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+						title={showInspector ? 'Hide Inspector' : 'Show Inspector'}
 						onclick={() => {
 							preferences.set('gadget.show-inspector', !showInspector);
-						}}>{@html Cog}</button
+						}}
 					>
+						{@html Adjustments}
+						<span class="flex items-center text-gray-400">{@html showInspector ? ChevronLeft : ChevronRight}</span>
+					</button>
 				</div>
 				<div class="flex flex-1 flex-col justify-stretch overflow-y-auto overscroll-none">
 					{#each normalizedDataSources as ds, id}
