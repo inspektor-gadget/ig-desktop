@@ -241,8 +241,7 @@
 	});
 
 	const eventCount = $derived(instance?.eventCount || 0);
-	const displayedEventCount = $derived(events?.length || 0);
-	const maxEventsConfig = $derived((configuration.get('maxEventsPerGadget') as number) || 500);
+	const displayedEventCount = $derived(events ? Math.min(eventCount, events.capacity) : 0);
 	const isCapped = $derived(eventCount > displayedEventCount);
 
 	function openMaxEventsSettings() {
