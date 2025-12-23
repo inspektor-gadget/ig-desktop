@@ -492,7 +492,7 @@
 			</div>
 			{#if !logCollapsed}
 				<div
-					class="h-2 cursor-ns-resize touch-none bg-gray-800 select-none"
+					class="h-2 cursor-row-resize touch-none bg-gray-800 select-none"
 					onpointerdown={resize}
 				></div>
 			{/if}
@@ -506,7 +506,7 @@
 		</div>
 		{#if showInspector}
 			<div
-				class="w-1 cursor-ew-resize touch-none border-r-1 border-r-gray-600 bg-gray-800 select-none"
+				class="w-1 cursor-col-resize touch-none border-r-1 border-r-gray-600 bg-gray-800 select-none"
 				onpointerdown={resizeSidebar}
 			></div>
 			<div
