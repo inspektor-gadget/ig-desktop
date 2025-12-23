@@ -453,6 +453,7 @@
 			selectedIndices={selectedSnapshotIndices}
 			onSelect={selectSnapshot}
 			onRangeSelect={selectRange}
+			onSelectAll={selectAll}
 		/>
 
 		<!-- Navigation bar -->

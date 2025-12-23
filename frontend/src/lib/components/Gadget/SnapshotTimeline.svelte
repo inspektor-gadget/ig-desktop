@@ -6,21 +6,42 @@
 		selectedIndices: Set<number>;
 		onSelect: (index: number, event: MouseEvent | KeyboardEvent) => void;
 		onRangeSelect?: (startIndex: number, endIndex: number) => void;
+		onSelectAll?: () => void;
 	}
 
-	let { snapshots, selectedIndices, onSelect, onRangeSelect }: Props = $props();
+	let { snapshots, selectedIndices, onSelect, onRangeSelect, onSelectAll }: Props = $props();
 
 	// Check if an index is selected
 	function isSelected(index: number): boolean {
 		return selectedIndices.has(index);
 	}
 
-	// Container dimensions
+	// Container and scroll dimensions
 	let containerWidth = $state(400);
+	let scrollContainer: HTMLDivElement | undefined = $state();
+	let timelineContainer: HTMLDivElement | undefined = $state();
+
+	// Focus index tracks the "active" end of a selection for keyboard navigation
+	// This is separate from the selection anchor (tracked in parent as lastSelectedIndex)
+	let focusIndex = $state(0);
+
+	// Keep focusIndex in bounds when snapshots change
+	$effect(() => {
+		if (snapshots.length > 0 && focusIndex >= snapshots.length) {
+			focusIndex = snapshots.length - 1;
+		}
+	});
 	const height = 60;
 	const margin = { top: 8, right: 8, bottom: 16, left: 8 };
-	const boundedWidth = $derived(Math.max(containerWidth - margin.left - margin.right, 0));
 	const boundedHeight = height - margin.top - margin.bottom;
+
+	// Fixed bar dimensions for consistent appearance
+	const barWidth = 12;
+	const barSpacing = 16; // Space between bar centers
+
+	// Calculate content width based on number of snapshots
+	const contentWidth = $derived(Math.max(snapshots.length * barSpacing + margin.left + margin.right, containerWidth));
+	const boundedWidth = $derived(contentWidth - margin.left - margin.right);
 
 	// Calculate time range from snapshots (oldest to newest)
 	const timeRange = $derived.by(() => {
@@ -35,12 +56,6 @@
 
 	// Calculate max count for Y scale
 	const maxCount = $derived(Math.max(...snapshots.map((s) => s.data.length), 1));
-
-	// Bar width and spacing - fixed size, bars grow from right to left
-	const barWidth = $derived(
-		Math.max(4, Math.min(20, boundedWidth / Math.max(snapshots.length, 1) - 2))
-	);
-	const barSpacing = $derived(barWidth + 4); // Fixed spacing between bars
 
 	// X position for a snapshot by index
 	// Index 0 (newest) is at the right edge, higher indices go left
@@ -90,11 +105,12 @@
 		return index >= dragRange.start && index <= dragRange.end;
 	}
 
-	// Get x position from mouse event relative to SVG
+	// Get x position from mouse event relative to SVG content
 	function getRelativeX(event: MouseEvent): number {
-		if (!svgElement) return 0;
-		const rect = svgElement.getBoundingClientRect();
-		return event.clientX - rect.left - margin.left;
+		if (!scrollContainer) return 0;
+		const rect = scrollContainer.getBoundingClientRect();
+		// Account for scroll position within the container
+		return event.clientX - rect.left + scrollContainer.scrollLeft - margin.left;
 	}
 
 	function handleMouseDown(event: MouseEvent) {
@@ -119,7 +135,7 @@
 		dragCurrentIndex = xPositionToIndex(x);
 	}
 
-	function handleMouseUp() {
+	function handleMouseUp(event: MouseEvent) {
 		if (!isDragging || dragStartIndex === null || dragCurrentIndex === null) {
 			isDragging = false;
 			return;
@@ -128,10 +144,18 @@
 		const start = Math.min(dragStartIndex, dragCurrentIndex);
 		const end = Math.max(dragStartIndex, dragCurrentIndex);
 
-		// Only trigger range select if dragged across multiple items
-		if (start !== end && onRangeSelect) {
+		// If start === end, it was a click, not a drag - select that snapshot
+		if (start === end) {
+			onSelect(start, event);
+			focusIndex = start;
+		} else if (onRangeSelect) {
+			// Actual drag across multiple items
 			onRangeSelect(start, end);
+			focusIndex = dragCurrentIndex;
 		}
+
+		// Always focus the timeline for keyboard navigation
+		timelineContainer?.focus();
 
 		isDragging = false;
 		dragStartIndex = null;
@@ -147,33 +171,93 @@
 		}
 	}
 
-	// Keyboard navigation handler
-	function handleKeydown(index: number, event: KeyboardEvent) {
-		if (event.key === 'Enter' || event.key === ' ') {
+	// Component-level keyboard navigation (when timeline container is focused)
+	function handleContainerKeydown(event: KeyboardEvent) {
+		if (snapshots.length === 0) return;
+
+		// Handle Ctrl+A / Cmd+A for select all
+		if ((event.ctrlKey || event.metaKey) && event.key === 'a') {
 			event.preventDefault();
-			onSelect(index, event);
-		} else if (event.key === 'ArrowLeft') {
-			// Left arrow = go to older snapshot (higher index, displayed to the left)
-			event.preventDefault();
-			if (index < snapshots.length - 1) {
-				onSelect(index + 1, event);
-				// Focus the new element
-				const newElement = document.querySelector(
-					`[data-snapshot-index="${index + 1}"]`
-				) as HTMLElement;
-				newElement?.focus();
+			event.stopPropagation();
+			onSelectAll?.();
+			return;
+		}
+
+		// Only handle navigation keys
+		if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+
+		// Prevent browser's default scroll behavior
+		event.preventDefault();
+		event.stopPropagation();
+
+		if (event.key === 'ArrowLeft') {
+			// Left arrow = go to older snapshot (higher index)
+			const newIndex = Math.min(focusIndex + 1, snapshots.length - 1);
+			if (newIndex !== focusIndex) {
+				onSelect(newIndex, event);
+				focusIndex = newIndex;
+				scrollToIndex(newIndex);
 			}
 		} else if (event.key === 'ArrowRight') {
-			// Right arrow = go to newer snapshot (lower index, displayed to the right)
-			event.preventDefault();
-			if (index > 0) {
-				onSelect(index - 1, event);
-				// Focus the new element
-				const newElement = document.querySelector(
-					`[data-snapshot-index="${index - 1}"]`
-				) as HTMLElement;
-				newElement?.focus();
+			// Right arrow = go to newer snapshot (lower index)
+			const newIndex = Math.max(focusIndex - 1, 0);
+			if (newIndex !== focusIndex) {
+				onSelect(newIndex, event);
+				focusIndex = newIndex;
+				scrollToIndex(newIndex);
 			}
+		} else if (event.key === 'Home') {
+			// Home = go to newest snapshot (index 0)
+			onSelect(0, event);
+			focusIndex = 0;
+			scrollToIndex(0);
+		} else if (event.key === 'End') {
+			// End = go to oldest snapshot
+			const lastIndex = snapshots.length - 1;
+			onSelect(lastIndex, event);
+			focusIndex = lastIndex;
+			scrollToIndex(lastIndex);
+		}
+	}
+
+	// Scroll to make a snapshot index visible
+	function scrollToIndex(index: number) {
+		if (!scrollContainer) return;
+
+		const x = xPositionForIndex(index);
+		const scrollLeft = scrollContainer.scrollLeft;
+		const viewportWidth = scrollContainer.clientWidth;
+
+		// Calculate the position we need to scroll to
+		const targetLeft = x - barWidth / 2 - margin.left;
+		const targetRight = x + barWidth / 2 + margin.right;
+
+		if (targetLeft < scrollLeft) {
+			// Scroll left to show the bar
+			scrollContainer.scrollTo({ left: Math.max(0, targetLeft - 20), behavior: 'smooth' });
+		} else if (targetRight > scrollLeft + viewportWidth) {
+			// Scroll right to show the bar
+			scrollContainer.scrollTo({ left: targetRight - viewportWidth + 20, behavior: 'smooth' });
+		}
+	}
+
+	// Auto-scroll to keep selected snapshot visible when selection changes
+	$effect(() => {
+		if (selectedIndices.size === 1) {
+			const index = selectedIndices.values().next().value as number;
+			// Use a microtask to ensure DOM is updated
+			queueMicrotask(() => scrollToIndex(index));
+		}
+	});
+
+	// Handle wheel events to enable horizontal scrolling with vertical mousewheel
+	function handleWheel(event: WheelEvent) {
+		if (!scrollContainer) return;
+
+		// If there's horizontal scroll needed and user is scrolling vertically
+		if (Math.abs(event.deltaY) > Math.abs(event.deltaX) && contentWidth > containerWidth) {
+			event.preventDefault();
+			scrollContainer.scrollLeft += event.deltaY;
 		}
 	}
 </script>
@@ -182,16 +266,28 @@
 	class="snapshot-timeline w-full border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 select-none"
 	class:cursor-crosshair={onRangeSelect}
 	bind:clientWidth={containerWidth}
+	bind:this={timelineContainer}
+	tabindex="0"
+	role="listbox"
+	aria-label="Snapshot timeline navigation. Use left/right arrows to navigate snapshots."
+	aria-activedescendant={selectedIndices.size === 1 ? `snapshot-${selectedIndices.values().next().value}` : undefined}
+	onkeydown={handleContainerKeydown}
+	onwheel={handleWheel}
 >
-	<svg
-		bind:this={svgElement}
-		{height}
-		width="100%"
-		onmousedown={handleMouseDown}
-		onmousemove={handleMouseMove}
-		onmouseup={handleMouseUp}
-		onmouseleave={handleMouseLeave}
+	<div
+		class="scroll-container"
+		bind:this={scrollContainer}
+		tabindex="-1"
 	>
+		<svg
+			bind:this={svgElement}
+			{height}
+			width={contentWidth}
+			onmousedown={handleMouseDown}
+			onmousemove={handleMouseMove}
+			onmouseup={handleMouseUp}
+			onmouseleave={handleMouseLeave}
+		>
 		<g transform="translate({margin.left}, {margin.top})">
 			<!-- Background grid line -->
 			<line
@@ -228,17 +324,12 @@
 				{@const selected = isSelected(i)}
 				{@const inDragRange = isInDragRange(i)}
 				<g
-					class="cursor-pointer focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500"
-					onclick={(e) => {
-						if (!isDragging) onSelect(i, e);
-					}}
-					role="button"
-					tabindex="0"
-					onkeydown={(e) => handleKeydown(i, e)}
+					class="cursor-pointer"
+					role="option"
+					id="snapshot-{i}"
+					aria-selected={selected}
+					aria-label="{snapshot.data.length} events at {formatTime(snapshot.receivedAt)}"
 					data-snapshot-index={i}
-					aria-label="Snapshot {i + 1} of {snapshots.length}: {snapshot.data
-						.length} events at {formatTime(snapshot.receivedAt)}"
-					aria-pressed={selected}
 				>
 					<!-- Transparent hit area for easier clicking on small bars -->
 					<rect
@@ -282,9 +373,9 @@
 				</g>
 			{/each}
 
-			<!-- Selected indicator lines (show dashed line for each selected snapshot) -->
+			<!-- Selected indicator lines (only show when bar has no visible height) -->
 			{#each snapshots as snapshot, i (snapshot.batchId)}
-				{#if isSelected(i)}
+				{#if isSelected(i) && snapshot.data.length === 0}
 					{@const selectedX = xPositionForIndex(i)}
 					<line
 						x1={selectedX}
@@ -310,11 +401,34 @@
 			</text>
 		</g>
 	</svg>
+	</div>
 </div>
 
 <style>
 	.snapshot-timeline {
 		height: 76px;
 		flex-shrink: 0;
+		outline: none;
+	}
+
+	.scroll-container {
+		width: 100%;
+		height: 100%;
+		overflow-x: auto;
+		overflow-y: hidden;
+		/* Hide scrollbar while maintaining scroll functionality */
+		scrollbar-width: none; /* Firefox */
+		-ms-overflow-style: none; /* IE/Edge */
+		/* Prevent scroll container from being keyboard navigable */
+		outline: none;
+	}
+
+	.scroll-container::-webkit-scrollbar {
+		display: none; /* Chrome, Safari, Opera */
+	}
+
+	/* Prevent native keyboard scrolling on the scroll container */
+	.scroll-container:focus {
+		outline: none;
 	}
 </style>
