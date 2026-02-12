@@ -23,8 +23,8 @@ import (
 
 	"github.com/coder/websocket"
 
-	"ig-frontend/internal/api/transport"
-	"ig-frontend/internal/app"
+	"github.com/inspektor-gadget/ig-desktop/internal/app"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api/transport"
 )
 
 // Server provides HTTP and WebSocket server functionality for

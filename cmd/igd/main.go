@@ -28,7 +28,7 @@ import (
 	"syscall"
 	"time"
 
-	"ig-frontend/internal/server"
+	"github.com/inspektor-gadget/ig-desktop/internal/server"
 )
 
 func main() {

@@ -20,9 +20,9 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/gadget"
 	igApi "github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-service/api"
-	"ig-frontend/internal/api"
-	"ig-frontend/internal/gadget"
 )
 
 // HandleRunGadget handles running a new gadget instance
@@ -44,6 +44,12 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 		return
 	}
 
+	runtime, err := h.runtimeFactory.GetRuntime(req.EnvironmentID)
+	if err != nil {
+		h.send(ev.SetError(err))
+		return
+	}
+
 	runReq := gadget.RunRequest{
 		ID:            req.ID,
 		Image:         req.Image,
@@ -56,7 +62,7 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 		SessionName:   req.SessionName,
 	}
 
-	instanceID, err := h.gadgetService.Run(h.ctx, runReq)
+	instanceID, err := h.gadgetService.Run(h.ctx, runtime, runReq)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
@@ -87,6 +93,12 @@ func (h *Handler) HandleAttachInstance(ev *api.Event) {
 		return
 	}
 
+	runtime, err := h.runtimeFactory.GetRuntime(req.EnvironmentID)
+	if err != nil {
+		h.send(ev.SetError(err))
+		return
+	}
+
 	attachReq := gadget.AttachRequest{
 		ID:            req.ID,
 		Image:         req.Image,
@@ -95,7 +107,7 @@ func (h *Handler) HandleAttachInstance(ev *api.Event) {
 		InstanceName:  req.InstanceName,
 	}
 
-	instanceID, err := h.gadgetService.Attach(h.ctx, attachReq)
+	instanceID, err := h.gadgetService.Attach(h.ctx, runtime, attachReq)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
@@ -118,8 +130,14 @@ func (h *Handler) HandleGetGadgetInfo(ev *api.Event) {
 		return
 	}
 
+	runtime, err := h.runtimeFactory.GetRuntime(req.EnvironmentID)
+	if err != nil {
+		h.send(ev.SetError(err))
+		return
+	}
+
 	go func() {
-		info, err := h.gadgetService.GetInfo(h.ctx, req.EnvironmentID, req.URL)
+		info, err := h.gadgetService.GetInfo(h.ctx, runtime, req.URL)
 		if err != nil {
 			h.send(ev.SetError(err))
 			return
@@ -139,8 +157,14 @@ func (h *Handler) HandleListInstances(ev *api.Event) {
 		return
 	}
 
+	runtime, err := h.runtimeFactory.GetRuntime(req.EnvironmentID)
+	if err != nil {
+		h.send(ev.SetError(err))
+		return
+	}
+
 	go func() {
-		instances, err := h.gadgetService.ListInstances(h.ctx, req.EnvironmentID)
+		instances, err := h.gadgetService.ListInstances(h.ctx, runtime)
 		if err != nil {
 			log.Println(err)
 			h.send(ev.SetError(err))

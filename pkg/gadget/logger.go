@@ -22,16 +22,15 @@ import (
 
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/logger"
 
-	"ig-frontend/internal/api"
-	"ig-frontend/internal/session"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
 
 // GenericLogger implements logger.GenericLogger for gadget instances
 type GenericLogger struct {
-	send           func(any)
-	instanceID     string
-	level          logger.Level
-	sessionService *session.Service
+	send            func(any)
+	instanceID      string
+	level           logger.Level
+	sessionRecorder SessionRecorder
 }
 
 // NewLogger creates a new GenericLogger
@@ -43,9 +42,9 @@ func NewLogger(send func(any), instanceID string, level logger.Level) *GenericLo
 	}
 }
 
-// SetSessionService sets the session service for recording logs
-func (l *GenericLogger) SetSessionService(ss *session.Service) {
-	l.sessionService = ss
+// SetSessionRecorder sets the session recorder for recording logs
+func (l *GenericLogger) SetSessionRecorder(sr SessionRecorder) {
+	l.sessionRecorder = sr
 }
 
 // SetLevel sets the logging level
@@ -65,8 +64,8 @@ func (l *GenericLogger) sendLogEvent(data []byte) {
 		Type:       api.TypeGadgetLog,
 		Data:       data,
 	})
-	if l.sessionService != nil {
-		if err := l.sessionService.WriteEvent(l.instanceID, api.TypeGadgetLog, "", data); err != nil {
+	if l.sessionRecorder != nil {
+		if err := l.sessionRecorder.WriteEvent(l.instanceID, api.TypeGadgetLog, "", data); err != nil {
 			log.Printf("failed to write log to session: %v", err)
 		}
 	}

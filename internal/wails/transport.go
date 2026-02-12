@@ -23,7 +23,7 @@ import (
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
-	"ig-frontend/internal/api/transport"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api/transport"
 )
 
 // Transport implements transport.Transport using Wails events

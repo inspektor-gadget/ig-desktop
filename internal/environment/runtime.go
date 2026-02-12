@@ -22,8 +22,8 @@ import (
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadgets"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"ig-frontend/internal/api"
-	grpcruntime "ig-frontend/pkg/grpc-runtime"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
+	grpcruntime "github.com/inspektor-gadget/ig-desktop/pkg/grpc-runtime"
 )
 
 // RuntimeFactory handles creation and initialization of runtimes from environment configs

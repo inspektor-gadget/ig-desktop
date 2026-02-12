@@ -26,25 +26,31 @@ import (
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/operators/simple"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	apiTypes "github.com/inspektor-gadget/ig-desktop/pkg/api"
+	grpcruntime "github.com/inspektor-gadget/ig-desktop/pkg/grpc-runtime"
+	json2 "github.com/inspektor-gadget/ig-desktop/pkg/json"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/datasource"
-	apiTypes "ig-frontend/internal/api"
-	"ig-frontend/internal/environment"
-	"ig-frontend/internal/session"
-	json2 "ig-frontend/pkg/json"
 )
+
+// SessionRecorder is the interface for optional session recording.
+// Implementations can record gadget runs and their events for later replay.
+type SessionRecorder interface {
+	CreateSession(name, envID string) (string, error)
+	StartGadgetRun(instanceID, sessionID, image string, params map[string]string, gadgetInfo []byte) (string, error)
+	WriteEvent(instanceID string, eventType int, dsName string, data []byte) error
+	StopGadgetRun(instanceID string) error
+}
 
 // Service handles gadget operations
 type Service struct {
-	runtimeFactory  *environment.RuntimeFactory
 	instanceManager *InstanceManager
-	sessionService  *session.Service
+	sessionRecorder SessionRecorder
 	send            func(any)
 }
 
 // NewService creates a new gadget service
-func NewService(runtimeFactory *environment.RuntimeFactory, instanceManager *InstanceManager) *Service {
+func NewService(instanceManager *InstanceManager) *Service {
 	return &Service{
-		runtimeFactory:  runtimeFactory,
 		instanceManager: instanceManager,
 	}
 }
@@ -54,9 +60,9 @@ func (s *Service) SetSendFunc(send func(any)) {
 	s.send = send
 }
 
-// SetSessionService sets the session service for the service
-func (s *Service) SetSessionService(ss *session.Service) {
-	s.sessionService = ss
+// SetSessionRecorder sets the session recorder for the service
+func (s *Service) SetSessionRecorder(sr SessionRecorder) {
+	s.sessionRecorder = sr
 }
 
 // setupSessionRecording creates or uses an existing session for recording.
@@ -67,7 +73,7 @@ func (s *Service) setupSessionRecording(instanceID string, req RunRequest, gi *a
 
 	if sessionID == "" {
 		var err error
-		sessionID, err = s.sessionService.CreateSession(req.SessionName, req.EnvironmentID)
+		sessionID, err = s.sessionRecorder.CreateSession(req.SessionName, req.EnvironmentID)
 		if err != nil {
 			log.Printf("failed to create session: %v (continuing without recording)", err)
 			return nil
@@ -81,7 +87,7 @@ func (s *Service) setupSessionRecording(instanceID string, req RunRequest, gi *a
 		return nil
 	}
 
-	runID, err := s.sessionService.StartGadgetRun(instanceID, sessionID, req.Image, req.Params, gadgetInfoBytes)
+	runID, err := s.sessionRecorder.StartGadgetRun(instanceID, sessionID, req.Image, req.Params, gadgetInfoBytes)
 	if err != nil {
 		log.Printf("failed to start gadget run: %v (continuing without recording)", err)
 		return nil
@@ -95,7 +101,7 @@ func (s *Service) setupSessionRecording(instanceID string, req RunRequest, gi *a
 }
 
 // subscribeToDataSources subscribes to all data sources and sends events to the frontend.
-// If withRecording is true, events are also written to the session service.
+// If withRecording is true, events are also written to the session recorder.
 func (s *Service) subscribeToDataSources(gadgetCtx operators.GadgetContext, instanceID string, withRecording bool) error {
 	for _, ds := range gadgetCtx.GetDataSources() {
 		formatter, err := json2.New(ds, json2.WithFlatten(true), json2.WithShowAll(true))
@@ -114,8 +120,8 @@ func (s *Service) subscribeToDataSources(gadgetCtx operators.GadgetContext, inst
 					Data:         jsonData,
 					DatasourceID: dsName,
 				})
-				if withRecording && s.sessionService != nil {
-					if err := s.sessionService.WriteEvent(instanceID, apiTypes.TypeGadgetEvent, dsName, jsonData); err != nil {
+				if withRecording && s.sessionRecorder != nil {
+					if err := s.sessionRecorder.WriteEvent(instanceID, apiTypes.TypeGadgetEvent, dsName, jsonData); err != nil {
 						log.Printf("failed to write event to session: %v", err)
 					}
 				}
@@ -130,8 +136,8 @@ func (s *Service) subscribeToDataSources(gadgetCtx operators.GadgetContext, inst
 					Data:         jsonData,
 					DatasourceID: dsName,
 				})
-				if withRecording && s.sessionService != nil {
-					if err := s.sessionService.WriteEvent(instanceID, apiTypes.TypeGadgetEventArray, dsName, jsonData); err != nil {
+				if withRecording && s.sessionRecorder != nil {
+					if err := s.sessionRecorder.WriteEvent(instanceID, apiTypes.TypeGadgetEventArray, dsName, jsonData); err != nil {
 						log.Printf("failed to write event to session: %v", err)
 					}
 				}
@@ -165,12 +171,7 @@ type AttachRequest struct {
 }
 
 // Run starts a new gadget instance
-func (s *Service) Run(ctx context.Context, req RunRequest) (string, error) {
-	runtime, err := s.runtimeFactory.GetRuntime(req.EnvironmentID)
-	if err != nil {
-		return "", err
-	}
-
+func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req RunRequest) (string, error) {
 	instanceID := uuid.New().String()
 
 	xop := simple.New("exp", simple.WithPriority(1000), simple.OnPreStart(func(gadgetCtx operators.GadgetContext) error {
@@ -186,7 +187,7 @@ func (s *Service) Run(ctx context.Context, req RunRequest) (string, error) {
 		}
 
 		var sessionInfo *apiTypes.SessionInfo
-		if req.Record && s.sessionService != nil {
+		if req.Record && s.sessionRecorder != nil {
 			sessionInfo = s.setupSessionRecording(instanceID, req, gi)
 		}
 
@@ -201,10 +202,10 @@ func (s *Service) Run(ctx context.Context, req RunRequest) (string, error) {
 		return s.subscribeToDataSources(gadgetCtx, instanceID, req.Record)
 	}))
 
-	// Create logger and set session service if available
+	// Create logger and set session recorder if available
 	gadgetLogger := NewLogger(s.send, instanceID, logger.DebugLevel)
-	if s.sessionService != nil {
-		gadgetLogger.SetSessionService(s.sessionService)
+	if s.sessionRecorder != nil {
+		gadgetLogger.SetSessionRecorder(s.sessionRecorder)
 	}
 
 	options := []gadgetcontext.Option{
@@ -233,8 +234,8 @@ func (s *Service) Run(ctx context.Context, req RunRequest) (string, error) {
 		}
 
 		// Stop session recording if active
-		if s.sessionService != nil {
-			if err := s.sessionService.StopGadgetRun(instanceID); err != nil {
+		if s.sessionRecorder != nil {
+			if err := s.sessionRecorder.StopGadgetRun(instanceID); err != nil {
 				log.Printf("failed to stop gadget run: %v", err)
 			}
 		}
@@ -253,12 +254,7 @@ func (s *Service) Run(ctx context.Context, req RunRequest) (string, error) {
 }
 
 // Attach attaches to an existing gadget instance
-func (s *Service) Attach(ctx context.Context, req AttachRequest) (string, error) {
-	runtime, err := s.runtimeFactory.GetRuntime(req.EnvironmentID)
-	if err != nil {
-		return "", err
-	}
-
+func (s *Service) Attach(ctx context.Context, runtime *grpcruntime.Runtime, req AttachRequest) (string, error) {
 	instanceID := uuid.New().String()
 
 	xop := simple.New("exp", simple.WithPriority(1000), simple.OnPreStart(func(gadgetCtx operators.GadgetContext) error {
@@ -318,12 +314,7 @@ func (s *Service) Attach(ctx context.Context, req AttachRequest) (string, error)
 }
 
 // GetInfo retrieves information about a gadget
-func (s *Service) GetInfo(ctx context.Context, environmentID string, url string) (*api.GadgetInfo, error) {
-	runtime, err := s.runtimeFactory.GetRuntime(environmentID)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *Service) GetInfo(ctx context.Context, runtime *grpcruntime.Runtime, url string) (*api.GadgetInfo, error) {
 	gadgetCtx := gadgetcontext.New(ctx, url)
 	rtParams := runtime.ParamDescs().ToParams()
 
@@ -331,23 +322,13 @@ func (s *Service) GetInfo(ctx context.Context, environmentID string, url string)
 }
 
 // ListInstances lists all running gadget instances in an environment
-func (s *Service) ListInstances(ctx context.Context, environmentID string) ([]*api.GadgetInstance, error) {
-	runtime, err := s.runtimeFactory.GetRuntime(environmentID)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *Service) ListInstances(ctx context.Context, runtime *grpcruntime.Runtime) ([]*api.GadgetInstance, error) {
 	rtParams := runtime.ParamDescs().ToParams()
 	return runtime.GetGadgetInstances(ctx, rtParams)
 }
 
 // RemoveInstance removes a gadget instance from the runtime
-func (s *Service) RemoveInstance(ctx context.Context, environmentID string, instanceID string) error {
-	runtime, err := s.runtimeFactory.GetRuntime(environmentID)
-	if err != nil {
-		return err
-	}
-
+func (s *Service) RemoveInstance(ctx context.Context, runtime *grpcruntime.Runtime, instanceID string) error {
 	rtParams := runtime.ParamDescs().ToParams()
 	return runtime.RemoveGadgetInstance(ctx, rtParams, instanceID)
 }

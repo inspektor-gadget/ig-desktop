@@ -18,7 +18,7 @@ import (
 	"context"
 	"sync"
 
-	"ig-frontend/internal/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
 
 // InstanceManager manages lifecycle of running gadget instances

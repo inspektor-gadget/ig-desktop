@@ -15,8 +15,8 @@
 package handlers
 
 import (
-	"ig-frontend/internal/api"
-	"ig-frontend/internal/version"
+	"github.com/inspektor-gadget/ig-desktop/internal/version"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
 
 // HandleGetVersion returns the application version

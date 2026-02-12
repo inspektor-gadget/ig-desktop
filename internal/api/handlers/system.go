@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"ig-frontend/internal/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
 
 // HandleHelo handles the initial handshake and sends all environments
@@ -51,8 +51,14 @@ func (h *Handler) HandleRemoveInstance(ev *api.Event) {
 		return
 	}
 
+	runtime, err := h.runtimeFactory.GetRuntime(req.EnvironmentID)
+	if err != nil {
+		h.send(ev.SetError(err))
+		return
+	}
+
 	go func() {
-		err := h.gadgetService.RemoveInstance(h.ctx, req.EnvironmentID, req.ID)
+		err := h.gadgetService.RemoveInstance(h.ctx, runtime, req.ID)
 		if err != nil {
 			h.send(ev.SetError(err))
 			return

@@ -17,8 +17,8 @@ package handlers
 import (
 	"encoding/json"
 
-	"ig-frontend/internal/api"
-	"ig-frontend/internal/environment"
+	"github.com/inspektor-gadget/ig-desktop/internal/environment"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
 
 // HandleCreateEnvironment handles creating a new environment

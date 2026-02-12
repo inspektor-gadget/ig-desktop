@@ -22,40 +22,34 @@ import (
 
 	"github.com/google/uuid"
 
-	"ig-frontend/internal/api"
-	"ig-frontend/internal/config"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
 
 // Storage handles persistence of environment configurations
-type Storage struct{}
+type Storage struct {
+	dir string
+}
 
-// NewStorage creates a new Storage instance
-func NewStorage() *Storage {
-	return &Storage{}
+// NewStorage creates a new Storage instance that persists environments
+// to the given directory.
+func NewStorage(dir string) *Storage {
+	return &Storage{dir: dir}
 }
 
 // Add creates a new environment and persists it to disk
 func (s *Storage) Add(environment *Environment) error {
-	dir, err := config.GetDir("env")
-	if err != nil {
-		return err
-	}
 	environment.ID = uuid.New().String()
-	filename := filepath.Join(dir, environment.ID+".json")
+	filename := filepath.Join(s.dir, environment.ID+".json")
 	d, _ := json.Marshal(environment)
 	return os.WriteFile(filename, d, 0o644)
 }
 
 // Delete removes an environment from disk
 func (s *Storage) Delete(environment *Environment) error {
-	dir, err := config.GetDir("env")
-	if err != nil {
-		return err
-	}
 	if err := uuid.Validate(environment.ID); err != nil {
 		return &api.ErrInvalidEnvironmentID{ID: environment.ID}
 	}
-	return os.Remove(filepath.Join(dir, environment.ID+".json"))
+	return os.Remove(filepath.Join(s.dir, environment.ID+".json"))
 }
 
 // Get retrieves a single environment by ID
@@ -63,11 +57,7 @@ func (s *Storage) Get(id string) (*Environment, error) {
 	if err := uuid.Validate(id); err != nil {
 		return nil, &api.ErrInvalidEnvironmentID{ID: id}
 	}
-	dir, err := config.GetDir("env")
-	if err != nil {
-		return nil, err
-	}
-	b, err := os.ReadFile(filepath.Join(dir, id+".json"))
+	b, err := os.ReadFile(filepath.Join(s.dir, id+".json"))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, &api.ErrEnvironmentNotFound{ID: id}
@@ -84,17 +74,13 @@ func (s *Storage) Get(id string) (*Environment, error) {
 
 // List returns all persisted environments
 func (s *Storage) List() ([]*Environment, error) {
-	dir, err := config.GetDir("env")
-	if err != nil {
-		return nil, err
-	}
-	files, err := os.ReadDir(dir)
+	files, err := os.ReadDir(s.dir)
 	if err != nil {
 		return nil, err
 	}
 	environments := make([]*Environment, 0, len(files))
 	for _, file := range files {
-		b, err := os.ReadFile(filepath.Join(dir, file.Name()))
+		b, err := os.ReadFile(filepath.Join(s.dir, file.Name()))
 		if err != nil {
 			continue
 		}

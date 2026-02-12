@@ -25,7 +25,7 @@ import (
 
 	"github.com/coder/websocket"
 
-	"ig-frontend/internal/api/transport"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api/transport"
 )
 
 // WebSocketTransport implements transport.Transport using WebSocket

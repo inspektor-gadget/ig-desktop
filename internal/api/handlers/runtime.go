@@ -18,8 +18,8 @@ import (
 	"encoding/json"
 	"log"
 
-	"ig-frontend/internal/api"
-	"ig-frontend/internal/environment"
+	"github.com/inspektor-gadget/ig-desktop/internal/environment"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
 
 // HandleGetRuntimes returns available runtime types

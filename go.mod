@@ -1,4 +1,4 @@
-module ig-frontend
+module github.com/inspektor-gadget/ig-desktop
 
 go 1.25.0
 

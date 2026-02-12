@@ -21,13 +21,13 @@ import (
 	"context"
 	"log"
 
-	"ig-frontend/internal/api/handlers"
-	"ig-frontend/internal/artifacthub"
-	"ig-frontend/internal/config"
-	"ig-frontend/internal/environment"
-	"ig-frontend/internal/gadget"
-	"ig-frontend/internal/plugins"
-	"ig-frontend/internal/session"
+	"github.com/inspektor-gadget/ig-desktop/internal/api/handlers"
+	"github.com/inspektor-gadget/ig-desktop/internal/artifacthub"
+	"github.com/inspektor-gadget/ig-desktop/internal/config"
+	"github.com/inspektor-gadget/ig-desktop/internal/environment"
+	"github.com/inspektor-gadget/ig-desktop/internal/plugins"
+	"github.com/inspektor-gadget/ig-desktop/internal/session"
+	"github.com/inspektor-gadget/ig-desktop/pkg/gadget"
 )
 
 // Services holds the shared backend services used by the application.
@@ -51,11 +51,21 @@ type Services struct {
 func NewServices() *Services {
 	ctx := context.Background()
 
+	// Resolve directories
+	envDir, err := config.GetDir("env")
+	if err != nil {
+		log.Fatalf("failed to get env directory: %v", err)
+	}
+	helmDir, err := config.GetDir("helm")
+	if err != nil {
+		log.Fatalf("failed to get helm directory: %v", err)
+	}
+
 	// Initialize storage and services
-	envStorage := environment.NewStorage()
+	envStorage := environment.NewStorage(envDir)
 	runtimeFactory := environment.NewRuntimeFactory(envStorage)
 	instanceManager := gadget.NewInstanceManager()
-	gadgetService := gadget.NewService(runtimeFactory, instanceManager)
+	gadgetService := gadget.NewService(instanceManager)
 	artifactHubClient := artifacthub.NewClient()
 
 	// Initialize session service
@@ -69,7 +79,7 @@ func NewServices() *Services {
 			log.Printf("failed to initialize session service: %v (session recording will be disabled)", err)
 			sessionService = nil
 		} else {
-			gadgetService.SetSessionService(sessionService)
+			gadgetService.SetSessionRecorder(sessionService)
 		}
 	}
 
@@ -91,6 +101,7 @@ func NewServices() *Services {
 		artifactHubClient,
 		sessionService,
 		pluginService,
+		helmDir,
 	)
 
 	return &Services{
@@ -115,6 +126,7 @@ type SharedServices struct {
 	artifactHub    *artifacthub.Client
 	sessionService *session.Service
 	pluginService  *plugins.Service
+	helmDir        string
 }
 
 // NewSharedServices creates shared services for multi-client scenarios.
@@ -122,8 +134,18 @@ type SharedServices struct {
 func NewSharedServices() *SharedServices {
 	ctx := context.Background()
 
+	// Resolve directories
+	envDir, err := config.GetDir("env")
+	if err != nil {
+		log.Fatalf("failed to get env directory: %v", err)
+	}
+	helmDir, err := config.GetDir("helm")
+	if err != nil {
+		log.Fatalf("failed to get helm directory: %v", err)
+	}
+
 	// Initialize shared storage and services
-	envStorage := environment.NewStorage()
+	envStorage := environment.NewStorage(envDir)
 	runtimeFactory := environment.NewRuntimeFactory(envStorage)
 	artifactHubClient := artifacthub.NewClient()
 
@@ -155,6 +177,7 @@ func NewSharedServices() *SharedServices {
 		artifactHub:    artifactHubClient,
 		sessionService: sessionService,
 		pluginService:  pluginService,
+		helmDir:        helmDir,
 	}
 }
 
@@ -174,10 +197,10 @@ func (s *SharedServices) NewConnectionServices() *ConnectionServices {
 	// Each connection gets its own instance manager and gadget service
 	// so that gadget output goes to the correct client
 	instanceManager := gadget.NewInstanceManager()
-	gadgetService := gadget.NewService(s.runtimeFactory, instanceManager)
+	gadgetService := gadget.NewService(instanceManager)
 
 	if s.sessionService != nil {
-		gadgetService.SetSessionService(s.sessionService)
+		gadgetService.SetSessionRecorder(s.sessionService)
 	}
 
 	// Create handler with per-connection gadget service
@@ -190,6 +213,7 @@ func (s *SharedServices) NewConnectionServices() *ConnectionServices {
 		s.artifactHub,
 		s.sessionService,
 		s.pluginService,
+		s.helmDir,
 	)
 
 	return &ConnectionServices{

@@ -17,7 +17,7 @@ package handlers
 import (
 	"encoding/json"
 
-	"ig-frontend/internal/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
 
 // HandleGetArtifactHubPackage retrieves package information from ArtifactHub

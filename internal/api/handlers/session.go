@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"log"
 
-	"ig-frontend/internal/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
 
 // HandleListSessions lists all sessions for an environment

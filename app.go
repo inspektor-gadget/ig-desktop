@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 
-	"ig-frontend/internal/app"
-	"ig-frontend/internal/wails"
+	"github.com/inspektor-gadget/ig-desktop/internal/app"
+	"github.com/inspektor-gadget/ig-desktop/internal/wails"
 )
 
 // App struct wraps the shared services for the Wails desktop application.

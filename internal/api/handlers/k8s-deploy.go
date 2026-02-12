@@ -24,9 +24,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
-	"ig-frontend/internal/api"
-	"ig-frontend/internal/k8s"
-	"ig-frontend/pkg/helm"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/helm"
+	"github.com/inspektor-gadget/ig-desktop/pkg/k8s"
 )
 
 type CheckIGDeploymentRequest struct {
@@ -126,6 +126,7 @@ func (h *Handler) HandleDeployIG(ev *api.Event) {
 		CustomValues: customValues,
 		KubeConfig:   req.KubeConfig,
 		KubeContext:  req.KubeContext,
+		HelmDir:      h.helmDir,
 	}
 
 	// Return deployment ID immediately
@@ -283,7 +284,7 @@ func (h *Handler) HandleGetChartValues(ev *api.Event) {
 		}
 	}
 
-	values, err := helm.GetChartValues(req.ChartVersion)
+	values, err := helm.GetChartValues(h.helmDir, req.ChartVersion)
 	if err != nil {
 		h.send(ev.SetError(fmt.Errorf("failed to get chart values: %w", err)))
 		return

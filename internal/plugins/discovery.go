@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"ig-frontend/internal/config"
+	"github.com/inspektor-gadget/ig-desktop/internal/config"
 )
 
 // PluginType represents the type of plugin

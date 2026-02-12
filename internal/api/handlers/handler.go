@@ -20,13 +20,13 @@ import (
 	"log"
 	"sync"
 
-	"ig-frontend/internal/api"
-	"ig-frontend/internal/api/transport"
-	"ig-frontend/internal/artifacthub"
-	"ig-frontend/internal/environment"
-	"ig-frontend/internal/gadget"
-	"ig-frontend/internal/plugins"
-	"ig-frontend/internal/session"
+	"github.com/inspektor-gadget/ig-desktop/internal/artifacthub"
+	"github.com/inspektor-gadget/ig-desktop/internal/environment"
+	"github.com/inspektor-gadget/ig-desktop/internal/plugins"
+	"github.com/inspektor-gadget/ig-desktop/internal/session"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api/transport"
+	"github.com/inspektor-gadget/ig-desktop/pkg/gadget"
 )
 
 // Handler coordinates all command handlers
@@ -39,6 +39,7 @@ type Handler struct {
 	artifactHub     *artifacthub.Client
 	sessionService  *session.Service
 	pluginService   *plugins.Service
+	helmDir         string
 
 	mu   sync.Mutex
 	send func(any)
@@ -68,6 +69,7 @@ func New(
 	artifactHub *artifacthub.Client,
 	sessionService *session.Service,
 	pluginService *plugins.Service,
+	helmDir string,
 ) *Handler {
 	return &Handler{
 		ctx:             ctx,
@@ -78,6 +80,7 @@ func New(
 		artifactHub:     artifactHub,
 		sessionService:  sessionService,
 		pluginService:   pluginService,
+		helmDir:         helmDir,
 	}
 }
 

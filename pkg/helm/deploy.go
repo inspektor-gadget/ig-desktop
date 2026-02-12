@@ -32,8 +32,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-
-	"ig-frontend/internal/config"
 )
 
 const (
@@ -42,14 +40,9 @@ const (
 	inspektorGadgetChart    = "gadget/gadget"
 )
 
-// newIsolatedSettings creates Helm CLI settings using an isolated directory
-// within the app's config folder, avoiding interference with any existing Helm installation.
-func newIsolatedSettings() (*cli.EnvSettings, error) {
-	helmDir, err := config.GetDir("helm")
-	if err != nil {
-		return nil, fmt.Errorf("getting helm config directory: %w", err)
-	}
-
+// newIsolatedSettings creates Helm CLI settings using an isolated directory,
+// avoiding interference with any existing Helm installation.
+func newIsolatedSettings(helmDir string) (*cli.EnvSettings, error) {
 	settings := cli.New()
 	settings.RepositoryConfig = filepath.Join(helmDir, "repositories.yaml")
 	settings.RepositoryCache = filepath.Join(helmDir, "cache")
@@ -63,6 +56,7 @@ type DeployConfig struct {
 	CustomValues map[string]interface{}
 	KubeConfig   string
 	KubeContext  string
+	HelmDir      string
 }
 
 type DeployProgress struct {
@@ -79,7 +73,7 @@ type Deployer struct {
 }
 
 func NewDeployer(config *DeployConfig) (*Deployer, error) {
-	settings, err := newIsolatedSettings()
+	settings, err := newIsolatedSettings(config.HelmDir)
 	if err != nil {
 		return nil, err
 	}
@@ -586,8 +580,8 @@ func getKubernetesClient(config *rest.Config) (*kubernetes.Clientset, error) {
 }
 
 // GetChartValues fetches the default values.yaml from the Inspektor Gadget Helm chart
-func GetChartValues(chartVersion string) (string, error) {
-	settings, err := newIsolatedSettings()
+func GetChartValues(helmDir string, chartVersion string) (string, error) {
+	settings, err := newIsolatedSettings(helmDir)
 	if err != nil {
 		return "", fmt.Errorf("creating helm settings: %w", err)
 	}

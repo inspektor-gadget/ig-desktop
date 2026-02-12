@@ -24,8 +24,8 @@ import (
 	"strings"
 	"time"
 
-	"ig-frontend/internal/api"
-	"ig-frontend/internal/version"
+	"github.com/inspektor-gadget/ig-desktop/internal/version"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
 
 const (

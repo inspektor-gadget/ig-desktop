@@ -25,8 +25,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"ig-frontend/internal/api"
-	"ig-frontend/internal/k8s"
+	"github.com/inspektor-gadget/ig-desktop/pkg/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/k8s"
 )
 
 // K8sResourceRequest represents a request for Kubernetes resources
