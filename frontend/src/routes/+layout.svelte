@@ -41,6 +41,10 @@
 	import { APP_MODE, features } from '$lib/config/app-mode';
 	import { loadSingleEnvConfig } from '$lib/services/config-loader.service';
 	import { resolve } from '$app/paths';
+	import { WailsAdapter } from '$lib/transport/wails.adapter';
+	import { WebSocketAdapter } from '$lib/transport/websocket.adapter';
+	import { DemoAdapter } from '$lib/transport/demo.adapter';
+	import type { ITransportAdapter } from '$lib/transport/adapter';
 	import { registerBuiltinPlugins } from '$lib/plugins/builtin';
 	import { loadLocalPlugins } from '$lib/services/plugin-loader.service';
 	import PluginHookRenderer from '$lib/components/PluginHookRenderer.svelte';
@@ -194,6 +198,17 @@
 		modalError = message;
 	}
 
+	// Create the appropriate transport adapter based on environment and app mode
+	function createAdapter(isWailsApp: boolean): ITransportAdapter {
+		if (APP_MODE === 'demo') {
+			return new DemoAdapter();
+		}
+		if (isWailsApp) {
+			return new WailsAdapter();
+		}
+		return new WebSocketAdapter();
+	}
+
 	// Initialize WebSocket and message routing on mount (after Wails globals are ready)
 	onMount(async () => {
 		// Register built-in plugins before anything else
@@ -213,9 +228,10 @@
 			}
 		}
 
-		websocketService.initialize(isWailsApp, (message) => {
+		const adapter = createAdapter(isWailsApp);
+		websocketService.initialize(adapter, (message) => {
 			messageRouter.route(message);
-		});
+		}, isWailsApp);
 
 		// Set up legacy appState.api for browser mode compatibility
 		if (!isWailsApp) {
