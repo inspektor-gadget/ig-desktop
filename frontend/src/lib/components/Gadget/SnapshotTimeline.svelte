@@ -265,7 +265,7 @@
 </script>
 
 <div
-	class="snapshot-timeline w-full border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 select-none"
+	class="snapshot-timeline w-full border-t border-ig-border bg-ig-surface-raised select-none"
 	class:cursor-crosshair={onRangeSelect}
 	bind:clientWidth={containerWidth}
 	bind:this={timelineContainer}
@@ -295,7 +295,7 @@
 					y1={boundedHeight}
 					x2={boundedWidth}
 					y2={boundedHeight}
-					stroke="#374151"
+					stroke="var(--ig-color-border-strong, #d1d5db)"
 					stroke-width="1"
 				/>
 
@@ -387,10 +387,22 @@
 
 			<!-- Time labels -->
 			<g transform="translate({margin.left}, {height - 4})">
-				<text x="0" y="0" fill="#6b7280" font-size="9" text-anchor="start">
+				<text
+					x="0"
+					y="0"
+					fill="var(--ig-color-text-muted, #6b7280)"
+					font-size="9"
+					text-anchor="start"
+				>
 					{formatTime(timeRange.min)}
 				</text>
-				<text x={boundedWidth} y="0" fill="#6b7280" font-size="9" text-anchor="end">
+				<text
+					x={boundedWidth}
+					y="0"
+					fill="var(--ig-color-text-muted, #6b7280)"
+					font-size="9"
+					text-anchor="end"
+				>
 					{formatTime(timeRange.max)}
 				</text>
 			</g>

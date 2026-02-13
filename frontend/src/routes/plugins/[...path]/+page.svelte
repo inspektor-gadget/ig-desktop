@@ -73,7 +73,7 @@
 				<p class="mb-6 text-gray-600 dark:text-gray-400">{error}</p>
 				<button
 					onclick={goBack}
-					class="inline-flex items-center gap-2 rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+					class="inline-flex items-center gap-2 rounded-ig-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
 				>
 					<span class="flex h-4 w-4 [&>svg]:h-full [&>svg]:w-full">{@html ChevronLeft}</span>
 					Go Back

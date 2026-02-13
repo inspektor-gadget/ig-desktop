@@ -13,7 +13,7 @@ export interface ListPluginsResponse {
 	pluginsDir: string;
 }
 
-type RequestCommand = {
+export type RequestCommand = {
 	cmd: string;
 	reqID?: string;
 	[key: string]: any;

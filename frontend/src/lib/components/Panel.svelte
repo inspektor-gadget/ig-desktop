@@ -11,10 +11,11 @@
 		 */
 		icon?: string;
 		/**
-		 * Color theme for the panel (affects border, icon, and hover states)
+		 * Color theme for the panel (affects border, icon, and hover states).
+		 * Use 'accent' to follow the IG theme's primary color.
 		 * @default 'blue'
 		 */
-		color?: 'blue' | 'purple' | 'green' | 'red' | 'orange' | 'gray';
+		color?: 'blue' | 'purple' | 'green' | 'red' | 'orange' | 'gray' | 'accent';
 		/**
 		 * Badge text to display next to the title (e.g., count)
 		 */
@@ -44,21 +45,61 @@
 		bodyPadding = 'default'
 	}: PanelProps = $props();
 
-	// Compute color classes based on the color prop
-	const colorClasses = $derived({
-		border: `hover:border-${color}-500/50`,
-		shadow: `hover:shadow-${color}-500/10 shadow-gray-200/90 dark:shadow-gray-950/90`,
-		icon: `text-${color}-500 dark:text-${color}-400`,
-		badge: `bg-${color}-500/20 text-${color}-600 dark:text-${color}-400`
-	});
+	// Explicit color class map (avoids dynamic template strings for Tailwind class detection)
+	const colorMap: Record<string, { border: string; shadow: string; icon: string; badge: string }> =
+		{
+			blue: {
+				border: 'hover:border-blue-500/50',
+				shadow: 'hover:shadow-blue-500/10 shadow-gray-200/90 dark:shadow-gray-950/90',
+				icon: 'text-blue-500 dark:text-blue-400',
+				badge: 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+			},
+			purple: {
+				border: 'hover:border-purple-500/50',
+				shadow: 'hover:shadow-purple-500/10 shadow-gray-200/90 dark:shadow-gray-950/90',
+				icon: 'text-purple-500 dark:text-purple-400',
+				badge: 'bg-purple-500/20 text-purple-600 dark:text-purple-400'
+			},
+			green: {
+				border: 'hover:border-green-500/50',
+				shadow: 'hover:shadow-green-500/10 shadow-gray-200/90 dark:shadow-gray-950/90',
+				icon: 'text-green-500 dark:text-green-400',
+				badge: 'bg-green-500/20 text-green-600 dark:text-green-400'
+			},
+			red: {
+				border: 'hover:border-red-500/50',
+				shadow: 'hover:shadow-red-500/10 shadow-gray-200/90 dark:shadow-gray-950/90',
+				icon: 'text-red-500 dark:text-red-400',
+				badge: 'bg-red-500/20 text-red-600 dark:text-red-400'
+			},
+			orange: {
+				border: 'hover:border-orange-500/50',
+				shadow: 'hover:shadow-orange-500/10 shadow-gray-200/90 dark:shadow-gray-950/90',
+				icon: 'text-orange-500 dark:text-orange-400',
+				badge: 'bg-orange-500/20 text-orange-600 dark:text-orange-400'
+			},
+			gray: {
+				border: 'hover:border-gray-500/50',
+				shadow: 'hover:shadow-gray-500/10 shadow-gray-200/90 dark:shadow-gray-950/90',
+				icon: 'text-gray-500 dark:text-gray-400',
+				badge: 'bg-gray-500/20 text-gray-600 dark:text-gray-400'
+			},
+			accent: {
+				border: 'hover:border-ig-primary/50',
+				shadow: 'hover:shadow-ig-primary/10 shadow-gray-200/90 dark:shadow-gray-950/90',
+				icon: 'text-ig-primary',
+				badge: 'bg-ig-primary-muted text-ig-primary'
+			}
+		};
+	const colorClasses = $derived(colorMap[color] ?? colorMap.blue);
 </script>
 
 <div
-	class="group main-gradient flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 transition-all {colorClasses.border} shadow-sm hover:shadow-lg {colorClasses.shadow}"
+	class="group main-gradient flex flex-col rounded-ig-lg border border-ig-border bg-ig-surface transition-all {colorClasses.border} shadow-sm hover:shadow-lg {colorClasses.shadow}"
 >
 	<!-- Header -->
 	<div
-		class="flex items-center gap-3 rounded-t-2xl border-b border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50 px-6 py-4"
+		class="flex items-center gap-3 rounded-t-ig-lg border-b border-ig-border bg-ig-surface-raised px-6 py-4"
 	>
 		<div class="flex flex-1 items-center gap-3">
 			{#if icon}

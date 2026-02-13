@@ -44,7 +44,7 @@
 	let Component = $derived(tabs[tabIndex]?.class);
 </script>
 
-<div class="flex flex-row bg-white dark:bg-gray-950">
+<div class="flex flex-row bg-ig-surface">
 	{#each tabs as tab, id}
 		<button
 			title={tab.name}
@@ -52,23 +52,23 @@
 				tabIndex = id;
 			}}
 			class={tabIndex === id
-				? 'cursor-pointer border-t border-r border-b border-t-gray-400 dark:border-t-gray-500 border-r-gray-300 dark:border-r-gray-700 border-b-transparent bg-gray-50 dark:bg-gray-900 p-2'
-				: 'cursor-pointer border-t border-r border-b border-t-transparent border-r-gray-300 dark:border-r-gray-700 border-b-gray-300 dark:border-b-gray-700 p-2'}
+				? 'cursor-pointer border-t border-r border-b border-t-ig-text-muted border-r-ig-border border-b-transparent bg-ig-surface-raised p-2'
+				: 'cursor-pointer border-t border-r border-b border-t-transparent border-r-ig-border border-b-ig-border p-2'}
 			>{@html tab.icon}</button
 		>
 	{/each}
-	<div class="flex-1 border-b border-b-gray-300 dark:border-b-gray-700"></div>
+	<div class="flex-1 border-b border-b-ig-border"></div>
 	<button
-		class="flex cursor-pointer items-center justify-center border-b border-b-gray-300 px-3 text-gray-500 transition-colors hover:text-gray-700 dark:border-b-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+		class="flex cursor-pointer items-center justify-center border-b border-b-ig-border px-3 text-ig-text-muted transition-colors hover:text-ig-text-secondary"
 		onclick={onclose}
 		title="Close Inspector"
 	>
-		<span class="rounded p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+		<span class="rounded-ig-sm p-1 transition-colors hover:bg-ig-border"
 			>{@html Close}</span
 		>
 	</button>
 </div>
 
-<div class="flex flex-1 flex-col overflow-auto bg-gray-50 dark:bg-gray-900">
+<div class="flex flex-1 flex-col overflow-auto bg-ig-surface-raised">
 	<Component {gadgetInfo} />
 </div>

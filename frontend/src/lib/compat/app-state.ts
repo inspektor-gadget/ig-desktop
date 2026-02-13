@@ -25,6 +25,6 @@ export function setPage(pageState: Partial<PageState>): void {
  */
 export const page: PageState = new Proxy({} as PageState, {
 	get(_, prop: string) {
-		return (_page as any)[prop];
+		return _page[prop as keyof PageState];
 	}
 });

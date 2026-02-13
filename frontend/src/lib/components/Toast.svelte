@@ -18,35 +18,35 @@
 		warning: '⚠'
 	};
 
-	// Color schemes for each toast type
+	// Color schemes for each toast type using semantic tokens where applicable
 	const colorSchemes = {
 		success: {
-			border: 'border-green-800',
-			bg: 'bg-green-900/90',
-			text: 'text-green-100',
-			icon: 'text-green-400',
-			button: 'hover:bg-green-800/50'
+			border: 'border-ig-success/50',
+			bg: 'bg-ig-success/15',
+			text: 'text-ig-text',
+			icon: 'text-ig-success',
+			button: 'hover:bg-ig-success/20'
 		},
 		error: {
-			border: 'border-red-800',
-			bg: 'bg-red-900/90',
-			text: 'text-red-100',
-			icon: 'text-red-400',
-			button: 'hover:bg-red-800/50'
+			border: 'border-ig-error/50',
+			bg: 'bg-ig-error/15',
+			text: 'text-ig-text',
+			icon: 'text-ig-error',
+			button: 'hover:bg-ig-error/20'
 		},
 		info: {
-			border: 'border-blue-800',
-			bg: 'bg-blue-900/90',
-			text: 'text-blue-100',
-			icon: 'text-blue-400',
-			button: 'hover:bg-blue-800/50'
+			border: 'border-ig-primary/50',
+			bg: 'bg-ig-primary/15',
+			text: 'text-ig-text',
+			icon: 'text-ig-primary',
+			button: 'hover:bg-ig-primary/20'
 		},
 		warning: {
-			border: 'border-yellow-800',
-			bg: 'bg-yellow-900/90',
-			text: 'text-yellow-100',
-			icon: 'text-yellow-400',
-			button: 'hover:bg-yellow-800/50'
+			border: 'border-ig-warning/50',
+			bg: 'bg-ig-warning/15',
+			text: 'text-ig-text',
+			icon: 'text-ig-warning',
+			button: 'hover:bg-ig-warning/20'
 		}
 	};
 
@@ -55,7 +55,7 @@
 
 <div
 	transition:fly={{ x: 100, duration: 300, easing: quintOut }}
-	class="flex items-start gap-3 rounded-lg border {scheme.border} {scheme.bg} px-4 py-3 shadow-lg backdrop-blur-md"
+	class="flex items-start gap-3 rounded-ig-md border {scheme.border} {scheme.bg} px-4 py-3 shadow-lg backdrop-blur-md"
 >
 	<!-- Icon -->
 	<div class="flex-shrink-0 text-lg font-bold {scheme.icon}">
@@ -68,7 +68,7 @@
 		{#if toast.action}
 			<button
 				onclick={toast.action.onClick}
-				class="mt-2 rounded px-2 py-1 text-xs font-medium {scheme.button} transition-colors"
+				class="mt-2 rounded-ig-sm px-2 py-1 text-xs font-medium {scheme.button} transition-colors"
 			>
 				{toast.action.label}
 			</button>

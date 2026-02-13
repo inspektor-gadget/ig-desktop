@@ -79,6 +79,8 @@
 					resizingIndex: number | null;
 					/** Svelte action to bind header row element for width measurement */
 					setHeaderRow: (el: HTMLTableRowElement) => void;
+					/** Reset a column's width to its annotation-based default */
+					resetColumnWidth: (index: number) => void;
 				}
 			]
 		>;
@@ -100,6 +102,12 @@
 		 * Hold Alt to exclude headers from the copy.
 		 */
 		oncopy?: (event: CopyEvent) => void;
+		/** Optional callback when columns are resized. Receives a map of column key → pixel width */
+		oncolumnresize?: (widths: Record<string, number>) => void;
+		/** Optional initial column widths (column key → pixel width). Takes priority over annotation-based defaults */
+		initialColumnWidths?: Record<string, number>;
+		/** Optional callback when a single column width is reset to its default */
+		oncolumnreset?: (columnKey: string) => void;
 	}
 
 	let {
@@ -115,7 +123,10 @@
 		onVisibleRangeChange,
 		onfocus,
 		onselectionchange,
-		oncopy
+		oncopy,
+		oncolumnresize,
+		initialColumnWidths,
+		oncolumnreset
 	}: Props = $props();
 
 	// ===========================================
@@ -231,6 +242,28 @@
 		resizingIndex = null;
 		document.removeEventListener('pointermove', handleResize);
 		document.removeEventListener('pointerup', stopResize);
+		if (oncolumnresize) {
+			const widthMap: Record<string, number> = {};
+			for (let i = 0; i < columns.length; i++) {
+				if (columnWidths[i] != null) {
+					widthMap[columns[i].key] = columnWidths[i];
+				}
+			}
+			oncolumnresize(widthMap);
+		}
+	}
+
+	/**
+	 * Reset a column's width to its annotation-based default.
+	 */
+	function resetColumnWidth(index: number) {
+		if (index < 0 || index >= columns.length) return;
+		const col = columns[index];
+		const charWidth = col.width ?? DEFAULT_CHAR_WIDTH;
+		columnWidths[index] = charToPixelWidth(charWidth);
+		if (oncolumnreset) {
+			oncolumnreset(col.key);
+		}
 	}
 
 	/**
@@ -280,11 +313,14 @@
 	// Track if widths have been initialized (don't override user resizes)
 	let widthsInitialized = $state(false);
 
-	// Calculate initial column widths from annotations (or default)
+	// Calculate initial column widths from stored values, then annotations, then default
 	$effect(() => {
 		if (widthsInitialized || columns.length === 0) return;
 
 		const widths = columns.map((col) => {
+			if (initialColumnWidths && col.key in initialColumnWidths) {
+				return initialColumnWidths[col.key];
+			}
 			const charWidth = col.width ?? DEFAULT_CHAR_WIDTH;
 			return charToPixelWidth(charWidth);
 		});
@@ -477,7 +513,14 @@
 	 * Start drag selection on mousedown.
 	 */
 	function handleDragStart(index: number, event: MouseEvent) {
-		// Don't start drag on right-click or if modifier for toggle
+		// Right-click: select and focus row (for context menu highlighting)
+		if (event.button === 2) {
+			selectSingle(index);
+			setFocus(index);
+			if (onrowclick) onrowclick(items[index], index, event);
+			return;
+		}
+		// Don't start drag on non-left-click or if modifier for toggle
 		if (event.button !== 0) return;
 		if (event.metaKey || event.ctrlKey) return; // Let click handler deal with toggle
 
@@ -760,7 +803,7 @@
 				{/if}
 				<thead>
 					{#if header}
-						{@render header(columns, { startResize, resizingIndex, setHeaderRow })}
+						{@render header(columns, { startResize, resizingIndex, setHeaderRow, resetColumnWidth })}
 					{:else}
 						<tr bind:this={headerRow}>
 							{#each columns as column, i}

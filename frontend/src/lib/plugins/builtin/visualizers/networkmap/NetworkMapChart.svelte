@@ -179,7 +179,7 @@
 
 	<!-- Stats overlay -->
 	<div
-		class="absolute top-2 left-2 text-xs text-gray-500 dark:text-gray-400 bg-white/90 dark:bg-gray-800/90 px-2 py-1 rounded pointer-events-none z-10"
+		class="absolute top-2 left-2 text-xs text-gray-500 dark:text-gray-400 bg-white/90 dark:bg-gray-800/90 px-2 py-1 rounded-ig-sm pointer-events-none z-10"
 	>
 		{nodeCount} nodes, {edgeCount} connections
 	</div>

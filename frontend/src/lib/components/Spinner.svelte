@@ -26,7 +26,7 @@
 
 	.spinner {
 		border: 4px solid rgba(255, 255, 255, 0.1);
-		border-top-color: #3b82f6;
+		border-top-color: var(--ig-color-primary, #3b82f6);
 		border-radius: 50%;
 		animation: spin 0.8s linear infinite;
 	}

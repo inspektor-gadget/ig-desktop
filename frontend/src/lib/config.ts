@@ -119,8 +119,8 @@ export const configurationSchema: ConfigurationSchema = {
 			settings: [
 				{
 					key: 'theme',
-					title: 'Theme',
-					description: 'Choose your preferred color scheme. System follows your OS preference.',
+					title: 'Color Mode',
+					description: 'Choose your preferred color mode. System follows your OS preference.',
 					type: 'select',
 					options: {
 						dark: 'Dark',
@@ -128,6 +128,19 @@ export const configurationSchema: ConfigurationSchema = {
 						system: 'System'
 					},
 					default: 'dark'
+				},
+				{
+					key: 'designTheme',
+					title: 'Theme',
+					description:
+						'Select a visual theme preset. Material pairs well with MUI-based host applications.',
+					type: 'select',
+					options: {
+						default: 'Default',
+						material: 'Material',
+						headlamp: 'Headlamp'
+					},
+					default: 'default'
 				},
 				{
 					key: 'gradientEnabled',

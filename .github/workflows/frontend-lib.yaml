@@ -1,0 +1,106 @@
+name: Frontend Library Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build and attach the artifact to (e.g. v0.3.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  NODE_OPTIONS: "--max-old-space-size=4096"
+
+jobs:
+  frontend-lib:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Determine tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '23.5.0'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build library
+        run: npm run build:lib
+        working-directory: frontend
+
+      - name: Assemble tarball
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          STAGING="$(mktemp -d)"
+
+          # Copy dist-lib
+          cp -r frontend/dist-lib "$STAGING/dist-lib"
+
+          # Copy react wrapper sources
+          mkdir -p "$STAGING/react/src"
+          cp frontend/react/src/index.ts "$STAGING/react/src/"
+          cp frontend/react/src/IGProvider.tsx "$STAGING/react/src/"
+          cp frontend/react/src/SvelteWrapper.tsx "$STAGING/react/src/"
+
+          # Extract resolved Svelte version from node_modules
+          SVELTE_VERSION=$(node -e "console.log(require('./frontend/node_modules/svelte/package.json').version)")
+
+          # Generate metadata.json
+          cat > "$STAGING/metadata.json" <<EOF
+          {
+            "svelteVersion": "$SVELTE_VERSION",
+            "igDesktopVersion": "$TAG",
+            "buildDate": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+          # Generate vendor package.json
+          cat > "$STAGING/package.json" <<EOF
+          {
+            "name": "@inspektor-gadget/ig-desktop",
+            "private": true,
+            "version": "0.0.1",
+            "type": "module",
+            "exports": {
+              "./frontend": "./dist-lib/ig-frontend.js",
+              "./frontend/react": "./react/src/index.ts",
+              "./frontend/dist-lib/*": "./dist-lib/*"
+            },
+            "peerDependencies": {
+              "react": "^18.0.0 || ^19.0.0",
+              "svelte": "^5.0.0"
+            }
+          }
+          EOF
+
+          # Create flat tarball (extracts directly into target dir)
+          tar -czf ig-frontend-lib.tar.gz -C "$STAGING" .
+
+          echo "Tarball contents:"
+          tar -tzf ig-frontend-lib.tar.gz
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ steps.tag.outputs.tag }}" ig-frontend-lib.tar.gz --clobber

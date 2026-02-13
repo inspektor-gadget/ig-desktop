@@ -16,6 +16,7 @@
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import { entryMatchesSearch } from '$lib/utils/search-match';
 	import type { SearchableVisualizerProps } from '$lib/types/plugin-api';
+	import type { CellClickHandler, CellContextMenuHandler } from '$lib/types/cell-interaction';
 
 	// Re-export for backwards compatibility
 	export type { TableMenuController };
@@ -35,6 +36,10 @@
 		sortReset?: number;
 		/** Callback to expose menu controller for external rendering */
 		onMenuController?: (controller: TableMenuController) => void;
+		/** Callback when a cell is clicked (only fires for cells with interaction.clickable annotation) */
+		onCellClick?: CellClickHandler;
+		/** Callback when a cell is right-clicked */
+		onCellContextMenu?: CellContextMenuHandler;
 	}
 
 	let {
@@ -55,7 +60,9 @@
 		showHeader = true,
 		onSortChange,
 		sortReset = 0,
-		onMenuController
+		onMenuController,
+		onCellClick,
+		onCellContextMenu
 	}: Props = $props();
 
 	// Get gadget info from context (plugin context or Svelte context fallback)
@@ -70,22 +77,35 @@
 	let sortColumn = $state<string | null>(null);
 	let sortDirection = $state<'asc' | 'desc'>('asc');
 
+	// Track when last resize ended to suppress the click that follows a resize drag
+	let lastResizeEnd = 0;
+
 	// Snapshot mode allows sorting while running (since data is discrete snapshots)
 	const isSnapshotMode = $derived(snapshotData !== undefined);
 
 	// Sorting is allowed when gadget is stopped OR when in snapshot mode
 	const canSort = $derived(!isRunning || isSnapshotMode);
 
-	// Handle column header click for sorting
+	// Handle column header click for sorting (three-state cycle: asc → desc → clear)
 	function handleColumnSort(fieldName: string) {
 		if (!canSort) return;
 		if (sortColumn === fieldName) {
-			// Toggle direction if clicking same column
-			sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+			if (sortDirection === 'asc') {
+				sortDirection = 'desc';
+			} else {
+				// Third click: clear sort entirely
+				sortColumn = null;
+				sortDirection = 'asc';
+			}
 		} else {
-			// New column, start with ascending
 			sortColumn = fieldName;
 			sortDirection = 'asc';
+		}
+		if (sortConfigKey) {
+			configuration.set(
+				sortConfigKey,
+				sortColumn ? { column: sortColumn, direction: sortDirection } : null
+			);
 		}
 	}
 
@@ -104,6 +124,9 @@
 			lastSortReset = sortReset;
 			sortColumn = null;
 			sortDirection = 'asc';
+			if (sortConfigKey) {
+				configuration.set(sortConfigKey, null);
+			}
 		}
 	});
 
@@ -169,6 +192,57 @@
 	// Check if a column is visible
 	function isColumnVisible(fieldName: string): boolean {
 		return !hiddenColumns.has(fieldName);
+	}
+
+	// Configuration key for column widths (per gadget + datasource)
+	const columnWidthsKey = $derived(gadgetImage ? `columnWidths:${gadgetImage}:${ds.name}` : '');
+
+	// Configuration key for sort config (only for snapshot-mode datasources)
+	const sortConfigKey = $derived(
+		gadgetImage && isSnapshotMode ? `sortConfig:${gadgetImage}:${ds.name}` : ''
+	);
+
+	// Load stored sort config on init (exactly once per key)
+	let sortInitialized = false;
+
+	$effect(() => {
+		if (sortInitialized || !sortConfigKey) return;
+		const stored = configuration.get(sortConfigKey) as
+			| { column: string; direction: 'asc' | 'desc' }
+			| undefined;
+		if (stored?.column) {
+			sortColumn = stored.column;
+			sortDirection = stored.direction ?? 'asc';
+		}
+		sortInitialized = true;
+	});
+
+	// Reset sortInitialized when key changes (gadget/datasource switch)
+	$effect(() => {
+		sortConfigKey; // dependency
+		sortInitialized = false;
+	});
+
+	// Load stored column widths from configuration
+	const storedColumnWidths = $derived.by(() => {
+		if (!columnWidthsKey) return undefined;
+		const stored = configuration.get(columnWidthsKey) as Record<string, number> | undefined;
+		return stored;
+	});
+
+	// Save column widths to configuration
+	function handleColumnResize(widths: Record<string, number>) {
+		if (!columnWidthsKey) return;
+		configuration.set(columnWidthsKey, widths);
+	}
+
+	// Handle column width reset (remove single key from stored widths)
+	function handleColumnReset(columnKey: string) {
+		if (!columnWidthsKey) return;
+		const stored = (configuration.get(columnWidthsKey) as Record<string, number>) || {};
+		const updated = { ...stored };
+		delete updated[columnKey];
+		configuration.set(columnWidthsKey, updated);
 	}
 
 	// Close menu when clicking outside
@@ -525,7 +599,7 @@
 		const queryLen = searchQuery.length;
 		return (
 			escapeHtml(str.slice(0, idx)) +
-			'<mark class="bg-yellow-500/50 text-inherit rounded-sm">' +
+			'<mark class="bg-yellow-500/50 text-inherit rounded-ig-sm">' +
 			escapeHtml(str.slice(idx, idx + queryLen)) +
 			'</mark>' +
 			escapeHtml(str.slice(idx + queryLen))
@@ -551,7 +625,7 @@
 		field: any,
 		column?: TableColumn
 	): { html: string } | string {
-		const value = entry[field.fullName];
+		let value = entry[field.fullName];
 
 		// Check for cell hooks (future use)
 		if (hookRegistry?.cellHooks && column) {
@@ -567,6 +641,11 @@
 					return typeof result === 'string' ? { html: escapeHtml(result) } : result;
 				}
 			}
+		}
+
+		// Format floats to specified precision (pre-cached on column)
+		if (column?.precision != null && value != null) {
+			value = Number(value).toFixed(column.precision);
 		}
 
 		// Default rendering - compute highlight on demand
@@ -767,13 +846,11 @@
 	}
 </script>
 
-<div
-	class="gadget-table flex h-full flex-col overflow-hidden border-t-1 border-gray-300 dark:border-gray-500"
->
+<div class="gadget-table flex h-full flex-col overflow-hidden border-t-1 border-ig-border">
 	<!-- Datasource header (name + menu) -->
 	{#if showHeader}
 		<div
-			class="flex h-10 flex-row items-center bg-white dark:bg-gray-950 p-2 text-base font-normal flex-shrink-0"
+			class="flex h-10 flex-row items-center bg-ig-surface p-2 text-base font-normal flex-shrink-0"
 		>
 			<div class="pr-2">{@html Table}</div>
 			<h2 class="px-2">{ds.name}</h2>
@@ -781,7 +858,7 @@
 			<div class="relative">
 				<button
 					bind:this={menuButton}
-					class="pl-2 hover:text-gray-900 dark:hover:text-white transition-colors"
+					class="pl-2 hover:text-ig-text transition-colors"
 					onclick={() => (menuOpen = !menuOpen)}
 					title="Column visibility"
 					aria-label="Toggle column visibility menu"
@@ -796,27 +873,25 @@
 						id="column-menu"
 						role="menu"
 						aria-label="Column visibility options"
-						class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl"
+						class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-ig-md border border-ig-border bg-ig-surface shadow-xl"
 					>
 						<div
-							class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-200 dark:border-gray-700"
+							class="px-3 py-2 text-xs font-semibold text-ig-text-muted uppercase border-b border-ig-border"
 						>
 							Columns
 						</div>
 						<div class="py-1" role="group" aria-label="Column toggles">
 							{#each toggleableFields as field}
 								<label
-									class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-sm"
+									class="flex items-center gap-2 px-3 py-1.5 hover:bg-ig-surface-raised cursor-pointer text-sm"
 								>
 									<input
 										type="checkbox"
 										checked={isColumnVisible(field.fullName)}
 										onchange={() => toggleColumnVisibility(field.fullName)}
-										class="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+										class="rounded-ig-sm border-ig-border-strong bg-ig-surface-raised text-ig-primary focus:ring-ig-primary-muted focus:ring-offset-0"
 									/>
-									<span class="text-gray-800 dark:text-gray-200 truncate" title={field.fullName}
-										>{field.fullName}</span
-									>
+									<span class="text-ig-text truncate" title={field.fullName}>{field.fullName}</span>
 								</label>
 							{/each}
 						</div>
@@ -835,25 +910,30 @@
 				{columns}
 				rowHeight={24}
 				class="text-sm"
+				initialColumnWidths={storedColumnWidths}
+				oncolumnresize={handleColumnResize}
+				oncolumnreset={handleColumnReset}
 				rowClass={(entry, index, isFocused, isSelected) => {
 					const isCurrent = isCurrentMatch(index);
 					const isMatch = isRowMatch(entry);
-					return `cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 ${isCurrent ? 'search-current-match' : isMatch ? 'search-highlight-row' : ''}`;
+					return `cursor-pointer hover:bg-ig-surface-raised ${isCurrent ? 'search-current-match' : isMatch ? 'search-highlight-row' : ''}`;
 				}}
 				onrowclick={(entry) => inspect(entry)}
 				onVisibleRangeChange={handleVisibleRangeChange}
 				oncopy={handleCopy}
 			>
-				{#snippet header(cols, { startResize, resizingIndex, setHeaderRow })}
-					<tr class="bg-white dark:bg-gray-950" use:setHeaderRow>
+				{#snippet header(cols, { startResize, resizingIndex, setHeaderRow, resetColumnWidth })}
+					<tr class="bg-ig-surface" use:setHeaderRow>
 						{#each visibleFields as field, i}
 							{@const isSorted = sortColumn === field.fullName}
 							<th
-								class="relative border-r border-r-gray-300 dark:border-r-gray-600 p-2 text-xs font-normal last:border-r-0 overflow-hidden"
+								class="relative border-r border-r-ig-border p-2 text-xs font-normal last:border-r-0 overflow-hidden select-none"
 								class:cursor-pointer={canSort}
-								class:hover:bg-gray-100={canSort}
-								class:dark:hover:bg-gray-800={canSort}
-								onclick={() => handleColumnSort(field.fullName)}
+								class:hover:bg-ig-surface-raised={canSort}
+								onclick={() => {
+									if (Date.now() - lastResizeEnd < 200) return;
+									handleColumnSort(field.fullName);
+								}}
 							>
 								<div
 									title={canSort
@@ -863,7 +943,7 @@
 								>
 									<span class="overflow-hidden text-ellipsis">{field.fullName}</span>
 									{#if isSorted && canSort}
-										<span class="text-blue-600 dark:text-blue-400 flex-shrink-0">
+										<span class="text-ig-primary flex-shrink-0">
 											{#if sortDirection === 'asc'}
 												<svg
 													xmlns="http://www.w3.org/2000/svg"
@@ -900,7 +980,19 @@
 									<div
 										class="resize-handle"
 										class:active={resizingIndex === i}
-										onpointerdown={(e) => startResize(e, i)}
+										onpointerdown={(e) => {
+											const onDone = () => {
+												lastResizeEnd = Date.now();
+												document.removeEventListener('pointerup', onDone);
+											};
+											document.addEventListener('pointerup', onDone, { once: true });
+											startResize(e, i);
+										}}
+										oncontextmenu={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											resetColumnWidth(i);
+										}}
 									></div>
 								{/if}
 							</th>
@@ -910,10 +1002,39 @@
 				{#snippet row(entry, index)}
 					{#each visibleFields as field, i}
 						{@const cellValue = renderCellValue(entry, field, allColumns[i])}
+						{@const isClickable = field.annotations?.['interaction.clickable'] === 'true'}
 						<td
-							class="border-r border-r-gray-300 dark:border-r-gray-600 px-2 py-0 text-nowrap text-ellipsis last:border-r-0 font-mono text-xs text-gray-800 dark:text-gray-200"
+							class="border-r border-r-ig-border px-2 py-0 text-nowrap text-ellipsis last:border-r-0 font-mono text-xs text-ig-text"
 							class:text-right={columns[i]?.align === 'right'}
 							class:text-center={columns[i]?.align === 'center'}
+							class:ig-cell-clickable={isClickable && onCellClick}
+							onclick={(e) => {
+								if (isClickable && onCellClick) {
+									e.stopPropagation();
+									onCellClick({
+										value: entry[field.fullName],
+										fieldName: field.fullName,
+										fieldAnnotations: field.annotations ?? {},
+										row: entry,
+										position: { x: e.clientX, y: e.clientY },
+										event: e
+									});
+								}
+							}}
+							oncontextmenu={(e) => {
+								if (onCellContextMenu) {
+									e.preventDefault();
+									e.stopPropagation();
+									onCellContextMenu({
+										value: entry[field.fullName],
+										fieldName: field.fullName,
+										fieldAnnotations: field.annotations ?? {},
+										row: entry,
+										position: { x: e.clientX, y: e.clientY },
+										event: e
+									});
+								}
+							}}
 						>
 							{#if typeof cellValue === 'object' && 'html' in cellValue}
 								{@html cellValue.html}
@@ -955,5 +1076,15 @@
 	.resize-handle:hover,
 	.resize-handle.active {
 		background: rgb(59 130 246 / 0.5);
+	}
+
+	:global(.ig-cell-clickable) {
+		cursor: pointer;
+		text-decoration: underline;
+		text-decoration-style: dotted;
+		text-underline-offset: 2px;
+	}
+	:global(.ig-cell-clickable:hover) {
+		color: rgb(59 130 246);
 	}
 </style>

@@ -27,7 +27,7 @@
 		showCloseButton?: boolean;
 		/** Modal size variant */
 		size?: 'sm' | 'md' | 'lg' | 'xl';
-		/** Background color class for modal container (default: 'bg-white dark:bg-gray-950') */
+		/** Background color class for modal container (default: 'bg-ig-surface') */
 		background?: string;
 		/** Header slot for custom header content */
 		header?: Snippet;
@@ -44,7 +44,7 @@
 		icon,
 		showCloseButton = true,
 		size = 'md',
-		background = 'bg-white dark:bg-gray-950',
+		background = 'bg-ig-surface',
 		header,
 		footer,
 		children
@@ -100,7 +100,7 @@
 		<div
 			class="flex w-full {sizeClasses[
 				size
-			]} flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 {background} shadow-2xl"
+			]} flex-col overflow-hidden rounded-ig-lg border border-ig-border {background} shadow-2xl"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby={title ? 'modal-title' : undefined}
@@ -110,17 +110,17 @@
 				{@render header()}
 			{:else if title || icon}
 				<div
-					class="flex items-center gap-3 border-b border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50 px-6 py-4 rounded-t-2xl"
+					class="flex items-center gap-3 border-b border-ig-border bg-ig-surface-raised px-6 py-4 rounded-t-ig-lg"
 				>
 					{#if icon}
-						<div class="flex-shrink-0 text-blue-500">
+						<div class="flex-shrink-0 text-ig-primary">
 							{@html icon}
 						</div>
 					{/if}
 					{#if title}
 						<h2
 							id="modal-title"
-							class="flex-1 text-xl font-semibold text-gray-900 dark:text-gray-100"
+							class="flex-1 text-xl font-semibold text-ig-text"
 						>
 							{title}
 						</h2>
@@ -128,7 +128,7 @@
 					{#if showCloseButton}
 						<button
 							onclick={closeModal}
-							class="rounded-lg p-2 text-gray-500 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200"
+							class="rounded-ig-md p-2 text-ig-text-muted transition-colors hover:bg-ig-border hover:text-ig-text-secondary"
 							aria-label="Close modal"
 						>
 							<svg
@@ -158,7 +158,7 @@
 			<!-- Footer -->
 			{#if footer}
 				<div
-					class="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50 px-6 py-4 rounded-b-2xl"
+					class="flex items-center justify-end gap-3 border-t border-ig-border bg-ig-surface-raised px-6 py-4 rounded-b-ig-lg"
 				>
 					{@render footer()}
 				</div>

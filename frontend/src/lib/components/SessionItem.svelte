@@ -12,7 +12,7 @@
 </script>
 
 <div
-	class="group/item rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+	class="group/item rounded-ig-md border border-ig-border bg-ig-surface-raised p-4 transition-all hover:border-ig-success/50 hover:bg-ig-border"
 >
 	<div class="flex flex-row items-start justify-between gap-4">
 		<a
@@ -20,14 +20,14 @@
 			class="flex flex-1 flex-col gap-2"
 		>
 			<div class="flex flex-row items-center gap-2">
-				<span class="font-medium text-gray-800 dark:text-gray-200"
+				<span class="font-medium text-ig-text"
 					>{session.name || 'Unnamed Session'}</span
 				>
-				<span class="rounded bg-green-500/20 px-2 py-0.5 text-xs text-green-600 dark:text-green-400"
+				<span class="rounded-ig-sm bg-green-500/20 px-2 py-0.5 text-xs text-green-600 dark:text-green-400"
 					>{session.runCount} {session.runCount === 1 ? 'run' : 'runs'}</span
 				>
 			</div>
-			<div class="flex flex-row items-center gap-2 text-xs text-gray-500">
+			<div class="flex flex-row items-center gap-2 text-xs text-ig-text-muted">
 				<span class="cursor-help" title={formatAbsoluteTime(session.createdAt)}
 					>Created {formatRelativeTime(session.createdAt)}</span
 				>
@@ -41,7 +41,7 @@
 		</a>
 		<button
 			onclick={() => onDelete?.()}
-			class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
+			class="cursor-pointer rounded-ig-sm p-1.5 text-ig-text-muted transition-all hover:bg-ig-border hover:text-ig-error"
 			title="Delete session">{@html Trash}</button
 		>
 	</div>

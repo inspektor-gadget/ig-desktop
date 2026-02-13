@@ -499,7 +499,7 @@
 		<div class="flex max-w-1/3 flex-col justify-between">
 			<div></div>
 			<div
-				class="flex flex-col gap-8 rounded-xl border border-gray-300 bg-white/90 dark:border-gray-700 dark:bg-gray-900/90 p-16 backdrop-blur-lg"
+				class="flex flex-col gap-8 rounded-ig-lg border border-gray-300 bg-white/90 dark:border-gray-700 dark:bg-gray-900/90 p-16 backdrop-blur-lg"
 			>
 				<div class="text-lg text-gray-600 dark:text-gray-400">An error occurred</div>
 				<div class="text-red-600 dark:text-red-400">{modalError}</div>
@@ -508,7 +508,7 @@
 						onclick={() => {
 							modalError = null;
 						}}
-						class="flex cursor-pointer flex-row items-center gap-2 rounded bg-red-600 dark:bg-red-900 px-2 py-1 text-white hover:bg-red-500 dark:hover:bg-red-800"
+						class="flex cursor-pointer flex-row items-center gap-2 rounded-ig-sm bg-red-600 dark:bg-red-900 px-2 py-1 text-white hover:bg-red-500 dark:hover:bg-red-800"
 						>Close
 					</button>
 				</div>
@@ -527,7 +527,7 @@
 			activeDeploymentId = activeDeployment.id;
 			deployModalOpen = true;
 		}}
-		class="fixed right-4 bottom-4 z-40 flex items-center gap-3 rounded-lg border border-blue-800 bg-blue-900/90 px-4 py-3 text-white shadow-lg backdrop-blur-md transition-all hover:bg-blue-800/90"
+		class="fixed right-4 bottom-4 z-40 flex items-center gap-3 rounded-ig-md border border-blue-800 bg-blue-900/90 px-4 py-3 text-white shadow-lg backdrop-blur-md transition-all hover:bg-blue-800/90"
 		title="View deployment progress"
 	>
 		<div class="text-blue-400">{@html Server}</div>

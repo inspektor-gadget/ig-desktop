@@ -1,7 +1,21 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
+import { cpSync, mkdirSync } from 'fs';
+
+/** Copy theme CSS files to dist-lib/themes/ after build. */
+function copyThemes(): Plugin {
+	return {
+		name: 'copy-themes',
+		closeBundle() {
+			const src = resolve(__dirname, 'src/lib/themes');
+			const dest = resolve(__dirname, 'dist-lib/themes');
+			mkdirSync(dest, { recursive: true });
+			cpSync(src, dest, { recursive: true, filter: (s) => s.endsWith('.css') || !s.includes('.') });
+		}
+	};
+}
 
 export default defineConfig({
 	define: {
@@ -14,7 +28,8 @@ export default defineConfig({
 				css: 'injected'
 			}
 		}),
-		tailwindcss()
+		tailwindcss(),
+		copyThemes()
 	],
 	resolve: {
 		alias: {
@@ -32,7 +47,7 @@ export default defineConfig({
 			fileName: 'ig-frontend'
 		},
 		rollupOptions: {
-			external: ['svelte', 'svelte/legacy', 'svelte/store', '@wailsio/runtime']
+			external: [/^svelte(\/.*)?$/, '@wailsio/runtime']
 		},
 		outDir: 'dist-lib',
 		cssCodeSplit: false // Bundle all CSS into one file

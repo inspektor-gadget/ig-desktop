@@ -1,4 +1,4 @@
-import type { ITransportAdapter } from './adapter';
+import type { ITransportAdapter, MessageHandler, ConnectionHandler } from './adapter';
 
 /**
  * WebSocket transport adapter for browser environments.
@@ -6,8 +6,8 @@ import type { ITransportAdapter } from './adapter';
  */
 export class WebSocketAdapter implements ITransportAdapter {
 	private ws: WebSocket | null = null;
-	private messageHandler: ((message: string) => void) | null = null;
-	private connectionHandler: ((connected: boolean) => void) | null = null;
+	private messageHandler: MessageHandler | null = null;
+	private connectionHandler: ConnectionHandler | null = null;
 	private _connected = false;
 
 	constructor(private url?: string) {}
@@ -44,11 +44,11 @@ export class WebSocketAdapter implements ITransportAdapter {
 		this.ws?.send(message);
 	}
 
-	onMessage(handler: (message: string) => void): void {
+	onMessage(handler: MessageHandler): void {
 		this.messageHandler = handler;
 	}
 
-	onConnectionChange(handler: (connected: boolean) => void): void {
+	onConnectionChange(handler: ConnectionHandler): void {
 		this.connectionHandler = handler;
 	}
 

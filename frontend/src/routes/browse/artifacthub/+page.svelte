@@ -66,7 +66,7 @@
 			<div class="flex flex-row items-center gap-4">
 				<button
 					onclick={() => history.back()}
-					class="flex cursor-pointer items-center rounded bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
+					class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
 					title="Go back"
 				>
 					{@html ChevronLeft}
@@ -86,7 +86,7 @@
 				</div>
 				<input
 					bind:value={search}
-					class="w-64 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 py-2 pr-4 pl-10 text-sm placeholder-gray-500 transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+					class="w-64 rounded-ig-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 py-2 pr-4 pl-10 text-sm placeholder-gray-500 transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 					type="search"
 					placeholder="Search gadgets..."
 				/>
@@ -113,7 +113,7 @@
 				{#each results as entry}
 					<a
 						href={`${resolve(`/browse/artifacthub/${entry.repository.name}/${entry.normalized_name}/${entry.version}`)}${environmentID ? `?env=${environmentID}` : ''}`}
-						class="group relative flex flex-col justify-between gap-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 p-5 shadow-lg shadow-gray-200/50 dark:shadow-gray-950/50 transition-all hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
+						class="group relative flex flex-col justify-between gap-3 rounded-ig-lg border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 p-5 shadow-lg shadow-gray-200/50 dark:shadow-gray-950/50 transition-all hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 					>
 						{#if entry.official}
 							<div class="ribbon-official text-xs">Official</div>
@@ -165,7 +165,7 @@
 									</div>
 								</div>
 								<div
-									class="flex items-center gap-2 rounded-lg bg-blue-600/10 px-3 py-1.5 transition-all group-hover:bg-blue-600/20"
+									class="flex items-center gap-2 rounded-ig-md bg-blue-600/10 px-3 py-1.5 transition-all group-hover:bg-blue-600/20"
 								>
 									<span class="text-xs font-medium text-blue-600 dark:text-blue-400">Run</span>
 									<div class="text-blue-600 dark:text-blue-400">

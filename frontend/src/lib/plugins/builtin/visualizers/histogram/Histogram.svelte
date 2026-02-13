@@ -165,7 +165,7 @@
 			>
 				<!-- View mode toggle -->
 				<div
-					class="flex items-center rounded-md border border-gray-300 dark:border-gray-600 overflow-hidden"
+					class="flex items-center rounded-ig-sm border border-gray-300 dark:border-gray-600 overflow-hidden"
 				>
 					<button
 						class="px-3 py-1 text-[11px] font-medium transition-colors {viewMode === 'heatmap'

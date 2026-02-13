@@ -24,11 +24,11 @@
 </script>
 
 <div
-	class="address-node rounded-lg border-2 bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 {borderClass}"
+	class="address-node rounded-ig-md border-2 bg-white dark:bg-gray-800 shadow-sm transition-all duration-200 {borderClass}"
 >
 	<!-- Header with labels from keying fields -->
 	<div
-		class="flex flex-col gap-0.5 rounded-t-md border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2"
+		class="flex flex-col gap-0.5 rounded-t-ig-sm border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2"
 		title={fullTitle}
 	>
 		<div class="flex items-center justify-between gap-2">
@@ -62,7 +62,7 @@
 			{#each handles as handle (handle.id)}
 				{@const isEphemeral = handle.id.endsWith(':high')}
 				<div
-					class="handle-row relative flex items-center justify-between px-2 py-1.5 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded"
+					class="handle-row relative flex items-center justify-between px-2 py-1.5 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-ig-sm"
 				>
 					<span class="font-mono text-[11px]"
 						>{handle.proto}:{handle.port}{isEphemeral ? '+' : ''}</span

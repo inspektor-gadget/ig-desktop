@@ -16,23 +16,50 @@
 	import { preferences } from '$lib/shared/preferences.svelte';
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
+	import type { ViewConfig } from '$lib/types/view-config';
+	import { resolveViewConfig } from '$lib/types/view-config';
+	import type { CellClickHandler, CellContextMenuHandler } from '$lib/types/cell-interaction';
+	import {
+		applyFieldAnnotationProviders,
+		applyDatasourceAnnotationProviders
+	} from '$lib/services/annotation-provider.service';
 
-	let { instanceID }: { instanceID: string } = $props();
+	let {
+		instanceID,
+		viewConfig,
+		onCellClick,
+		onCellContextMenu
+	}: {
+		instanceID: string;
+		viewConfig?: ViewConfig;
+		onCellClick?: CellClickHandler;
+		onCellContextMenu?: CellContextMenuHandler;
+	} = $props();
+
+	const config = $derived(resolveViewConfig(viewConfig));
 
 	let gadgetInfo = $derived(instances[instanceID]?.gadgetInfo);
 	let events = $derived(instances[instanceID]?.events);
 	let logs = $derived(instances[instanceID]?.logs);
 
-	// Normalize datasources once when gadgetInfo changes, not on every render
+	// Normalize datasources once when gadgetInfo changes, not on every render.
+	// Applies registered annotation providers (datasource-level then field-level).
 	const normalizedDataSources = $derived(
-		gadgetInfo?.dataSources?.map((ds) => ({
-			...ds,
-			fields: (ds.fields ?? []).map((f) => ({
-				...f,
-				flags: f.flags ?? 0,
-				annotations: f.annotations ?? {}
-			}))
-		})) ?? []
+		gadgetInfo?.dataSources?.map((ds) => {
+			const dsAnnotations = applyDatasourceAnnotationProviders(ds);
+			const enrichedDs = { ...ds, annotations: dsAnnotations };
+			return {
+				...enrichedDs,
+				fields: (ds.fields ?? []).map((f) => ({
+					...f,
+					flags: f.flags ?? 0,
+					annotations: applyFieldAnnotationProviders(
+						{ ...f, annotations: f.annotations ?? {} },
+						enrichedDs
+					)
+				}))
+			};
+		}) ?? []
 	);
 
 	let logPane = $state<HTMLDivElement | null>(null);
@@ -263,15 +290,17 @@
 	<div class="flex flex-1 flex-row overflow-hidden">
 		<div class="flex flex-1 flex-col overflow-hidden">
 			<div class="flex grow flex-col overflow-hidden">
+				{#if config.statusBar || config.searchBar || config.inspector}
 				<div class="flex flex-row items-center justify-between py-2 pl-2">
+					{#if config.statusBar}
 					<div class="flex flex-row items-center gap-2">
 						<div class="flex flex-row items-center">
 							<!-- Play/Stop button group -->
 							<div class="flex">
 								<div
-									class="flex h-8 w-8 items-center justify-center rounded-l border transition-colors {instance.running
+									class="flex h-8 w-8 items-center justify-center rounded-l-ig-sm border transition-colors {instance.running
 										? 'border-green-600 bg-green-600 text-white'
-										: 'border-gray-600 bg-transparent text-gray-500'}"
+										: 'border-ig-border-strong bg-transparent text-ig-text-muted'}"
 									title={instance.running ? 'Running' : 'Stopped'}
 								>
 									{@html Play}
@@ -279,7 +308,7 @@
 								<button
 									onclick={() => stopInstance(instanceID)}
 									disabled={!instance.running}
-									class="flex h-8 items-center justify-center gap-1 rounded-r border border-l-0 px-2 transition-colors {instance.running
+									class="flex h-8 items-center justify-center gap-1 rounded-r-ig-sm border border-l-0 px-2 transition-colors {instance.running
 										? 'border-gray-600 bg-transparent text-red-500 hover:bg-red-600 hover:text-white cursor-pointer'
 										: 'border-red-800 bg-red-800 text-white cursor-default'}"
 									title={instance.running
@@ -306,16 +335,16 @@
 							{/if}
 						</div>
 						{#if instance.isReplay}
-							<div class="flex items-center gap-2 text-sm text-gray-400">
+							<div class="flex items-center gap-2 text-sm text-ig-text-muted">
 								{#if instance.replayMode === 'snapshot'}
 									<span
-										class="rounded border border-purple-700 bg-purple-900/50 px-2 py-0.5 text-xs font-semibold text-purple-300"
+										class="rounded-ig-sm border border-purple-700 bg-purple-900/50 px-2 py-0.5 text-xs font-semibold text-purple-300"
 									>
 										SNAPSHOT
 									</span>
 								{:else}
 									<span
-										class="rounded border border-blue-700 bg-blue-900/50 px-2 py-0.5 text-xs font-semibold text-blue-300 {instance.running
+										class="rounded-ig-sm border border-blue-700 bg-blue-900/50 px-2 py-0.5 text-xs font-semibold text-blue-300 {instance.running
 											? 'animate-pulse'
 											: ''}"
 									>
@@ -326,19 +355,21 @@
 						{/if}
 						{#if instance.session}
 							<span
-								class="flex items-center gap-1 rounded border border-red-700 bg-red-900/50 px-2 py-0.5 text-xs font-semibold text-red-300"
+								class="flex items-center gap-1 rounded-ig-sm border border-red-700 bg-red-900/50 px-2 py-0.5 text-xs font-semibold text-red-300"
 							>
 								<span class="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500"></span>
 								REC
 							</span>
 						{/if}
 					</div>
+					{/if}
 					<div class="flex-1"></div>
-					<div class="px-2 font-mono text-sm text-gray-400">
+					{#if config.statusBar}
+					<div class="px-2 font-mono text-sm text-ig-text-muted">
 						{#if isCapped}
 							<button
 								onclick={openMaxEventsSettings}
-								class="cursor-pointer hover:text-gray-200"
+								class="cursor-pointer hover:text-ig-text"
 								title="Click to configure maximum events"
 							>
 								{displayedEventCount} of {eventCount} events
@@ -347,9 +378,11 @@
 							{eventCount} events
 						{/if}
 					</div>
-					{#if elapsedTime}<div class="px-2 font-mono text-sm text-gray-400">
+					{#if elapsedTime}<div class="px-2 font-mono text-sm text-ig-text-muted">
 							{elapsedTime}
 						</div>{/if}
+					{/if}
+					{#if config.searchBar}
 					<div class="flex items-center px-2">
 						<div class="relative">
 							<Input
@@ -365,7 +398,7 @@
 										searchInput = '';
 										searchInputRef?.focus();
 									}}
-									class="absolute right-2 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+									class="absolute right-2 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full text-ig-text-muted hover:text-ig-text-secondary hover:bg-ig-border transition-colors"
 									title="Clear search"
 								>
 									<svg
@@ -388,9 +421,9 @@
 						<button
 							onclick={toggleSearchMode}
 							ondblclick={openSearchModeSettings}
-							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-300 dark:border-gray-800 transition-colors {searchModeFilter
-								? 'bg-blue-600 text-white hover:bg-blue-500'
-								: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}"
+							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-ig-border-strong transition-colors {searchModeFilter
+								? 'bg-ig-primary text-ig-text-on-primary hover:bg-ig-primary-hover'
+								: 'bg-ig-border text-ig-text-secondary hover:bg-ig-border-strong'}"
 							title={searchModeFilter
 								? 'Filter mode: hiding non-matching entries (click to switch to highlight mode, double-click to open settings)'
 								: 'Highlight mode: showing all entries with matches highlighted (click to switch to filter mode, double-click to open settings)'}
@@ -400,12 +433,12 @@
 						<button
 							onclick={toggleHighlightInFilterMode}
 							ondblclick={openHighlightSettings}
-							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-300 dark:border-gray-800 transition-colors {searchHighlightInFilterMode
+							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-ig-border-strong transition-colors {searchHighlightInFilterMode
 								? 'bg-yellow-600 text-white hover:bg-yellow-500'
-								: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'} {!searchModeFilter &&
+								: 'bg-ig-border text-ig-text-secondary hover:bg-ig-border-strong'} {!searchModeFilter &&
 							searchQuery
 								? ''
-								: 'rounded-r-lg'}"
+								: 'rounded-r-ig-md'}"
 							title={searchHighlightInFilterMode
 								? 'Text highlighting enabled (click to disable, double-click to open settings)'
 								: 'Text highlighting disabled (click to enable, double-click to open settings)'}
@@ -426,7 +459,7 @@
 							<button
 								onclick={goToPrevMatch}
 								disabled={matchCount === 0}
-								class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-gray-300 dark:border-gray-800 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+								class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-ig-border-strong bg-ig-border text-ig-text-secondary transition-colors hover:bg-ig-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
 								title="Previous match (wraps around)"
 							>
 								<svg
@@ -446,7 +479,7 @@
 							<button
 								onclick={goToNextMatch}
 								disabled={matchCount === 0}
-								class="flex h-[38px] w-8 items-center justify-center rounded-r-lg border border-l-0 border-gray-300 dark:border-gray-800 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 transition-colors hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+								class="flex h-[38px] w-8 items-center justify-center rounded-r-ig-md border border-l-0 border-ig-border-strong bg-ig-border text-ig-text-secondary transition-colors hover:bg-ig-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
 								title="Next match (wraps around)"
 							>
 								<svg
@@ -466,7 +499,7 @@
 						{/if}
 					</div>
 					{#if searchQuery}
-						<div class="px-2 font-mono text-sm text-gray-400">
+						<div class="px-2 font-mono text-sm text-ig-text-muted">
 							{#if searchModeFilter}
 								{matchCount} of {totalCount}
 							{:else if matchCount > 0}
@@ -476,19 +509,23 @@
 							{/if}
 						</div>
 					{/if}
+					{/if}
+					{#if config.inspector}
 					<button
-						class="flex cursor-pointer items-center gap-1.5 rounded-l-md border border-r-0 border-gray-300 bg-gray-100 py-1.5 pl-2 pr-1 transition-colors hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+						class="flex cursor-pointer items-center gap-1.5 rounded-l-ig-sm border border-r-0 border-ig-border-strong bg-ig-surface-raised py-1.5 pl-2 pr-1 transition-colors hover:bg-ig-border"
 						title={showInspector ? 'Hide Inspector' : 'Show Inspector'}
 						onclick={() => {
 							preferences.set('gadget.show-inspector', !showInspector);
 						}}
 					>
 						{@html Adjustments}
-						<span class="flex items-center text-gray-400"
+						<span class="flex items-center text-ig-text-muted"
 							>{@html showInspector ? ChevronLeft : ChevronRight}</span
 						>
 					</button>
+					{/if}
 				</div>
+				{/if}
 				<div class="flex flex-1 flex-col justify-stretch overflow-y-auto overscroll-none">
 					{#each normalizedDataSources as ds, id}
 						{#if ds.annotations?.['view.hidden'] !== 'true'}
@@ -504,14 +541,19 @@
 								{currentMatchIndex}
 								onScrollToIndex={handleScrollToIndex}
 								isRunning={instance.running}
+								showDatasourceHeader={config.datasourceTabs}
+								showSnapshotTimeline={config.snapshotTimeline}
+								{onCellClick}
+								{onCellContextMenu}
 							/>
 						{/if}
 					{/each}
 				</div>
 			</div>
+			{#if config.logPanel}
 			{#if !logCollapsed}
 				<div
-					class="h-2 cursor-row-resize touch-none bg-gray-800 select-none"
+					class="h-2 cursor-row-resize touch-none bg-ig-border-strong select-none"
 					onpointerdown={resize}
 				></div>
 			{/if}
@@ -522,10 +564,11 @@
 			>
 				<Log log={logs ?? []} {instanceID} />
 			</div>
+			{/if}
 		</div>
-		{#if showInspector}
+		{#if config.inspector && showInspector}
 			<div
-				class="w-1 cursor-col-resize touch-none border-r-1 border-r-gray-600 bg-gray-800 select-none"
+				class="w-1 cursor-col-resize touch-none border-r-1 border-r-ig-border-strong bg-ig-border-strong select-none"
 				onpointerdown={resizeSidebar}
 			></div>
 			<div
@@ -546,7 +589,7 @@
 	</div>
 {:else}
 	<div
-		class="flex flex-1 items-center justify-center bg-gray-50 dark:bg-gray-950 align-middle font-mono text-gray-900 dark:text-gray-100"
+		class="flex flex-1 items-center justify-center bg-ig-surface align-middle font-mono text-ig-text"
 	>
 		<div>
 			<div class="text-xl">Gadget Instance not found (yet)</div>

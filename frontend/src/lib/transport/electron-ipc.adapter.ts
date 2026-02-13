@@ -1,4 +1,4 @@
-import type { ITransportAdapter } from './adapter';
+import type { ITransportAdapter, MessageHandler, ConnectionHandler } from './adapter';
 
 /**
  * Electron IPC transport adapter stub.
@@ -6,8 +6,8 @@ import type { ITransportAdapter } from './adapter';
  * communicates via Electron's IPC or a local WebSocket.
  */
 export class ElectronIPCAdapter implements ITransportAdapter {
-	private messageHandler: ((message: string) => void) | null = null;
-	private connectionHandler: ((connected: boolean) => void) | null = null;
+	private messageHandler: MessageHandler | null = null;
+	private connectionHandler: ConnectionHandler | null = null;
 	private _connected = false;
 
 	get connected(): boolean {
@@ -24,11 +24,11 @@ export class ElectronIPCAdapter implements ITransportAdapter {
 		throw new Error('ElectronIPCAdapter not yet implemented');
 	}
 
-	onMessage(handler: (message: string) => void): void {
+	onMessage(handler: MessageHandler): void {
 		this.messageHandler = handler;
 	}
 
-	onConnectionChange(handler: (connected: boolean) => void): void {
+	onConnectionChange(handler: ConnectionHandler): void {
 		this.connectionHandler = handler;
 	}
 

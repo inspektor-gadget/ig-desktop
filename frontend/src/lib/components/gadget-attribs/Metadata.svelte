@@ -10,7 +10,7 @@
 </script>
 
 <!-- Fixed Header -->
-<div class="shrink-0 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-950">
+<div class="shrink-0 border-b border-ig-border bg-ig-surface">
 	<div class="flex items-center justify-between px-2 py-1.5">
 		<span class="font-medium">Gadget Metadata</span>
 	</div>

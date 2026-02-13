@@ -1,4 +1,4 @@
-import type { ITransportAdapter } from './adapter';
+import type { ITransportAdapter, MessageHandler, ConnectionHandler } from './adapter';
 import { demoBackend } from '../services/demo-backend.service.svelte';
 
 /**
@@ -6,8 +6,8 @@ import { demoBackend } from '../services/demo-backend.service.svelte';
  * to serve static pre-recorded session data.
  */
 export class DemoAdapter implements ITransportAdapter {
-	private messageHandler: ((message: string) => void) | null = null;
-	private connectionHandler: ((connected: boolean) => void) | null = null;
+	private messageHandler: MessageHandler | null = null;
+	private connectionHandler: ConnectionHandler | null = null;
 	private _connected = false;
 
 	get connected(): boolean {
@@ -15,8 +15,6 @@ export class DemoAdapter implements ITransportAdapter {
 	}
 
 	async connect(): Promise<void> {
-		console.log('Initializing demo mode backend');
-
 		// Wire up the demo backend to route messages through us
 		demoBackend.setMessageHandler((message: string) => {
 			this.messageHandler?.(message);
@@ -33,11 +31,11 @@ export class DemoAdapter implements ITransportAdapter {
 		demoBackend.handleCommand(message);
 	}
 
-	onMessage(handler: (message: string) => void): void {
+	onMessage(handler: MessageHandler): void {
 		this.messageHandler = handler;
 	}
 
-	onConnectionChange(handler: (connected: boolean) => void): void {
+	onConnectionChange(handler: ConnectionHandler): void {
 		this.connectionHandler = handler;
 	}
 

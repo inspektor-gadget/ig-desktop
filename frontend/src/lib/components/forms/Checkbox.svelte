@@ -51,18 +51,18 @@
 		bind:checked
 		{disabled}
 		onchange={handleChange}
-		class="mt-0.5 h-4 w-4 cursor-pointer rounded border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800 text-blue-500 transition-colors focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
+		class="mt-0.5 h-4 w-4 cursor-pointer rounded-ig-sm border-ig-border-strong bg-ig-surface-raised text-ig-primary transition-colors focus:ring-2 focus:ring-ig-primary-muted focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
 	/>
 
 	{#if label || description}
 		<div class="flex flex-col gap-0.5">
 			{#if label}
-				<label for={checkboxId} class="text-sm font-medium text-gray-700 dark:text-gray-300">
+				<label for={checkboxId} class="text-sm font-medium text-ig-text-secondary">
 					{label}
 				</label>
 			{/if}
 			{#if description}
-				<p class="text-xs text-gray-500">{description}</p>
+				<p class="text-xs text-ig-text-muted">{description}</p>
 			{/if}
 		</div>
 	{/if}

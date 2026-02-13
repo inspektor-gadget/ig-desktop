@@ -69,7 +69,7 @@
 <BaseModal bind:open title="Custom Plugin" size="lg" onClose={handleClose}>
 	<div class="space-y-4">
 		<!-- Security Warning -->
-		<div class="flex items-start gap-3 rounded-lg border border-amber-500/50 bg-amber-500/10 p-4">
+		<div class="flex items-start gap-3 rounded-ig-md border border-amber-500/50 bg-amber-500/10 p-4">
 			<div class="flex-shrink-0 text-amber-500">
 				{@html WarningIcon}
 			</div>
@@ -85,21 +85,21 @@
 
 		<!-- Plugin Info -->
 		<div
-			class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4"
+			class="rounded-ig-md border border-ig-border bg-ig-surface-raised p-4"
 		>
 			<div class="flex items-center justify-between">
 				<div>
-					<h4 class="font-medium text-gray-900 dark:text-gray-100">
+					<h4 class="font-medium text-ig-text">
 						{bundle.name}
 					</h4>
-					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+					<p class="mt-1 text-sm text-ig-text-muted">
 						{fileCount} file{fileCount === 1 ? '' : 's'} &middot; {(totalSize / 1024).toFixed(1)} KB
 						&middot; Entry: {entrypoint}
 					</p>
 				</div>
 				<button
 					onclick={togglePreview}
-					class="text-sm font-medium text-blue-500 hover:text-blue-400 transition-colors"
+					class="text-sm font-medium text-ig-primary hover:text-ig-primary-hover transition-colors"
 				>
 					{showPreview ? 'Hide' : 'Preview'} source
 				</button>
@@ -108,18 +108,18 @@
 
 		<!-- Source Code Preview -->
 		{#if showPreview}
-			<div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+			<div class="rounded-ig-md border border-ig-border overflow-hidden">
 				<!-- File tabs -->
 				<div
-					class="flex items-center gap-1 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 px-2 py-1 overflow-x-auto"
+					class="flex items-center gap-1 border-b border-ig-border bg-ig-surface-raised px-2 py-1 overflow-x-auto"
 				>
 					{#each fileList as file}
 						<button
 							onclick={() => (selectedFile = file)}
-							class="px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap {selectedFile ===
+							class="px-3 py-1.5 text-xs font-medium rounded-ig-sm transition-colors whitespace-nowrap {selectedFile ===
 							file
-								? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
-								: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}"
+								? 'bg-gray-200 dark:bg-gray-700 text-ig-text'
+								: 'text-ig-text-muted hover:text-gray-700 dark:hover:text-gray-200'}"
 						>
 							{file}
 							{#if file === entrypoint}
@@ -132,14 +132,14 @@
 				<!-- File content -->
 				{#if selectedFile && bundle.files[selectedFile]}
 					<div
-						class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-850 px-4 py-2"
+						class="flex items-center justify-between border-b border-ig-border bg-ig-surface-raised px-4 py-2"
 					>
-						<span class="text-xs font-medium text-gray-500 dark:text-gray-400">
+						<span class="text-xs font-medium text-ig-text-muted">
 							{selectedFile} ({bundle.files[selectedFile].length} characters)
 						</span>
 						<button
 							onclick={() => selectedFile && navigator.clipboard.writeText(bundle.files[selectedFile])}
-							class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+							class="text-xs text-ig-text-muted hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
 						>
 							Copy
 						</button>
@@ -153,7 +153,7 @@
 
 		<!-- Error Display -->
 		{#if error}
-			<div class="rounded-lg border border-red-500/50 bg-red-500/10 p-4 text-red-400">
+			<div class="rounded-ig-md border border-red-500/50 bg-red-500/10 p-4 text-red-400">
 				<h4 class="font-semibold">Compilation Error</h4>
 				<pre class="mt-2 text-sm whitespace-pre-wrap">{error}</pre>
 			</div>

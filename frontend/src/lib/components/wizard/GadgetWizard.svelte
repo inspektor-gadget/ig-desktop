@@ -88,11 +88,11 @@
 </script>
 
 <div
-	class="group main-gradient flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 transition-all hover:border-orange-500/50 shadow-sm hover:shadow-lg hover:shadow-orange-500/10 shadow-gray-200/90 dark:shadow-gray-950/90"
+	class="group main-gradient flex flex-col rounded-ig-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 transition-all hover:border-orange-500/50 shadow-sm hover:shadow-lg hover:shadow-orange-500/10 shadow-gray-200/90 dark:shadow-gray-950/90"
 >
 	<!-- Custom Header -->
 	<div
-		class="flex items-center gap-3 rounded-t-2xl border-b border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50 px-6 py-4"
+		class="flex items-center gap-3 rounded-t-ig-lg border-b border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50 px-6 py-4"
 	>
 		<div class="flex flex-1 items-center gap-3">
 			<!-- Fixed-width container for icon/back button to keep title aligned -->
@@ -104,7 +104,7 @@
 					<!-- Not at root: show back button -->
 					<button
 						onclick={goBack}
-						class="-m-1 cursor-pointer rounded p-1 text-orange-500 dark:text-orange-400 transition-all hover:bg-orange-100 dark:hover:bg-orange-900/30 [&>svg]:size-5"
+						class="-m-1 cursor-pointer rounded-ig-sm p-1 text-orange-500 dark:text-orange-400 transition-all hover:bg-orange-100 dark:hover:bg-orange-900/30 [&>svg]:size-5"
 						title="Go back"
 					>
 						{@html ChevronLeft}

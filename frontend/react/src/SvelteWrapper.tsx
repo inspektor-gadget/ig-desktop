@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ComponentType } from 'react';
-import { createClassComponent } from 'svelte/legacy';
+import { mount, unmount } from 'svelte';
 
 interface SvelteWrapperProps {
 	/** The Svelte component class to mount */
@@ -10,7 +10,7 @@ interface SvelteWrapperProps {
 
 /**
  * Generic React wrapper that mounts a compiled Svelte 5 component
- * into a React DOM node using createClassComponent from svelte/legacy.
+ * into a React DOM node using Svelte 5's mount() API.
  *
  * Usage:
  * ```tsx
@@ -26,25 +26,25 @@ export function SvelteWrapper({ component: SvelteComp, ...props }: SvelteWrapper
 	useEffect(() => {
 		if (!targetRef.current) return;
 
-		const Compat = createClassComponent({ component: SvelteComp as any });
-		instanceRef.current = new Compat({
+		instanceRef.current = mount(SvelteComp as any, {
 			target: targetRef.current,
 			props
 		});
 
 		return () => {
-			instanceRef.current?.$destroy();
-			instanceRef.current = null;
+			if (instanceRef.current) {
+				unmount(instanceRef.current);
+				instanceRef.current = null;
+			}
 		};
 		// Only re-mount when the Svelte component class itself changes
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [SvelteComp]);
 
-	// Update props on the mounted instance when they change
-	useEffect(() => {
-		instanceRef.current?.$set(props);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [JSON.stringify(props)]);
-
-	return <div ref={targetRef} />;
+	return (
+		<div
+			ref={targetRef}
+			style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}
+		/>
+	);
 }

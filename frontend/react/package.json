@@ -9,6 +9,6 @@
 		"svelte": "^5.0.0"
 	},
 	"dependencies": {
-		"@inspektor-gadget/frontend": "workspace:*"
+		"@inspektor-gadget/frontend": "file:.."
 	}
 }

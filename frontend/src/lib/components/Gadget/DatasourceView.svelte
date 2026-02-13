@@ -14,6 +14,7 @@
 	import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
 	import { resolvePluginIcon } from '$lib/utils/plugin-icons';
 	import PluginHookRenderer from '$lib/components/PluginHookRenderer.svelte';
+	import type { CellClickHandler, CellContextMenuHandler } from '$lib/types/cell-interaction';
 
 	interface Props {
 		ds: Datasource;
@@ -31,6 +32,10 @@
 		currentMatchIndex?: number;
 		onScrollToIndex?: (scrollFn: (index: number) => void) => void;
 		isRunning?: boolean;
+		showDatasourceHeader?: boolean;
+		showSnapshotTimeline?: boolean;
+		onCellClick?: CellClickHandler;
+		onCellContextMenu?: CellContextMenuHandler;
 	}
 
 	let {
@@ -44,7 +49,11 @@
 		onMatchInfo,
 		currentMatchIndex = -1,
 		onScrollToIndex,
-		isRunning = true
+		isRunning = true,
+		showDatasourceHeader = true,
+		showSnapshotTimeline = true,
+		onCellClick,
+		onCellContextMenu
 	}: Props = $props();
 
 	// Get applicable visualizers from the plugin registry
@@ -336,8 +345,9 @@
 
 <div class="flex h-full flex-col">
 	<!-- Header with tabs -->
+	{#if showDatasourceHeader}
 	<div
-		class="sticky top-0 left-0 z-20 flex h-10 flex-shrink-0 flex-row items-center border-t border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 text-base font-normal"
+		class="sticky top-0 left-0 z-20 flex h-10 flex-shrink-0 flex-row items-center border-t border-ig-border-strong bg-ig-surface px-2 text-base font-normal"
 	>
 		<div class="flex h-6 w-6 items-center justify-center pr-2">
 			{@html activeVisualizerIcon}
@@ -355,20 +365,17 @@
 		</div>
 
 		{#if applicableVisualizers.length > 1}
-			<div class="flex flex-row rounded-md bg-gray-100 dark:bg-gray-900 p-0.5">
+			<div class="flex flex-row rounded-ig-sm bg-ig-surface-raised p-0.5">
 				<!-- Render tabs for all applicable visualizers from registry -->
 				{#each applicableVisualizers as visualizer (visualizer.id)}
 					{@const tabId = visualizer.visualizer.id}
 					{@const isActive = activeTab === tabId}
 					<button
-						class="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors"
-						class:bg-gray-300={isActive}
-						class:dark:bg-gray-700={isActive}
-						class:text-gray-800={isActive}
-						class:dark:text-gray-200={isActive}
-						class:text-gray-500={!isActive}
-						class:hover:text-gray-700={!isActive}
-						class:dark:hover:text-gray-300={!isActive}
+						class="flex items-center gap-1 rounded-ig-sm px-2 py-0.5 text-xs transition-colors"
+						class:bg-ig-border-strong={isActive}
+						class:text-ig-text={isActive}
+						class:text-ig-text-muted={!isActive}
+						class:hover:text-ig-text-secondary={!isActive}
 						onclick={() => setTab(tabId)}
 					>
 						{@html resolvePluginIcon(visualizer.visualizer.icon)}
@@ -384,10 +391,9 @@
 		>
 			<button
 				bind:this={menuButton}
-				class="pl-2 hover:text-gray-900 dark:hover:text-white transition-colors"
-				class:text-gray-500={activeTab !== 'table'}
-				class:hover:text-gray-700={activeTab !== 'table'}
-				class:dark:hover:text-gray-300={activeTab !== 'table'}
+				class="pl-2 hover:text-ig-text transition-colors"
+				class:text-ig-text-muted={activeTab !== 'table'}
+				class:hover:text-ig-text-secondary={activeTab !== 'table'}
 				onclick={() => (menuOpen = !menuOpen)}
 				title="Column visibility"
 				aria-label="Toggle column visibility menu"
@@ -403,25 +409,25 @@
 					id="column-menu"
 					role="menu"
 					aria-label="Column visibility options"
-					class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl"
+					class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-ig-md border border-ig-border-strong bg-ig-surface shadow-xl"
 				>
 					<div
-						class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase border-b border-gray-200 dark:border-gray-700"
+						class="px-3 py-2 text-xs font-semibold text-ig-text-muted uppercase border-b border-ig-border"
 					>
 						Columns
 					</div>
 					<div class="py-1" role="group" aria-label="Column toggles">
 						{#each tableMenuController.toggleableFields as field (field.fullName)}
 							<label
-								class="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-sm"
+								class="flex items-center gap-2 px-3 py-1.5 hover:bg-ig-surface-raised cursor-pointer text-sm"
 							>
 								<input
 									type="checkbox"
 									checked={tableMenuController.isColumnVisible(field.fullName)}
 									onchange={() => tableMenuController?.toggleColumnVisibility(field.fullName)}
-									class="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+									class="rounded-ig-sm border-ig-border-strong bg-ig-surface text-ig-primary focus:ring-ig-primary focus:ring-offset-0"
 								/>
-								<span class="text-gray-800 dark:text-gray-200 truncate" title={field.fullName}
+								<span class="text-ig-text truncate" title={field.fullName}
 									>{field.fullName}</span
 								>
 							</label>
@@ -431,9 +437,10 @@
 			{/if}
 		</div>
 	</div>
+	{/if}
 
 	<!-- Snapshot timeline and navigation (for array datasources in table/flamegraph/histogram view) -->
-	{#if (activeTab === 'table' || activeTab === 'flamegraph' || activeTab === 'histogram') && hasSnapshots && snapshotCount > 1}
+	{#if showSnapshotTimeline && (activeTab === 'table' || activeTab === 'flamegraph' || activeTab === 'histogram') && hasSnapshots && snapshotCount > 1}
 		<!-- Mini timeline chart -->
 		<SnapshotTimeline
 			{snapshots}
@@ -445,37 +452,31 @@
 
 		<!-- Navigation bar -->
 		<div
-			class="flex flex-shrink-0 items-center justify-between border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-2 py-1 text-xs"
+			class="flex flex-shrink-0 items-center justify-between border-t border-ig-border bg-ig-surface-raised px-2 py-1 text-xs"
 		>
 			<div class="flex items-center gap-2">
 				<!-- Back/forth navigation for single selection -->
 				{#if selectedSnapshotIndices.size === 1}
 					<div class="flex items-center gap-1">
 						<button
-							class="rounded p-0.5 transition-colors disabled:opacity-30"
-							class:text-gray-500={singleSelectedIndex > 0}
-							class:dark:text-gray-400={singleSelectedIndex > 0}
-							class:hover:bg-gray-200={singleSelectedIndex > 0}
-							class:dark:hover:bg-gray-700={singleSelectedIndex > 0}
-							class:hover:text-gray-800={singleSelectedIndex > 0}
-							class:dark:hover:text-gray-200={singleSelectedIndex > 0}
+							class="rounded-ig-sm p-0.5 transition-colors disabled:opacity-30"
+							class:text-ig-text-muted={singleSelectedIndex > 0}
+							class:hover:bg-ig-border={singleSelectedIndex > 0}
+							class:hover:text-ig-text={singleSelectedIndex > 0}
 							disabled={singleSelectedIndex === 0}
 							onclick={goToNewerSnapshot}
 							title="Newer snapshot"
 						>
 							{@html ChevronLeft}
 						</button>
-						<span class="min-w-16 text-center text-gray-500 dark:text-gray-400">
+						<span class="min-w-16 text-center text-ig-text-muted">
 							{singleSelectedIndex + 1} / {snapshotCount}
 						</span>
 						<button
-							class="rounded p-0.5 transition-colors disabled:opacity-30"
-							class:text-gray-500={singleSelectedIndex < snapshotCount - 1}
-							class:dark:text-gray-400={singleSelectedIndex < snapshotCount - 1}
-							class:hover:bg-gray-200={singleSelectedIndex < snapshotCount - 1}
-							class:dark:hover:bg-gray-700={singleSelectedIndex < snapshotCount - 1}
-							class:hover:text-gray-800={singleSelectedIndex < snapshotCount - 1}
-							class:dark:hover:text-gray-200={singleSelectedIndex < snapshotCount - 1}
+							class="rounded-ig-sm p-0.5 transition-colors disabled:opacity-30"
+							class:text-ig-text-muted={singleSelectedIndex < snapshotCount - 1}
+							class:hover:bg-ig-border={singleSelectedIndex < snapshotCount - 1}
+							class:hover:text-ig-text={singleSelectedIndex < snapshotCount - 1}
 							disabled={singleSelectedIndex >= snapshotCount - 1}
 							onclick={goToOlderSnapshot}
 							title="Older snapshot"
@@ -485,7 +486,7 @@
 					</div>
 				{:else}
 					<!-- Multi-selection info -->
-					<span class="text-gray-500 dark:text-gray-400">
+					<span class="text-ig-text-muted">
 						{selectedSnapshotIndices.size} of {snapshotCount} snapshots
 					</span>
 				{/if}
@@ -493,7 +494,7 @@
 				<!-- Select all button -->
 				{#if selectedSnapshotIndices.size < snapshotCount}
 					<button
-						class="rounded bg-gray-200 dark:bg-gray-700 px-2 py-0.5 text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-300 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
+						class="rounded-ig-sm bg-ig-border px-2 py-0.5 text-ig-text-secondary transition-colors hover:bg-ig-border-strong hover:text-ig-text"
 						onclick={selectAll}
 						title="Select all snapshots (merge all data)"
 					>
@@ -506,13 +507,13 @@
 			<div class="mx-2 min-w-0 flex-1 overflow-hidden text-center">
 				{#if customSortColumn}
 					<div
-						class="inline-flex items-center gap-1.5 rounded bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 text-amber-800 dark:text-amber-200"
+						class="inline-flex items-center gap-1.5 rounded-ig-sm bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 text-amber-800 dark:text-amber-200"
 						title="Server-side filtering may have limited the results. The sorted view shows only the events received, not necessarily all matching events."
 					>
 						<span class="h-3.5 w-3.5 flex-shrink-0">{@html InfoIcon}</span>
 						<span class="truncate">Sorted locally (results may be partial)</span>
 						<button
-							class="ml-1 rounded px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-100 transition-colors hover:bg-amber-200 dark:hover:bg-amber-800/50"
+							class="ml-1 rounded-ig-sm px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-100 transition-colors hover:bg-amber-200 dark:hover:bg-amber-800/50"
 							onclick={resetSort}
 							title="Reset sorting to default order"
 						>
@@ -520,13 +521,13 @@
 						</button>
 					</div>
 				{:else if selectedSnapshotIndices.size === 1}
-					<span class="truncate text-gray-500 dark:text-gray-600">
+					<span class="truncate text-ig-text-muted">
 						Drag to select range, Ctrl+click to toggle
 					</span>
 				{/if}
 			</div>
 
-			<div class="flex flex-shrink-0 items-center gap-2 text-gray-500 dark:text-gray-500">
+			<div class="flex flex-shrink-0 items-center gap-2 text-ig-text-muted">
 				<!-- Event count info -->
 				<span>
 					{selectedEventCount} events
@@ -538,7 +539,7 @@
 				<!-- Return to latest button when pinned -->
 				{#if isPinned}
 					<button
-						class="flex items-center gap-1 rounded bg-green-700 px-2 py-0.5 text-green-100 transition-colors hover:bg-green-600"
+						class="flex items-center gap-1 rounded-ig-sm bg-green-700 px-2 py-0.5 text-green-100 transition-colors hover:bg-green-600"
 						onclick={goToLatest}
 						title="Return to latest snapshot"
 					>
@@ -590,6 +591,8 @@
 				onSortChange={handleSortChange}
 				sortReset={sortResetTrigger}
 				onMenuController={(ctrl: TableMenuController) => (tableMenuController = ctrl)}
+				{onCellClick}
+				{onCellContextMenu}
 			/>
 		</div>
 	{/if}

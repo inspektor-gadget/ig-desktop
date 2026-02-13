@@ -136,7 +136,7 @@
 		<div class="flex flex-row items-center gap-4">
 			<button
 				onclick={() => history.back()}
-				class="flex cursor-pointer items-center rounded bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
+				class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
 				title="Go back"
 			>
 				{@html ChevronLeft}
@@ -151,7 +151,7 @@
 		<div class="mx-auto flex w-full max-w-7xl flex-col gap-6">
 			<!-- Hero Section -->
 			<div
-				class="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 p-8 shadow-lg shadow-gray-200/50 dark:shadow-gray-950/50"
+				class="relative overflow-hidden rounded-ig-lg border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 p-8 shadow-lg shadow-gray-200/50 dark:shadow-gray-950/50"
 			>
 				<!-- Decorative gradient overlay -->
 				<div
@@ -225,7 +225,7 @@
 							{#if pkg.signed && pkg.signatures}
 								{#each pkg.signatures as sig}
 									<span
-										class="rounded bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs text-green-600 dark:text-green-400"
+										class="rounded-ig-sm bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs text-green-600 dark:text-green-400"
 										>{sig}</span
 									>
 								{/each}
@@ -268,7 +268,7 @@
 						<div
 							role="article"
 							aria-label="Package readme"
-							class="marked overflow-auto rounded p-4 whitespace-pre-wrap"
+							class="marked overflow-auto rounded-ig-sm p-4 whitespace-pre-wrap"
 							onclick={handleLinkClick}
 						>
 							{@html marked(pkg.readme || '')}
@@ -286,11 +286,11 @@
 									class="group"
 								>
 									<div
-										class="flex flex-col gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-900 dark:to-gray-950 p-4 transition-all hover:scale-[1.02] hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10"
+										class="flex flex-col gap-3 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-900 dark:to-gray-950 p-4 transition-all hover:scale-[1.02] hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10"
 									>
 										<div class="flex items-center gap-3">
 											<div
-												class="rounded-lg bg-green-600/10 p-2 text-green-600 dark:text-green-400 transition-colors group-hover:bg-green-600/20"
+												class="rounded-ig-md bg-green-600/10 p-2 text-green-600 dark:text-green-400 transition-colors group-hover:bg-green-600/20"
 											>
 												{@html Play}
 											</div>

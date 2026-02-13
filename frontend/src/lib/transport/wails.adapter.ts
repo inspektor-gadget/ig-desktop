@@ -1,14 +1,20 @@
-import type { ITransportAdapter } from './adapter';
+import type { ITransportAdapter, MessageHandler, ConnectionHandler } from './adapter';
+
+/** Minimal structural type for the Wails v3 Events API. */
+interface WailsEvents {
+	On(event: string, cb: (msg: { data: string }) => void): void;
+	Emit(event: string, data: string): void;
+}
 
 /**
  * Wails Events transport adapter for desktop app environments.
  * Uses the Wails v3 Events API for communication.
  */
 export class WailsAdapter implements ITransportAdapter {
-	private messageHandler: ((message: string) => void) | null = null;
-	private connectionHandler: ((connected: boolean) => void) | null = null;
+	private messageHandler: MessageHandler | null = null;
+	private connectionHandler: ConnectionHandler | null = null;
 	private _connected = false;
-	private Events: any = null;
+	private Events: WailsEvents | null = null;
 
 	get connected(): boolean {
 		return this._connected;
@@ -22,8 +28,7 @@ export class WailsAdapter implements ITransportAdapter {
 		this._connected = true;
 		this.connectionHandler?.(true);
 
-		console.log('installing client listener');
-		this.Events.On('client', (msg: any) => {
+		this.Events.On('client', (msg: { data: string }) => {
 			if (this.messageHandler && msg.data) {
 				this.messageHandler(msg.data);
 			}
@@ -34,11 +39,11 @@ export class WailsAdapter implements ITransportAdapter {
 		this.Events?.Emit('server', message);
 	}
 
-	onMessage(handler: (message: string) => void): void {
+	onMessage(handler: MessageHandler): void {
 		this.messageHandler = handler;
 	}
 
-	onConnectionChange(handler: (connected: boolean) => void): void {
+	onConnectionChange(handler: ConnectionHandler): void {
 		this.connectionHandler = handler;
 	}
 
