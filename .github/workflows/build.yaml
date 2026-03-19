@@ -39,7 +39,7 @@ jobs:
       - name: Build wails
         uses: ./.github/actions/wails
         id: build
-        continue-on-error: true
+
         with:
           build-name: ${{ matrix.build.name }}
           build-platform: ${{ matrix.build.platform }}

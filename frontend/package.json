@@ -51,7 +51,6 @@
 	},
 	"dependencies": {
 		"@dagrejs/dagre": "^1.1.8",
-		"@rollup/rollup-linux-arm64-gnu": "^4.59.0",
 		"@tailwindcss/vite": "^4.1.18",
 		"@wailsio/runtime": "3.0.0-alpha.73",
 		"d3": "^7.9.0",
