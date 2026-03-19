@@ -91,7 +91,7 @@
 				{#each visibleCategories as category}
 					<button
 						onclick={() => (activeCategory = category.id)}
-						class="mb-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all {activeCategory ===
+						class="mb-1 flex w-full items-center gap-3 rounded-ig-md px-3 py-2 text-sm transition-all {activeCategory ===
 						category.id
 							? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
 							: 'text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-800/50 hover:text-gray-800 dark:hover:text-gray-300'}"
@@ -119,7 +119,7 @@
 										{@const value = configuration.get(setting.key)}
 										{@const SettingComponent = settingComponents[setting.type]}
 										<div
-											class="rounded-lg transition-all duration-300 {highlightedSetting ===
+											class="rounded-ig-md transition-all duration-300 {highlightedSetting ===
 											setting.key
 												? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900'
 												: ''}"

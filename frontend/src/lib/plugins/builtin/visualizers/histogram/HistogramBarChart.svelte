@@ -188,7 +188,7 @@
 				use:clickOutside={{ enabled: groupMenuOpen, onClickOutside: () => (groupMenuOpen = false) }}
 			>
 				<button
-					class="flex items-center gap-1 py-1 px-2 border rounded text-[11px] cursor-pointer transition-all hover:border-gray-400 {activeGroupCount >
+					class="flex items-center gap-1 py-1 px-2 border rounded-ig-sm text-[11px] cursor-pointer transition-all hover:border-gray-400 {activeGroupCount >
 					0
 						? 'bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300'
 						: 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}"
@@ -207,7 +207,7 @@
 				{#if groupMenuOpen}
 					<div
 						role="menu"
-						class="absolute top-full left-0 mt-1 min-w-52 max-h-70 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg z-50"
+						class="absolute top-full left-0 mt-1 min-w-52 max-h-70 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-ig-sm shadow-lg z-50"
 					>
 						<div
 							class="px-3 py-2 text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700"
@@ -224,7 +224,7 @@
 										type="checkbox"
 										checked={activeGroupFields.has(field.fieldName)}
 										onchange={() => toggleGroupField(field.fieldName)}
-										class="w-3.5 h-3.5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 cursor-pointer"
+										class="w-3.5 h-3.5 rounded-ig-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 cursor-pointer"
 									/>
 									<div class="flex flex-col min-w-0">
 										<span class="text-xs text-gray-700 dark:text-gray-200 truncate"
@@ -245,7 +245,7 @@
 		<!-- Group selector -->
 		{#if groupLabels.length > 1}
 			<select
-				class="py-1 px-2 border border-gray-300 dark:border-gray-600 rounded text-[11px] bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer"
+				class="py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-ig-sm text-[11px] bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer"
 				bind:value={selectedGroup}
 			>
 				<option value={null}>All groups</option>
@@ -365,7 +365,7 @@
 	<!-- Tooltip -->
 	{#if tooltipData}
 		<div
-			class="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full -mt-3 bg-white/[.98] dark:bg-gray-900/[.98] border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-xs shadow-lg"
+			class="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full -mt-3 bg-white/[.98] dark:bg-gray-900/[.98] border border-gray-300 dark:border-gray-600 rounded-ig-sm px-3 py-2 text-xs shadow-lg"
 			style="left: {tooltipData.x}px; top: {tooltipData.y}px;"
 		>
 			<div class="font-medium text-gray-900 dark:text-gray-100 mb-1">{tooltipData.label}</div>

@@ -196,7 +196,7 @@
 
 							<a
 								href={resolve('/environment/create')}
-								class="group/btn flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-all hover:bg-blue-500"
+								class="group/btn flex items-center justify-center gap-2 rounded-ig-md bg-blue-600 px-6 py-3 font-medium text-white transition-all hover:bg-blue-500"
 							>
 								<div class="h-5 w-5">{@html CirclePlus}</div>
 								<span>Create New Environment</span>
@@ -281,7 +281,7 @@
 							{#each Object.values(environments).slice(0, 4) as env}
 								<button
 									onclick={() => goto(resolve(`/env/${env.id}`))}
-									class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+									class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 								>
 									<div class="flex flex-col gap-1">
 										<div class="font-medium text-gray-800 dark:text-gray-200">{env.name}</div>
@@ -314,7 +314,7 @@
 								{#each allHistories as { gadget, envId, envName }}
 									<button
 										onclick={() => runGadget(gadget, envId)}
-										class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+										class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 									>
 										<div class="flex flex-1 flex-col gap-1 overflow-hidden">
 											<div class="truncate font-medium text-gray-800 dark:text-gray-200">
@@ -359,7 +359,7 @@
 						<div class="flex flex-col gap-2">
 							<a
 								href={resolve('/browse/artifacthub')}
-								class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+								class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">
 									<div class="font-medium text-gray-800 dark:text-gray-200">All Gadgets</div>
@@ -376,7 +376,7 @@
 
 							<a
 								href={resolve('/browse/artifacthub')}
-								class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+								class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">
 									<div class="font-medium text-gray-800 dark:text-gray-200">Security</div>
@@ -393,7 +393,7 @@
 
 							<a
 								href={resolve('/browse/artifacthub')}
-								class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+								class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">
 									<div class="font-medium text-gray-800 dark:text-gray-200">Networking</div>
@@ -420,7 +420,7 @@
 
 			<!-- Quick Tips -->
 			<div
-				class="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-100/30 dark:bg-gray-900/30 p-6 shadow-sm shadow-gray-200/90 dark:shadow-gray-950/90"
+				class="rounded-ig-lg border border-gray-200 dark:border-gray-800 bg-gray-100/30 dark:bg-gray-900/30 p-6 shadow-sm shadow-gray-200/90 dark:shadow-gray-950/90"
 			>
 				<h3
 					class="mb-4 text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 uppercase"
@@ -433,7 +433,7 @@
 							onclick={() => {
 								openExternalURL(tip.url);
 							}}
-							class="group/tip flex gap-2 rounded-lg border border-transparent bg-gray-200 dark:bg-gray-800 p-4 text-left shadow-sm shadow-gray-200/90 dark:shadow-gray-950/90 transition-all hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-100/50 dark:hover:bg-gray-900/50"
+							class="group/tip flex gap-2 rounded-ig-md border border-transparent bg-gray-200 dark:bg-gray-800 p-4 text-left shadow-sm shadow-gray-200/90 dark:shadow-gray-950/90 transition-all hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-100/50 dark:hover:bg-gray-900/50"
 						>
 							<div class="text-{tip.color}-400">{@html tip.icon}</div>
 							<div>
@@ -468,7 +468,7 @@
 					<div class="flex flex-col gap-2">
 						<button
 							onclick={() => openExternalURL('https://inspektor-gadget.io/')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Link}</div>
@@ -483,7 +483,7 @@
 
 						<button
 							onclick={() => openExternalURL('https://inspektor-gadget.io/blog')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Link}</div>
@@ -498,7 +498,7 @@
 
 						<button
 							onclick={() => openExternalURL('https://inspektor-gadget.io/docs/latest/quick-start')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Book}</div>
@@ -514,7 +514,7 @@
 						<button
 							onclick={() =>
 								openExternalURL('https://inspektor-gadget.io/docs/latest/gadget-devel/')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Book}</div>
@@ -540,7 +540,7 @@
 					<div class="flex flex-col gap-2">
 						<button
 							onclick={() => openExternalURL('https://discord.gg/HbapduTjj9')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html GridSmall}</div>
@@ -558,7 +558,7 @@
 
 						<button
 							onclick={() => openExternalURL('https://kubernetes.slack.com/archives/CSYL75LF6')}
-							class="group/link flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html GridSmall}</div>
@@ -576,7 +576,7 @@
 					</div>
 
 					<div
-						class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/30 dark:bg-gray-900/30 p-4"
+						class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/30 dark:bg-gray-900/30 p-4"
 					>
 						<p class="text-sm text-gray-600 dark:text-gray-400">
 							Have questions or want to contribute? Join our community to connect with other users

@@ -1,0 +1,119 @@
+/* ============================================================
+   IG Design Tokens — Semantic CSS Custom Properties
+   Shared between SvelteKit app (app.css) and library (lib.css).
+   Override these --ig-* variables to theme the IG components.
+   ============================================================ */
+:root {
+	/* Primary / accent */
+	--ig-color-primary: #3b82f6;
+	--ig-color-primary-hover: #60a5fa;
+	--ig-color-primary-muted: rgba(59, 130, 246, 0.2);
+
+	/* Surfaces */
+	--ig-color-surface: #ffffff;
+	--ig-color-surface-raised: rgba(243, 244, 246, 0.5);
+
+	/* Text */
+	--ig-color-text: #111827;
+	--ig-color-text-secondary: #374151;
+	--ig-color-text-muted: #6b7280;
+	--ig-color-text-on-primary: #ffffff;
+
+	/* Borders */
+	--ig-color-border: #e5e7eb;
+	--ig-color-border-strong: #d1d5db;
+
+	/* Semantic status */
+	--ig-color-error: #ef4444;
+	--ig-color-success: #22c55e;
+	--ig-color-warning: #eab308;
+
+	/* Radius */
+	--ig-radius-sm: 0.25rem;
+	--ig-radius-md: 0.5rem;
+	--ig-radius-lg: 0.75rem;
+
+	/* Fonts */
+	--ig-font-sans: 'Fira Sans', 'Lato';
+	--ig-font-mono:
+		FireCode, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+		'Courier New', monospace;
+}
+
+/* Dark-mode token overrides */
+.dark {
+	--ig-color-surface: #09090b;
+	--ig-color-surface-raised: rgba(15, 15, 17, 0.5);
+
+	--ig-color-text: #f3f4f6;
+	--ig-color-text-secondary: #d1d5db;
+	--ig-color-text-muted: #9ca3af;
+
+	--ig-color-border: #27272a;
+	--ig-color-border-strong: #3f3f46;
+}
+
+.scrollbar-hide {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
+
+@theme {
+	--font-sans: var(--ig-font-sans);
+	--font-serif: 'Dancing Script', serif;
+	--font-mono: var(--ig-font-mono);
+
+	/* Neutral grayscale palette */
+	--color-gray-50: #f9fafb;
+	--color-gray-100: #e5e7eb;
+	--color-gray-200: #d1d5db;
+	--color-gray-300: #9ca3af;
+	--color-gray-400: #6b7280;
+	--color-gray-500: #52525b;
+	--color-gray-600: #3f3f46;
+	--color-gray-700: #27272a;
+	--color-gray-800: #18181b;
+	--color-gray-900: #0f0f11;
+	--color-gray-950: #09090b;
+
+	/* Custom semantic colors */
+	--color-bg-primary: #09090b;
+	--color-bg-secondary: #0f0f11;
+	--color-bg-tertiary: #18181b;
+	--color-border: #27272a;
+
+	/* Accent colors for interactive elements */
+	--color-cyan-400: #22d3ee;
+	--color-cyan-500: #06b6d4;
+	--color-blue-500: #3b82f6;
+	--color-blue-600: #2563eb;
+	--color-purple-500: #a855f7;
+	--color-purple-600: #9333ea;
+
+	/* IG Semantic Design Tokens — generates utility classes like bg-ig-primary, text-ig-text, etc. */
+	--color-ig-primary: var(--ig-color-primary);
+	--color-ig-primary-hover: var(--ig-color-primary-hover);
+	--color-ig-primary-muted: var(--ig-color-primary-muted);
+	--color-ig-surface: var(--ig-color-surface);
+	--color-ig-surface-raised: var(--ig-color-surface-raised);
+	--color-ig-text: var(--ig-color-text);
+	--color-ig-text-secondary: var(--ig-color-text-secondary);
+	--color-ig-text-muted: var(--ig-color-text-muted);
+	--color-ig-text-on-primary: var(--ig-color-text-on-primary);
+	--color-ig-border: var(--ig-color-border);
+	--color-ig-border-strong: var(--ig-color-border-strong);
+	--color-ig-error: var(--ig-color-error);
+	--color-ig-success: var(--ig-color-success);
+	--color-ig-warning: var(--ig-color-warning);
+
+	/* IG Radius tokens */
+	--radius-ig-sm: var(--ig-radius-sm);
+	--radius-ig-md: var(--ig-radius-md);
+	--radius-ig-lg: var(--ig-radius-lg);
+}
+
+/* Override dark mode for now */
+@custom-variant dark (&:where(.dark, .dark *));

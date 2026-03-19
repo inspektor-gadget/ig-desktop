@@ -51,7 +51,7 @@
 	const toggleClasses = $derived(
 		[
 			'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-			checked ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700',
+			checked ? 'bg-ig-primary' : 'bg-ig-border-strong',
 			disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
 		]
 			.filter(Boolean)
@@ -85,12 +85,12 @@
 	{#if label || description}
 		<div class="flex flex-col gap-0.5">
 			{#if label}
-				<label for={toggleId} class="text-sm font-medium text-gray-700 dark:text-gray-300">
+				<label for={toggleId} class="text-sm font-medium text-ig-text-secondary">
 					{label}
 				</label>
 			{/if}
 			{#if description}
-				<p class="text-xs text-gray-500">{description}</p>
+				<p class="text-xs text-ig-text-muted">{description}</p>
 			{/if}
 		</div>
 	{/if}

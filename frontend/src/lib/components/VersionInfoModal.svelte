@@ -92,14 +92,14 @@
 			</div>
 		{:else}
 			<div class="space-y-3">
-				<div class="flex justify-between rounded-lg bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
+				<div class="flex justify-between rounded-ig-md bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
 					<span class="text-gray-600 dark:text-gray-400">Current Version</span>
 					<span class="font-mono text-gray-800 dark:text-gray-200"
 						>{versionData.currentVersion}</span
 					>
 				</div>
 
-				<div class="flex justify-between rounded-lg bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
+				<div class="flex justify-between rounded-ig-md bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
 					<span class="text-gray-600 dark:text-gray-400">Latest Version</span>
 					<span class="font-mono text-gray-800 dark:text-gray-200">
 						{#if versionData.latestVersion}
@@ -112,7 +112,7 @@
 							</button>
 							{#if versionData.updateAvailable}
 								<span
-									class="ml-2 rounded bg-blue-500/20 px-2 py-0.5 text-xs text-blue-600 dark:text-blue-400"
+									class="ml-2 rounded-ig-sm bg-blue-500/20 px-2 py-0.5 text-xs text-blue-600 dark:text-blue-400"
 								>
 									Update available
 								</span>
@@ -125,7 +125,7 @@
 					</span>
 				</div>
 
-				<div class="flex justify-between rounded-lg bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
+				<div class="flex justify-between rounded-ig-md bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
 					<span class="text-gray-600 dark:text-gray-400">Inspektor Gadget Library</span>
 					<span class="font-mono text-gray-800 dark:text-gray-200"
 						>{versionData.igLibraryVersion}</span
@@ -135,14 +135,14 @@
 
 			{#if error}
 				<div
-					class="rounded-lg bg-red-100 dark:bg-red-900/20 px-4 py-3 text-sm text-red-600 dark:text-red-400"
+					class="rounded-ig-md bg-red-100 dark:bg-red-900/20 px-4 py-3 text-sm text-red-600 dark:text-red-400"
 				>
 					{error}
 				</div>
 			{/if}
 
 			{#if versionData.updateAvailable}
-				<div class="rounded-lg bg-blue-100 dark:bg-blue-900/20 px-4 py-3">
+				<div class="rounded-ig-md bg-blue-100 dark:bg-blue-900/20 px-4 py-3">
 					<p class="text-sm text-blue-700 dark:text-blue-300">
 						A new version is available! Click the button below to visit the releases page.
 					</p>

@@ -266,7 +266,7 @@
 	>
 		<!-- Search box -->
 		<div
-			class="flex items-center gap-1 px-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md"
+			class="flex items-center gap-1 px-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-ig-sm"
 		>
 			<span class="w-3.5 h-3.5 text-gray-400 flex-shrink-0">{@html SearchIcon}</span>
 			<input
@@ -283,13 +283,13 @@
 					onclick={clearSearch}
 					title="Clear search"
 					aria-label="Clear search"
-					class="flex items-center justify-center w-4 h-4 p-0 border-none bg-transparent text-gray-400 cursor-pointer rounded hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+					class="flex items-center justify-center w-4 h-4 p-0 border-none bg-transparent text-gray-400 cursor-pointer rounded-ig-sm hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
 				>
 					{@html CloseIcon}
 				</button>
 			{/if}
 			<button
-				class="py-0.5 px-1.5 border border-gray-300 dark:border-gray-600 rounded text-[10px] font-medium cursor-pointer bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-600"
+				class="py-0.5 px-1.5 border border-gray-300 dark:border-gray-600 rounded-ig-sm text-[10px] font-medium cursor-pointer bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-600"
 				class:!bg-blue-500={caseSensitive}
 				class:!border-blue-500={caseSensitive}
 				class:!text-white={caseSensitive}
@@ -305,7 +305,7 @@
 		<!-- Search match info -->
 		{#if searchRegex && totalValue > 0}
 			<span
-				class="text-[11px] text-gray-500 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 py-0.5 px-2 rounded"
+				class="text-[11px] text-gray-500 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 py-0.5 px-2 rounded-ig-sm"
 			>
 				{formatNumber(matchedSamples)} / {formatNumber(totalValue)} samples ({getPercentage(
 					matchedSamples,
@@ -322,7 +322,7 @@
 			>
 				<button
 					bind:this={groupMenuButton}
-					class="flex items-center gap-1 py-1 px-2 border rounded text-[11px] cursor-pointer transition-all hover:border-gray-400 {activeGroupCount >
+					class="flex items-center gap-1 py-1 px-2 border rounded-ig-sm text-[11px] cursor-pointer transition-all hover:border-gray-400 {activeGroupCount >
 					0
 						? 'bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300'
 						: 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}"
@@ -344,7 +344,7 @@
 						id="group-menu"
 						role="menu"
 						aria-label="Group by options"
-						class="absolute top-full left-0 mt-1 min-w-52 max-h-70 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg z-50"
+						class="absolute top-full left-0 mt-1 min-w-52 max-h-70 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-ig-sm shadow-lg z-50"
 					>
 						<div
 							class="px-3 py-2 text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700"
@@ -364,7 +364,7 @@
 										type="checkbox"
 										checked={activeGroupFields.has(field.fieldName)}
 										onchange={() => toggleGroupField(field.fieldName)}
-										class="w-3.5 h-3.5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 cursor-pointer"
+										class="w-3.5 h-3.5 rounded-ig-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 cursor-pointer"
 									/>
 									<div class="flex flex-col min-w-0">
 										<span class="text-xs text-gray-700 dark:text-gray-200 truncate"
@@ -387,7 +387,7 @@
 		<!-- Zoom controls -->
 		{#if zoomedNode || zoomHistory.length > 0}
 			<button
-				class="py-1 px-2.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] cursor-pointer bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+				class="py-1 px-2.5 border border-gray-300 dark:border-gray-600 rounded-ig-sm text-[11px] cursor-pointer bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
 				onclick={handleBack}
 				disabled={zoomHistory.length === 0}
 				title="Go back (Backspace)"
@@ -395,7 +395,7 @@
 				Back
 			</button>
 			<button
-				class="py-1 px-2.5 border border-gray-300 dark:border-gray-600 rounded text-[11px] cursor-pointer bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-400"
+				class="py-1 px-2.5 border border-gray-300 dark:border-gray-600 rounded-ig-sm text-[11px] cursor-pointer bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-400"
 				onclick={handleReset}
 				title="Reset zoom (Escape)"
 			>
@@ -488,7 +488,7 @@
 	<!-- Tooltip -->
 	{#if tooltipNode}
 		<div
-			class="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full -mt-3 bg-white/[.98] dark:bg-gray-900/[.98] border border-gray-300 dark:border-gray-600 rounded-md px-3.5 py-2.5 text-xs shadow-lg max-w-md"
+			class="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-full -mt-3 bg-white/[.98] dark:bg-gray-900/[.98] border border-gray-300 dark:border-gray-600 rounded-ig-sm px-3.5 py-2.5 text-xs shadow-lg max-w-md"
 			style="left: {tooltipPosition.x}px; top: {tooltipPosition.y}px;"
 			role="tooltip"
 		>

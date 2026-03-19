@@ -1,8 +1,9 @@
 {
-	"name": "web",
+	"name": "@inspektor-gadget/frontend",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"main": "dist-lib/ig-frontend.js",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -15,7 +16,9 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
-		"build:dev": "vite build --minify false --mode development"
+		"build:dev": "vite build --minify false --mode development",
+		"build:lib": "vite build --config vite.lib.config.ts",
+		"build:lib:watch": "vite build --config vite.lib.config.ts --watch"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.0",

@@ -55,7 +55,7 @@
 	<!-- Telemetry note banner -->
 	{#if showTelemetryNote}
 		<div
-			class="flex flex-row items-start gap-3 rounded-lg border border-blue-300/50 dark:border-blue-800/50 bg-blue-100/20 dark:bg-blue-900/20 p-3 text-sm"
+			class="flex flex-row items-start gap-3 rounded-ig-md border border-blue-300/50 dark:border-blue-800/50 bg-blue-100/20 dark:bg-blue-900/20 p-3 text-sm"
 		>
 			<span class="mt-0.5 text-blue-500">{@html Info}</span>
 			<div class="flex flex-col gap-1">
@@ -74,7 +74,7 @@
 			{@const icon = getIcon(childNode)}
 			<button
 				onclick={() => onNavigate(id)}
-				class="group flex cursor-pointer flex-col gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4 text-left transition-all hover:border-orange-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+				class="group flex cursor-pointer flex-col gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4 text-left transition-all hover:border-orange-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 			>
 				<div class="flex flex-row items-center justify-between gap-3">
 					<div class="flex flex-row items-center gap-3">

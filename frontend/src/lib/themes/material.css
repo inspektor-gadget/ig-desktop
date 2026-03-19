@@ -1,0 +1,65 @@
+/*
+ * Material Design theme for IG Desktop components.
+ *
+ * Usage:
+ *   @import '@inspektor-gadget/frontend/themes/material.css';
+ *
+ * This overrides the IG semantic tokens with Material Design 3 palette values.
+ * It pairs well with MUI (Material UI) React host applications.
+ */
+
+:root {
+	/* Material Blue primary */
+	--ig-color-primary: #1976d2;
+	--ig-color-primary-hover: #1565c0;
+	--ig-color-primary-muted: rgba(25, 118, 210, 0.12);
+
+	/* Material surfaces */
+	--ig-color-surface: #ffffff;
+	--ig-color-surface-raised: #f5f5f5;
+
+	/* Material text */
+	--ig-color-text: rgba(0, 0, 0, 0.87);
+	--ig-color-text-secondary: rgba(0, 0, 0, 0.6);
+	--ig-color-text-muted: rgba(0, 0, 0, 0.38);
+	--ig-color-text-on-primary: #ffffff;
+
+	/* Material borders / dividers */
+	--ig-color-border: rgba(0, 0, 0, 0.12);
+	--ig-color-border-strong: rgba(0, 0, 0, 0.23);
+
+	/* Material semantic colors */
+	--ig-color-error: #d32f2f;
+	--ig-color-success: #2e7d32;
+	--ig-color-warning: #ed6c02;
+
+	/* Material shape */
+	--ig-radius-sm: 4px;
+	--ig-radius-md: 4px;
+	--ig-radius-lg: 8px;
+
+	/* Material typography */
+	--ig-font-sans: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+	--ig-font-mono: 'Roboto Mono', monospace;
+}
+
+.dark {
+	/* Material dark surfaces */
+	--ig-color-surface: #121212;
+	--ig-color-surface-raised: #1e1e1e;
+
+	/* Material dark text */
+	--ig-color-text: rgba(255, 255, 255, 0.87);
+	--ig-color-text-secondary: rgba(255, 255, 255, 0.6);
+	--ig-color-text-muted: rgba(255, 255, 255, 0.38);
+
+	/* Material dark borders */
+	--ig-color-border: rgba(255, 255, 255, 0.12);
+	--ig-color-border-strong: rgba(255, 255, 255, 0.23);
+
+	/* Material dark primary (lighter for contrast) */
+	--ig-color-primary: #90caf9;
+	--ig-color-primary-hover: #42a5f5;
+	--ig-color-primary-muted: rgba(144, 202, 249, 0.12);
+	--ig-color-text-on-primary: rgba(0, 0, 0, 0.87);
+}

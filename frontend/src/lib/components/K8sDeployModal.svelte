@@ -382,7 +382,7 @@
 		tabindex="-1"
 	>
 		<div
-			class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950"
+			class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-ig-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950"
 		>
 			<!-- Modal Header -->
 			<div
@@ -397,7 +397,7 @@
 				</div>
 				<button
 					onclick={() => closeModal(true)}
-					class="cursor-pointer rounded p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
+					class="cursor-pointer rounded-ig-sm p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
 					title="Close (Force)"
 				>
 					<svg
@@ -467,7 +467,7 @@
 							<!-- Chart values error -->
 							{#if chartValuesError}
 								<div
-									class="rounded-lg border border-yellow-300 dark:border-yellow-800/50 bg-yellow-100 dark:bg-yellow-900/20 p-3 text-sm text-yellow-700 dark:text-yellow-400"
+									class="rounded-ig-md border border-yellow-300 dark:border-yellow-800/50 bg-yellow-100 dark:bg-yellow-900/20 p-3 text-sm text-yellow-700 dark:text-yellow-400"
 								>
 									Failed to load chart values: {chartValuesError}
 								</div>
@@ -476,7 +476,7 @@
 							<!-- Exposed Settings -->
 							{#if chartValuesLoaded}
 								<div
-									class="flex flex-col gap-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4"
+									class="flex flex-col gap-4 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4"
 								>
 									<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
 										Configuration
@@ -491,14 +491,14 @@
 
 								<!-- OpenTelemetry Configuration -->
 								<div
-									class="flex flex-col gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4"
+									class="flex flex-col gap-3 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4"
 								>
 									<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
 										OpenTelemetry
 									</h3>
 									<button
 										onclick={() => (otelLogsModalOpen = true)}
-										class="flex cursor-pointer items-center justify-between rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-200 dark:hover:bg-gray-800"
+										class="flex cursor-pointer items-center justify-between rounded-ig-md border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-200 dark:hover:bg-gray-800"
 									>
 										<div class="flex flex-col gap-0.5">
 											<span class="text-sm font-medium text-gray-800 dark:text-gray-200"
@@ -516,7 +516,7 @@
 									</button>
 									<button
 										onclick={() => (otelMetricsModalOpen = true)}
-										class="flex cursor-pointer items-center justify-between rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-200 dark:hover:bg-gray-800"
+										class="flex cursor-pointer items-center justify-between rounded-ig-md border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-200 dark:hover:bg-gray-800"
 									>
 										<div class="flex flex-col gap-0.5">
 											<span class="text-sm font-medium text-gray-800 dark:text-gray-200"
@@ -596,7 +596,7 @@
 						<button
 							disabled={!isValid}
 							onclick={startDeployment}
-							class="flex cursor-pointer items-center justify-center gap-2 rounded-lg px-6 py-3 text-white transition-all disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500"
+							class="flex cursor-pointer items-center justify-center gap-2 rounded-ig-md px-6 py-3 text-white transition-all disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500"
 							class:bg-green-800={!undeploy}
 							class:hover:bg-green-700={!undeploy}
 							class:disabled:bg-green-950={!undeploy}
@@ -654,7 +654,7 @@
 						{#if showDebugConsole && currentDeployment?.debugLogs && currentDeployment.debugLogs.length > 0}
 							<div class="flex flex-col gap-2">
 								<div
-									class="max-h-64 overflow-y-auto rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3 font-mono text-xs"
+									class="max-h-64 overflow-y-auto rounded-ig-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3 font-mono text-xs"
 								>
 									{#each currentDeployment.debugLogs as log}
 										<div class="text-gray-600 dark:text-gray-400">{log}</div>
@@ -670,7 +670,7 @@
 									Deployment Logs
 								</span>
 								<div
-									class="max-h-64 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 font-mono text-xs"
+									class="max-h-64 overflow-y-auto rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 font-mono text-xs"
 								>
 									{#each currentDeployment.logs as log}
 										<div class="text-gray-600 dark:text-gray-400">{log}</div>
@@ -696,7 +696,7 @@
 						{#if currentDeployment?.logs && currentDeployment.logs.length > 0}
 							<div class="w-full">
 								<div
-									class="max-h-48 overflow-y-auto rounded-lg border border-red-300 dark:border-red-800/50 bg-red-50 dark:bg-red-900/10 p-4 text-left font-mono text-xs"
+									class="max-h-48 overflow-y-auto rounded-ig-md border border-red-300 dark:border-red-800/50 bg-red-50 dark:bg-red-900/10 p-4 text-left font-mono text-xs"
 								>
 									{#each currentDeployment.logs as log}
 										<div class="text-gray-600 dark:text-gray-400">{log}</div>
@@ -710,7 +710,7 @@
 								if (deploymentId) deployments.remove(deploymentId);
 								deploymentId = undefined;
 							}}
-							class="mt-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-6 py-2 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+							class="mt-4 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-6 py-2 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							Try Again
 						</button>
@@ -750,7 +750,7 @@
 
 						<button
 							onclick={() => closeModal()}
-							class="mt-4 rounded-lg bg-green-800 px-6 py-3 text-white transition-all hover:bg-green-700"
+							class="mt-4 rounded-ig-md bg-green-800 px-6 py-3 text-white transition-all hover:bg-green-700"
 						>
 							Continue
 						</button>

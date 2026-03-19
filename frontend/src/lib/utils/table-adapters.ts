@@ -17,6 +17,8 @@ import type { TableColumn, EnrichedRow } from '$lib/types/table';
  * @returns TableColumn configuration
  */
 export function gadgetFieldToColumn(field: any, env?: any): TableColumn {
+	const isFloat = field.kind === 'Float32' || field.kind === 'Float64';
+	const precisionAnnotation = field.annotations?.['columns.precision'];
 	return {
 		id: field.fullName || 'unknown',
 		source: 'gadget',
@@ -25,6 +27,7 @@ export function gadgetFieldToColumn(field: any, env?: any): TableColumn {
 		field: field.fullName || 'unknown',
 		kind: field.kind,
 		align: getColumnAlignment(field),
+		precision: precisionAnnotation != null ? parseInt(precisionAnnotation, 10) : isFloat ? 2 : null,
 		sortable: true,
 		filterable: true,
 		hidden: shouldHideColumn(field, env),
@@ -115,53 +118,4 @@ export function wrapRowsForEnrichment<T>(events: T[]): EnrichedRow<T>[] {
 		enrichments: {},
 		status: {}
 	}));
-}
-
-/**
- * Gets the value for a column from an enriched row.
- * Hook enrichments take precedence over original data.
- *
- * @param row - EnrichedRow with original data and enrichments
- * @param column - TableColumn to get value for
- * @returns Value from enrichments or original data, or undefined if not found
- */
-export function getRowValue(row: EnrichedRow, column: TableColumn): any {
-	if (!row) return undefined;
-
-	// Hook enrichments take precedence
-	if (column.source === 'hook' && column.field in row.enrichments) {
-		return row.enrichments[column.field];
-	}
-
-	// Fall back to original data
-	// Handle null/undefined data gracefully
-	if (!row.data) return undefined;
-
-	// Support dot notation for nested fields (e.g., "user.name")
-	if (column.field.includes('.')) {
-		return getNestedValue(row.data, column.field);
-	}
-
-	return row.data[column.field];
-}
-
-/**
- * Gets a nested value from an object using dot notation.
- *
- * @param obj - Object to extract value from
- * @param path - Dot-separated path (e.g., "user.name")
- * @returns Value at path or undefined if not found
- */
-function getNestedValue(obj: any, path: string): any {
-	if (!obj) return undefined;
-
-	const keys = path.split('.');
-	let value = obj;
-
-	for (const key of keys) {
-		if (value == null) return undefined;
-		value = value[key];
-	}
-
-	return value;
 }

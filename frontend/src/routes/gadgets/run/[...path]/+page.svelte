@@ -323,7 +323,7 @@
 	<div class="flex flex-row items-center gap-4">
 		<button
 			onclick={() => history.back()}
-			class="flex cursor-pointer items-center rounded bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
+			class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
 			title="Go back"
 		>
 			{@html ChevronLeft}
@@ -346,7 +346,7 @@
 			</svg>
 			<select
 				bind:value={environmentID}
-				class="col-start-1 row-start-1 appearance-none rounded bg-gray-200 dark:bg-gray-800 p-1.5 pr-8 pl-3"
+				class="col-start-1 row-start-1 appearance-none rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 pr-8 pl-3"
 			>
 				<option value="">Select environment</option>
 				{#each Object.entries(environments) as [id, environment]}
@@ -363,7 +363,7 @@
 			{#if !gadgetInfo}
 				{#if error}
 					<div
-						class="flex flex-col gap-4 rounded-xl border border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-950/50 p-6 shadow-lg"
+						class="flex flex-col gap-4 rounded-ig-lg border border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-950/50 p-6 shadow-lg"
 					>
 						<div class="flex flex-row items-start gap-4">
 							<div class="flex-shrink-0 text-red-600 dark:text-red-400">
@@ -395,7 +395,7 @@
 
 								{#if originalError}
 									<div
-										class="mt-3 rounded border border-red-300/50 dark:border-red-800/50 bg-red-100/30 dark:bg-red-900/30 p-3"
+										class="mt-3 rounded-ig-sm border border-red-300/50 dark:border-red-800/50 bg-red-100/30 dark:bg-red-900/30 p-3"
 									>
 										<p class="text-xs font-semibold text-red-700/90 dark:text-red-300/90">
 											Error details:
@@ -410,7 +410,7 @@
 									onclick={() => {
 										retryTrigger++;
 									}}
-									class="mt-4 rounded bg-red-600 dark:bg-red-800 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 dark:hover:bg-red-700"
+									class="mt-4 rounded-ig-sm bg-red-600 dark:bg-red-800 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 dark:hover:bg-red-700"
 								>
 									Retry
 								</button>
@@ -427,7 +427,7 @@
 
 							{#if Object.keys(environments).length === 0}
 								<div
-									class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-100/30 dark:bg-gray-900/30 p-8 text-center"
+									class="flex flex-col items-center justify-center rounded-ig-md border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-100/30 dark:bg-gray-900/30 p-8 text-center"
 								>
 									<div class="mb-3 text-gray-500">{@html Server}</div>
 									<p class="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -444,7 +444,7 @@
 											onclick={() => {
 												environmentID = environment.id;
 											}}
-											class="group/item flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+											class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 										>
 											<div class="flex flex-col gap-1">
 												<div class="font-medium text-gray-800 dark:text-gray-200">
@@ -464,7 +464,7 @@
 								</div>
 
 								<div
-									class="mt-2 rounded-lg border border-blue-200/30 dark:border-blue-900/30 bg-blue-50/20 dark:bg-blue-950/20 p-3 text-xs text-blue-700/80 dark:text-blue-300/80"
+									class="mt-2 rounded-ig-md border border-blue-200/30 dark:border-blue-900/30 bg-blue-50/20 dark:bg-blue-950/20 p-3 text-xs text-blue-700/80 dark:text-blue-300/80"
 								>
 									<span class="font-semibold">Tip:</span> You can also use the environment selector in
 									the top-right corner.
@@ -480,14 +480,14 @@
 			{:else}
 				<!-- Panel-like container without header for detached settings -->
 				<div
-					class="main-gradient flex flex-col gap-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
+					class="main-gradient flex flex-col gap-4 rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 				>
 					<!-- Detached checkbox -->
 					<div class="flex flex-row gap-4">
 						<div class="grid items-center justify-center">
 							<input
 								type="checkbox"
-								class="peer col-start-1 row-start-1 h-4 w-4 appearance-none rounded border border-gray-300 ring-transparent checked:border-violet-600 checked:bg-violet-600 dark:border-gray-600 dark:checked:border-violet-600 forced-colors:appearance-auto"
+								class="peer col-start-1 row-start-1 h-4 w-4 appearance-none rounded-ig-sm border border-gray-300 ring-transparent checked:border-violet-600 checked:bg-violet-600 dark:border-gray-600 dark:checked:border-violet-600 forced-colors:appearance-auto"
 								bind:checked={detached}
 							/>
 							<svg
@@ -528,7 +528,7 @@
 							</div>
 							<div class="grow">
 								<input
-									class="w-full rounded bg-gray-200 dark:bg-gray-800 p-1.5 text-sm"
+									class="w-full rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 text-sm"
 									type="text"
 									placeholder="My Gadget"
 									bind:value={instanceName}
@@ -541,14 +541,14 @@
 				<!-- Session recording settings (experimental) - not available for detached instances -->
 				{#if sessionRecordingEnabled && !detached}
 					<div
-						class="main-gradient flex flex-col gap-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
+						class="main-gradient flex flex-col gap-4 rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 					>
 						<!-- Session recording toggle -->
 						<div class="flex flex-row gap-4">
 							<div class="grid items-center justify-center">
 								<input
 									type="checkbox"
-									class="peer col-start-1 row-start-1 h-4 w-4 appearance-none rounded border border-gray-300 ring-transparent checked:border-violet-600 checked:bg-violet-600 dark:border-gray-600 dark:checked:border-violet-600 forced-colors:appearance-auto"
+									class="peer col-start-1 row-start-1 h-4 w-4 appearance-none rounded-ig-sm border border-gray-300 ring-transparent checked:border-violet-600 checked:bg-violet-600 dark:border-gray-600 dark:checked:border-violet-600 forced-colors:appearance-auto"
 									bind:checked={recordGadgetRun}
 								/>
 								<svg
@@ -607,7 +607,7 @@
 										type="text"
 										bind:value={sessionName}
 										placeholder="Session name (optional)"
-										class="w-full rounded bg-gray-200 dark:bg-gray-800 p-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-violet-600 focus:outline-none"
+										class="w-full rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-violet-600 focus:outline-none"
 									/>
 								{/if}
 
@@ -648,7 +648,7 @@
 				{#snippet headerActions()}
 					<button
 						onclick={copyCommand}
-						class="cursor-pointer rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
+						class="cursor-pointer rounded-ig-sm p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
 						title="Copy to clipboard"
 					>
 						{@html Copy}
@@ -656,11 +656,11 @@
 				{/snippet}
 
 				<div class="flex flex-col gap-4">
-					<div class="rounded bg-gray-200 dark:bg-gray-800 p-3 font-mono text-xs">{command}</div>
+					<div class="rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-3 font-mono text-xs">{command}</div>
 					<div class="flex flex-row items-center">
 						<button
 							onclick={() => (commandType = 'ig')}
-							class="flex-1 rounded-l px-2 py-1 text-xs transition-colors"
+							class="flex-1 rounded-l-ig-sm px-2 py-1 text-xs transition-colors"
 							class:bg-gray-400={commandType === 'ig'}
 							class:dark:bg-gray-600={commandType === 'ig'}
 							class:hover:bg-gray-300={commandType === 'ig'}
@@ -688,7 +688,7 @@
 						</button>
 						<button
 							onclick={() => (commandType = 'kubectl')}
-							class="flex-1 rounded-r px-2 py-1 text-xs transition-colors"
+							class="flex-1 rounded-r-ig-sm px-2 py-1 text-xs transition-colors"
 							class:bg-gray-400={commandType === 'kubectl'}
 							class:dark:bg-gray-600={commandType === 'kubectl'}
 							class:hover:bg-gray-300={commandType === 'kubectl'}
@@ -708,14 +708,14 @@
 				{#snippet headerActions()}
 					<button
 						onclick={copyManifest}
-						class="cursor-pointer rounded p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
+						class="cursor-pointer rounded-ig-sm p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
 						title="Copy to clipboard"
 					>
 						{@html Copy}
 					</button>
 				{/snippet}
 
-				<div class="rounded bg-gray-200 dark:bg-gray-800 p-3 font-mono text-xs whitespace-pre-wrap">
+				<div class="rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-3 font-mono text-xs whitespace-pre-wrap">
 					{manifest}
 				</div>
 			</Panel>
@@ -735,7 +735,7 @@
 			<button
 				disabled={!canRun()}
 				onclick={runGadget}
-				class="flex cursor-pointer flex-row gap-2 rounded bg-green-600 dark:bg-green-800 py-2 pr-4 pl-2 text-white hover:bg-green-500 dark:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-200 dark:disabled:bg-green-950 disabled:text-gray-500"
+				class="flex cursor-pointer flex-row gap-2 rounded-ig-sm bg-green-600 dark:bg-green-800 py-2 pr-4 pl-2 text-white hover:bg-green-500 dark:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-200 dark:disabled:bg-green-950 disabled:text-gray-500"
 			>
 				<span>{@html Play}</span>
 				<span>Run Gadget</span>

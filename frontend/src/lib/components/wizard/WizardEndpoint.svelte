@@ -168,7 +168,7 @@
 		<div class="flex flex-wrap gap-1.5">
 			{#each gadgetNames as name (name)}
 				<span
-					class="rounded border border-orange-300/50 dark:border-orange-700/50 bg-orange-100/50 dark:bg-orange-900/30 px-2 py-0.5 text-xs font-mono text-orange-700 dark:text-orange-400"
+					class="rounded-ig-sm border border-orange-300/50 dark:border-orange-700/50 bg-orange-100/50 dark:bg-orange-900/30 px-2 py-0.5 text-xs font-mono text-orange-700 dark:text-orange-400"
 				>
 					{name}
 				</span>
@@ -179,7 +179,7 @@
 	<!-- Detached mode indicator -->
 	{#if detached}
 		<div
-			class="rounded-lg border border-blue-300/50 dark:border-blue-800/50 bg-blue-100/20 dark:bg-blue-900/20 p-3 text-sm text-blue-700 dark:text-blue-300"
+			class="rounded-ig-md border border-blue-300/50 dark:border-blue-800/50 bg-blue-100/20 dark:bg-blue-900/20 p-3 text-sm text-blue-700 dark:text-blue-300"
 		>
 			{#if hasMultipleGadgets}
 				This will create {gadgetSpecs.length} headless instances
@@ -215,7 +215,7 @@
 	<div class="flex flex-row items-center justify-end gap-2 pt-2">
 		<button
 			onclick={handleConfigure}
-			class="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 transition-all hover:border-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900"
+			class="flex cursor-pointer items-center gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 transition-all hover:border-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900"
 			title={hasMultipleGadgets
 				? 'Configure first gadget with more options'
 				: 'Configure and run with more options'}
@@ -225,7 +225,7 @@
 		</button>
 		<button
 			onclick={handleRunNow}
-			class="flex cursor-pointer items-center gap-2 rounded-lg border border-orange-300 dark:border-orange-800 bg-orange-100/20 dark:bg-orange-900/20 px-4 py-2 text-sm text-orange-600 dark:text-orange-400 transition-all hover:border-orange-500/50 hover:bg-orange-100/40 dark:hover:bg-orange-900/40"
+			class="flex cursor-pointer items-center gap-2 rounded-ig-md border border-orange-300 dark:border-orange-800 bg-orange-100/20 dark:bg-orange-900/20 px-4 py-2 text-sm text-orange-600 dark:text-orange-400 transition-all hover:border-orange-500/50 hover:bg-orange-100/40 dark:hover:bg-orange-900/40"
 		>
 			<span>{@html PlaySmall}</span>
 			<span>

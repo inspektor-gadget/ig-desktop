@@ -119,13 +119,13 @@
 	{#if networkMapConfig.isValidNetworkMap}
 		<!-- Options overlay -->
 		<div
-			class="absolute top-2 right-2 z-20 flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 rounded px-2 py-1 text-xs"
+			class="absolute top-2 right-2 z-20 flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 rounded-ig-sm px-2 py-1 text-xs"
 		>
 			<label class="flex items-center gap-1.5 cursor-pointer text-gray-600 dark:text-gray-300">
 				<input
 					type="checkbox"
 					bind:checked={collapseEphemeral}
-					class="w-3.5 h-3.5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+					class="w-3.5 h-3.5 rounded-ig-sm border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
 				/>
 				<span>Collapse high ports</span>
 			</label>

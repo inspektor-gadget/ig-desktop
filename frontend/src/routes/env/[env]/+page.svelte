@@ -348,7 +348,7 @@
 					{#if !wizardVisible && features.canRunGadgets && gadgetWizardEnabled}
 						<button
 							onclick={showWizard}
-							class="flex cursor-pointer items-center gap-2 rounded-lg border border-orange-300 dark:border-orange-800 bg-orange-100/20 dark:bg-orange-900/20 px-3 py-2 text-sm text-orange-600 dark:text-orange-400 transition-all hover:border-orange-500/50 hover:bg-orange-100/40 dark:hover:bg-orange-900/40"
+							class="flex cursor-pointer items-center gap-2 rounded-ig-md border border-orange-300 dark:border-orange-800 bg-orange-100/20 dark:bg-orange-900/20 px-3 py-2 text-sm text-orange-600 dark:text-orange-400 transition-all hover:border-orange-500/50 hover:bg-orange-100/40 dark:hover:bg-orange-900/40"
 							title="Show Gadget Wizard"
 						>
 							<span>{@html GadgetIcon}</span>
@@ -357,7 +357,7 @@
 					{/if}
 					<button
 						onclick={() => (settingsModalOpen = true)}
-						class="cursor-pointer rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-3 text-gray-600 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-blue-400"
+						class="cursor-pointer rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-3 text-gray-600 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-blue-400"
 						title="Environment Settings"
 					>
 						{@html Cog}
@@ -388,7 +388,7 @@
 								<a
 									href={`${resolve('/browse/artifacthub')}?env=${env.id}`}
 									title="Discover Gadgets"
-									class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 md:w-auto md:justify-start"
+									class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 md:w-auto md:justify-start"
 								>
 									<span class="text-blue-400">{@html Grid}</span>
 									<span class="text-gray-800 dark:text-gray-200">Discover</span>
@@ -412,7 +412,7 @@
 								disabled={!validURL}
 								onclick={runInstance}
 								title="Run Gadget"
-								class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-lg border border-blue-300 dark:border-blue-800 bg-blue-100/20 dark:bg-blue-900/20 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 transition-all hover:border-blue-500/50 hover:bg-blue-100/40 dark:hover:bg-blue-900/40 disabled:cursor-not-allowed disabled:border-gray-300 dark:disabled:border-gray-800 disabled:bg-gray-100/20 dark:disabled:bg-gray-900/20 disabled:text-gray-400 dark:disabled:text-gray-600 md:w-auto"
+								class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-ig-md border border-blue-300 dark:border-blue-800 bg-blue-100/20 dark:bg-blue-900/20 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 transition-all hover:border-blue-500/50 hover:bg-blue-100/40 dark:hover:bg-blue-900/40 disabled:cursor-not-allowed disabled:border-gray-300 dark:disabled:border-gray-800 disabled:bg-gray-100/20 dark:disabled:bg-gray-900/20 disabled:text-gray-400 dark:disabled:text-gray-600 md:w-auto"
 							>
 								<span>{@html PlaySmall}</span>
 								<span>Run</span>
@@ -456,7 +456,7 @@
 
 						{#each paginatedHistory as entry, idx}
 							<div
-								class="group/item flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4 transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+								class="group/item flex flex-col gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4 transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
 								<div class="flex flex-row items-start justify-between gap-4">
 									<div class="flex flex-1 flex-col gap-2">
@@ -464,12 +464,12 @@
 											<span class="font-medium text-gray-800 dark:text-gray-200">{entry.image}</span
 											>
 											{#if entry.detached}
-												<span class="rounded bg-blue-500/20 px-2 py-0.5 text-xs text-blue-400"
+												<span class="rounded-ig-sm bg-blue-500/20 px-2 py-0.5 text-xs text-blue-400"
 													>detached</span
 												>
 											{/if}
 											{#if entry.instanceName}
-												<span class="rounded bg-purple-500/20 px-2 py-0.5 text-xs text-purple-400"
+												<span class="rounded-ig-sm bg-purple-500/20 px-2 py-0.5 text-xs text-purple-400"
 													>{entry.instanceName}</span
 												>
 											{/if}
@@ -485,7 +485,7 @@
 											<div class="flex flex-row flex-wrap gap-2 text-xs">
 												{#each Object.entries(entry.params) as [key, value]}
 													<span
-														class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-950/50 px-2 py-1 font-mono"
+														class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-950/50 px-2 py-1 font-mono"
 														><span class="text-gray-500">{key}:</span>
 														<span class="text-gray-700 dark:text-gray-300">{value}</span></span
 													>
@@ -495,7 +495,7 @@
 									</div>
 									<div class="flex flex-row items-start gap-1">
 										<button
-											class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
+											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
 											title="Remove from list"
 											onclick={() => {
 												const actualIdx = currentPage * ITEMS_PER_PAGE + idx;
@@ -505,7 +505,7 @@
 										>
 										{#if !features.isDemoMode}
 											<button
-												class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
+												class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
 												title="Configure and run"
 												onclick={() => {
 													const params = new URLSearchParams();
@@ -524,7 +524,7 @@
 											>
 										{/if}
 										<button
-											class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-purple-400"
+											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-purple-400"
 											title="Run again"
 											onclick={() => {
 												runGadget(entry);
@@ -603,14 +603,14 @@
 											<td class="px-4 py-3">
 												<div class="flex flex-row justify-end gap-1">
 													<button
-														class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-blue-400"
+														class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-blue-400"
 														title="Attach"
 														onclick={() => {
 															attachInstance(instance);
 														}}>{@html Browser}</button
 													>
 													<button
-														class="cursor-pointer rounded p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
+														class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
 														title="Delete"
 														onclick={() => {
 															removeInstance(instance);
@@ -680,7 +680,7 @@
 				<div class="flex flex-col gap-2">
 					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Name</span>
 					<div
-						class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200"
+						class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200"
 					>
 						{env.name}
 					</div>
@@ -690,7 +690,7 @@
 				<div class="flex flex-col gap-2">
 					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">ID</span>
 					<div
-						class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-400"
+						class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-400"
 					>
 						{env.id}
 					</div>
@@ -700,7 +700,7 @@
 				<div class="flex flex-col gap-2">
 					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Runtime</span>
 					<div
-						class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200"
+						class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200"
 					>
 						{env.runtime}
 					</div>
@@ -713,7 +713,7 @@
 							>Configuration</span
 						>
 						<div
-							class="flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4"
+							class="flex flex-col gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4"
 						>
 							{#each Object.entries(env.params) as [key, value]}
 								<div class="flex flex-col gap-1">
@@ -728,7 +728,7 @@
 				<!-- Danger Zone (hidden in single-env and demo mode) -->
 				{#if features.canDeleteEnvironment}
 					<div
-						class="mt-4 flex flex-col gap-4 rounded-lg border border-red-300/50 dark:border-red-800/50 bg-red-100/10 dark:bg-red-900/10 p-4"
+						class="mt-4 flex flex-col gap-4 rounded-ig-md border border-red-300/50 dark:border-red-800/50 bg-red-100/10 dark:bg-red-900/10 p-4"
 					>
 						<div class="flex flex-col gap-1">
 							<h3 class="font-semibold text-red-600 dark:text-red-400">Danger Zone</h3>

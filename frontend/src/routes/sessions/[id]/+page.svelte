@@ -194,7 +194,7 @@
 				<div class="flex items-center gap-3">
 					<a
 						href={resolve(`/env/${session.environmentId}`)}
-						class="flex cursor-pointer items-center rounded bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
+						class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
 						title="Back to Environment"
 					>
 						{@html ChevronLeft}
@@ -217,7 +217,7 @@
 						<span class="text-sm text-gray-600 dark:text-gray-400">Playing...</span>
 						<button
 							onclick={stopPlayback}
-							class="rounded border border-red-300 dark:border-red-800 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-100/20 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-300"
+							class="rounded-ig-sm border border-red-300 dark:border-red-800 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-100/20 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-300"
 						>
 							Stop Playback
 						</button>
@@ -233,7 +233,7 @@
 			>
 				{#each session.runs as run}
 					<div
-						class="flex items-center gap-3 rounded-lg border px-4 py-2 whitespace-nowrap transition-colors
+						class="flex items-center gap-3 rounded-ig-md border px-4 py-2 whitespace-nowrap transition-colors
 							   {activeRunId === run.id
 							? 'border-blue-500/50 bg-blue-100/20 dark:bg-blue-900/20'
 							: 'border-gray-300 dark:border-gray-700 bg-gray-200/50 dark:bg-gray-800/50'}"

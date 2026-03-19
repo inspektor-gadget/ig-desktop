@@ -234,7 +234,7 @@
 	>
 		<!-- Stop propagation to prevent backdrop click from closing modal -->
 		<div
-			class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950"
+			class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-ig-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="document"
@@ -248,7 +248,7 @@
 				</h2>
 				<button
 					onclick={() => onClose()}
-					class="cursor-pointer rounded p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
+					class="cursor-pointer rounded-ig-sm p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
 					title="Close"
 				>
 					<svg
@@ -272,7 +272,7 @@
 						<div class="flex flex-col gap-2">
 							{#each Object.entries(exporters) as [name, config] (name)}
 								<div
-									class="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-4 py-3"
+									class="flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-4 py-3"
 								>
 									<div class="flex flex-col gap-1">
 										<span class="font-medium text-gray-800 dark:text-gray-200">{name}</span>
@@ -290,14 +290,14 @@
 									<div class="flex items-center gap-2">
 										<button
 											onclick={() => openEditForm(name)}
-											class="cursor-pointer rounded p-1.5 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
+											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
 											title="Edit"
 										>
 											{@html Edit}
 										</button>
 										<button
 											onclick={() => deleteExporter(name)}
-											class="cursor-pointer rounded p-1.5 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-600 dark:hover:text-red-400"
+											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-600 dark:hover:text-red-400"
 											title="Delete"
 										>
 											{@html Trash}
@@ -308,7 +308,7 @@
 						</div>
 					{:else}
 						<div
-							class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30 p-6 text-center"
+							class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30 p-6 text-center"
 						>
 							<p class="text-sm text-gray-500 dark:text-gray-500">
 								No {typeLabel.toLowerCase()} exporters configured
@@ -319,7 +319,7 @@
 					<!-- Add Button -->
 					<button
 						onclick={openAddForm}
-						class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 px-4 py-3 text-sm text-gray-500 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900/50 hover:text-blue-600 dark:hover:text-blue-400"
+						class="flex cursor-pointer items-center justify-center gap-2 rounded-ig-md border border-dashed border-gray-300 dark:border-gray-700 px-4 py-3 text-sm text-gray-500 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900/50 hover:text-blue-600 dark:hover:text-blue-400"
 					>
 						<span class="h-4 w-4">{@html Plus}</span>
 						<span>Add {typeLabel} Exporter</span>
@@ -333,13 +333,13 @@
 			>
 				<button
 					onclick={() => onClose()}
-					class="cursor-pointer rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 transition-all hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-800"
+					class="cursor-pointer rounded-ig-md border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 transition-all hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-800"
 				>
 					Cancel
 				</button>
 				<button
 					onclick={handleSave}
-					class="cursor-pointer rounded-lg bg-green-600 px-4 py-2 text-sm text-white transition-all hover:bg-green-500"
+					class="cursor-pointer rounded-ig-md bg-green-600 px-4 py-2 text-sm text-white transition-all hover:bg-green-500"
 				>
 					Save Changes
 				</button>
@@ -361,7 +361,7 @@
 		tabindex="-1"
 	>
 		<div
-			class="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl"
+			class="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="document"
@@ -375,7 +375,7 @@
 				</h3>
 				<button
 					onclick={closeFormModal}
-					class="cursor-pointer rounded p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200"
+					class="cursor-pointer rounded-ig-sm p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200"
 					title="Close"
 				>
 					<svg
@@ -466,14 +466,14 @@
 			>
 				<button
 					onclick={closeFormModal}
-					class="cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 transition-all hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700"
+					class="cursor-pointer rounded-ig-md border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 transition-all hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700"
 				>
 					Cancel
 				</button>
 				<button
 					onclick={saveExporter}
 					disabled={!formValid}
-					class="cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+					class="cursor-pointer rounded-ig-md bg-blue-600 px-4 py-2 text-sm text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{editingName ? 'Update' : 'Add'} Exporter
 				</button>

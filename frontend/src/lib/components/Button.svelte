@@ -53,12 +53,13 @@
 	 */
 	const variantClasses = {
 		primary:
-			'bg-blue-500 text-white hover:bg-blue-400 focus:ring-blue-500/50 disabled:bg-blue-500/50',
+			'bg-ig-primary text-ig-text-on-primary hover:bg-ig-primary-hover focus:ring-ig-primary-muted disabled:bg-ig-primary/50',
 		secondary:
-			'bg-gray-100/50 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-800 hover:bg-gray-200 dark:hover:bg-gray-900 hover:border-gray-400 dark:hover:border-gray-700 focus:ring-gray-500/50 disabled:bg-gray-100/30 dark:disabled:bg-gray-900/30 disabled:text-gray-400 dark:disabled:text-gray-500',
-		danger: 'bg-red-500 text-white hover:bg-red-400 focus:ring-red-500/50 disabled:bg-red-500/50',
+			'bg-ig-surface-raised text-ig-text-secondary border border-ig-border-strong hover:bg-ig-border hover:border-ig-text-muted focus:ring-ig-primary-muted disabled:bg-ig-surface-raised/30 disabled:text-ig-text-muted',
+		danger:
+			'bg-ig-error text-ig-text-on-primary hover:bg-ig-error/80 focus:ring-ig-error/50 disabled:bg-ig-error/50',
 		ghost:
-			'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 focus:ring-gray-500/50 disabled:text-gray-400 dark:disabled:text-gray-600'
+			'bg-transparent text-ig-text-secondary hover:bg-ig-border focus:ring-ig-primary-muted disabled:text-ig-text-muted'
 	};
 
 	/**
@@ -75,7 +76,7 @@
 	 */
 	const buttonClasses = $derived(
 		[
-			'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all',
+			'inline-flex items-center justify-center gap-2 rounded-ig-md font-medium transition-all',
 			'focus:outline-none focus:ring-2',
 			'disabled:cursor-not-allowed disabled:opacity-50',
 			variantClasses[variant],

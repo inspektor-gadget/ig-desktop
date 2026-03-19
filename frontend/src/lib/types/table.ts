@@ -35,6 +35,8 @@ export interface TableColumn {
 	width?: string;
 	/** Text alignment */
 	align?: 'left' | 'right' | 'center';
+	/** Decimal places for float display (null = no formatting) */
+	precision?: number | null;
 	/** Custom renderer function */
 	render?: (value: any, row: any) => string | { html: string };
 

@@ -5,6 +5,9 @@
 
 import { browser } from '$app/environment';
 import { configuration } from '$lib/stores/configuration.svelte';
+import { setTheme, resetTheme } from '$lib/themes/set-theme';
+import { materialLight, materialDark } from '$lib/themes/material-tokens';
+import { headlampLight, headlampDark } from '$lib/themes/headlamp-tokens';
 
 type ThemePreference = 'dark' | 'light' | 'system';
 type ResolvedTheme = 'dark' | 'light';
@@ -20,6 +23,9 @@ class ThemeService {
 
 	/** The user's theme preference from settings */
 	readonly preference = $derived((configuration.get('theme') as ThemePreference) || 'dark');
+
+	/** The selected design theme preset */
+	readonly designTheme = $derived((configuration.get('designTheme') as string) || 'default');
 
 	/** The actual resolved theme (dark or light) */
 	readonly resolvedTheme: ResolvedTheme = $derived(
@@ -48,6 +54,15 @@ class ThemeService {
 
 		document.documentElement.classList.toggle('dark', this.isDark);
 		document.querySelector('meta[name="theme-color"]')?.setAttribute('content', this.themeColor);
+
+		// Apply or reset design theme preset
+		if (this.designTheme === 'material') {
+			setTheme(this.isDark ? materialDark : materialLight);
+		} else if (this.designTheme === 'headlamp') {
+			setTheme(this.isDark ? headlampDark : headlampLight);
+		} else {
+			resetTheme();
+		}
 	}
 }
 
