@@ -46,5 +46,5 @@ jobs:
           build-tags: "withoutebpf"
           package: true
           go-version: '1.25'
-          node-version: '23.5.0'
+          node-version: '24'
           wails-build-webview2: "embed"
