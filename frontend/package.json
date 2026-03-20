@@ -21,7 +21,7 @@
 		"build:lib:watch": "vite build --config vite.lib.config.ts --watch"
 	},
 	"devDependencies": {
-		"@eslint/compat": "^2.0.0",
+		"@eslint/compat": "^2.0.3",
 		"@eslint/js": "^9.39.2",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-static": "^3.0.10",
