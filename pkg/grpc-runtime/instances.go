@@ -22,7 +22,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/moby/moby/pkg/namesgenerator"
+	"github.com/inspektor-gadget/ig-desktop/pkg/grpc-runtime/internal/namesgenerator"
 
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/environment"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-service/api"
