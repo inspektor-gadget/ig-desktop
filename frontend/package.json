@@ -25,8 +25,8 @@
 		"@eslint/js": "^10.0.1",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-static": "^3.0.10",
-		"@sveltejs/kit": "^2.55.0",
-		"@sveltejs/vite-plugin-svelte": "^6.2.1",
+		"@sveltejs/kit": "2.57.1",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/container-queries": "^0.1.1",
 		"@tailwindcss/forms": "^0.5.11",
 		"@tailwindcss/postcss": "^4.1.18",
@@ -47,7 +47,7 @@
 		"tailwindcss": "^4.2",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.59.3",
-		"vite": "^7.3.2"
+		"vite": "^8.0.12"
 	},
 	"dependencies": {
 		"@dagrejs/dagre": "^3.0.0",
