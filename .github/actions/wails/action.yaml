@@ -42,7 +42,7 @@ inputs:
   wails-version:
     description: "Wails version to use"
     required: false
-    default: "latest"
+    default: "v3.0.0-alpha.79"
   wails-build-webview2:
     description: "Webview2 installer method [download,embed,browser,error]"
     required: false
