@@ -9,7 +9,7 @@ require (
 	github.com/sirupsen/logrus v1.9.4
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.79
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
-	google.golang.org/grpc v1.81.0
+	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.20.2
