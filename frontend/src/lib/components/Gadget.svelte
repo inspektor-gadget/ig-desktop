@@ -291,240 +291,253 @@
 		<div class="flex flex-1 flex-col overflow-hidden">
 			<div class="flex grow flex-col overflow-hidden">
 				{#if config.statusBar || config.searchBar || config.inspector}
-				<div class="flex flex-row items-center justify-between py-2 pl-2">
-					{#if config.statusBar}
-					<div class="flex flex-row items-center gap-2">
-						<div class="flex flex-row items-center">
-							<!-- Play/Stop button group -->
-							<div class="flex">
-								<div
-									class="flex h-8 w-8 items-center justify-center rounded-l-ig-sm border transition-colors {instance.running
-										? 'border-green-600 bg-green-600 text-white'
-										: 'border-ig-border-strong bg-transparent text-ig-text-muted'}"
-									title={instance.running ? 'Running' : 'Stopped'}
-								>
-									{@html Play}
+					<div class="flex flex-row items-center justify-between py-2 pl-2">
+						{#if config.statusBar}
+							<div class="flex flex-row items-center gap-2">
+								<div class="flex flex-row items-center">
+									<!-- Play/Stop button group -->
+									<div class="flex">
+										<div
+											class="flex h-8 w-8 items-center justify-center rounded-l-ig-sm border transition-colors {instance.running
+												? 'border-green-600 bg-green-600 text-white'
+												: 'border-ig-border-strong bg-transparent text-ig-text-muted'}"
+											title={instance.running ? 'Running' : 'Stopped'}
+										>
+											{@html Play}
+										</div>
+										<button
+											onclick={() => stopInstance(instanceID)}
+											disabled={!instance.running}
+											class="flex h-8 items-center justify-center gap-1 rounded-r-ig-sm border border-l-0 px-2 transition-colors {instance.running
+												? 'border-gray-600 bg-transparent text-red-500 hover:bg-red-600 hover:text-white cursor-pointer'
+												: 'border-red-800 bg-red-800 text-white cursor-default'}"
+											title={instance.running
+												? instance.attached
+													? 'Detach from gadget (keeps running)'
+													: 'Stop gadget'
+												: instance.attached
+													? 'Detached'
+													: 'Stopped'}
+										>
+											{@html Stop}
+											{#if instance.running && instance.attached}
+												<span class="text-sm">Detach</span>
+											{/if}
+										</button>
+									</div>
 								</div>
-								<button
-									onclick={() => stopInstance(instanceID)}
-									disabled={!instance.running}
-									class="flex h-8 items-center justify-center gap-1 rounded-r-ig-sm border border-l-0 px-2 transition-colors {instance.running
-										? 'border-gray-600 bg-transparent text-red-500 hover:bg-red-600 hover:text-white cursor-pointer'
-										: 'border-red-800 bg-red-800 text-white cursor-default'}"
-									title={instance.running
-										? instance.attached
-											? 'Detach from gadget (keeps running)'
-											: 'Stop gadget'
-										: instance.attached
-											? 'Detached'
-											: 'Stopped'}
-								>
-									{@html Stop}
-									{#if instance.running && instance.attached}
-										<span class="text-sm">Detach</span>
+								<div>
+									{#if instance.running}
+										Running
+										{#if environmentName}{` on ${environmentName}`}{/if}
+									{:else}
+										{instance.attached ? 'Detached' : 'Stopped'}
 									{/if}
-								</button>
-							</div>
-						</div>
-						<div>
-							{#if instance.running}
-								Running
-								{#if environmentName}{` on ${environmentName}`}{/if}
-							{:else}
-								{instance.attached ? 'Detached' : 'Stopped'}
-							{/if}
-						</div>
-						{#if instance.isReplay}
-							<div class="flex items-center gap-2 text-sm text-ig-text-muted">
-								{#if instance.replayMode === 'snapshot'}
+								</div>
+								{#if instance.isReplay}
+									<div class="flex items-center gap-2 text-sm text-ig-text-muted">
+										{#if instance.replayMode === 'snapshot'}
+											<span
+												class="rounded-ig-sm border border-purple-700 bg-purple-900/50 px-2 py-0.5 text-xs font-semibold text-purple-300"
+											>
+												SNAPSHOT
+											</span>
+										{:else}
+											<span
+												class="rounded-ig-sm border border-blue-700 bg-blue-900/50 px-2 py-0.5 text-xs font-semibold text-blue-300 {instance.running
+													? 'animate-pulse'
+													: ''}"
+											>
+												REPLAY
+											</span>
+										{/if}
+									</div>
+								{/if}
+								{#if instance.session}
 									<span
-										class="rounded-ig-sm border border-purple-700 bg-purple-900/50 px-2 py-0.5 text-xs font-semibold text-purple-300"
+										class="flex items-center gap-1 rounded-ig-sm border border-red-700 bg-red-900/50 px-2 py-0.5 text-xs font-semibold text-red-300"
 									>
-										SNAPSHOT
-									</span>
-								{:else}
-									<span
-										class="rounded-ig-sm border border-blue-700 bg-blue-900/50 px-2 py-0.5 text-xs font-semibold text-blue-300 {instance.running
-											? 'animate-pulse'
-											: ''}"
-									>
-										REPLAY
+										<span class="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500"></span>
+										REC
 									</span>
 								{/if}
 							</div>
 						{/if}
-						{#if instance.session}
-							<span
-								class="flex items-center gap-1 rounded-ig-sm border border-red-700 bg-red-900/50 px-2 py-0.5 text-xs font-semibold text-red-300"
-							>
-								<span class="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500"></span>
-								REC
-							</span>
+						<div class="flex-1"></div>
+						{#if config.statusBar}
+							<div class="px-2 font-mono text-sm text-ig-text-muted">
+								{#if isCapped}
+									<button
+										onclick={openMaxEventsSettings}
+										class="cursor-pointer hover:text-ig-text"
+										title="Click to configure maximum events"
+									>
+										{displayedEventCount} of {eventCount} events
+									</button>
+								{:else}
+									{eventCount} events
+								{/if}
+							</div>
+							{#if elapsedTime}<div class="px-2 font-mono text-sm text-ig-text-muted">
+									{elapsedTime}
+								</div>{/if}
 						{/if}
-					</div>
-					{/if}
-					<div class="flex-1"></div>
-					{#if config.statusBar}
-					<div class="px-2 font-mono text-sm text-ig-text-muted">
-						{#if isCapped}
-							<button
-								onclick={openMaxEventsSettings}
-								class="cursor-pointer hover:text-ig-text"
-								title="Click to configure maximum events"
-							>
-								{displayedEventCount} of {eventCount} events
-							</button>
-						{:else}
-							{eventCount} events
-						{/if}
-					</div>
-					{#if elapsedTime}<div class="px-2 font-mono text-sm text-ig-text-muted">
-							{elapsedTime}
-						</div>{/if}
-					{/if}
-					{#if config.searchBar}
-					<div class="flex items-center px-2">
-						<div class="relative">
-							<Input
-								bind:this={searchInputRef}
-								bind:value={searchInput}
-								placeholder="Search..."
-								class="text-sm rounded-r-none pr-8"
-								onkeydown={handleSearchKeydown}
-							/>
-							{#if searchInput}
+						{#if config.searchBar}
+							<div class="flex items-center px-2">
+								<div class="relative">
+									<Input
+										bind:this={searchInputRef}
+										bind:value={searchInput}
+										placeholder="Search..."
+										class="text-sm rounded-r-none pr-8"
+										onkeydown={handleSearchKeydown}
+									/>
+									{#if searchInput}
+										<button
+											onclick={() => {
+												searchInput = '';
+												searchInputRef?.focus();
+											}}
+											class="absolute right-2 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full text-ig-text-muted hover:text-ig-text-secondary hover:bg-ig-border transition-colors"
+											title="Clear search"
+										>
+											<svg
+												aria-hidden="true"
+												xmlns="http://www.w3.org/2000/svg"
+												width="14"
+												height="14"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="2"
+												stroke-linecap="round"
+												stroke-linejoin="round"
+											>
+												<line x1="18" y1="6" x2="6" y2="18"></line>
+												<line x1="6" y1="6" x2="18" y2="18"></line>
+											</svg>
+										</button>
+									{/if}
+								</div>
 								<button
-									onclick={() => {
-										searchInput = '';
-										searchInputRef?.focus();
-									}}
-									class="absolute right-2 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full text-ig-text-muted hover:text-ig-text-secondary hover:bg-ig-border transition-colors"
-									title="Clear search"
+									onclick={toggleSearchMode}
+									ondblclick={openSearchModeSettings}
+									class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-ig-border-strong transition-colors {searchModeFilter
+										? 'bg-ig-primary text-ig-text-on-primary hover:bg-ig-primary-hover'
+										: 'bg-ig-border text-ig-text-secondary hover:bg-ig-border-strong'}"
+									title={searchModeFilter
+										? 'Filter mode: hiding non-matching entries (click to switch to highlight mode, double-click to open settings)'
+										: 'Highlight mode: showing all entries with matches highlighted (click to switch to filter mode, double-click to open settings)'}
+									aria-label={searchModeFilter
+										? 'Search mode: filter (switch to highlight)'
+										: 'Search mode: highlight (switch to filter)'}
+								>
+									{@html FilterIcon}
+								</button>
+								<button
+									onclick={toggleHighlightInFilterMode}
+									ondblclick={openHighlightSettings}
+									class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-ig-border-strong transition-colors {searchHighlightInFilterMode
+										? 'bg-yellow-600 text-white hover:bg-yellow-500'
+										: 'bg-ig-border text-ig-text-secondary hover:bg-ig-border-strong'} {!searchModeFilter &&
+									searchQuery
+										? ''
+										: 'rounded-r-ig-md'}"
+									title={searchHighlightInFilterMode
+										? 'Text highlighting enabled (click to disable, double-click to open settings)'
+										: 'Text highlighting disabled (click to enable, double-click to open settings)'}
+									aria-label={searchHighlightInFilterMode
+										? 'Disable text highlighting'
+										: 'Enable text highlighting'}
+									aria-pressed={searchHighlightInFilterMode}
 								>
 									<svg
+										aria-hidden="true"
 										xmlns="http://www.w3.org/2000/svg"
-										width="14"
-										height="14"
+										width="16"
+										height="16"
 										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
+										fill="currentColor"
 									>
-										<line x1="18" y1="6" x2="6" y2="18"></line>
-										<line x1="6" y1="6" x2="18" y2="18"></line>
+										<path
+											d="M15.243 3.172a4 4 0 0 1 5.657 5.656l-8.486 8.486a2 2 0 0 1-.578.39l-4.243 1.768a1 1 0 0 1-1.287-1.287l1.768-4.243a2 2 0 0 1 .39-.578l8.486-8.486zM3 20h4a1 1 0 1 1 0 2H3a1 1 0 1 1 0-2z"
+										/>
 									</svg>
 								</button>
+								{#if !searchModeFilter && searchQuery}
+									<button
+										onclick={goToPrevMatch}
+										disabled={matchCount === 0}
+										class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-ig-border-strong bg-ig-border text-ig-text-secondary transition-colors hover:bg-ig-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
+										title="Previous match (wraps around)"
+										aria-label="Previous match"
+									>
+										<svg
+											aria-hidden="true"
+											xmlns="http://www.w3.org/2000/svg"
+											width="16"
+											height="16"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										>
+											<polyline points="15 18 9 12 15 6"></polyline>
+										</svg>
+									</button>
+									<button
+										onclick={goToNextMatch}
+										disabled={matchCount === 0}
+										class="flex h-[38px] w-8 items-center justify-center rounded-r-ig-md border border-l-0 border-ig-border-strong bg-ig-border text-ig-text-secondary transition-colors hover:bg-ig-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
+										title="Next match (wraps around)"
+										aria-label="Next match"
+									>
+										<svg
+											aria-hidden="true"
+											xmlns="http://www.w3.org/2000/svg"
+											width="16"
+											height="16"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										>
+											<polyline points="9 18 15 12 9 6"></polyline>
+										</svg>
+									</button>
+								{/if}
+							</div>
+							{#if searchQuery}
+								<div class="px-2 font-mono text-sm text-ig-text-muted">
+									{#if searchModeFilter}
+										{matchCount} of {totalCount}
+									{:else if matchCount > 0}
+										{currentMatchIndex + 1}/{matchCount}
+									{:else}
+										0 matches
+									{/if}
+								</div>
 							{/if}
-						</div>
-						<button
-							onclick={toggleSearchMode}
-							ondblclick={openSearchModeSettings}
-							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-ig-border-strong transition-colors {searchModeFilter
-								? 'bg-ig-primary text-ig-text-on-primary hover:bg-ig-primary-hover'
-								: 'bg-ig-border text-ig-text-secondary hover:bg-ig-border-strong'}"
-							title={searchModeFilter
-								? 'Filter mode: hiding non-matching entries (click to switch to highlight mode, double-click to open settings)'
-								: 'Highlight mode: showing all entries with matches highlighted (click to switch to filter mode, double-click to open settings)'}
-						>
-							{@html FilterIcon}
-						</button>
-						<button
-							onclick={toggleHighlightInFilterMode}
-							ondblclick={openHighlightSettings}
-							class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-ig-border-strong transition-colors {searchHighlightInFilterMode
-								? 'bg-yellow-600 text-white hover:bg-yellow-500'
-								: 'bg-ig-border text-ig-text-secondary hover:bg-ig-border-strong'} {!searchModeFilter &&
-							searchQuery
-								? ''
-								: 'rounded-r-ig-md'}"
-							title={searchHighlightInFilterMode
-								? 'Text highlighting enabled (click to disable, double-click to open settings)'
-								: 'Text highlighting disabled (click to enable, double-click to open settings)'}
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="16"
-								height="16"
-								viewBox="0 0 24 24"
-								fill="currentColor"
-							>
-								<path
-									d="M15.243 3.172a4 4 0 0 1 5.657 5.656l-8.486 8.486a2 2 0 0 1-.578.39l-4.243 1.768a1 1 0 0 1-1.287-1.287l1.768-4.243a2 2 0 0 1 .39-.578l8.486-8.486zM3 20h4a1 1 0 1 1 0 2H3a1 1 0 1 1 0-2z"
-								/>
-							</svg>
-						</button>
-						{#if !searchModeFilter && searchQuery}
+						{/if}
+						{#if config.inspector}
 							<button
-								onclick={goToPrevMatch}
-								disabled={matchCount === 0}
-								class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-ig-border-strong bg-ig-border text-ig-text-secondary transition-colors hover:bg-ig-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
-								title="Previous match (wraps around)"
+								class="flex cursor-pointer items-center gap-1.5 rounded-l-ig-sm border border-r-0 border-ig-border-strong bg-ig-surface-raised py-1.5 pl-2 pr-1 transition-colors hover:bg-ig-border"
+								title={showInspector ? 'Hide Inspector' : 'Show Inspector'}
+								onclick={() => {
+									preferences.set('gadget.show-inspector', !showInspector);
+								}}
 							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
+								{@html Adjustments}
+								<span class="flex items-center text-ig-text-muted"
+									>{@html showInspector ? ChevronLeft : ChevronRight}</span
 								>
-									<polyline points="15 18 9 12 15 6"></polyline>
-								</svg>
-							</button>
-							<button
-								onclick={goToNextMatch}
-								disabled={matchCount === 0}
-								class="flex h-[38px] w-8 items-center justify-center rounded-r-ig-md border border-l-0 border-ig-border-strong bg-ig-border text-ig-text-secondary transition-colors hover:bg-ig-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
-								title="Next match (wraps around)"
-							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								>
-									<polyline points="9 18 15 12 9 6"></polyline>
-								</svg>
 							</button>
 						{/if}
 					</div>
-					{#if searchQuery}
-						<div class="px-2 font-mono text-sm text-ig-text-muted">
-							{#if searchModeFilter}
-								{matchCount} of {totalCount}
-							{:else if matchCount > 0}
-								{currentMatchIndex + 1}/{matchCount}
-							{:else}
-								0 matches
-							{/if}
-						</div>
-					{/if}
-					{/if}
-					{#if config.inspector}
-					<button
-						class="flex cursor-pointer items-center gap-1.5 rounded-l-ig-sm border border-r-0 border-ig-border-strong bg-ig-surface-raised py-1.5 pl-2 pr-1 transition-colors hover:bg-ig-border"
-						title={showInspector ? 'Hide Inspector' : 'Show Inspector'}
-						onclick={() => {
-							preferences.set('gadget.show-inspector', !showInspector);
-						}}
-					>
-						{@html Adjustments}
-						<span class="flex items-center text-ig-text-muted"
-							>{@html showInspector ? ChevronLeft : ChevronRight}</span
-						>
-					</button>
-					{/if}
-				</div>
 				{/if}
 				<div class="flex flex-1 flex-col justify-stretch overflow-y-auto overscroll-none">
 					{#each normalizedDataSources as ds, id}
@@ -551,19 +564,19 @@
 				</div>
 			</div>
 			{#if config.logPanel}
-			{#if !logCollapsed}
+				{#if !logCollapsed}
+					<div
+						class="h-2 cursor-row-resize touch-none bg-ig-border-strong select-none"
+						onpointerdown={resize}
+					></div>
+				{/if}
 				<div
-					class="h-2 cursor-row-resize touch-none bg-ig-border-strong select-none"
-					onpointerdown={resize}
-				></div>
-			{/if}
-			<div
-				bind:this={logPane}
-				class="flex flex-col overflow-hidden"
-				style={logCollapsed ? 'flex: 0 0 auto' : `flex: 0 0 ${logHeight}px`}
-			>
-				<Log log={logs ?? []} {instanceID} />
-			</div>
+					bind:this={logPane}
+					class="flex flex-col overflow-hidden"
+					style={logCollapsed ? 'flex: 0 0 auto' : `flex: 0 0 ${logHeight}px`}
+				>
+					<Log log={logs ?? []} {instanceID} />
+				</div>
 			{/if}
 		</div>
 		{#if config.inspector && showInspector}

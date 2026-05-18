@@ -23,7 +23,7 @@ const VIEW_CONFIG_DEFAULTS: Required<ViewConfig> = {
 	logPanel: true,
 	datasourceTabs: true,
 	searchBar: true,
-	snapshotTimeline: true,
+	snapshotTimeline: true
 };
 
 /** Merge a partial ViewConfig with defaults, returning a fully-resolved config. */

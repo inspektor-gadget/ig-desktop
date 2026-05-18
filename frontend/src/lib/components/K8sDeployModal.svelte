@@ -401,6 +401,7 @@
 					title="Close (Force)"
 				>
 					<svg
+						aria-hidden="true"
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
 						viewBox="0 0 24 24"
@@ -563,6 +564,7 @@
 								class="flex items-center gap-2 text-sm text-blue-400 transition-all hover:text-blue-300"
 							>
 								<svg
+									aria-hidden="true"
 									xmlns="http://www.w3.org/2000/svg"
 									fill="none"
 									viewBox="0 0 24 24"

@@ -469,7 +469,8 @@
 												>
 											{/if}
 											{#if entry.instanceName}
-												<span class="rounded-ig-sm bg-purple-500/20 px-2 py-0.5 text-xs text-purple-400"
+												<span
+													class="rounded-ig-sm bg-purple-500/20 px-2 py-0.5 text-xs text-purple-400"
 													>{entry.instanceName}</span
 												>
 											{/if}

@@ -72,11 +72,17 @@
 {/snippet}
 
 {#if href}
-	<a {href} {target} onclick={handleClick} class="group relative block" {title}>
+	<a {href} {target} onclick={handleClick} class="group relative block" {title} aria-label={title}>
 		{@render content()}
 	</a>
 {:else}
-	<button type="button" onclick={handleClick} class="group relative block cursor-pointer" {title}>
+	<button
+		type="button"
+		onclick={handleClick}
+		class="group relative block cursor-pointer"
+		aria-label={title}
+		{title}
+	>
 		{@render content()}
 	</button>
 {/if}

@@ -179,12 +179,23 @@
 					{#if runtimes}
 						{#each runtimes as rt}
 							<div
+								role="button"
+								tabindex="0"
+								aria-pressed={selectedRuntime === rt.key}
+								aria-label={`Select runtime: ${rt.title}`}
 								onpointerdown={(e) => {
 									// Don't trigger if clicking on select dropdown
 									if (e.target instanceof HTMLSelectElement) return;
 									setRuntime(rt.key);
 								}}
-								class="flex cursor-pointer flex-col gap-3 rounded-ig-md border-2 bg-gray-100 dark:bg-gray-900 p-4 transition-all select-none hover:bg-gray-200 dark:hover:bg-gray-800"
+								onkeydown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										if (e.target instanceof HTMLSelectElement) return;
+										e.preventDefault();
+										setRuntime(rt.key);
+									}
+								}}
+								class="flex cursor-pointer flex-col gap-3 rounded-ig-md border-2 bg-gray-100 dark:bg-gray-900 p-4 transition-all select-none hover:bg-gray-200 dark:hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-ig-primary focus-visible:outline-offset-2"
 								class:border-gray-300={selectedRuntime !== rt.key}
 								class:dark:border-gray-700={selectedRuntime !== rt.key}
 								class:border-purple-600={selectedRuntime === rt.key}

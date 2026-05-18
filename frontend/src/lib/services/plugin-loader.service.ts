@@ -51,13 +51,19 @@ async function registerLocalPlugin(plugin: DiscoveredPlugin): Promise<void> {
 	try {
 		// Describe what capabilities this plugin provides
 		const caps: string[] = [];
-		if (plugin.manifest.visualizers?.length) caps.push(`${plugin.manifest.visualizers.length} visualizer(s)`);
-		if (plugin.manifest.dataProcessors?.length) caps.push(`${plugin.manifest.dataProcessors.length} processor(s)`);
-		if (plugin.manifest.paramInputs?.length) caps.push(`${plugin.manifest.paramInputs.length} param input(s)`);
-		if (plugin.manifest.inspectorTabs?.length) caps.push(`${plugin.manifest.inspectorTabs.length} inspector tab(s)`);
+		if (plugin.manifest.visualizers?.length)
+			caps.push(`${plugin.manifest.visualizers.length} visualizer(s)`);
+		if (plugin.manifest.dataProcessors?.length)
+			caps.push(`${plugin.manifest.dataProcessors.length} processor(s)`);
+		if (plugin.manifest.paramInputs?.length)
+			caps.push(`${plugin.manifest.paramInputs.length} param input(s)`);
+		if (plugin.manifest.inspectorTabs?.length)
+			caps.push(`${plugin.manifest.inspectorTabs.length} inspector tab(s)`);
 		if (plugin.manifest.hooks?.length) caps.push(`${plugin.manifest.hooks.length} hook(s)`);
 		if (plugin.manifest.routes?.length) caps.push(`${plugin.manifest.routes.length} route(s)`);
-		console.log(`plugin-loader: registering ${plugin.manifest.id} (${caps.join(', ') || 'no capabilities'})`);
+		console.log(
+			`plugin-loader: registering ${plugin.manifest.id} (${caps.join(', ') || 'no capabilities'})`
+		);
 
 		await pluginRegistry.registerExternal(plugin.manifest, 'local', plugin.files);
 

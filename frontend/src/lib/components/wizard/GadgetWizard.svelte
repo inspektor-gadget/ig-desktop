@@ -118,6 +118,7 @@
 				onclick={onHide}
 				class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-orange-400"
 				title="Hide Wizard"
+				aria-label="Hide Wizard"
 			>
 				{@html Close}
 			</button>

@@ -7,9 +7,7 @@ export type FieldAnnotationProvider = (
 ) => Record<string, string>;
 
 /** Injects extra annotations onto datasources themselves. */
-export type DatasourceAnnotationProvider = (
-	datasource: GadgetDatasource
-) => Record<string, string>;
+export type DatasourceAnnotationProvider = (datasource: GadgetDatasource) => Record<string, string>;
 
 export interface AnnotationProviders {
 	field?: FieldAnnotationProvider;

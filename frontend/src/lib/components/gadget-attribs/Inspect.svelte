@@ -19,8 +19,7 @@
 			<tbody>
 				{#each inspect.fields as field}
 					<tr>
-						<td
-							class="border-r border-ig-border px-2 py-1 text-ig-text-secondary"
+						<td class="border-r border-ig-border px-2 py-1 text-ig-text-secondary"
 							>{field.fullName}</td
 						>
 						<td class="px-2 py-1 text-nowrap overflow-ellipsis">{inspect.entry[field.fullName]}</td>

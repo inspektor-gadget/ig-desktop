@@ -103,7 +103,11 @@ export interface DataProcessorExports {
 	processEvent?(
 		event: Record<string, unknown>,
 		ctx: DataProcessorContext
-	): Record<string, unknown> | null | undefined | Promise<Record<string, unknown> | null | undefined>;
+	):
+		| Record<string, unknown>
+		| null
+		| undefined
+		| Promise<Record<string, unknown> | null | undefined>;
 
 	/**
 	 * Called when the gadget starts.

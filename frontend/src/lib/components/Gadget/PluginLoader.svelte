@@ -69,7 +69,9 @@
 <BaseModal bind:open title="Custom Plugin" size="lg" onClose={handleClose}>
 	<div class="space-y-4">
 		<!-- Security Warning -->
-		<div class="flex items-start gap-3 rounded-ig-md border border-amber-500/50 bg-amber-500/10 p-4">
+		<div
+			class="flex items-start gap-3 rounded-ig-md border border-amber-500/50 bg-amber-500/10 p-4"
+		>
 			<div class="flex-shrink-0 text-amber-500">
 				{@html WarningIcon}
 			</div>
@@ -84,17 +86,15 @@
 		</div>
 
 		<!-- Plugin Info -->
-		<div
-			class="rounded-ig-md border border-ig-border bg-ig-surface-raised p-4"
-		>
+		<div class="rounded-ig-md border border-ig-border bg-ig-surface-raised p-4">
 			<div class="flex items-center justify-between">
 				<div>
 					<h4 class="font-medium text-ig-text">
 						{bundle.name}
 					</h4>
 					<p class="mt-1 text-sm text-ig-text-muted">
-						{fileCount} file{fileCount === 1 ? '' : 's'} &middot; {(totalSize / 1024).toFixed(1)} KB
-						&middot; Entry: {entrypoint}
+						{fileCount} file{fileCount === 1 ? '' : 's'} &middot; {(totalSize / 1024).toFixed(1)} KB &middot;
+						Entry: {entrypoint}
 					</p>
 				</div>
 				<button
@@ -138,7 +138,8 @@
 							{selectedFile} ({bundle.files[selectedFile].length} characters)
 						</span>
 						<button
-							onclick={() => selectedFile && navigator.clipboard.writeText(bundle.files[selectedFile])}
+							onclick={() =>
+								selectedFile && navigator.clipboard.writeText(bundle.files[selectedFile])}
 							class="text-xs text-ig-text-muted hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
 						>
 							Copy

@@ -9,11 +9,7 @@
  */
 
 import { compile } from 'svelte/compiler';
-import type {
-	PluginCompileRequest,
-	PluginCompileResponse,
-	CompiledFile
-} from '$lib/types/plugin';
+import type { PluginCompileRequest, PluginCompileResponse, CompiledFile } from '$lib/types/plugin';
 
 /**
  * Allowed imports for sandboxed (gadget) plugins.
@@ -124,9 +120,7 @@ function handlePluginCompile(request: PluginCompileRequest): void {
 			}
 
 			if (allDisallowed.length > 0) {
-				const details = allDisallowed
-					.map((d) => `${d.file}: ${d.imports.join(', ')}`)
-					.join('\n');
+				const details = allDisallowed.map((d) => `${d.file}: ${d.imports.join(', ')}`).join('\n');
 				throw new Error(
 					`Sandboxed plugin contains disallowed imports:\n${details}\n\n` +
 						`Only Svelte and D3 visualization libraries are allowed.`
@@ -219,14 +213,17 @@ function transformSvelteImports(code: string): string {
 	);
 
 	// Handle named imports: import { a, b } from 'svelte/...'
-	code = code.replace(/import\s*\{([^}]+)\}\s*from\s*['"]svelte[^'"]*['"];?/g, (_match, symbols) => {
-		const names = symbols
-			.split(',')
-			.map((s: string) => s.trim())
-			.filter((s: string) => s.length > 0);
-		namedImports.push(...names);
-		return '';
-	});
+	code = code.replace(
+		/import\s*\{([^}]+)\}\s*from\s*['"]svelte[^'"]*['"];?/g,
+		(_match, symbols) => {
+			const names = symbols
+				.split(',')
+				.map((s: string) => s.trim())
+				.filter((s: string) => s.length > 0);
+			namedImports.push(...names);
+			return '';
+		}
+	);
 
 	// Handle side-effect imports: import 'svelte/...'
 	code = code.replace(/import\s*['"]svelte[^'"]*['"];?/g, '');

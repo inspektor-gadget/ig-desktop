@@ -229,9 +229,13 @@
 		}
 
 		const adapter = createAdapter(isWailsApp);
-		websocketService.initialize(adapter, (message) => {
-			messageRouter.route(message);
-		}, isWailsApp);
+		websocketService.initialize(
+			adapter,
+			(message) => {
+				messageRouter.route(message);
+			},
+			isWailsApp
+		);
 
 		// Set up legacy appState.api for browser mode compatibility
 		if (!isWailsApp) {
@@ -374,7 +378,7 @@
 	{/if}
 	{#if websocketService.connected}
 		<div class="flex flex-1 overflow-hidden text-gray-900 dark:text-gray-100">
-			<div
+			<nav
 				class="scrollbar-hide flex flex-col justify-between space-y-2 overflow-y-scroll border-r border-r-gray-200 bg-gray-100/60 dark:border-r-gray-700 dark:bg-gray-900/60 p-3 backdrop-blur-md"
 			>
 				<div class="flex flex-col select-none">
@@ -414,7 +418,9 @@
 				</div>
 				<div class="flex flex-col">
 					{#if features.canBrowseArtifactHub}
-						<NavbarLink href={resolve('/browse/artifacthub')}>{@html ArtifactHub}</NavbarLink>
+						<NavbarLink href={resolve('/browse/artifacthub')} title="Gadgets on ArtifactHub"
+							>{@html ArtifactHub}</NavbarLink
+						>
 					{/if}
 					<NavbarLink
 						href="https://inspektor-gadget.io/docs/latest/"
@@ -429,9 +435,9 @@
 					>
 						{@html Cog}
 					</NavbarLink>
-					<NavbarLink href={resolve('/info')}>{@html Info}</NavbarLink>
+					<NavbarLink href={resolve('/info')} title="About">{@html Info}</NavbarLink>
 				</div>
-			</div>
+			</nav>
 			{@render children()}
 		</div>
 		<div

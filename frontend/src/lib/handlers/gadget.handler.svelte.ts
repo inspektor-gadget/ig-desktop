@@ -292,7 +292,8 @@ class EventBuffer {
 			if (!instance?.events) continue;
 
 			// Get datasource for processors (streaming events typically have datasourceID)
-			const datasourceID = (msgs[0].data as Record<string, unknown>)?._datasourceID as string || 'default';
+			const datasourceID =
+				((msgs[0].data as Record<string, unknown>)?._datasourceID as string) || 'default';
 			const gds = instance.gadgetInfo?.datasources?.find((d) => d.name === datasourceID);
 			const datasource = toDatasource(gds, datasourceID);
 

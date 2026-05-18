@@ -68,6 +68,8 @@
 				><div class="flex flex-row items-center gap-2">
 					<button
 						class="small-icon rounded-4xl p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700"
+						title="Close tab"
+						aria-label="Close tab"
 						onclick={(ev) => {
 							ev.preventDefault();
 							ev.stopPropagation();

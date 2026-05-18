@@ -803,16 +803,30 @@
 				{/if}
 				<thead>
 					{#if header}
-						{@render header(columns, { startResize, resizingIndex, setHeaderRow, resetColumnWidth })}
+						{@render header(columns, {
+							startResize,
+							resizingIndex,
+							setHeaderRow,
+							resetColumnWidth
+						})}
 					{:else}
-						<tr bind:this={headerRow}>
+						<tr bind:this={headerRow} aria-label="Column headers">
 							{#each columns as column, i}
-								<th style={column.width ? `width: ${column.width};` : ''} class="relative">
+								<th
+									scope="col"
+									aria-label={column.label}
+									style={column.width ? `width: ${column.width};` : ''}
+									class="relative"
+									role="columnheader"
+								>
 									{column.label}
 									{#if i < columns.length - 1}
 										<div
 											class="resize-handle"
 											class:active={resizingIndex === i}
+											role="separator"
+											aria-orientation="vertical"
+											aria-label={`Resize column ${column.label}`}
 											onpointerdown={(e) => startResize(e, i)}
 										></div>
 									{/if}
@@ -838,6 +852,11 @@
 		tabindex="0"
 		role="grid"
 		aria-rowcount={items.length}
+		aria-colcount={columns.length}
+		aria-live="polite"
+		aria-label={selectedIndices.size > 0
+			? `Gadget output: ${selectedIndices.size} of ${items.length} rows selected`
+			: `Gadget output: ${items.length} rows`}
 	>
 		<!-- Spacer to create correct scrollbar height -->
 		<div class="virtual-table-spacer" style="height: {scrollState.totalHeight}px;">
@@ -854,7 +873,7 @@
 							{/each}
 						</colgroup>
 					{/if}
-					<tbody>
+					<tbody role="rowgroup">
 						{#each visibleItems as item, i}
 							{@const actualIndex = scrollState.startIndex + i}
 							{@const isFocused = actualIndex === focusedIndex}

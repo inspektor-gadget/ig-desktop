@@ -60,10 +60,13 @@
 	const applicableVisualizers = $derived(pluginRegistry.getVisualizersForDatasource(ds));
 
 	// Get the active visualizer and its icon for the header
-	const activeVisualizer = $derived(applicableVisualizers.find((v) => v.visualizer.id === activeTab));
+	const activeVisualizer = $derived(
+		applicableVisualizers.find((v) => v.visualizer.id === activeTab)
+	);
 	const activeVisualizerIcon = $derived(
 		resolvePluginIcon(activeVisualizer?.visualizer.icon) ||
-		applicableVisualizers.find((v) => v.visualizer.id === 'table')?.visualizer.icon || ''
+			applicableVisualizers.find((v) => v.visualizer.id === 'table')?.visualizer.icon ||
+			''
 	);
 
 	// Tab state - persist per datasource
@@ -346,97 +349,95 @@
 <div class="flex h-full flex-col">
 	<!-- Header with tabs -->
 	{#if showDatasourceHeader}
-	<div
-		class="sticky top-0 left-0 z-20 flex h-10 flex-shrink-0 flex-row items-center border-t border-ig-border-strong bg-ig-surface px-2 text-base font-normal"
-	>
-		<div class="flex h-6 w-6 items-center justify-center pr-2">
-			{@html activeVisualizerIcon}
-		</div>
-
-		<h2 class="px-1">{ds.name}</h2>
-
-		<!-- Plugin hooks for header controls (e.g., wireshark filter) -->
-		<div class="flex-1 flex items-center justify-center">
-			<PluginHookRenderer
-				hookId="datasource:header"
-				scopes={['builtin']}
-				props={{ ds, activeTab }}
-			/>
-		</div>
-
-		{#if applicableVisualizers.length > 1}
-			<div class="flex flex-row rounded-ig-sm bg-ig-surface-raised p-0.5">
-				<!-- Render tabs for all applicable visualizers from registry -->
-				{#each applicableVisualizers as visualizer (visualizer.id)}
-					{@const tabId = visualizer.visualizer.id}
-					{@const isActive = activeTab === tabId}
-					<button
-						class="flex items-center gap-1 rounded-ig-sm px-2 py-0.5 text-xs transition-colors"
-						class:bg-ig-border-strong={isActive}
-						class:text-ig-text={isActive}
-						class:text-ig-text-muted={!isActive}
-						class:hover:text-ig-text-secondary={!isActive}
-						onclick={() => setTab(tabId)}
-					>
-						{@html resolvePluginIcon(visualizer.visualizer.icon)}
-						<span>{visualizer.visualizer.displayName}</span>
-					</button>
-				{/each}
-			</div>
-		{/if}
-
 		<div
-			class="relative"
-			use:clickOutside={{ enabled: menuOpen, onClickOutside: () => (menuOpen = false) }}
+			class="sticky top-0 left-0 z-20 flex h-10 flex-shrink-0 flex-row items-center border-t border-ig-border-strong bg-ig-surface px-2 text-base font-normal"
 		>
-			<button
-				bind:this={menuButton}
-				class="pl-2 hover:text-ig-text transition-colors"
-				class:text-ig-text-muted={activeTab !== 'table'}
-				class:hover:text-ig-text-secondary={activeTab !== 'table'}
-				onclick={() => (menuOpen = !menuOpen)}
-				title="Column visibility"
-				aria-label="Toggle column visibility menu"
-				aria-haspopup="menu"
-				aria-expanded={menuOpen}
-				aria-controls="column-menu"
-				disabled={activeTab !== 'table'}
-			>
-				{@html Dots}
-			</button>
-			{#if menuOpen && activeTab === 'table' && tableMenuController}
-				<div
-					id="column-menu"
-					role="menu"
-					aria-label="Column visibility options"
-					class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-ig-md border border-ig-border-strong bg-ig-surface shadow-xl"
-				>
-					<div
-						class="px-3 py-2 text-xs font-semibold text-ig-text-muted uppercase border-b border-ig-border"
-					>
-						Columns
-					</div>
-					<div class="py-1" role="group" aria-label="Column toggles">
-						{#each tableMenuController.toggleableFields as field (field.fullName)}
-							<label
-								class="flex items-center gap-2 px-3 py-1.5 hover:bg-ig-surface-raised cursor-pointer text-sm"
-							>
-								<input
-									type="checkbox"
-									checked={tableMenuController.isColumnVisible(field.fullName)}
-									onchange={() => tableMenuController?.toggleColumnVisibility(field.fullName)}
-									class="rounded-ig-sm border-ig-border-strong bg-ig-surface text-ig-primary focus:ring-ig-primary focus:ring-offset-0"
-								/>
-								<span class="text-ig-text truncate" title={field.fullName}
-									>{field.fullName}</span
-								>
-							</label>
-						{/each}
-					</div>
+			<div class="flex h-6 w-6 items-center justify-center pr-2">
+				{@html activeVisualizerIcon}
+			</div>
+
+			<h2 class="px-1">{ds.name}</h2>
+
+			<!-- Plugin hooks for header controls (e.g., wireshark filter) -->
+			<div class="flex-1 flex items-center justify-center">
+				<PluginHookRenderer
+					hookId="datasource:header"
+					scopes={['builtin']}
+					props={{ ds, activeTab }}
+				/>
+			</div>
+
+			{#if applicableVisualizers.length > 1}
+				<div class="flex flex-row rounded-ig-sm bg-ig-surface-raised p-0.5">
+					<!-- Render tabs for all applicable visualizers from registry -->
+					{#each applicableVisualizers as visualizer (visualizer.id)}
+						{@const tabId = visualizer.visualizer.id}
+						{@const isActive = activeTab === tabId}
+						<button
+							class="flex items-center gap-1 rounded-ig-sm px-2 py-0.5 text-xs transition-colors"
+							class:bg-ig-border-strong={isActive}
+							class:text-ig-text={isActive}
+							class:text-ig-text-muted={!isActive}
+							class:hover:text-ig-text-secondary={!isActive}
+							onclick={() => setTab(tabId)}
+						>
+							{@html resolvePluginIcon(visualizer.visualizer.icon)}
+							<span>{visualizer.visualizer.displayName}</span>
+						</button>
+					{/each}
 				</div>
 			{/if}
+
+			<div
+				class="relative"
+				use:clickOutside={{ enabled: menuOpen, onClickOutside: () => (menuOpen = false) }}
+			>
+				<button
+					bind:this={menuButton}
+					class="pl-2 hover:text-ig-text transition-colors"
+					class:text-ig-text-muted={activeTab !== 'table'}
+					class:hover:text-ig-text-secondary={activeTab !== 'table'}
+					onclick={() => (menuOpen = !menuOpen)}
+					title="Column visibility"
+					aria-label="Toggle column visibility menu"
+					aria-haspopup="menu"
+					aria-expanded={menuOpen}
+					aria-controls="column-menu"
+					disabled={activeTab !== 'table'}
+				>
+					{@html Dots}
+				</button>
+				{#if menuOpen && activeTab === 'table' && tableMenuController}
+					<div
+						id="column-menu"
+						role="menu"
+						aria-label="Column visibility options"
+						class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-ig-md border border-ig-border-strong bg-ig-surface shadow-xl"
+					>
+						<div
+							class="px-3 py-2 text-xs font-semibold text-ig-text-muted uppercase border-b border-ig-border"
+						>
+							Columns
+						</div>
+						<div class="py-1" role="group" aria-label="Column toggles">
+							{#each tableMenuController.toggleableFields as field (field.fullName)}
+								<label
+									class="flex items-center gap-2 px-3 py-1.5 hover:bg-ig-surface-raised cursor-pointer text-sm"
+								>
+									<input
+										type="checkbox"
+										checked={tableMenuController.isColumnVisible(field.fullName)}
+										onchange={() => tableMenuController?.toggleColumnVisibility(field.fullName)}
+										class="rounded-ig-sm border-ig-border-strong bg-ig-surface text-ig-primary focus:ring-ig-primary focus:ring-offset-0"
+									/>
+									<span class="text-ig-text truncate" title={field.fullName}>{field.fullName}</span>
+								</label>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</div>
 		</div>
-	</div>
 	{/if}
 
 	<!-- Snapshot timeline and navigation (for array datasources in table/flamegraph/histogram view) -->
@@ -565,7 +566,10 @@
 				{isRunning}
 				{instanceID}
 				isActiveTab={activeTab === tabId}
-				multipleSnapshots={visualizer.visualizer.id === 'histogram' && selectedSnapshotIndices.size > 1 ? getSelectedSnapshots() : undefined}
+				multipleSnapshots={visualizer.visualizer.id === 'histogram' &&
+				selectedSnapshotIndices.size > 1
+					? getSelectedSnapshots()
+					: undefined}
 			/>
 		</div>
 	{/each}

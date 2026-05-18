@@ -656,7 +656,9 @@
 				{/snippet}
 
 				<div class="flex flex-col gap-4">
-					<div class="rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-3 font-mono text-xs">{command}</div>
+					<div class="rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-3 font-mono text-xs">
+						{command}
+					</div>
 					<div class="flex flex-row items-center">
 						<button
 							onclick={() => (commandType = 'ig')}
@@ -710,12 +712,15 @@
 						onclick={copyManifest}
 						class="cursor-pointer rounded-ig-sm p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
 						title="Copy to clipboard"
+						aria-label="Copy gadget manifest to clipboard"
 					>
 						{@html Copy}
 					</button>
 				{/snippet}
 
-				<div class="rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-3 font-mono text-xs whitespace-pre-wrap">
+				<div
+					class="rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-3 font-mono text-xs whitespace-pre-wrap"
+				>
 					{manifest}
 				</div>
 			</Panel>

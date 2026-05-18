@@ -9,7 +9,12 @@ import type { PluginType } from './plugin-system';
 import { PLUGIN_ENTRYPOINTS } from './plugin-system';
 
 // Re-export from plugin system modules
-export type { PluginType, PluginSource, PluginCapabilities, RegisteredPlugin } from './plugin-system';
+export type {
+	PluginType,
+	PluginSource,
+	PluginCapabilities,
+	RegisteredPlugin
+} from './plugin-system';
 export type { PluginStatus } from './plugin-system';
 export { PLUGIN_CAPABILITIES, PLUGIN_ENTRYPOINTS } from './plugin-system';
 export type {

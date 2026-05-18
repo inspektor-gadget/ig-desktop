@@ -339,8 +339,15 @@
 					onclick={clearSelection}
 					class="flex-shrink-0 text-ig-text-muted transition-colors hover:text-ig-text"
 					title="Clear selection"
+					aria-label="Clear selection"
 				>
-					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg
+						aria-hidden="true"
+						class="h-4 w-4"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
 						<path
 							stroke-linecap="round"
 							stroke-linejoin="round"
@@ -390,14 +397,13 @@
 						}}
 						class="w-full px-4 py-2 text-left transition-colors {isHighlighted
 							? 'bg-ig-surface-raised'
-							: 'hover:bg-ig-surface-raised'} {isSelected
-							? 'text-ig-primary'
-							: 'text-ig-text'}"
+							: 'hover:bg-ig-surface-raised'} {isSelected ? 'text-ig-primary' : 'text-ig-text'}"
 					>
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2">
 								{#if option.isRecent}
 									<svg
+										aria-hidden="true"
 										class="h-3.5 w-3.5 text-ig-text-muted"
 										fill="none"
 										stroke="currentColor"
@@ -414,7 +420,7 @@
 								<span>{option.label || option.value}</span>
 							</div>
 							{#if isSelected}
-								<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+								<svg aria-hidden="true" class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
 									<path
 										fill-rule="evenodd"
 										d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"

@@ -282,9 +282,7 @@
 			{@const hiddenFields = getHiddenFields(ds)}
 
 			<!-- Datasource Header (sticky at top of scroll area) -->
-			<div
-				class="sticky top-0 z-20 border-b border-ig-border bg-ig-surface-raised"
-			>
+			<div class="sticky top-0 z-20 border-b border-ig-border bg-ig-surface-raised">
 				<button
 					class="flex w-full cursor-pointer items-center gap-2 px-2 py-1.5 text-left transition-colors hover:bg-ig-border"
 					onclick={() => toggleDataSource(ds.name)}
@@ -375,18 +373,14 @@
 						{node.field.name}
 					</span>
 					{#if node.field.kind}
-						<span class="shrink-0 text-[10px] text-ig-text-muted"
-							>{node.field.kind}</span
-						>
+						<span class="shrink-0 text-[10px] text-ig-text-muted">{node.field.kind}</span>
 					{/if}
 					{#if node.field.annotations?.description}
 						<span class="truncate text-[10px] text-ig-text-muted"
 							>— {node.field.annotations.description}</span
 						>
 					{/if}
-					<span class="shrink-0 text-[10px] text-ig-text-muted"
-						>({node.children.length})</span
-					>
+					<span class="shrink-0 text-[10px] text-ig-text-muted">({node.children.length})</span>
 				</div>
 			</div>
 		</div>
@@ -470,8 +464,7 @@
 					>
 				{/if}
 				{#if hasFlag(flags, 0x04)}
-					<span class="rounded-ig-sm bg-ig-surface-raised px-1 py-0 text-[9px]">hidden</span
-					>
+					<span class="rounded-ig-sm bg-ig-surface-raised px-1 py-0 text-[9px]">hidden</span>
 				{/if}
 				{#if hasFlag(flags, 0x08)}
 					<span class="rounded-ig-sm bg-blue-200/60 px-1 py-0 text-[9px] dark:bg-blue-800/60"
@@ -484,7 +477,9 @@
 					>
 				{/if}
 				{#if hasFlag(flags, 0x20)}
-					<span class="rounded-ig-sm bg-red-200/60 px-1 py-0 text-[9px] dark:bg-red-800/60">unref</span>
+					<span class="rounded-ig-sm bg-red-200/60 px-1 py-0 text-[9px] dark:bg-red-800/60"
+						>unref</span
+					>
 				{/if}
 			</div>
 		{/if}

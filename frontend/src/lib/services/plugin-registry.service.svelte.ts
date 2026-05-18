@@ -161,8 +161,7 @@ function matchesVisualizerConditions(ds: Datasource, conditions: VisualizerCondi
 	if (conditions.hasFieldAnnotation) {
 		for (const [fieldPattern, annotations] of Object.entries(conditions.hasFieldAnnotation)) {
 			const matchingFields = ds.fields.filter(
-				(f) =>
-					matchesPattern(f.fullName, fieldPattern) || matchesPattern(f.name, fieldPattern)
+				(f) => matchesPattern(f.fullName, fieldPattern) || matchesPattern(f.name, fieldPattern)
 			);
 			if (matchingFields.length === 0) return false;
 
@@ -177,8 +176,7 @@ function matchesVisualizerConditions(ds: Datasource, conditions: VisualizerCondi
 	if (conditions.hasFieldTag) {
 		for (const [fieldPattern, tagToMatch] of Object.entries(conditions.hasFieldTag)) {
 			const matchingFields = ds.fields.filter(
-				(f) =>
-					matchesPattern(f.fullName, fieldPattern) || matchesPattern(f.name, fieldPattern)
+				(f) => matchesPattern(f.fullName, fieldPattern) || matchesPattern(f.name, fieldPattern)
 			);
 			if (matchingFields.length === 0) return false;
 
@@ -281,7 +279,8 @@ class PluginRegistry {
 	/** Data processor plugins sorted by execution order (legacy support) */
 	readonly dataProcessors = $derived.by(() => {
 		const list = [...this.plugins.values()].filter(
-			(p) => p.manifest.dataProcessors && p.manifest.dataProcessors.length > 0 && p.status === 'ready'
+			(p) =>
+				p.manifest.dataProcessors && p.manifest.dataProcessors.length > 0 && p.status === 'ready'
 		);
 		return list.sort((a, b) => {
 			const orderA = a.manifest.dataProcessors?.[0]?.order ?? 0;
@@ -326,7 +325,7 @@ class PluginRegistry {
 				if (!component) {
 					console.error(
 						`Plugin '${manifest.id}': Missing component for visualizer '${viz.id}'. ` +
-						`Expected key '${viz.id}' in components.visualizers.`
+							`Expected key '${viz.id}' in components.visualizers.`
 					);
 					continue;
 				}
@@ -348,7 +347,7 @@ class PluginRegistry {
 				if (!component) {
 					console.error(
 						`Plugin '${manifest.id}': Missing component for param input '${paramInput.id}'. ` +
-						`Expected key '${paramInput.id}' in components.paramInputs.`
+							`Expected key '${paramInput.id}' in components.paramInputs.`
 					);
 					continue;
 				}
@@ -370,7 +369,7 @@ class PluginRegistry {
 				if (!component) {
 					console.error(
 						`Plugin '${manifest.id}': Missing component for inspector tab '${tab.id}'. ` +
-						`Expected key '${tab.id}' in components.inspectorTabs.`
+							`Expected key '${tab.id}' in components.inspectorTabs.`
 					);
 					continue;
 				}
@@ -392,7 +391,7 @@ class PluginRegistry {
 				if (!component) {
 					console.error(
 						`Plugin '${manifest.id}': Missing component for hook '${hook.hookId}'. ` +
-						`Expected key '${hook.hookId}' in components.hooks.`
+							`Expected key '${hook.hookId}' in components.hooks.`
 					);
 					continue;
 				}
@@ -414,7 +413,7 @@ class PluginRegistry {
 				if (!component) {
 					console.error(
 						`Plugin '${manifest.id}': Missing component for route '${route.path}'. ` +
-						`Expected key '${route.path}' in components.routes.`
+							`Expected key '${route.path}' in components.routes.`
 					);
 					continue;
 				}
@@ -954,8 +953,16 @@ class PluginRegistry {
 	 */
 	getDataProcessorsForStage(
 		stage: 'pre-buffer' | 'post-buffer'
-	): Array<RegisteredPlugin & { dataProcessor: import('$lib/types/plugin-manifest').DataProcessorCapability }> {
-		const result: Array<RegisteredPlugin & { dataProcessor: import('$lib/types/plugin-manifest').DataProcessorCapability }> = [];
+	): Array<
+		RegisteredPlugin & {
+			dataProcessor: import('$lib/types/plugin-manifest').DataProcessorCapability;
+		}
+	> {
+		const result: Array<
+			RegisteredPlugin & {
+				dataProcessor: import('$lib/types/plugin-manifest').DataProcessorCapability;
+			}
+		> = [];
 
 		for (const plugin of this.plugins.values()) {
 			if (plugin.status !== 'ready' || !plugin.manifest.dataProcessors) continue;
@@ -1092,10 +1099,7 @@ class PluginRegistry {
 	 */
 	getPluginsWithSettings(): RegisteredPlugin[] {
 		return [...this.plugins.values()].filter(
-			(p) =>
-				p.source === 'local' &&
-				p.manifest.settings &&
-				p.manifest.settings.length > 0
+			(p) => p.source === 'local' && p.manifest.settings && p.manifest.settings.length > 0
 		);
 	}
 

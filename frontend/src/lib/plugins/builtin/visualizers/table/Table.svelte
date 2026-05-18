@@ -923,10 +923,22 @@
 				oncopy={handleCopy}
 			>
 				{#snippet header(cols, { startResize, resizingIndex, setHeaderRow, resetColumnWidth })}
-					<tr class="bg-ig-surface" use:setHeaderRow>
+					<tr class="bg-ig-surface" use:setHeaderRow aria-label="Column headers">
 						{#each visibleFields as field, i}
 							{@const isSorted = sortColumn === field.fullName}
 							<th
+								scope="col"
+								aria-sort={canSort
+									? isSorted
+										? sortDirection === 'asc'
+											? 'ascending'
+											: 'descending'
+										: 'none'
+									: undefined}
+								tabindex={canSort ? 0 : undefined}
+								aria-label={field.annotations?.description
+									? `${field.fullName}: ${field.annotations.description}${canSort ? ' (sortable)' : ''}`
+									: `${field.fullName}${canSort ? ' (sortable)' : ''}`}
 								class="relative border-r border-r-ig-border p-2 text-xs font-normal last:border-r-0 overflow-hidden select-none"
 								class:cursor-pointer={canSort}
 								class:hover:bg-ig-surface-raised={canSort}
@@ -934,6 +946,14 @@
 									if (Date.now() - lastResizeEnd < 200) return;
 									handleColumnSort(field.fullName);
 								}}
+								onkeydown={canSort
+									? (e) => {
+											if (e.key === 'Enter' || e.key === ' ') {
+												e.preventDefault();
+												handleColumnSort(field.fullName);
+											}
+										}
+									: undefined}
 							>
 								<div
 									title={canSort
@@ -980,6 +1000,9 @@
 									<div
 										class="resize-handle"
 										class:active={resizingIndex === i}
+										role="separator"
+										aria-orientation="vertical"
+										aria-label={`Resize column ${field.fullName}`}
 										onpointerdown={(e) => {
 											const onDone = () => {
 												lastResizeEnd = Date.now();
@@ -1008,6 +1031,7 @@
 							class:text-right={columns[i]?.align === 'right'}
 							class:text-center={columns[i]?.align === 'center'}
 							class:ig-cell-clickable={isClickable && onCellClick}
+							role="gridcell"
 							onclick={(e) => {
 								if (isClickable && onCellClick) {
 									e.stopPropagation();

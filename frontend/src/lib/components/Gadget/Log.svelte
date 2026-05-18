@@ -127,9 +127,7 @@
 
 <svelte:document onclick={handleClickOutside} />
 
-<div
-	class="sticky left-0 flex flex-row items-center justify-between bg-ig-surface px-2 py-1.5"
->
+<div class="sticky left-0 flex flex-row items-center justify-between bg-ig-surface px-2 py-1.5">
 	<div class="flex flex-row items-center">
 		<!-- Collapse/Expand Chevron -->
 		<button
@@ -138,6 +136,7 @@
 			aria-label={collapsed ? 'Expand logs' : 'Collapse logs'}
 		>
 			<svg
+				aria-hidden="true"
 				class="h-4 w-4 transition-transform duration-200 {collapsed ? '' : 'rotate-90'}"
 				viewBox="0 0 20 20"
 				fill="currentColor"
@@ -153,14 +152,26 @@
 		<h2 class="text-sm font-medium">Log</h2>
 		{#if hasErrors}
 			<!-- Red octagon (stop sign) for errors -->
-			<svg class="ml-2 h-4 w-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+			<svg
+				role="img"
+				aria-label="Logs contain errors"
+				class="ml-2 h-4 w-4 text-red-500"
+				viewBox="0 0 24 24"
+				fill="currentColor"
+			>
 				<path
 					d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86L7.86 2zM12 8a1 1 0 00-1 1v4a1 1 0 002 0V9a1 1 0 00-1-1zm0 8a1 1 0 100-2 1 1 0 000 2z"
 				/>
 			</svg>
 		{:else if hasWarnings}
 			<!-- Orange warning triangle -->
-			<svg class="ml-2 h-4 w-4 text-orange-400" viewBox="0 0 24 24" fill="currentColor">
+			<svg
+				role="img"
+				aria-label="Logs contain warnings"
+				class="ml-2 h-4 w-4 text-orange-400"
+				viewBox="0 0 24 24"
+				fill="currentColor"
+			>
 				<path
 					d="M12 2L1 21h22L12 2zm0 4.5l7.53 13.5H4.47L12 6.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"
 				/>
@@ -178,7 +189,7 @@
 				>
 					<span class="h-4 w-4">{@html Filter}</span>
 					<span>Severity</span>
-					<svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+					<svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
 						<path
 							fill-rule="evenodd"
 							d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
@@ -212,6 +223,7 @@
 				class="w-48 rounded-ig-md border border-ig-border bg-ig-surface-raised px-3 py-1.5 text-sm text-ig-text transition-colors placeholder:text-ig-text-muted focus:border-ig-primary focus:ring-2 focus:ring-ig-primary-muted focus:outline-none"
 				type="text"
 				placeholder="Search logs..."
+				aria-label="Search logs"
 				bind:value={search}
 			/>
 			<!-- Clear Logs Button -->
@@ -219,6 +231,7 @@
 				onclick={clearLogs}
 				class="flex items-center gap-1.5 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-3 py-1.5 text-sm text-ig-text-secondary transition-colors hover:border-red-400 dark:hover:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none"
 				title="Clear logs"
+				aria-label="Clear logs"
 			>
 				<span class="h-4 w-4">{@html Trash}</span>
 			</button>

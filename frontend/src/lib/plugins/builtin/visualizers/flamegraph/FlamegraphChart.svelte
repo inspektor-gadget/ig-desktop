@@ -266,7 +266,7 @@
 	>
 		<!-- Search box -->
 		<div
-			class="flex items-center gap-1 px-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-ig-sm"
+			class="flex items-center gap-1 px-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-ig-sm focus-within:border-ig-primary focus-within:ring-2 focus-within:ring-ig-primary-muted"
 		>
 			<span class="w-3.5 h-3.5 text-gray-400 flex-shrink-0">{@html SearchIcon}</span>
 			<input

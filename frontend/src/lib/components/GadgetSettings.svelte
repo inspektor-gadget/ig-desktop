@@ -63,9 +63,7 @@
 		onclick={onclose}
 		title="Close Inspector"
 	>
-		<span class="rounded-ig-sm p-1 transition-colors hover:bg-ig-border"
-			>{@html Close}</span
-		>
+		<span class="rounded-ig-sm p-1 transition-colors hover:bg-ig-border">{@html Close}</span>
 	</button>
 </div>
 
