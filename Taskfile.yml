@@ -50,7 +50,7 @@ tasks:
     deps:
       - frontend:build
     cmds:
-      - go run ./cmd/igd --listen :8080 --assets frontend/build
+      - go run -tags production,withoutebpf ./cmd/igd --listen :8080 --assets frontend/build
 
   frontend:build:
     summary: Builds the frontend
