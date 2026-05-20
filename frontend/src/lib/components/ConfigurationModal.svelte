@@ -12,6 +12,8 @@
 	import Button from './Button.svelte';
 	import type { Component } from 'svelte';
 	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
+	import { t, getLanguage, setLanguage } from '$lib/i18n/index.svelte';
+	import { supportedLanguages } from '$lib/i18n/supported-languages';
 	// Import to ensure plugin config service is initialized
 	import '$lib/services/plugin-config.service';
 
@@ -80,7 +82,7 @@
 	}
 </script>
 
-<BaseModal bind:open title="Settings" icon={Cog} size="lg" onClose={handleClose}>
+<BaseModal bind:open title={t('Settings')} icon={Cog} size="lg" onClose={handleClose}>
 	<!-- Content area with sidebar and panel -->
 	<div class="-mx-6 -my-6 flex h-[500px] gap-0">
 		<!-- Left Sidebar - Categories -->
@@ -111,7 +113,7 @@
 						<div class="space-y-6">
 							<div>
 								<h3 class="mb-4 text-base font-semibold text-gray-800 dark:text-gray-200">
-									{category.name} Settings
+									{t('{{category}} Settings', { category: category.name })}
 								</h3>
 
 								<div class="space-y-4">
@@ -142,6 +144,19 @@
 	</div>
 
 	{#snippet footer()}
-		<Button variant="secondary" onclick={handleClose}>Close</Button>
+		<div class="mr-auto flex items-center gap-2">
+			<label for="ig-language-select" class="text-sm text-ig-text-secondary">{t('Language')}</label>
+			<select
+				id="ig-language-select"
+				value={getLanguage()}
+				onchange={(e) => setLanguage(e.currentTarget.value)}
+				class="rounded-ig-sm border border-ig-border-strong bg-ig-surface-raised px-2 py-1 text-sm text-ig-text focus:border-ig-primary focus:ring-ig-primary-muted focus:outline-none"
+			>
+				{#each Object.entries(supportedLanguages) as [code, name] (code)}
+					<option value={code}>{name}</option>
+				{/each}
+			</select>
+		</div>
+		<Button variant="secondary" onclick={handleClose}>{t('Close')}</Button>
 	{/snippet}
 </BaseModal>

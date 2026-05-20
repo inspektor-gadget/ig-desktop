@@ -1,1 +1,27 @@
-{}
+{
+	"Any personal information": "Any personal information",
+	"Cancel": "Cancel",
+	"Close": "Close",
+	"Confirm": "Confirm",
+	"Enable analytics": "Enable analytics",
+	"Help Improve Inspektor Gadget": "Help Improve Inspektor Gadget",
+	"Language": "Language",
+	"No, thanks": "No, thanks",
+	"OK": "OK",
+	"Parameters or data from gadget runs": "Parameters or data from gadget runs",
+	"Settings": "Settings",
+	"Third-party gadget URLs": "Third-party gadget URLs",
+	"What we collect:": "What we collect:",
+	"What we don't collect:": "What we don't collect:",
+	"Which official gadgets you run (only from the Inspektor Gadget project)": "Which official gadgets you run (only from the Inspektor Gadget project)",
+	"Would you like to help improve Inspektor Gadget Desktop by sharing anonymous usage data?": "Would you like to help improve Inspektor Gadget Desktop by sharing anonymous usage data?",
+	"You can change this setting anytime in Settings under General.": "You can change this setting anytime in Settings under General.",
+	"just now": "just now",
+	"{{category}} Settings": "{{category}} Settings",
+	"{{count}} day ago_one": "{{count}} day ago",
+	"{{count}} day ago_other": "{{count}} days ago",
+	"{{count}} hour ago_one": "{{count}} hour ago",
+	"{{count}} hour ago_other": "{{count}} hours ago",
+	"{{count}} minute ago_one": "{{count}} minute ago",
+	"{{count}} minute ago_other": "{{count}} minutes ago"
+}

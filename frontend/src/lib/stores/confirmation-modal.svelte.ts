@@ -3,6 +3,8 @@
  * Provides a promise-based API for showing confirmation dialogs
  */
 
+import { t } from '$lib/i18n/index.svelte';
+
 type ConfirmationOptions = {
 	message: string;
 	confirmLabel?: string;
@@ -57,9 +59,9 @@ class ConfirmationModalStore {
 			this.state = {
 				isOpen: true,
 				message: options.message,
-				confirmLabel: options.confirmLabel || 'OK',
-				cancelLabel: options.cancelLabel || 'Cancel',
-				title: options.title || 'Confirm',
+				confirmLabel: options.confirmLabel || t('OK'),
+				cancelLabel: options.cancelLabel || t('Cancel'),
+				title: options.title || t('Confirm'),
 				resolve
 			};
 		});

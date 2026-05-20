@@ -3,6 +3,7 @@
 	import Button from './Button.svelte';
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import { analyticsService } from '$lib/services/analytics.service.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		open?: boolean;
@@ -31,36 +32,38 @@
 
 <BaseModal
 	bind:open
-	title="Help Improve Inspektor Gadget"
+	title={t('Help Improve Inspektor Gadget')}
 	icon={analyticsIcon}
 	size="sm"
 	onClose={handleDecline}
 >
 	<div class="space-y-4">
 		<p class="text-gray-700 dark:text-gray-300">
-			Would you like to help improve Inspektor Gadget Desktop by sharing anonymous usage data?
+			{t('Would you like to help improve Inspektor Gadget Desktop by sharing anonymous usage data?')}
 		</p>
 		<div
 			class="rounded-ig-md border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 p-3 text-sm text-gray-600 dark:text-gray-400"
 		>
-			<p class="mb-2 font-medium text-gray-700 dark:text-gray-300">What we collect:</p>
+			<p class="mb-2 font-medium text-gray-700 dark:text-gray-300">{t('What we collect:')}</p>
 			<ul class="ml-4 list-disc space-y-1">
-				<li>Which official gadgets you run (only from the Inspektor Gadget project)</li>
+				<li>{t('Which official gadgets you run (only from the Inspektor Gadget project)')}</li>
 			</ul>
-			<p class="mt-3 mb-2 font-medium text-gray-700 dark:text-gray-300">What we don't collect:</p>
+			<p class="mt-3 mb-2 font-medium text-gray-700 dark:text-gray-300">
+				{t("What we don't collect:")}
+			</p>
 			<ul class="ml-4 list-disc space-y-1">
-				<li>Any personal information</li>
-				<li>Third-party gadget URLs</li>
-				<li>Parameters or data from gadget runs</li>
+				<li>{t('Any personal information')}</li>
+				<li>{t('Third-party gadget URLs')}</li>
+				<li>{t('Parameters or data from gadget runs')}</li>
 			</ul>
 		</div>
 		<p class="text-sm text-gray-500 dark:text-gray-500">
-			You can change this setting anytime in Settings under General.
+			{t('You can change this setting anytime in Settings under General.')}
 		</p>
 	</div>
 
 	{#snippet footer()}
-		<Button variant="secondary" onclick={handleDecline}>No, thanks</Button>
-		<Button variant="primary" onclick={handleEnable}>Enable analytics</Button>
+		<Button variant="secondary" onclick={handleDecline}>{t('No, thanks')}</Button>
+		<Button variant="primary" onclick={handleEnable}>{t('Enable analytics')}</Button>
 	{/snippet}
 </BaseModal>
