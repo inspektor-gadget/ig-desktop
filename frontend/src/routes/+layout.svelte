@@ -53,7 +53,8 @@
 	import { registerBuiltinPlugins } from '$lib/plugins/builtin';
 	import { loadLocalPlugins } from '$lib/services/plugin-loader.service';
 	import PluginHookRenderer from '$lib/components/PluginHookRenderer.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import { t, getLanguage } from '$lib/i18n/index.svelte';
+	import { rtlLanguages } from '$lib/i18n/supported-languages';
 
 	let { children } = $props();
 
@@ -171,6 +172,13 @@
 	// Apply theme changes reactively
 	$effect(() => {
 		themeService.applyTheme();
+	});
+
+	// Keep <html> lang/dir in sync with the active language (RTL support).
+	$effect(() => {
+		const lang = getLanguage();
+		document.documentElement.lang = lang;
+		document.documentElement.dir = rtlLanguages.has(lang) ? 'rtl' : 'ltr';
 	});
 
 	let modalError: string | null = $state(null);

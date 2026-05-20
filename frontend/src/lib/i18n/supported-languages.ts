@@ -7,5 +7,16 @@
  */
 export const supportedLanguages: Record<string, string> = {
 	en: 'English',
-	de: 'Deutsch'
+	de: 'Deutsch',
+	es: 'Español',
+	fr: 'Français',
+	hi: 'हिन्दी',
+	it: 'Italiano',
+	ro: 'Română',
+	ru: 'Русский',
+	tr: 'Türkçe',
+	ur: 'اردو'
 };
+
+/** Language codes that render right-to-left. */
+export const rtlLanguages = new Set<string>(['ur']);
