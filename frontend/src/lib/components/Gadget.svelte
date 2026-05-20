@@ -577,6 +577,9 @@
 				{#if !logCollapsed}
 					<div
 						class="h-2 cursor-row-resize touch-none bg-ig-border-strong select-none"
+						role="separator"
+						aria-orientation="horizontal"
+						aria-label={t('Resize log panel')}
 						onpointerdown={resize}
 					></div>
 				{/if}
@@ -592,6 +595,9 @@
 		{#if config.inspector && showInspector}
 			<div
 				class="w-1 cursor-col-resize touch-none border-r-1 border-r-ig-border-strong bg-ig-border-strong select-none"
+				role="separator"
+				aria-orientation="vertical"
+				aria-label={t('Resize inspector panel')}
 				onpointerdown={resizeSidebar}
 			></div>
 			<div

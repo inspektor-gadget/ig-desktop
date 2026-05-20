@@ -430,6 +430,8 @@
 	"Reset zoom": "Reset zoom",
 	"Reset zoom (Escape)": "Reset zoom (Escape)",
 	"Resize column {{field}}": "Resize column {{field}}",
+	"Resize inspector panel": "Resize inspector panel",
+	"Resize log panel": "Resize log panel",
 	"Resources & Community": "Resources & Community",
 	"Restore window": "Restore window",
 	"Retry": "Retry",

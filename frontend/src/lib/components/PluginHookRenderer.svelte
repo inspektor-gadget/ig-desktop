@@ -28,5 +28,6 @@
 </script>
 
 {#each hooks as hook (hook.id)}
-	<svelte:component this={hook.component} {...props} {hookId} pluginId={hook.manifest.id} />
+	{@const Component = hook.component}
+	<Component {...props} {hookId} pluginId={hook.manifest.id} />
 {/each}

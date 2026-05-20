@@ -52,7 +52,7 @@
 	let isOpen = $state(false);
 	let highlightedIndex = $state(0);
 	let inputRef: HTMLInputElement;
-	let dropdownRef: HTMLDivElement;
+	let dropdownRef = $state<HTMLDivElement>();
 
 	// Convert value to array for consistent handling
 	const selectedValues = $derived(

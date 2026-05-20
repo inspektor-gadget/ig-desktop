@@ -253,6 +253,8 @@
 	}
 </script>
 
+<!-- role="application" container: tabindex + keydown is the intended ARIA application pattern -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
 <div
 	class="flex h-full w-full flex-col relative outline-none overflow-hidden focus:outline-2 focus:outline-blue-500 focus:-outline-offset-2"
 	bind:this={containerRef}
@@ -432,7 +434,8 @@
 					{@const yPx = depth * (ROW_HEIGHT + ROW_GAP)}
 					{@const showText = widthPx >= TEXT_MIN_WIDTH_PX}
 					{@const isRoot = depth === 0}
-					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<!-- Keyboard navigation for flamegraph nodes is handled by the parent role="application" container -->
+					<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
 					<g
 						class="cursor-pointer transition-opacity duration-100"
 						class:!cursor-default={isRoot}

@@ -16,9 +16,9 @@
 		}
 	}
 
-	let element: HTMLDivElement;
+	let element = $state<HTMLDivElement>();
 	let dropdownOpen = $state(false);
-	let dropdownButton: HTMLButtonElement;
+	let dropdownButton = $state<HTMLButtonElement>();
 
 	// Collapsed state - default collapsed, persisted globally
 	const savedCollapsed = preferences.get('log-panel-collapsed') as boolean | undefined;

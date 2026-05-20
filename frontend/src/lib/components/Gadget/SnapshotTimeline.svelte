@@ -279,6 +279,8 @@
 	onwheel={handleWheel}
 >
 	<div class="scroll-container" bind:this={scrollContainer} tabindex="-1">
+		<!-- Drag-select layer; keyboard navigation + ARIA roles are handled by the parent role="listbox" container -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<svg
 			bind:this={svgElement}
 			{height}

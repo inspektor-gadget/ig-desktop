@@ -873,7 +873,7 @@
 							{/each}
 						</colgroup>
 					{/if}
-					<tbody role="rowgroup">
+					<tbody>
 						{#each visibleItems as item, i (scrollState.startIndex + i)}
 							{@const actualIndex = scrollState.startIndex + i}
 							{@const isFocused = actualIndex === focusedIndex}

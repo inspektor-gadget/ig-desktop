@@ -560,9 +560,9 @@
 	<!-- Render visualizers from registry (excludes table which is always shown separately) -->
 	{#each applicableVisualizers.filter((v) => v.visualizer.id !== 'table') as visualizer (visualizer.id)}
 		{@const tabId = visualizer.visualizer.id}
+		{@const Component = visualizer.component}
 		<div class="min-h-0 flex-1" class:hidden={activeTab !== tabId}>
-			<svelte:component
-				this={visualizer.component}
+			<Component
 				{ds}
 				events={hasSnapshots ? undefined : events}
 				snapshotData={snapshotEvents}
@@ -580,9 +580,9 @@
 	<!-- Table is always rendered (fallback visualizer) with extended props -->
 	{#if applicableVisualizers.find((v) => v.visualizer.id === 'table')}
 		{@const tableVisualizer = applicableVisualizers.find((v) => v.visualizer.id === 'table')}
+		{@const TableComponent = tableVisualizer?.component}
 		<div class="min-h-0 flex-1" class:hidden={activeTab !== 'table'}>
-			<svelte:component
-				this={tableVisualizer?.component}
+			<TableComponent
 				{ds}
 				events={hasSnapshots ? undefined : events}
 				snapshotData={snapshotEvents}

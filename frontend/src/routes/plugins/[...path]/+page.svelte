@@ -82,12 +82,8 @@
 			</div>
 		</div>
 	{:else if routeMatch}
-		<svelte:component
-			this={routeMatch.route.component}
-			params={routeMatch.params}
-			pluginId={fullPluginId}
-			routePath={data.routePath}
-		/>
+		{@const RouteComponent = routeMatch.route.component}
+		<RouteComponent params={routeMatch.params} pluginId={fullPluginId} routePath={data.routePath} />
 	{:else}
 		<div class="flex flex-1 items-center justify-center">
 			<Spinner message={t('Loading...')} />

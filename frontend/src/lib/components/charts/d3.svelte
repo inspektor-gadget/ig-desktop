@@ -84,8 +84,7 @@
 
 <style>
 	.chart,
-	h2,
-	p {
+	h2 {
 		width: 100%;
 		margin-left: auto;
 		margin-right: auto;
