@@ -822,16 +822,14 @@
 									role="columnheader"
 								>
 									{column.label}
-									{#if i < columns.length - 1}
-										<div
-											class="resize-handle"
-											class:active={resizingIndex === i}
-											role="separator"
-											aria-orientation="vertical"
-											aria-label={`Resize column ${column.label}`}
-											onpointerdown={(e) => startResize(e, i)}
-										></div>
-									{/if}
+									<div
+										class="resize-handle"
+										class:active={resizingIndex === i}
+										role="separator"
+										aria-orientation="vertical"
+										aria-label={`Resize column ${column.label}`}
+										onpointerdown={(e) => startResize(e, i)}
+									></div>
 								</th>
 							{/each}
 						</tr>
@@ -932,6 +930,8 @@
 	.virtual-table-body {
 		flex: 1;
 		overflow: auto;
+		/* Prevent rubber-band/overscroll and scroll-chaining to parents */
+		overscroll-behavior: none;
 		position: relative;
 		outline: none;
 		/* Prevent text selection - interferes with row multi-select */

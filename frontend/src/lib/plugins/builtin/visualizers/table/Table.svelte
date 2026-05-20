@@ -986,28 +986,26 @@
 										</span>
 									{/if}
 								</div>
-								{#if i < visibleFields.length - 1}
-									<div
-										class="resize-handle"
-										class:active={resizingIndex === i}
-										role="separator"
-										aria-orientation="vertical"
-										aria-label={t('Resize column {{field}}', { field: field.fullName })}
-										onpointerdown={(e) => {
-											const onDone = () => {
-												lastResizeEnd = Date.now();
-												document.removeEventListener('pointerup', onDone);
-											};
-											document.addEventListener('pointerup', onDone, { once: true });
-											startResize(e, i);
-										}}
-										oncontextmenu={(e) => {
-											e.preventDefault();
-											e.stopPropagation();
-											resetColumnWidth(i);
-										}}
-									></div>
-								{/if}
+								<div
+									class="resize-handle"
+									class:active={resizingIndex === i}
+									role="separator"
+									aria-orientation="vertical"
+									aria-label={t('Resize column {{field}}', { field: field.fullName })}
+									onpointerdown={(e) => {
+										const onDone = () => {
+											lastResizeEnd = Date.now();
+											document.removeEventListener('pointerup', onDone);
+										};
+										document.addEventListener('pointerup', onDone, { once: true });
+										startResize(e, i);
+									}}
+									oncontextmenu={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										resetColumnWidth(i);
+									}}
+								></div>
 							</th>
 						{/each}
 					</tr>
