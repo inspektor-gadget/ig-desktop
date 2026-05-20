@@ -5,6 +5,7 @@
 	import Select from '$lib/components/forms/Select.svelte';
 	import Input from '$lib/components/forms/Input.svelte';
 	import type { GadgetParam, ParamConfig, GadgetInfo } from '$lib/types';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface FieldInfo {
 		ds: string;
@@ -178,7 +179,7 @@
 			class="flex cursor-pointer flex-row items-center gap-2 rounded-ig-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-700"
 			onclick={addFilter}
 		>
-			<span>Add Filter</span>
+			<span>{t('Add Filter')}</span>
 		</button>
 	</div>
 </div>

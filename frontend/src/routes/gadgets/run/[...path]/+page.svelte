@@ -29,6 +29,7 @@
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import { currentSessionStore } from '$lib/stores/current-session.svelte';
 	import { features } from '$lib/config/app-mode';
+	import { t } from '$lib/i18n/index.svelte';
 
 	// Redirect to home if running gadgets is not allowed (demo mode)
 	onMount(() => {
@@ -178,7 +179,7 @@
 			.request({ cmd: 'getGadgetInfo', data: { url: data.url, environmentID: environmentID } })
 			.then((res: any) => {
 				if (!res) {
-					error = 'Could not fetch gadget information. Is the given URL correct?';
+					error = t('Could not fetch gadget information. Is the given URL correct?');
 					originalError = null;
 					return;
 				}
@@ -189,8 +190,9 @@
 			.catch((err: any) => {
 				console.error('Failed to fetch gadget information:', err);
 				originalError = err?.message || String(err);
-				error =
-					'Failed to fetch gadget information. Please check your environment connection and try again.';
+				error = t(
+					'Failed to fetch gadget information. Please check your environment connection and try again.'
+				);
 				gadgetInfo = null;
 			});
 	});
@@ -291,7 +293,7 @@
 			if (detached) {
 				// Show info toast for headless instances (success confirmed when instance appears in list)
 				const displayName = instanceName || 'Unnamed instance';
-				toastStore.info(`Starting headless instance "${displayName}"...`, 3000);
+				toastStore.info(t('Starting headless instance "{{displayName}}"...', { displayName }), 3000);
 				goto(resolve(`/env/${environmentID}`));
 			} else {
 				goto(resolve(`/env/${environmentID}/running/${res.id}`));
@@ -300,10 +302,12 @@
 			// Show error toast
 			const errorMessage = err?.message || err?.toString() || 'Unknown error';
 			toastStore.error(
-				`Failed to start ${detached ? 'headless instance' : 'gadget'}: ${errorMessage}`,
+				detached
+					? t('Failed to start headless instance: {{errorMessage}}', { errorMessage })
+					: t('Failed to start gadget: {{errorMessage}}', { errorMessage }),
 				7000,
 				{
-					label: 'Retry',
+					label: t('Retry'),
 					onClick: () => runGadget()
 				}
 			);
@@ -324,7 +328,7 @@
 		<button
 			onclick={() => history.back()}
 			class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
-			title="Go back"
+			title={t('Go back')}
 		>
 			{@html ChevronLeft}
 		</button>
@@ -348,7 +352,7 @@
 				bind:value={environmentID}
 				class="col-start-1 row-start-1 appearance-none rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 pr-8 pl-3"
 			>
-				<option value="">Select environment</option>
+				<option value="">{t('Select environment')}</option>
 				{#each Object.entries(environments) as [id, environment]}
 					<option value={environment.id}>{environment.name}</option>
 				{/each}
@@ -378,18 +382,18 @@
 							</div>
 							<div class="flex-1">
 								<h3 class="text-lg font-semibold text-red-700 dark:text-red-300">
-									Failed to Load Gadget Information
+									{t('Failed to Load Gadget Information')}
 								</h3>
 								<p class="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
 
 								<div class="mt-4 text-sm text-red-700/80 dark:text-red-300/80">
-									<p class="font-semibold">Possible causes:</p>
+									<p class="font-semibold">{t('Possible causes:')}</p>
 									<ul class="mt-2 ml-4 list-disc space-y-1">
-										<li>The gadget URL is incorrect or the gadget does not exist</li>
-										<li>The gadget's signature was not accepted or present</li>
-										<li>The selected environment is not reachable or not running</li>
-										<li>Network connectivity issues between the app and the environment</li>
-										<li>The environment does not have access to the gadget registry</li>
+										<li>{t('The gadget URL is incorrect or the gadget does not exist')}</li>
+										<li>{t("The gadget's signature was not accepted or present")}</li>
+										<li>{t('The selected environment is not reachable or not running')}</li>
+										<li>{t('Network connectivity issues between the app and the environment')}</li>
+										<li>{t('The environment does not have access to the gadget registry')}</li>
 									</ul>
 								</div>
 
@@ -398,7 +402,7 @@
 										class="mt-3 rounded-ig-sm border border-red-300/50 dark:border-red-800/50 bg-red-100/30 dark:bg-red-900/30 p-3"
 									>
 										<p class="text-xs font-semibold text-red-700/90 dark:text-red-300/90">
-											Error details:
+											{t('Error details:')}
 										</p>
 										<p class="mt-1 font-mono text-xs text-red-600/80 dark:text-red-400/80">
 											{originalError}
@@ -412,17 +416,16 @@
 									}}
 									class="mt-4 rounded-ig-sm bg-red-600 dark:bg-red-800 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 dark:hover:bg-red-700"
 								>
-									Retry
+									{t('Retry')}
 								</button>
 							</div>
 						</div>
 					</div>
 				{:else if !environmentID}
-					<Panel title="Select Environment" icon={Server} color="blue">
+					<Panel title={t('Select Environment')} icon={Server} color="blue">
 						<div class="flex flex-col gap-4">
 							<p class="text-sm text-gray-600 dark:text-gray-400">
-								Choose an environment to run this gadget on. Environments define where and how the
-								gadget will execute.
+								{t('Choose an environment to run this gadget on. Environments define where and how the gadget will execute.')}
 							</p>
 
 							{#if Object.keys(environments).length === 0}
@@ -431,10 +434,10 @@
 								>
 									<div class="mb-3 text-gray-500">{@html Server}</div>
 									<p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-										No environments configured
+										{t('No environments configured')}
 									</p>
 									<p class="mt-2 text-xs text-gray-500">
-										Add an environment in the Environments section to get started.
+										{t('Add an environment in the Environments section to get started.')}
 									</p>
 								</div>
 							{:else}
@@ -466,15 +469,14 @@
 								<div
 									class="mt-2 rounded-ig-md border border-blue-200/30 dark:border-blue-900/30 bg-blue-50/20 dark:bg-blue-950/20 p-3 text-xs text-blue-700/80 dark:text-blue-300/80"
 								>
-									<span class="font-semibold">Tip:</span> You can also use the environment selector in
-									the top-right corner.
+									<span class="font-semibold">{t('Tip:')}</span> {t('You can also use the environment selector in the top-right corner.')}
 								</div>
 							{/if}
 						</div>
 					</Panel>
 				{:else}
 					<div class="flex items-center justify-center p-8">
-						<Spinner message="Loading gadget information..." />
+						<Spinner message={t('Loading gadget information...')} />
 					</div>
 				{/if}
 			{:else}
@@ -504,9 +506,9 @@
 						</div>
 						<Title
 							param={{
-								title: 'Detached',
+								title: t('Detached'),
 								key: 'detached',
-								description: 'The server will keep running the gadget even after closing the app'
+								description: t('The server will keep running the gadget even after closing the app')
 							}}
 							onclick={() => {
 								detached = !detached;
@@ -520,9 +522,9 @@
 							<div class="w-1/3">
 								<Title
 									param={{
-										title: 'Instance Name',
+										title: t('Instance Name'),
 										key: 'instanceName',
-										description: 'Descriptive name for the detached instance'
+										description: t('Descriptive name for the detached instance')
 									}}
 								/>
 							</div>
@@ -530,7 +532,7 @@
 								<input
 									class="w-full rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 text-sm"
 									type="text"
-									placeholder="My Gadget"
+									placeholder={t('My Gadget')}
 									bind:value={instanceName}
 								/>
 							</div>
@@ -565,10 +567,11 @@
 							</div>
 							<Title
 								param={{
-									title: 'Record to Session',
+									title: t('Record to Session'),
 									key: 'recordToSession',
-									description:
+									description: t(
 										'Save all gadget events to a session file for later replay and analysis'
+									)
 								}}
 								onclick={() => {
 									recordGadgetRun = !recordGadgetRun;
@@ -588,7 +591,7 @@
 											value="new"
 											class="h-4 w-4 cursor-pointer border-gray-300 text-violet-600 focus:ring-violet-600"
 										/>
-										<span class="text-sm text-gray-700 dark:text-gray-300">New Session</span>
+										<span class="text-sm text-gray-700 dark:text-gray-300">{t('New Session')}</span>
 									</label>
 									<label class="flex cursor-pointer items-center gap-2">
 										<input
@@ -597,7 +600,7 @@
 											value="existing"
 											class="h-4 w-4 cursor-pointer border-gray-300 text-violet-600 focus:ring-violet-600"
 										/>
-										<span class="text-sm text-gray-700 dark:text-gray-300">Add to Existing</span>
+										<span class="text-sm text-gray-700 dark:text-gray-300">{t('Add to Existing')}</span>
 									</label>
 								</div>
 
@@ -606,7 +609,7 @@
 									<input
 										type="text"
 										bind:value={sessionName}
-										placeholder="Session name (optional)"
+										placeholder={t('Session name (optional)')}
 										class="w-full rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-violet-600 focus:outline-none"
 									/>
 								{/if}
@@ -616,7 +619,7 @@
 									<Select
 										bind:value={selectedSessionId}
 										options={sessionOptions}
-										placeholder="Select a session..."
+										placeholder={t('Select a session...')}
 										class="text-sm"
 									/>
 								{/if}
@@ -625,7 +628,7 @@
 					</div>
 				{/if}
 
-				<Panel title="Parameters" icon={Cog} color="blue">
+				<Panel title={t('Parameters')} icon={Cog} color="blue">
 					{#snippet headerActions()}
 						<div class="flex flex-row items-center gap-2">
 							<input type="checkbox" bind:checked={showAdvanced} />
@@ -633,7 +636,7 @@
 								onclick={() => {
 									showAdvanced = !showAdvanced;
 								}}
-								class="text-xs">Show advanced options</button
+								class="text-xs">{t('Show advanced options')}</button
 							>
 						</div>
 					{/snippet}
@@ -644,12 +647,12 @@
 		</div>
 
 		<div class="flex w-1/3 flex-col gap-6">
-			<Panel title="Run Command" icon={Code} color="green">
+			<Panel title={t('Run Command')} icon={Code} color="green">
 				{#snippet headerActions()}
 					<button
 						onclick={copyCommand}
 						class="cursor-pointer rounded-ig-sm p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
-						title="Copy to clipboard"
+						title={t('Copy to clipboard')}
 					>
 						{@html Copy}
 					</button>
@@ -706,13 +709,13 @@
 				</div>
 			</Panel>
 
-			<Panel title="Gadget Manifest" icon={File} color="purple">
+			<Panel title={t('Gadget Manifest')} icon={File} color="purple">
 				{#snippet headerActions()}
 					<button
 						onclick={copyManifest}
 						class="cursor-pointer rounded-ig-sm p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
-						title="Copy to clipboard"
-						aria-label="Copy gadget manifest to clipboard"
+						title={t('Copy to clipboard')}
+						aria-label={t('Copy gadget manifest to clipboard')}
 					>
 						{@html Copy}
 					</button>
@@ -734,7 +737,7 @@
 		<div class="flex flex-col items-end gap-2">
 			{#if sessionRecordingEnabled && recordGadgetRun && sessionMode === 'existing' && !selectedSessionId}
 				<span class="text-xs text-yellow-600 dark:text-yellow-400"
-					>Please select a session to record to</span
+					>{t('Please select a session to record to')}</span
 				>
 			{/if}
 			<button
@@ -743,7 +746,7 @@
 				class="flex cursor-pointer flex-row gap-2 rounded-ig-sm bg-green-600 dark:bg-green-800 py-2 pr-4 pl-2 text-white hover:bg-green-500 dark:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-200 dark:disabled:bg-green-950 disabled:text-gray-500"
 			>
 				<span>{@html Play}</span>
-				<span>Run Gadget</span>
+				<span>{t('Run Gadget')}</span>
 			</button>
 		</div>
 	</div>

@@ -1,4 +1,5 @@
 import type { Environment } from '$lib/types';
+import { t } from '$lib/i18n/index.svelte';
 
 /**
  * State for tracking the currently viewed environment and its connection status.
@@ -49,20 +50,20 @@ class CurrentEnvironmentState {
 		let runtime: string;
 
 		if (this.environment.runtime === 'grpc-ig') {
-			runtime = this.environment.params?.['remote-address'] || 'Remote';
+			runtime = this.environment.params?.['remote-address'] || t('Remote');
 		} else {
 			// For Kubernetes, include context if available
 			const context = this.environment.params?.['context'];
-			runtime = context ? `Kubernetes (${context})` : 'Kubernetes';
+			runtime = context ? t('Kubernetes ({{context}})', { context }) : t('Kubernetes');
 		}
 
 		switch (this.connectionStatus) {
 			case 'connecting':
-				return `Connecting to ${envName} on ${runtime}...`;
+				return t('Connecting to {{envName}} on {{runtime}}...', { envName, runtime });
 			case 'connected':
-				return `Connected to ${envName} on ${runtime}`;
+				return t('Connected to {{envName}} on {{runtime}}', { envName, runtime });
 			case 'error':
-				return this.errorMessage || `Failed to connect to ${envName}`;
+				return this.errorMessage || t('Failed to connect to {{envName}}', { envName });
 		}
 	}
 

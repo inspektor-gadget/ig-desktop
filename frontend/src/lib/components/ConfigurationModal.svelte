@@ -98,7 +98,7 @@
 							? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
 							: 'text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-800/50 hover:text-gray-800 dark:hover:text-gray-300'}"
 					>
-						<span class="text-base">{category.name}</span>
+						<span class="text-base">{t(category.name)}</span>
 					</button>
 				{/each}
 			</nav>
@@ -113,7 +113,7 @@
 						<div class="space-y-6">
 							<div>
 								<h3 class="mb-4 text-base font-semibold text-gray-800 dark:text-gray-200">
-									{t('{{category}} Settings', { category: category.name })}
+									{t(`${category.name} Settings`)}
 								</h3>
 
 								<div class="space-y-4">

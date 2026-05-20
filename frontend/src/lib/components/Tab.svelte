@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		children: Snippet;
@@ -18,8 +19,8 @@
 	{href}
 	class:flex-0={shrink}
 	class:flex-1={!shrink}
-	aria-label="Environment Overview"
-	title="Environment Overview"
+	aria-label={t('Environment Overview')}
+	title={t('Environment Overview')}
 	class={active
 		? 'h-full cursor-default content-center border-r border-b border-ig-border border-t-ig-text-muted border-b-transparent p-2 text-nowrap overflow-ellipsis text-ig-text'
 		: 'h-full flex-1 cursor-default content-center border-r border-b border-ig-border border-t-ig-border-strong bg-ig-surface-raised p-2 text-nowrap overflow-ellipsis hover:bg-ig-border hover:text-ig-text-muted'}

@@ -4,6 +4,7 @@
 	import { getContext } from 'svelte';
 	import { environments } from '$lib/shared/environments.svelte';
 	import { page } from '$app/state';
+	import { t } from '$lib/i18n/index.svelte';
 	import VirtualTableBody from '$lib/components/VirtualTable/VirtualTableBody.svelte';
 	import type { TableHookRegistry } from '$lib/types/table-hooks';
 	import type { TableColumn, EnrichedRow, TableMenuController } from '$lib/types/table';
@@ -860,8 +861,8 @@
 					bind:this={menuButton}
 					class="pl-2 hover:text-ig-text transition-colors"
 					onclick={() => (menuOpen = !menuOpen)}
-					title="Column visibility"
-					aria-label="Toggle column visibility menu"
+					title={t('Column visibility')}
+					aria-label={t('Toggle column visibility menu')}
 					aria-haspopup="menu"
 					aria-expanded={menuOpen}
 					aria-controls="column-menu"
@@ -872,15 +873,15 @@
 					<div
 						id="column-menu"
 						role="menu"
-						aria-label="Column visibility options"
+						aria-label={t('Column visibility options')}
 						class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-ig-md border border-ig-border bg-ig-surface shadow-xl"
 					>
 						<div
 							class="px-3 py-2 text-xs font-semibold text-ig-text-muted uppercase border-b border-ig-border"
 						>
-							Columns
+							{t('Columns')}
 						</div>
-						<div class="py-1" role="group" aria-label="Column toggles">
+						<div class="py-1" role="group" aria-label={t('Column toggles')}>
 							{#each toggleableFields as field}
 								<label
 									class="flex items-center gap-2 px-3 py-1.5 hover:bg-ig-surface-raised cursor-pointer text-sm"
@@ -923,7 +924,7 @@
 				oncopy={handleCopy}
 			>
 				{#snippet header(cols, { startResize, resizingIndex, setHeaderRow, resetColumnWidth })}
-					<tr class="bg-ig-surface" use:setHeaderRow aria-label="Column headers">
+					<tr class="bg-ig-surface" use:setHeaderRow aria-label={t('Column headers')}>
 						{#each visibleFields as field, i}
 							{@const isSorted = sortColumn === field.fullName}
 							<th
@@ -937,8 +938,8 @@
 									: undefined}
 								tabindex={canSort ? 0 : undefined}
 								aria-label={field.annotations?.description
-									? `${field.fullName}: ${field.annotations.description}${canSort ? ' (sortable)' : ''}`
-									: `${field.fullName}${canSort ? ' (sortable)' : ''}`}
+									? `${field.fullName}: ${field.annotations.description}${canSort ? ' (' + t('sortable') + ')' : ''}`
+									: `${field.fullName}${canSort ? ' (' + t('sortable') + ')' : ''}`}
 								class="relative border-r border-r-ig-border p-2 text-xs font-normal last:border-r-0 overflow-hidden select-none"
 								class:cursor-pointer={canSort}
 								class:hover:bg-ig-surface-raised={canSort}
@@ -957,7 +958,7 @@
 							>
 								<div
 									title={canSort
-										? `${field.annotations?.description || field.fullName} (click to sort)`
+										? `${field.annotations?.description || field.fullName} (${t('click to sort')})`
 										: field.annotations?.description}
 									class="uppercase overflow-hidden text-ellipsis whitespace-nowrap flex items-center gap-1"
 								>
@@ -1002,7 +1003,7 @@
 										class:active={resizingIndex === i}
 										role="separator"
 										aria-orientation="vertical"
-										aria-label={`Resize column ${field.fullName}`}
+										aria-label={t('Resize column {{field}}', { field: field.fullName })}
 										onpointerdown={(e) => {
 											const onDone = () => {
 												lastResizeEnd = Date.now();

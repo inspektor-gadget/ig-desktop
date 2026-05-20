@@ -10,6 +10,7 @@
 	import type { VisualizerPluginProps } from '$lib/types/plugin-api';
 	import type { NetworkGraphState, NetworkNode, NetworkMapOptions } from '$lib/types/networkmap';
 	import { EDGE_ANIMATION_DURATION, DEFAULT_EPHEMERAL_PORT_THRESHOLD } from '$lib/types/networkmap';
+	import { t } from '$lib/i18n/index.svelte';
 
 	type Props = VisualizerPluginProps;
 
@@ -127,7 +128,7 @@
 					bind:checked={collapseEphemeral}
 					class="w-3.5 h-3.5 rounded-ig-sm border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
 				/>
-				<span>Collapse high ports</span>
+				<span>{t('Collapse high ports')}</span>
 			</label>
 		</div>
 
@@ -136,16 +137,16 @@
 		{:else}
 			<div class="flex h-full items-center justify-center text-gray-500 dark:text-gray-400">
 				<div class="text-center">
-					<p class="text-lg">Waiting for network data...</p>
-					<p class="text-sm mt-2">Connections will appear as events arrive</p>
+					<p class="text-lg">{t('Waiting for network data...')}</p>
+					<p class="text-sm mt-2">{t('Connections will appear as events arrive')}</p>
 				</div>
 			</div>
 		{/if}
 	{:else}
 		<div class="flex h-full items-center justify-center text-gray-500 dark:text-gray-400">
 			<div class="text-center">
-				<p class="text-lg">Network map not available</p>
-				<p class="text-sm mt-2">This datasource doesn't have the required src/dst address fields</p>
+				<p class="text-lg">{t('Network map not available')}</p>
+				<p class="text-sm mt-2">{t("This datasource doesn't have the required src/dst address fields")}</p>
 			</div>
 		</div>
 	{/if}

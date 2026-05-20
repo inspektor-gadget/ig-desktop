@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { SelectSetting } from '$lib/config.types';
 	import Select from '$lib/components/forms/Select.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		setting: SelectSetting;
@@ -14,7 +15,7 @@
 	const options = $derived(
 		Object.entries(setting.options).map(([value, label]) => ({
 			value,
-			label
+			label: t(label)
 		}))
 	);
 </script>
@@ -23,6 +24,6 @@
 	{value}
 	{options}
 	onchange={(e) => onChange((e.target as HTMLSelectElement).value)}
-	label={setting.title}
-	description={setting.description}
+	label={t(setting.title)}
+	description={setting.description ? t(setting.description) : undefined}
 />

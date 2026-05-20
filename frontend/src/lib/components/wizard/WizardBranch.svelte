@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { WizardBranchNode, WizardNode, WizardTreeConfig } from './wizard-types';
 	import { isBranchNode, getNodeLabel } from './wizard-types';
+	import { t } from '$lib/i18n/index.svelte';
 
 	import Bug from '$lib/icons/bug.svg?raw';
 	import Chart from '$lib/icons/chart.svg?raw';
@@ -59,10 +60,9 @@
 		>
 			<span class="mt-0.5 text-blue-500">{@html Info}</span>
 			<div class="flex flex-col gap-1">
-				<span class="font-medium text-blue-700 dark:text-blue-300">Telemetry Setup</span>
+				<span class="font-medium text-blue-700 dark:text-blue-300">{t('Telemetry Setup')}</span>
 				<span class="text-blue-600 dark:text-blue-400">
-					Telemetry gadgets export metrics to configured backends. Ensure Inspektor Gadget is
-					deployed with telemetry exporters enabled.
+					{t('Telemetry gadgets export metrics to configured backends. Ensure Inspektor Gadget is deployed with telemetry exporters enabled.')}
 				</span>
 			</div>
 		</div>
@@ -84,7 +84,7 @@
 							</span>
 						{/if}
 						<span class="font-medium text-gray-800 dark:text-gray-200">
-							{getNodeLabel(childNode)}
+							{t(getNodeLabel(childNode))}
 						</span>
 					</div>
 					<span class="text-gray-400 transition-colors group-hover:text-orange-500">
@@ -93,7 +93,7 @@
 				</div>
 				{#if getDescription(childNode)}
 					<p class="text-sm text-gray-500">
-						{getDescription(childNode)}
+						{t(getDescription(childNode) ?? '')}
 					</p>
 				{/if}
 			</button>

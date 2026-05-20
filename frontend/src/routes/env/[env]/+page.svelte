@@ -16,6 +16,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import SessionItemComponent from '$lib/components/SessionItem.svelte';
 	import { features } from '$lib/config/app-mode';
+	import { t } from '$lib/i18n/index.svelte';
 
 	import Browser from '$lib/icons/fa/browser.svg?raw';
 	import Trash from '$lib/icons/fa/trash.svg?raw';
@@ -193,10 +194,10 @@
 		const envId = env.id;
 
 		const confirmed = await confirmationModal.confirm({
-			title: 'Delete Environment',
-			message: 'Do you really want to delete this environment?',
-			confirmLabel: 'Delete',
-			cancelLabel: 'Cancel'
+			title: t('Delete Environment'),
+			message: t('Do you really want to delete this environment?'),
+			confirmLabel: t('Delete'),
+			cancelLabel: t('Cancel')
 		});
 		if (!confirmed) return;
 		await api.request({ cmd: 'deleteEnvironment', data: { id: envId } });
@@ -217,10 +218,10 @@
 
 	async function removeInstance(instance: GadgetInstance) {
 		const confirmed = await confirmationModal.confirm({
-			title: 'Remove Instance',
-			message: 'Do you really want to remove this instance?',
-			confirmLabel: 'Remove',
-			cancelLabel: 'Cancel'
+			title: t('Remove Instance'),
+			message: t('Do you really want to remove this instance?'),
+			confirmLabel: t('Remove'),
+			cancelLabel: t('Cancel')
 		});
 		if (!confirmed) return;
 
@@ -232,15 +233,15 @@
 
 			// Show success toast
 			const instanceName = instance.name || instance.id.substring(0, 8);
-			toastStore.success(`Instance "${instanceName}" removed successfully`);
+			toastStore.success(t('Instance "{{instanceName}}" removed successfully', { instanceName }));
 
 			getList(env.id);
 		} catch (err: any) {
 			// Show error toast
 			const errorMessage = err?.message || err?.toString() || 'Unknown error';
 			const instanceName = instance.name || instance.id.substring(0, 8);
-			toastStore.error(`Failed to remove instance "${instanceName}": ${errorMessage}`, 7000, {
-				label: 'Retry',
+			toastStore.error(t('Failed to remove instance "{{instanceName}}": {{errorMessage}}', { instanceName, errorMessage }), 7000, {
+				label: t('Retry'),
 				onClick: () => removeInstance(instance)
 			});
 		}
@@ -286,8 +287,8 @@
 
 			if (gadgetRunRequest.detached) {
 				// Show info toast for headless instances (success confirmed when instance appears in list)
-				const displayName = gadgetRunRequest.instanceName || 'Unnamed instance';
-				toastStore.info(`Starting headless instance "${displayName}"...`, 3000);
+				const displayName = gadgetRunRequest.instanceName || t('Unnamed instance');
+				toastStore.info(t('Starting headless instance "{{displayName}}"...', { displayName }), 3000);
 				getList(env.id);
 			} else {
 				goto(resolve(`/env/${env.id}/running/${res.id}`));
@@ -296,10 +297,12 @@
 			// Show error toast
 			const errorMessage = err?.message || err?.toString() || 'Unknown error';
 			toastStore.error(
-				`Failed to start ${gadgetRunRequest.detached ? 'headless instance' : 'gadget'}: ${errorMessage}`,
+				gadgetRunRequest.detached
+					? t('Failed to start headless instance: {{errorMessage}}', { errorMessage })
+					: t('Failed to start gadget: {{errorMessage}}', { errorMessage }),
 				7000,
 				{
-					label: 'Retry',
+					label: t('Retry'),
 					onClick: () => runGadget(gadgetRunRequest)
 				}
 			);
@@ -308,21 +311,21 @@
 
 	async function handleDeleteSession(sessionId: string) {
 		const confirmed = await confirmationModal.confirm({
-			title: 'Delete Session',
-			message: 'Do you really want to delete this session? This cannot be undone.',
-			confirmLabel: 'Delete',
-			cancelLabel: 'Cancel'
+			title: t('Delete Session'),
+			message: t('Do you really want to delete this session? This cannot be undone.'),
+			confirmLabel: t('Delete'),
+			cancelLabel: t('Cancel')
 		});
 		if (!confirmed) return;
 
 		try {
 			await api.deleteSession(sessionId);
-			toastStore.success('Session deleted successfully');
+			toastStore.success(t('Session deleted successfully'));
 			await loadSessions();
 		} catch (err: any) {
 			const errorMessage = err?.message || err?.toString() || 'Unknown error';
-			toastStore.error(`Failed to delete session: ${errorMessage}`, 7000, {
-				label: 'Retry',
+			toastStore.error(t('Failed to delete session: {{errorMessage}}', { errorMessage }), 7000, {
+				label: t('Retry'),
 				onClick: () => handleDeleteSession(sessionId)
 			});
 		}
@@ -332,7 +335,7 @@
 {#if !env}
 	<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
 		<div class="text-gray-400 dark:text-gray-600">{@html Server}</div>
-		<div class="text-sm text-gray-500">Environment not found</div>
+		<div class="text-sm text-gray-500">{t('Environment not found')}</div>
 	</div>
 {:else}
 	<div class="flex flex-1 flex-col gap-8 overflow-auto p-8 text-gray-900 dark:text-gray-100">
@@ -349,16 +352,16 @@
 						<button
 							onclick={showWizard}
 							class="flex cursor-pointer items-center gap-2 rounded-ig-md border border-orange-300 dark:border-orange-800 bg-orange-100/20 dark:bg-orange-900/20 px-3 py-2 text-sm text-orange-600 dark:text-orange-400 transition-all hover:border-orange-500/50 hover:bg-orange-100/40 dark:hover:bg-orange-900/40"
-							title="Show Gadget Wizard"
+							title={t('Show Gadget Wizard')}
 						>
 							<span>{@html GadgetIcon}</span>
-							<span>Wizard</span>
+							<span>{t('Wizard')}</span>
 						</button>
 					{/if}
 					<button
 						onclick={() => (settingsModalOpen = true)}
 						class="cursor-pointer rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-3 text-gray-600 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-blue-400"
-						title="Environment Settings"
+						title={t('Environment Settings')}
 					>
 						{@html Cog}
 					</button>
@@ -378,20 +381,20 @@
 				{/if}
 
 				<!-- Run Gadget Card -->
-				<Panel title="Run Gadget" icon={PlaySmall} color="blue" bodyPadding="large">
+				<Panel title={t('Run Gadget')} icon={PlaySmall} color="blue" bodyPadding="large">
 					{#if features.canRunGadgets}
 						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
-							Enter a gadget image URL or discover gadgets from ArtifactHub
+							{t('Enter a gadget image URL or discover gadgets from ArtifactHub')}
 						</p>
 						<div class="flex flex-col gap-2 md:flex-row">
 							{#if features.canBrowseArtifactHub}
 								<a
 									href={`${resolve('/browse/artifacthub')}?env=${env.id}`}
-									title="Discover Gadgets"
+									title={t('Discover Gadgets')}
 									class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 md:w-auto md:justify-start"
 								>
 									<span class="text-blue-400">{@html Grid}</span>
-									<span class="text-gray-800 dark:text-gray-200">Discover</span>
+									<span class="text-gray-800 dark:text-gray-200">{t('Discover')}</span>
 								</a>
 							{/if}
 							<div class="grow">
@@ -411,16 +414,16 @@
 							<button
 								disabled={!validURL}
 								onclick={runInstance}
-								title="Run Gadget"
+								title={t('Run Gadget')}
 								class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-ig-md border border-blue-300 dark:border-blue-800 bg-blue-100/20 dark:bg-blue-900/20 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 transition-all hover:border-blue-500/50 hover:bg-blue-100/40 dark:hover:bg-blue-900/40 disabled:cursor-not-allowed disabled:border-gray-300 dark:disabled:border-gray-800 disabled:bg-gray-100/20 dark:disabled:bg-gray-900/20 disabled:text-gray-400 dark:disabled:text-gray-600 md:w-auto"
 							>
 								<span>{@html PlaySmall}</span>
-								<span>Run</span>
+								<span>{t('Run')}</span>
 							</button>
 						</div>
 					{:else}
 						<div class="flex flex-col items-center justify-center gap-3 py-4 text-center">
-							<p class="text-sm text-gray-500">Unavailable in Demo Environment</p>
+							<p class="text-sm text-gray-500">{t('Unavailable in Demo Environment')}</p>
 						</div>
 					{/if}
 				</Panel>
@@ -428,7 +431,7 @@
 				<!-- Recently Run Gadgets Card -->
 				{#if history.length > 0}
 					<Panel
-						title="Recently run Gadgets"
+						title={t('Recently run Gadgets')}
 						icon={History}
 						color="purple"
 						badge={history.length}
@@ -439,7 +442,7 @@
 								onclick={() => currentPage--}
 								disabled={currentPage === 0}
 								class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-300 dark:disabled:text-gray-700"
-								title="Previous page"
+								title={t('Previous page')}
 							>
 								{@html ChevronLeft}
 							</button>
@@ -448,7 +451,7 @@
 								onclick={() => currentPage++}
 								disabled={currentPage >= totalPages - 1}
 								class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-300 dark:disabled:text-gray-700"
-								title="Next page"
+								title={t('Next page')}
 							>
 								{@html ChevronRight}
 							</button>
@@ -497,7 +500,7 @@
 									<div class="flex flex-row items-start gap-1">
 										<button
 											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
-											title="Remove from list"
+											title={t('Remove from list')}
 											onclick={() => {
 												const actualIdx = currentPage * ITEMS_PER_PAGE + idx;
 												history.splice(actualIdx, 1);
@@ -507,7 +510,7 @@
 										{#if !features.isDemoMode}
 											<button
 												class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
-												title="Configure and run"
+												title={t('Configure and run')}
 												onclick={() => {
 													const params = new URLSearchParams();
 													params.set('env', env.id);
@@ -526,7 +529,7 @@
 										{/if}
 										<button
 											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-purple-400"
-											title="Run again"
+											title={t('Run again')}
 											onclick={() => {
 												runGadget(entry);
 											}}>{@html PlaySmall}</button
@@ -540,7 +543,7 @@
 
 				<!-- Headless Gadget Instances Card -->
 				<Panel
-					title="Headless Gadget Instances"
+					title={t('Headless Gadget Instances')}
 					icon={Server}
 					color="blue"
 					badge={detachedInstances.length > 0 ? detachedInstances.length : undefined}
@@ -549,13 +552,13 @@
 					{#snippet headerActions()}
 						<button
 							onclick={() => currentEnvId && getList(currentEnvId)}
-							title="Refresh"
+							title={t('Refresh')}
 							class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400"
 							>{@html Refresh}</button
 						>
 						<a
 							href="https://inspektor-gadget.io/docs/latest/reference/headless"
-							title="Documentation"
+							title={t('Documentation')}
 							target="_blank"
 							class="text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400"
 							>{@html Info}</a
@@ -569,19 +572,19 @@
 									<tr class="border-b border-gray-200 dark:border-gray-800">
 										<th
 											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
-											>ID</th
+											>{t('ID')}</th
 										>
 										<th
 											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
-											>Name</th
+											>{t('Name')}</th
 										>
 										<th
 											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
-											>Tags</th
+											>{t('Tags')}</th
 										>
 										<th
 											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
-											>Image</th
+											>{t('Image')}</th
 										>
 										<th class="px-4 py-3"></th>
 									</tr>
@@ -605,14 +608,14 @@
 												<div class="flex flex-row justify-end gap-1">
 													<button
 														class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-blue-400"
-														title="Attach"
+														title={t('Attach')}
 														onclick={() => {
 															attachInstance(instance);
 														}}>{@html Browser}</button
 													>
 													<button
 														class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
-														title="Delete"
+														title={t('Delete')}
 														onclick={() => {
 															removeInstance(instance);
 														}}>{@html Trash}</button
@@ -627,7 +630,7 @@
 					{:else}
 						<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
 							<div class="text-gray-400 dark:text-gray-600">{@html Server}</div>
-							<div class="text-sm text-gray-500">No running instances found</div>
+							<div class="text-sm text-gray-500">{t('No running instances found')}</div>
 						</div>
 					{/if}
 				</Panel>
@@ -635,7 +638,7 @@
 				<!-- Sessions Card (experimental) -->
 				{#if sessionRecordingEnabled}
 					<Panel
-						title="Sessions"
+						title={t('Recorded Sessions')}
 						icon={History}
 						color="green"
 						badge={sessions.length > 0 ? sessions.length : undefined}
@@ -644,13 +647,13 @@
 						{#if loadingSessions}
 							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
 								<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
-								<div class="text-sm text-gray-500">Loading sessions...</div>
+								<div class="text-sm text-gray-500">{t('Loading sessions...')}</div>
 							</div>
 						{:else if sessions.length === 0}
 							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
 								<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
 								<div class="text-sm text-gray-500">
-									No sessions yet. Enable session recording when running a gadget to capture runs.
+									{t('No sessions yet. Enable session recording when running a gadget to capture runs.')}
 								</div>
 							</div>
 						{:else}
@@ -671,7 +674,7 @@
 		<!-- Settings Modal -->
 		<BaseModal
 			bind:open={settingsModalOpen}
-			title="Environment Settings"
+			title={t('Environment Settings')}
 			icon={Cog}
 			size="lg"
 			onClose={() => (settingsModalOpen = false)}
@@ -679,7 +682,7 @@
 			<div class="flex flex-col gap-6">
 				<!-- Environment Name -->
 				<div class="flex flex-col gap-2">
-					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Name</span>
+					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">{t('Name')}</span>
 					<div
 						class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200"
 					>
@@ -689,7 +692,7 @@
 
 				<!-- Environment ID -->
 				<div class="flex flex-col gap-2">
-					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">ID</span>
+					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">{t('ID')}</span>
 					<div
 						class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-400"
 					>
@@ -699,7 +702,7 @@
 
 				<!-- Runtime -->
 				<div class="flex flex-col gap-2">
-					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Runtime</span>
+					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">{t('Runtime')}</span>
 					<div
 						class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200"
 					>
@@ -711,7 +714,7 @@
 				{#if env.params && Object.keys(env.params).length > 0}
 					<div class="flex flex-col gap-2">
 						<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
-							>Configuration</span
+							>{t('Configuration')}</span
 						>
 						<div
 							class="flex flex-col gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4"
@@ -732,14 +735,14 @@
 						class="mt-4 flex flex-col gap-4 rounded-ig-md border border-red-300/50 dark:border-red-800/50 bg-red-100/10 dark:bg-red-900/10 p-4"
 					>
 						<div class="flex flex-col gap-1">
-							<h3 class="font-semibold text-red-600 dark:text-red-400">Danger Zone</h3>
+							<h3 class="font-semibold text-red-600 dark:text-red-400">{t('Danger Zone')}</h3>
 							<p class="text-sm text-gray-600 dark:text-gray-400">
-								Irreversible actions for this environment
+								{t('Irreversible actions for this environment')}
 							</p>
 						</div>
 						<Button variant="danger" onclick={() => deleteEnvironment()} class="justify-center">
 							<span>{@html Trash}</span>
-							<span>Delete Environment</span>
+							<span>{t('Delete Environment')}</span>
 						</Button>
 					</div>
 				{/if}

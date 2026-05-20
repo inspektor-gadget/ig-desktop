@@ -5,6 +5,7 @@
 	import SortUp from '$lib/icons/fa/sort-up.svg?raw';
 	import SortDown from '$lib/icons/fa/sort-down.svg?raw';
 	import type { GadgetParam, ParamConfig, GadgetInfo } from '$lib/types';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface FieldOption {
 		ds: string;
@@ -171,7 +172,7 @@
 			</div>
 			<div class="grid">
 				<button
-					title={sortOperations[entry.sorting].title}
+					title={t(sortOperations[entry.sorting].title)}
 					onclick={() => toggleSortDirection(entry)}
 					class="cursor-pointer rounded-ig-sm bg-gray-100 dark:bg-gray-800 p-2 hover:bg-gray-200 dark:hover:bg-gray-700"
 				>
@@ -191,7 +192,7 @@
 			class="flex cursor-pointer flex-row items-center gap-2 rounded-ig-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 hover:bg-gray-200 dark:hover:bg-gray-700"
 			onclick={addSortEntry}
 		>
-			<span>Add Sorting</span>
+			<span>{t('Add Sorting')}</span>
 		</button>
 	</div>
 </div>

@@ -9,6 +9,7 @@
 	import BarSeries from './BarSeries.svelte';
 	import { getUniqueId } from '$lib/components/charts/Chart/utils';
 	import type { ChartSeriesConfig, ChartDimensions } from '$lib/types/charts';
+	import { t } from '$lib/i18n/index.svelte';
 
 	// Time range options
 	const timeRanges = [
@@ -360,7 +361,7 @@
 		<!-- Time range selector and zoom controls -->
 		<div class="chart-controls">
 			{#if zoomRange}
-				<button class="reset-zoom-btn" onclick={resetZoom}> Reset zoom </button>
+				<button class="reset-zoom-btn" onclick={resetZoom}>{t('Reset zoom')}</button>
 			{/if}
 			<select
 				class="time-range-dropdown"
@@ -368,14 +369,14 @@
 				onchange={handleTimeRangeChange}
 			>
 				{#each timeRanges as range (range.value)}
-					<option value={range.value}>{range.label}</option>
+					<option value={range.value}>{t(range.label)}</option>
 				{/each}
 			</select>
 		</div>
 
 		<!-- Zoom hint -->
 		{#if !zoomRange}
-			<div class="zoom-hint">Drag to zoom</div>
+			<div class="zoom-hint">{t('Drag to zoom')}</div>
 		{/if}
 
 		<Chart {dimensions}>
@@ -503,9 +504,9 @@
 	{:else}
 		<div class="flex h-full items-center justify-center text-sm text-gray-500">
 			{#if series.length === 0}
-				No numeric fields to chart
+				{t('No numeric fields to chart')}
 			{:else}
-				Waiting for data...
+				{t('Waiting for data...')}
 			{/if}
 		</div>
 	{/if}

@@ -4,6 +4,7 @@
 	import ChevronDown from '$lib/icons/chevron-down.svg?raw';
 	import type { HeatmapData, HeatmapCell } from '$lib/types/histogram';
 	import type { GroupableField } from '$lib/types/flamegraph';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		data: HeatmapData;
@@ -173,7 +174,7 @@
 					aria-haspopup="menu"
 					aria-expanded={groupMenuOpen}
 				>
-					Group by
+					{t('Group by')}
 					{#if activeGroupCount > 0}
 						<span class="bg-blue-500 text-white text-[9px] py-px px-1.5 rounded-full font-semibold"
 							>{activeGroupCount}</span
@@ -189,7 +190,7 @@
 						<div
 							class="px-3 py-2 text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700"
 						>
-							Group by:
+							{t('Group by:')}
 						</div>
 						<div class="py-1">
 							{#each groupableFields as field (field.fieldName)}
@@ -261,7 +262,7 @@
 							transform="rotate(-90, {-margins.left + 12}, {boundedHeight / 2})"
 							class="text-[11px] font-medium"
 						>
-							Bucket {data.unit ? `(${data.unit})` : ''}
+							{data.unit ? t('Bucket ({{unit}})', { unit: data.unit }) : t('Bucket')}
 						</text>
 					</g>
 
@@ -289,7 +290,7 @@
 							text-anchor="middle"
 							class="text-[11px] font-medium"
 						>
-							Time (oldest → newest)
+							{t('Time (oldest → newest)')}
 						</text>
 					</g>
 				</g>
@@ -340,14 +341,14 @@
 						text-anchor="middle"
 						class="text-[10px] fill-gray-500 dark:fill-gray-400"
 					>
-						Count
+						{t('Count')}
 					</text>
 				</g>
 			</svg>
 		</div>
 	{:else}
 		<div class="flex items-center justify-center h-50 text-gray-500 dark:text-gray-400 text-sm">
-			No data in snapshots.
+			{t('No data in snapshots.')}
 		</div>
 	{/if}
 
@@ -361,10 +362,10 @@
 				{formatTime(tooltipData.cell.timestamp)}
 			</div>
 			<div class="text-gray-600 dark:text-gray-300">
-				Bucket: {tooltipData.cell.bucketLabel}
+				{t('Bucket:')} {tooltipData.cell.bucketLabel}
 			</div>
 			<div class="text-gray-500 dark:text-gray-400">
-				Count: {tooltipData.cell.value.toLocaleString()}
+				{t('Count:')} {tooltipData.cell.value.toLocaleString()}
 			</div>
 		</div>
 	{/if}

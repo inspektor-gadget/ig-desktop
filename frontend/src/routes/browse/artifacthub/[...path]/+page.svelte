@@ -16,6 +16,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import type { ApiContext } from '$lib/types';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface ArtifactHubPackageDetail {
 		name: string;
@@ -124,9 +125,9 @@
 		<div class="flex flex-col items-center gap-4">
 			<Spinner />
 			<div>
-				<div class="text-xl">Loading...</div>
+				<div class="text-xl">{t('Loading...')}</div>
 				<div class="text-sm text-gray-600 dark:text-gray-400">
-					The Inspektor is doing some research on ArtifactHub.
+					{t('The Inspektor is doing some research on ArtifactHub.')}
 				</div>
 			</div>
 		</div>
@@ -137,13 +138,13 @@
 			<button
 				onclick={() => history.back()}
 				class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
-				title="Go back"
+				title={t('Go back')}
 			>
 				{@html ChevronLeft}
 			</button>
 		</div>
 		<div class="flex flex-col">
-			<div class="text-right text-xs">powered by</div>
+			<div class="text-right text-xs">{t('powered by')}</div>
 			<div>{@html ArtifactHub}</div>
 		</div>
 	</div>
@@ -172,19 +173,19 @@
 							{#if pkg.official}
 								<span
 									class="rounded-full bg-blue-600/20 px-3 py-1 text-sm font-medium text-blue-600 dark:text-blue-400"
-									>Official</span
+									>{t('Official')}</span
 								>
 							{/if}
 							{#if pkg.cncf}
 								<span
 									class="rounded-full bg-purple-600/20 px-3 py-1 text-sm font-medium text-purple-600 dark:text-purple-400"
-									>CNCF</span
+									>{t('CNCF')}</span
 								>
 							{/if}
 						</div>
 
 						<div class="text-gray-600 dark:text-gray-400">
-							<span class="mr-1">by</span>
+							<span class="mr-1">{t('by')}</span>
 							<span class="font-medium text-gray-800 dark:text-gray-200"
 								>{pkg.repository?.organization_display_name || pkg.repository?.user_alias}</span
 							>
@@ -220,7 +221,7 @@
 									? 'text-green-600 dark:text-green-400'
 									: 'text-gray-500'} text-sm"
 							>
-								{pkg.signed ? 'Signed' : 'Unsigned'}
+								{pkg.signed ? t('Signed') : t('Unsigned')}
 							</span>
 							{#if pkg.signed && pkg.signatures}
 								{#each pkg.signatures as sig}
@@ -240,7 +241,7 @@
 								class="flex items-center gap-2 text-blue-600 dark:text-blue-400 transition-colors hover:text-blue-500 dark:hover:text-blue-300"
 							>
 								<div>{@html Link}</div>
-								<span class="text-sm font-medium underline">Repository</span>
+								<span class="text-sm font-medium underline">{t('Repository')}</span>
 							</button>
 						{/if}
 
@@ -252,7 +253,7 @@
 								class="flex items-center gap-2 text-purple-600 dark:text-purple-400 transition-colors hover:text-purple-500 dark:hover:text-purple-300"
 							>
 								<div>{@html Link}</div>
-								<span class="text-sm font-medium underline">ArtifactHub</span>
+								<span class="text-sm font-medium underline">{t('ArtifactHub')}</span>
 							</button>
 						{/if}
 					</div>
@@ -262,12 +263,12 @@
 			<!-- Main Content Area -->
 			<div class="flex flex-row gap-6 overflow-hidden">
 				<div class="flex w-2/3 flex-col">
-					<Panel title="README" icon={Book} color="blue">
+					<Panel title={t('README')} icon={Book} color="blue">
 						<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
 						<div
 							role="article"
-							aria-label="Package readme"
+							aria-label={t('Package readme')}
 							class="marked overflow-auto rounded-ig-sm p-4 whitespace-pre-wrap"
 							onclick={handleLinkClick}
 						>
@@ -276,7 +277,7 @@
 					</Panel>
 				</div>
 				<div class="w-1/3">
-					<Panel title="Images" icon={Code} color="green">
+					<Panel title={t('Images')} icon={Code} color="green">
 						<div class="flex flex-col gap-3">
 							{#each pkg.containers_images as image}
 								<a

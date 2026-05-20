@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { t } from '$lib/i18n/index.svelte';
+
 	let { gadgetInfo } = $props();
 </script>
 
-<h1 class="p-2">Parameters</h1>
+<h1 class="p-2">{t('Parameters')}</h1>
 <ul class="mb-2 px-2 text-sm">
 	{#each gadgetInfo.params as param}
 		<li class="border-b border-b-ig-border py-2 last:border-b-0">

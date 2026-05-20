@@ -3,6 +3,7 @@
 	import yaml from 'js-yaml';
 	import { deployments } from '$lib/shared/deployments.svelte';
 	import type { DeploymentConfig } from '$lib/types';
+	import { t } from '$lib/i18n/index.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import Server from '$lib/icons/server.svg?raw';
 	import Play from '$lib/icons/play-circle.svg?raw';
@@ -347,7 +348,7 @@
 		if (!force && isDeploying) {
 			if (
 				!confirm(
-					'Deployment is in progress. You can return to this modal later. Are you sure you want to close?'
+					t('Deployment is in progress. You can return to this modal later. Are you sure you want to close?')
 				)
 			) {
 				return;
@@ -391,14 +392,17 @@
 				<div class="flex items-center gap-3">
 					<div class:text-blue-400={!undeploy} class:text-red-400={undeploy}>{@html Server}</div>
 					<h2 id="deploy-modal-title" class="text-lg font-semibold">
-						{undeploy ? 'Undeploy' : redeploy ? 'Redeploy' : 'Deploy'} Inspektor Gadget
-						{undeploy ? 'from' : 'to'} Kubernetes
+						{undeploy
+							? t('Undeploy Inspektor Gadget from Kubernetes')
+							: redeploy
+								? t('Redeploy Inspektor Gadget to Kubernetes')
+								: t('Deploy Inspektor Gadget to Kubernetes')}
 					</h2>
 				</div>
 				<button
 					onclick={() => closeModal(true)}
 					class="cursor-pointer rounded-ig-sm p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
-					title="Close (Force)"
+					title={t('Close (Force)')}
 				>
 					<svg
 						aria-hidden="true"
@@ -421,47 +425,44 @@
 					<div class="flex flex-col gap-6">
 						<p class="text-sm text-gray-600 dark:text-gray-400">
 							{#if undeploy}
-								Configure the undeployment for Inspektor Gadget. The existing deployment will be
-								completely removed from your cluster.
+								{t('Configure the undeployment for Inspektor Gadget. The existing deployment will be completely removed from your cluster.')}
 							{:else if redeploy}
-								Configure the redeployment for Inspektor Gadget. The existing deployment will be
-								uninstalled first, then reinstalled using the official Inspektor Gadget Helm chart.
+								{t('Configure the redeployment for Inspektor Gadget. The existing deployment will be uninstalled first, then reinstalled using the official Inspektor Gadget Helm chart.')}
 							{:else}
-								Configure the Helm deployment for Inspektor Gadget. The deployment will be performed
-								using the official Inspektor Gadget Helm chart.
+								{t('Configure the Helm deployment for Inspektor Gadget. The deployment will be performed using the official Inspektor Gadget Helm chart.')}
 							{/if}
 						</p>
 
 						<!-- Namespace -->
 						<Input
 							bind:value={namespace}
-							label="Namespace"
+							label={t('Namespace')}
 							placeholder="gadget"
-							description="The Kubernetes namespace where Inspektor Gadget will be deployed"
+							description={t('The Kubernetes namespace where Inspektor Gadget will be deployed')}
 						/>
 
 						<!-- Release Name -->
 						<Input
 							bind:value={releaseName}
-							label="Release Name"
+							label={t('Release Name')}
 							placeholder="gadget"
-							description="The Helm release name for this installation"
+							description={t('The Helm release name for this installation')}
 						/>
 
 						{#if !undeploy}
 							<!-- Chart Version -->
 							<Input
 								bind:value={chartVersion}
-								label="Chart Version (Optional)"
+								label={t('Chart Version (Optional)')}
 								placeholder="latest"
-								description="Leave empty to use the latest version, or specify a version like '0.43.0'"
+								description={t("Leave empty to use the latest version, or specify a version like '0.43.0'")}
 							/>
 
 							<!-- Loading indicator -->
 							{#if loadingChartValues}
 								<div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
 									<Spinner />
-									<span>Loading chart values...</span>
+									<span>{t('Loading chart values...')}</span>
 								</div>
 							{/if}
 
@@ -470,7 +471,7 @@
 								<div
 									class="rounded-ig-md border border-yellow-300 dark:border-yellow-800/50 bg-yellow-100 dark:bg-yellow-900/20 p-3 text-sm text-yellow-700 dark:text-yellow-400"
 								>
-									Failed to load chart values: {chartValuesError}
+									{t('Failed to load chart values: {{error}}', { error: chartValuesError })}
 								</div>
 							{/if}
 
@@ -480,13 +481,13 @@
 									class="flex flex-col gap-4 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4"
 								>
 									<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-										Configuration
+										{t('Configuration')}
 									</h3>
 									<Toggle
 										checked={verifyImageSignatures}
 										onchange={handleVerifyImageChange}
-										label="Verify Image Signatures"
-										description="Verify container image signatures using cosign"
+										label={t('Verify Image Signatures')}
+										description={t('Verify container image signatures using cosign')}
 									/>
 								</div>
 
@@ -495,7 +496,7 @@
 									class="flex flex-col gap-3 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4"
 								>
 									<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-										OpenTelemetry
+										{t('OpenTelemetry')}
 									</h3>
 									<button
 										onclick={() => (otelLogsModalOpen = true)}
@@ -503,13 +504,13 @@
 									>
 										<div class="flex flex-col gap-0.5">
 											<span class="text-sm font-medium text-gray-800 dark:text-gray-200"
-												>Log Exporters</span
+												>{t('Log Exporters')}</span
 											>
 											<span class="text-xs text-gray-500 dark:text-gray-500">
 												{#if otelLogsExporterCount > 0}
-													{otelLogsExporterCount} exporter{otelLogsExporterCount !== 1 ? 's' : ''} configured
+													{t('{{count}} exporter configured', { count: otelLogsExporterCount })}
 												{:else}
-													No exporters configured
+													{t('No exporters configured')}
 												{/if}
 											</span>
 										</div>
@@ -521,15 +522,13 @@
 									>
 										<div class="flex flex-col gap-0.5">
 											<span class="text-sm font-medium text-gray-800 dark:text-gray-200"
-												>Metric Exporters</span
+												>{t('Metric Exporters')}</span
 											>
 											<span class="text-xs text-gray-500 dark:text-gray-500">
 												{#if otelMetricsExporterCount > 0}
-													{otelMetricsExporterCount} exporter{otelMetricsExporterCount !== 1
-														? 's'
-														: ''} configured
+													{t('{{count}} exporter configured', { count: otelMetricsExporterCount })}
 												{:else}
-													No exporters configured
+													{t('No exporters configured')}
 												{/if}
 											</span>
 										</div>
@@ -541,8 +540,8 @@
 										<Toggle
 											checked={otelMetricsListen}
 											onchange={handleOtelMetricsListenChange}
-											label="Prometheus Listener"
-											description="Enable the Prometheus-compatible metrics endpoint"
+											label={t('Prometheus Listener')}
+											description={t('Enable the Prometheus-compatible metrics endpoint')}
 										/>
 									</div>
 
@@ -550,9 +549,9 @@
 										<Input
 											bind:value={otelMetricsListenAddress}
 											onblur={handleOtelMetricsListenAddressChange}
-											label="Listen Address"
+											label={t('Listen Address')}
 											placeholder="0.0.0.0:2224"
-											description="Address and port for the Prometheus metrics endpoint"
+											description={t('Address and port for the Prometheus metrics endpoint')}
 										/>
 									{/if}
 								</div>
@@ -575,19 +574,19 @@
 								>
 									<path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
 								</svg>
-								<span>Advanced Options (YAML)</span>
+								{t('Advanced Options (YAML)')}
 							</button>
 
 							{#if showAdvanced}
 								<Textarea
 									bind:value={customValues}
 									onblur={handleYamlChange}
-									label="Custom Values (YAML)"
+									label={t('Custom Values (YAML)')}
 									placeholder={loadingChartValues
-										? 'Loading default values...'
+										? t('Loading default values...')
 										: 'key: value\nnested:\n  key: value'}
 									rows={16}
-									description="Full Helm values. Changes here will sync with the settings above."
+									description={t('Full Helm values. Changes here will sync with the settings above.')}
 									class="font-mono text-sm"
 									disabled={loadingChartValues}
 								/>
@@ -607,7 +606,7 @@
 							class:disabled:bg-red-950={undeploy}
 						>
 							<span>{@html Play}</span>
-							<span>{undeploy ? 'Undeploy' : redeploy ? 'Redeploy' : 'Deploy'}</span>
+							<span>{undeploy ? t('Undeploy') : redeploy ? t('Redeploy') : t('Deploy')}</span>
 						</button>
 					</div>
 				{:else if isDeploying}
@@ -617,10 +616,14 @@
 							<Spinner />
 							<div class="text-center">
 								<div class="text-lg font-semibold">
-									{undeploy ? 'Undeploying' : redeploy ? 'Redeploying' : 'Deploying'} Inspektor Gadget
+									{undeploy
+										? t('Undeploying Inspektor Gadget')
+										: redeploy
+											? t('Redeploying Inspektor Gadget')
+											: t('Deploying Inspektor Gadget')}
 								</div>
 								<div class="text-sm text-gray-600 dark:text-gray-400">
-									{currentDeployment?.currentStep || 'Initializing...'}
+									{currentDeployment?.currentStep || t('Initializing...')}
 								</div>
 							</div>
 						</div>
@@ -628,7 +631,7 @@
 						<!-- Progress Bar -->
 						<div class="flex flex-col gap-2">
 							<div class="flex items-center justify-between text-sm">
-								<span class="text-gray-600 dark:text-gray-400">Progress</span>
+								<span class="text-gray-600 dark:text-gray-400">{t('Progress')}</span>
 								<span class="font-semibold text-blue-600 dark:text-blue-400">
 									{currentDeployment?.progress || 0}%
 								</span>
@@ -649,7 +652,7 @@
 							<div class="transition-transform duration-200" class:rotate-180={showDebugConsole}>
 								{@html ChevronDown}
 							</div>
-							<span>Output Console ({currentDeployment?.debugLogs?.length || 0} entries)</span>
+							<span>{t('Output Console ({{count}} entries)', { count: currentDeployment?.debugLogs?.length || 0 })}</span>
 						</button>
 
 						<!-- Debug Console -->
@@ -669,7 +672,7 @@
 						{#if currentDeployment?.logs && currentDeployment.logs.length > 0}
 							<div class="flex flex-col gap-2">
 								<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">
-									Deployment Logs
+									{t('Deployment Logs')}
 								</span>
 								<div
 									class="max-h-64 overflow-y-auto rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 font-mono text-xs"
@@ -687,10 +690,10 @@
 						<div class="text-red-500 dark:text-red-400">{@html ExclamationCircle}</div>
 						<div>
 							<h3 class="text-lg font-semibold text-red-500 dark:text-red-400">
-								Deployment Failed
+								{t('Deployment Failed')}
 							</h3>
 							<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-								{currentDeployment?.error || 'An unknown error occurred'}
+								{currentDeployment?.error || t('An unknown error occurred')}
 							</p>
 						</div>
 
@@ -714,7 +717,7 @@
 							}}
 							class="mt-4 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-6 py-2 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
-							Try Again
+							{t('Try Again')}
 						</button>
 					</div>
 				{:else if isSuccess}
@@ -736,17 +739,18 @@
 								class:text-red-500={undeploy}
 								class:dark:text-red-400={undeploy}
 							>
-								{undeploy ? 'Undeployment' : redeploy ? 'Redeployment' : 'Deployment'} Successful!
+								{undeploy
+									? t('Undeployment Successful!')
+									: redeploy
+										? t('Redeployment Successful!')
+										: t('Deployment Successful!')}
 							</h3>
 							<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-								Inspektor Gadget has been successfully {undeploy
-									? 'undeployed from'
+								{undeploy
+									? t('Inspektor Gadget has been successfully undeployed from namespace {{namespace}}', { namespace: currentDeployment?.config.namespace })
 									: redeploy
-										? 'redeployed to'
-										: 'deployed to'} namespace
-								<span class="font-mono text-blue-600 dark:text-blue-400"
-									>{currentDeployment?.config.namespace}</span
-								>
+										? t('Inspektor Gadget has been successfully redeployed to namespace {{namespace}}', { namespace: currentDeployment?.config.namespace })
+										: t('Inspektor Gadget has been successfully deployed to namespace {{namespace}}', { namespace: currentDeployment?.config.namespace })}
 							</p>
 						</div>
 
@@ -754,7 +758,7 @@
 							onclick={() => closeModal()}
 							class="mt-4 rounded-ig-md bg-green-800 px-6 py-3 text-white transition-all hover:bg-green-700"
 						>
-							Continue
+							{t('Continue')}
 						</button>
 					</div>
 				{/if}

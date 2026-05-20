@@ -23,6 +23,7 @@
 		applyFieldAnnotationProviders,
 		applyDatasourceAnnotationProviders
 	} from '$lib/services/annotation-provider.service';
+	import { t } from '$lib/i18n/index.svelte';
 
 	let {
 		instanceID,
@@ -301,7 +302,7 @@
 											class="flex h-8 w-8 items-center justify-center rounded-l-ig-sm border transition-colors {instance.running
 												? 'border-green-600 bg-green-600 text-white'
 												: 'border-ig-border-strong bg-transparent text-ig-text-muted'}"
-											title={instance.running ? 'Running' : 'Stopped'}
+											title={instance.running ? t('Running') : t('Stopped')}
 										>
 											{@html Play}
 										</div>
@@ -313,25 +314,25 @@
 												: 'border-red-800 bg-red-800 text-white cursor-default'}"
 											title={instance.running
 												? instance.attached
-													? 'Detach from gadget (keeps running)'
-													: 'Stop gadget'
+													? t('Detach from gadget (keeps running)')
+													: t('Stop gadget')
 												: instance.attached
-													? 'Detached'
-													: 'Stopped'}
+													? t('Detached')
+													: t('Stopped')}
 										>
 											{@html Stop}
 											{#if instance.running && instance.attached}
-												<span class="text-sm">Detach</span>
+												<span class="text-sm">{t('Detach')}</span>
 											{/if}
 										</button>
 									</div>
 								</div>
 								<div>
 									{#if instance.running}
-										Running
-										{#if environmentName}{` on ${environmentName}`}{/if}
+										{t('Running')}
+										{#if environmentName}{t('on {{environmentName}}', { environmentName })}{/if}
 									{:else}
-										{instance.attached ? 'Detached' : 'Stopped'}
+										{instance.attached ? t('Detached') : t('Stopped')}
 									{/if}
 								</div>
 								{#if instance.isReplay}
@@ -340,7 +341,7 @@
 											<span
 												class="rounded-ig-sm border border-purple-700 bg-purple-900/50 px-2 py-0.5 text-xs font-semibold text-purple-300"
 											>
-												SNAPSHOT
+												{t('SNAPSHOT')}
 											</span>
 										{:else}
 											<span
@@ -348,7 +349,7 @@
 													? 'animate-pulse'
 													: ''}"
 											>
-												REPLAY
+												{t('REPLAY')}
 											</span>
 										{/if}
 									</div>
@@ -358,7 +359,7 @@
 										class="flex items-center gap-1 rounded-ig-sm border border-red-700 bg-red-900/50 px-2 py-0.5 text-xs font-semibold text-red-300"
 									>
 										<span class="inline-block h-2 w-2 animate-pulse rounded-full bg-red-500"></span>
-										REC
+										{t('REC')}
 									</span>
 								{/if}
 							</div>
@@ -370,7 +371,7 @@
 									<button
 										onclick={openMaxEventsSettings}
 										class="cursor-pointer hover:text-ig-text"
-										title="Click to configure maximum events"
+										title={t('Click to configure maximum events')}
 									>
 										{displayedEventCount} of {eventCount} events
 									</button>
@@ -388,7 +389,7 @@
 									<Input
 										bind:this={searchInputRef}
 										bind:value={searchInput}
-										placeholder="Search..."
+										placeholder={t('Search...')}
 										class="text-sm rounded-r-none pr-8"
 										onkeydown={handleSearchKeydown}
 									/>
@@ -399,7 +400,7 @@
 												searchInputRef?.focus();
 											}}
 											class="absolute right-2 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full text-ig-text-muted hover:text-ig-text-secondary hover:bg-ig-border transition-colors"
-											title="Clear search"
+											title={t('Clear search')}
 										>
 											<svg
 												aria-hidden="true"
@@ -426,11 +427,11 @@
 										? 'bg-ig-primary text-ig-text-on-primary hover:bg-ig-primary-hover'
 										: 'bg-ig-border text-ig-text-secondary hover:bg-ig-border-strong'}"
 									title={searchModeFilter
-										? 'Filter mode: hiding non-matching entries (click to switch to highlight mode, double-click to open settings)'
-										: 'Highlight mode: showing all entries with matches highlighted (click to switch to filter mode, double-click to open settings)'}
+										? t('Filter mode: hiding non-matching entries (click to switch to highlight mode, double-click to open settings)')
+										: t('Highlight mode: showing all entries with matches highlighted (click to switch to filter mode, double-click to open settings)')}
 									aria-label={searchModeFilter
-										? 'Search mode: filter (switch to highlight)'
-										: 'Search mode: highlight (switch to filter)'}
+										? t('Search mode: filter (switch to highlight)')
+										: t('Search mode: highlight (switch to filter)')}
 								>
 									{@html FilterIcon}
 								</button>
@@ -444,11 +445,11 @@
 										? ''
 										: 'rounded-r-ig-md'}"
 									title={searchHighlightInFilterMode
-										? 'Text highlighting enabled (click to disable, double-click to open settings)'
-										: 'Text highlighting disabled (click to enable, double-click to open settings)'}
+										? t('Text highlighting enabled (click to disable, double-click to open settings)')
+										: t('Text highlighting disabled (click to enable, double-click to open settings)')}
 									aria-label={searchHighlightInFilterMode
-										? 'Disable text highlighting'
-										: 'Enable text highlighting'}
+										? t('Disable text highlighting')
+										: t('Enable text highlighting')}
 									aria-pressed={searchHighlightInFilterMode}
 								>
 									<svg
@@ -469,8 +470,8 @@
 										onclick={goToPrevMatch}
 										disabled={matchCount === 0}
 										class="flex h-[38px] w-8 items-center justify-center border border-l-0 border-ig-border-strong bg-ig-border text-ig-text-secondary transition-colors hover:bg-ig-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
-										title="Previous match (wraps around)"
-										aria-label="Previous match"
+										title={t('Previous match (wraps around)')}
+										aria-label={t('Previous match')}
 									>
 										<svg
 											aria-hidden="true"
@@ -491,8 +492,8 @@
 										onclick={goToNextMatch}
 										disabled={matchCount === 0}
 										class="flex h-[38px] w-8 items-center justify-center rounded-r-ig-md border border-l-0 border-ig-border-strong bg-ig-border text-ig-text-secondary transition-colors hover:bg-ig-border-strong disabled:opacity-50 disabled:cursor-not-allowed"
-										title="Next match (wraps around)"
-										aria-label="Next match"
+										title={t('Next match (wraps around)')}
+										aria-label={t('Next match')}
 									>
 										<svg
 											aria-hidden="true"
@@ -518,7 +519,7 @@
 									{:else if matchCount > 0}
 										{currentMatchIndex + 1}/{matchCount}
 									{:else}
-										0 matches
+										{t('0 matches')}
 									{/if}
 								</div>
 							{/if}
@@ -526,7 +527,7 @@
 						{#if config.inspector}
 							<button
 								class="flex cursor-pointer items-center gap-1.5 rounded-l-ig-sm border border-r-0 border-ig-border-strong bg-ig-surface-raised py-1.5 pl-2 pr-1 transition-colors hover:bg-ig-border"
-								title={showInspector ? 'Hide Inspector' : 'Show Inspector'}
+								title={showInspector ? t('Hide Inspector') : t('Show Inspector')}
 								onclick={() => {
 									preferences.set('gadget.show-inspector', !showInspector);
 								}}
@@ -605,7 +606,7 @@
 		class="flex flex-1 items-center justify-center bg-ig-surface align-middle font-mono text-ig-text"
 	>
 		<div>
-			<div class="text-xl">Gadget Instance not found (yet)</div>
+			<div class="text-xl">{t('Gadget Instance not found (yet)')}</div>
 		</div>
 	</div>
 {/if}

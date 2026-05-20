@@ -13,6 +13,7 @@
 	import Eye from '$lib/icons/fa/eye.svg?raw';
 	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
 	import Button from '$lib/components/Button.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	const api: any = getContext('api');
 	const replayService = new ReplayService();
@@ -40,7 +41,7 @@
 		try {
 			session = await api.getSession(id);
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load session';
+			error = e instanceof Error ? e.message : t('Failed to load session');
 		} finally {
 			loading = false;
 		}
@@ -92,13 +93,13 @@
 
 	async function loadRunData(runId: string, mode: 'instant' | 'realtime') {
 		if (!session) {
-			error = 'Session not loaded';
+			error = t('Session not loaded');
 			return;
 		}
 
 		const run = session.runs.find((r) => r.id === runId);
 		if (!run) {
-			error = 'Run not found';
+			error = t('Run not found');
 			return;
 		}
 
@@ -174,15 +175,15 @@
 
 {#if loading}
 	<div class="flex flex-1 items-center justify-center p-8">
-		<span class="text-gray-600 dark:text-gray-400">Loading session...</span>
+		<span class="text-gray-600 dark:text-gray-400">{t('Loading session...')}</span>
 	</div>
 {:else if error}
 	<div class="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-		<p class="text-red-600 dark:text-red-400">Error: {error}</p>
+		<p class="text-red-600 dark:text-red-400">{t('Error:')} {error}</p>
 		<a
 			href={resolve('/')}
 			class="text-blue-600 dark:text-blue-400 underline hover:text-blue-500 dark:hover:text-blue-300"
-			>Return home</a
+			>{t('Return home')}</a
 		>
 	</div>
 {:else if session}
@@ -195,7 +196,7 @@
 					<a
 						href={resolve(`/env/${session.environmentId}`)}
 						class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
-						title="Back to Environment"
+						title={t('Back to Environment')}
 					>
 						{@html ChevronLeft}
 					</a>
@@ -204,8 +205,8 @@
 							{session.name || 'Unnamed Session'}
 						</h1>
 						<p class="text-sm text-gray-500">
-							{session.runs.length} run{session.runs.length !== 1 ? 's' : ''}
-							· Created
+							{t('{{count}} run', { count: session.runs.length })}
+							· {t('Created')}
 							<span class="cursor-help" title={formatAbsoluteTime(session.createdAt)}>
 								{formatRelativeTime(session.createdAt)}
 							</span>
@@ -214,12 +215,12 @@
 				</div>
 				{#if isPlaying}
 					<div class="flex items-center gap-4">
-						<span class="text-sm text-gray-600 dark:text-gray-400">Playing...</span>
+						<span class="text-sm text-gray-600 dark:text-gray-400">{t('Playing...')}</span>
 						<button
 							onclick={stopPlayback}
 							class="rounded-ig-sm border border-red-300 dark:border-red-800 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-100/20 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-300"
 						>
-							Stop Playback
+							{t('Stop Playback')}
 						</button>
 					</div>
 				{/if}
@@ -242,7 +243,7 @@
 							<div class="text-sm font-medium text-gray-800 dark:text-gray-200">
 								{getGadgetName(run.gadgetImage)}
 							</div>
-							<div class="text-xs text-gray-500">{run.eventCount} events</div>
+							<div class="text-xs text-gray-500">{t('{{count}} events', { count: run.eventCount })}</div>
 						</div>
 						<div class="flex items-center gap-1">
 							<Button variant="secondary" size="sm" onclick={() => viewResults(run.id)}
@@ -264,18 +265,18 @@
 						<Gadget instanceID={instanceId} />
 					{:else}
 						<div class="flex flex-1 items-center justify-center p-8">
-							<span class="text-gray-600 dark:text-gray-400">Loading run...</span>
+							<span class="text-gray-600 dark:text-gray-400">{t('Loading run...')}</span>
 						</div>
 					{/if}
 				{:else}
 					<div class="flex flex-1 items-center justify-center p-8">
-						<p class="text-gray-500">Select a run to view</p>
+						<p class="text-gray-500">{t('Select a run to view')}</p>
 					</div>
 				{/if}
 			</div>
 		{:else}
 			<div class="flex flex-1 items-center justify-center p-8">
-				<p class="text-gray-500">No runs in this session</p>
+				<p class="text-gray-500">{t('No runs in this session')}</p>
 			</div>
 		{/if}
 	</div>

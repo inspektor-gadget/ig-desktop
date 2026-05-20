@@ -5,6 +5,7 @@
 	import { preferences } from '$lib/shared/preferences.svelte';
 	import { instances } from '$lib/shared/instances.svelte';
 	import type { LogEntry } from '$lib/types';
+	import { t } from '$lib/i18n/index.svelte';
 
 	let { log, instanceID }: { log: LogEntry[]; instanceID?: string } = $props();
 
@@ -133,7 +134,7 @@
 		<button
 			onclick={toggleCollapsed}
 			class="mr-1 rounded-ig-sm p-0.5 text-ig-text-muted transition-colors hover:bg-ig-border hover:text-ig-text"
-			aria-label={collapsed ? 'Expand logs' : 'Collapse logs'}
+			aria-label={collapsed ? t('Expand logs') : t('Collapse logs')}
 		>
 			<svg
 				aria-hidden="true"
@@ -149,12 +150,12 @@
 			</svg>
 		</button>
 		<div class="pr-2">{@html Bug}</div>
-		<h2 class="text-sm font-medium">Log</h2>
+		<h2 class="text-sm font-medium">{t('Log')}</h2>
 		{#if hasErrors}
 			<!-- Red octagon (stop sign) for errors -->
 			<svg
 				role="img"
-				aria-label="Logs contain errors"
+				aria-label={t('Logs contain errors')}
 				class="ml-2 h-4 w-4 text-red-500"
 				viewBox="0 0 24 24"
 				fill="currentColor"
@@ -167,7 +168,7 @@
 			<!-- Orange warning triangle -->
 			<svg
 				role="img"
-				aria-label="Logs contain warnings"
+				aria-label={t('Logs contain warnings')}
 				class="ml-2 h-4 w-4 text-orange-400"
 				viewBox="0 0 24 24"
 				fill="currentColor"
@@ -188,7 +189,7 @@
 					class="flex items-center gap-1.5 rounded-ig-md border border-ig-border bg-ig-surface-raised px-3 py-1.5 text-sm text-ig-text-secondary transition-colors hover:border-ig-border-strong hover:bg-ig-border focus:border-ig-primary focus:ring-2 focus:ring-ig-primary-muted focus:outline-none"
 				>
 					<span class="h-4 w-4">{@html Filter}</span>
-					<span>Severity</span>
+					<span>{t('Severity')}</span>
 					<svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
 						<path
 							fill-rule="evenodd"
@@ -212,7 +213,7 @@
 									onchange={() => toggleSeverity(level.key)}
 									class="h-4 w-4 cursor-pointer rounded-ig-sm border-ig-border-strong bg-ig-surface text-ig-primary transition-colors focus:ring-2 focus:ring-ig-primary-muted focus:ring-offset-0"
 								/>
-								<span class="text-sm text-ig-text-secondary">{level.label}</span>
+								<span class="text-sm text-ig-text-secondary">{t(level.label)}</span>
 							</label>
 						{/each}
 					</div>
@@ -222,16 +223,16 @@
 			<input
 				class="w-48 rounded-ig-md border border-ig-border bg-ig-surface-raised px-3 py-1.5 text-sm text-ig-text transition-colors placeholder:text-ig-text-muted focus:border-ig-primary focus:ring-2 focus:ring-ig-primary-muted focus:outline-none"
 				type="text"
-				placeholder="Search logs..."
-				aria-label="Search logs"
+				placeholder={t('Search logs...')}
+				aria-label={t('Search logs')}
 				bind:value={search}
 			/>
 			<!-- Clear Logs Button -->
 			<button
 				onclick={clearLogs}
 				class="flex items-center gap-1.5 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-3 py-1.5 text-sm text-ig-text-secondary transition-colors hover:border-red-400 dark:hover:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 focus:outline-none"
-				title="Clear logs"
-				aria-label="Clear logs"
+				title={t('Clear logs')}
+				aria-label={t('Clear logs')}
 			>
 				<span class="h-4 w-4">{@html Trash}</span>
 			</button>

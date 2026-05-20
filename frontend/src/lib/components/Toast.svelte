@@ -2,6 +2,7 @@
 	import type { Toast } from '$lib/stores/toast.svelte';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		toast: Toast;
@@ -79,7 +80,7 @@
 	<button
 		onclick={() => onDismiss(toast.id)}
 		class="flex-shrink-0 {scheme.text} opacity-60 transition-opacity hover:opacity-100"
-		title="Dismiss"
+		title={t('Dismiss')}
 	>
 		<svg aria-hidden="true" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 			<path

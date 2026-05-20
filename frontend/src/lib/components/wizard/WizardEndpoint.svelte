@@ -14,6 +14,7 @@
 	import PlaySmall from '$lib/icons/fa/play.svg?raw';
 	import CogSmall from '$lib/icons/cog-small.svg?raw';
 	import ChevronDown from '$lib/icons/chevron-down.svg?raw';
+	import { t } from '$lib/i18n/index.svelte';
 	// Note: Breadcrumbs and back navigation are handled by parent GadgetWizard
 
 	interface Props {
@@ -160,9 +161,9 @@
 <div class="flex flex-col gap-4">
 	<!-- Gadget info -->
 	<div class="flex flex-col gap-2">
-		<h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{node.label}</h3>
+		<h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{t(node.label)}</h3>
 		{#if node.description}
-			<p class="text-sm text-gray-600 dark:text-gray-400">{node.description}</p>
+			<p class="text-sm text-gray-600 dark:text-gray-400">{t(node.description)}</p>
 		{/if}
 		<!-- Gadget tags -->
 		<div class="flex flex-wrap gap-1.5">
@@ -182,10 +183,10 @@
 			class="rounded-ig-md border border-blue-300/50 dark:border-blue-800/50 bg-blue-100/20 dark:bg-blue-900/20 p-3 text-sm text-blue-700 dark:text-blue-300"
 		>
 			{#if hasMultipleGadgets}
-				This will create {gadgetSpecs.length} headless instances
+				{t('This will create {{count}} headless instances', { count: gadgetSpecs.length })}
 			{:else}
-				This will create a headless instance named <span class="font-mono font-medium"
-					>{gadgetSpecs[0]?.suggestedInstanceName || 'unnamed'}</span
+				{t('This will create a headless instance named')} <span class="font-mono font-medium"
+					>{gadgetSpecs[0]?.suggestedInstanceName || t('unnamed')}</span
 				>
 			{/if}
 		</div>
@@ -204,7 +205,7 @@
 			>
 				{@html ChevronDown}
 			</span>
-			<span>Target Filters</span>
+			<span>{t('Target Filters')}</span>
 		</button>
 		{#if filtersExpanded}
 			<WizardTargets {isKubernetes} bind:params={targetParams} environmentID={env.id} />
@@ -217,11 +218,11 @@
 			onclick={handleConfigure}
 			class="flex cursor-pointer items-center gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 transition-all hover:border-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900"
 			title={hasMultipleGadgets
-				? 'Configure first gadget with more options'
-				: 'Configure and run with more options'}
+				? t('Configure first gadget with more options')
+				: t('Configure and run with more options')}
 		>
 			<span>{@html CogSmall}</span>
-			<span>Configure{hasMultipleGadgets ? ` (${gadgetNames[0]})` : ''}</span>
+			<span>{hasMultipleGadgets ? t('Configure ({{gadgetName}})', { gadgetName: gadgetNames[0] }) : t('Configure')}</span>
 		</button>
 		<button
 			onclick={handleRunNow}
@@ -231,10 +232,10 @@
 			<span>
 				{#if hasMultipleGadgets}
 					{detached
-						? `Create ${gadgetSpecs.length} Instances`
-						: `Run ${gadgetSpecs.length} Gadgets`}
+						? t('Create {{count}} Instances', { count: gadgetSpecs.length })
+						: t('Run {{count}} Gadgets', { count: gadgetSpecs.length })}
 				{:else}
-					{detached ? 'Create Instance' : 'Run Now'}
+					{detached ? t('Create Instance') : t('Run Now')}
 				{/if}
 			</span>
 		</button>

@@ -17,6 +17,7 @@
 	import type { IGDeploymentStatus, RuntimeInfo } from '$lib/types';
 	import Input from '$lib/components/forms/Input.svelte';
 	import Select from '$lib/components/forms/Select.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	const api: any = getContext('api');
 
@@ -149,13 +150,13 @@
 
 <div class="z-1 flex flex-col shadow-lg">
 	<div class="flex flex-row justify-between bg-white dark:bg-gray-950 p-4">
-		<div class="text-xl">Create Environment</div>
+		<div class="text-xl">{t('Create Environment')}</div>
 	</div>
 </div>
 
 <div class="flex grow flex-col overflow-auto p-8">
 	<div class="mx-auto flex w-full max-w-7xl flex-col gap-4">
-		<Panel title="Environment Name" icon={Plus} color="gray">
+		<Panel title={t('Environment Name')} icon={Plus} color="gray">
 			<div class="flex flex-row items-center gap-4">
 				<div
 					class="group-hover:bg-brand flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all duration-200 group-hover:rounded-ig-lg group-hover:text-white"
@@ -167,14 +168,14 @@
 					</div>
 				</div>
 				<div class="flex grow flex-col gap-2">
-					<Input bind:value={name} placeholder="Enter environment name..." class="text-sm" />
+					<Input bind:value={name} placeholder={t('Enter environment name...')} class="text-sm" />
 				</div>
 			</div>
 		</Panel>
 
-		<Panel title="Runtime" icon={Code} color="gray">
+		<Panel title={t('Runtime')} icon={Code} color="gray">
 			<div class="flex flex-col gap-3">
-				<div class="text-sm text-gray-600 dark:text-gray-400">Select your target runtime</div>
+				<div class="text-sm text-gray-600 dark:text-gray-400">{t('Select your target runtime')}</div>
 				<div class="grid grid-cols-2 gap-3">
 					{#if runtimes}
 						{#each runtimes as rt}
@@ -182,7 +183,7 @@
 								role="button"
 								tabindex="0"
 								aria-pressed={selectedRuntime === rt.key}
-								aria-label={`Select runtime: ${rt.title}`}
+								aria-label={t('Select runtime: {{title}}', { title: rt.title })}
 								onpointerdown={(e) => {
 									// Don't trigger if clicking on select dropdown
 									if (e.target instanceof HTMLSelectElement) return;
@@ -215,7 +216,7 @@
 											bind:value={selectedContext}
 											options={rt.contexts.map((ctx) => ({ value: ctx, label: ctx }))}
 											onchange={handleContextChange}
-											label="Kubernetes Context:"
+											label={t('Kubernetes Context:')}
 											disabled={selectedRuntime !== rt.key}
 											class="text-sm"
 										/>
@@ -237,7 +238,7 @@
 				>
 					<Spinner />
 					<div class="text-gray-600 dark:text-gray-400">
-						Checking Inspektor Gadget deployment status...
+						{t('Checking Inspektor Gadget deployment status...')}
 					</div>
 				</div>
 			{:else if deploymentStatus?.deployed}
@@ -264,20 +265,20 @@
 						</div>
 						<div class="flex-1">
 							<h3 class="font-semibold text-green-600 dark:text-green-400">
-								Inspektor Gadget Detected
+								{t('Inspektor Gadget Detected')}
 							</h3>
 							<div class="mt-1 flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-400">
-								<p>Inspektor Gadget is deployed and ready to use.</p>
+								<p>{t('Inspektor Gadget is deployed and ready to use.')}</p>
 								<div class="mt-1 flex gap-4 text-xs">
 									<span>
-										<span class="text-gray-500">Namespace:</span>
+										<span class="text-gray-500">{t('Namespace:')}</span>
 										<span class="font-mono text-green-600 dark:text-green-400"
 											>{deploymentStatus.namespace}</span
 										>
 									</span>
 									{#if deploymentStatus.version}
 										<span>
-											<span class="text-gray-500">Version:</span>
+											<span class="text-gray-500">{t('Version:')}</span>
 											<span class="font-mono text-green-600 dark:text-green-400"
 												>{deploymentStatus.version}</span
 											>
@@ -293,14 +294,14 @@
 							class="flex items-center justify-center gap-2 rounded-ig-md border border-purple-600 bg-purple-100/20 dark:bg-purple-900/20 px-4 py-2.5 text-sm text-purple-600 dark:text-purple-400 transition-all hover:bg-purple-100/50 dark:hover:bg-purple-900/50"
 						>
 							<span>{@html Refresh}</span>
-							<span>Redeploy Inspektor Gadget</span>
+							<span>{t('Redeploy Inspektor Gadget')}</span>
 						</button>
 						<button
 							onclick={openUndeployModal}
 							class="flex items-center justify-center gap-2 rounded-ig-md border border-red-600 bg-red-100/20 dark:bg-red-900/20 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 transition-all hover:bg-red-100/50 dark:hover:bg-red-900/50"
 						>
 							<span>{@html Trash}</span>
-							<span>Undeploy Inspektor Gadget</span>
+							<span>{t('Undeploy Inspektor Gadget')}</span>
 						</button>
 					</div>
 				</div>
@@ -313,15 +314,14 @@
 						<div class="text-blue-600 dark:text-blue-400">{@html Info}</div>
 						<div class="flex-1">
 							<h3 class="font-semibold text-blue-600 dark:text-blue-400">
-								Inspektor Gadget Not Detected
+								{t('Inspektor Gadget Not Detected')}
 							</h3>
 							<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-								Inspektor Gadget does not appear to be deployed in your Kubernetes cluster. You can
-								deploy it now using the official Helm chart.
+								{t('Inspektor Gadget does not appear to be deployed in your Kubernetes cluster. You can deploy it now using the official Helm chart.')}
 							</p>
 							{#if deploymentStatus?.error}
 								<p class="mt-2 text-xs text-red-600 dark:text-red-400">
-									Note: {deploymentStatus.error}
+									{t('Note:')} {deploymentStatus.error}
 								</p>
 							{/if}
 						</div>
@@ -331,14 +331,14 @@
 						class="flex items-center justify-center gap-2 rounded-ig-md bg-blue-600 dark:bg-blue-800 px-4 py-2.5 text-sm text-white transition-all hover:bg-blue-500 dark:hover:bg-blue-700"
 					>
 						<span>{@html Server}</span>
-						<span>Deploy Inspektor Gadget</span>
+						<span>{t('Deploy Inspektor Gadget')}</span>
 					</button>
 				</div>
 			{/if}
 		{/if}
 
 		{#if runtimeParams && runtimeParams.length > 0}
-			<Panel title="Configuration" icon={Adjustments} color="gray">
+			<Panel title={t('Configuration')} icon={Adjustments} color="gray">
 				<Params params={runtimeParams} {values} />
 			</Panel>
 		{/if}
@@ -363,7 +363,7 @@
 			onclick={createEnvironment}
 		>
 			<span>{@html Plus}</span>
-			<span>Create Environment</span>
+			<span>{t('Create Environment')}</span>
 		</button>
 	</div>
 </div>

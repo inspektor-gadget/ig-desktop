@@ -8,6 +8,7 @@
 	import Gadget from '$lib/icons/gadget.svg?raw';
 	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
 	import Close from '$lib/icons/close-small.svg?raw';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		treeConfig: WizardTreeConfig;
@@ -36,9 +37,11 @@
 
 	// Build title with breadcrumbs
 	const panelTitle = $derived.by(() => {
-		if (isAtRoot) return treeConfig.title;
+		if (isAtRoot) return t(treeConfig.title);
 		// Show breadcrumb path: "Gadget Wizard / Debug / Network"
-		const crumbs = navigationPath.slice(1).map((nodeId) => getNodeLabel(treeConfig.nodes[nodeId]));
+		const crumbs = navigationPath
+			.slice(1)
+			.map((nodeId) => t(getNodeLabel(treeConfig.nodes[nodeId])));
 		return crumbs.join(' / ');
 	});
 
@@ -105,7 +108,7 @@
 					<button
 						onclick={goBack}
 						class="-m-1 cursor-pointer rounded-ig-sm p-1 text-orange-500 dark:text-orange-400 transition-all hover:bg-orange-100 dark:hover:bg-orange-900/30 [&>svg]:size-5"
-						title="Go back"
+						title={t('Go back')}
 					>
 						{@html ChevronLeft}
 					</button>
@@ -117,8 +120,8 @@
 			<button
 				onclick={onHide}
 				class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-orange-400"
-				title="Hide Wizard"
-				aria-label="Hide Wizard"
+				title={t('Hide Wizard')}
+				aria-label={t('Hide Wizard')}
 			>
 				{@html Close}
 			</button>
@@ -129,7 +132,7 @@
 	<div class="flex flex-1 flex-col gap-2 p-6">
 		<!-- Question header (only shown at root) -->
 		{#if isAtRoot}
-			<p class="mb-4 text-gray-600 dark:text-gray-400">{treeConfig.question}</p>
+			<p class="mb-4 text-gray-600 dark:text-gray-400">{t(treeConfig.question)}</p>
 		{/if}
 
 		<!-- Branch view -->

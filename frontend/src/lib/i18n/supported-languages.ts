@@ -6,5 +6,6 @@
  * locale folders use the lowercased code (e.g. `zh-TW` → `locales/zh-tw/`).
  */
 export const supportedLanguages: Record<string, string> = {
-	en: 'English'
+	en: 'English',
+	de: 'Deutsch'
 };

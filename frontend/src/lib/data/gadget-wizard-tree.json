@@ -17,7 +17,7 @@
 		},
 		"telemetry": {
 			"type": "branch",
-			"label": "Setting up telemetry",
+			"label": "Set up telemetry",
 			"icon": "chart",
 			"description": "Create persistent monitoring instances",
 			"detached": true,

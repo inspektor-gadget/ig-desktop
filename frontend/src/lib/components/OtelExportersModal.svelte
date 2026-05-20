@@ -6,6 +6,7 @@
 	import Trash from '$lib/icons/trash.svg?raw';
 	import Plus from '$lib/icons/plus.svg?raw';
 	import Edit from '$lib/icons/pencil.svg?raw';
+	import { t } from '$lib/i18n/index.svelte';
 
 	/**
 	 * Configuration for a single OpenTelemetry exporter
@@ -244,12 +245,12 @@
 				class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-6 py-4"
 			>
 				<h2 id="otel-modal-title" class="text-lg font-semibold">
-					OpenTelemetry {typeLabel} Exporters
+					{t('OpenTelemetry {{typeLabel}} Exporters', { typeLabel })}
 				</h2>
 				<button
 					onclick={() => onClose()}
 					class="cursor-pointer rounded-ig-sm p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
-					title="Close"
+					title={t('Close')}
 				>
 					<svg
 						aria-hidden="true"
@@ -280,10 +281,10 @@
 										<span class="text-xs text-gray-500 dark:text-gray-500">
 											{config.exporter} → {config.endpoint}
 											{#if config.insecure}
-												<span class="text-yellow-600 dark:text-yellow-500">(insecure)</span>
+												<span class="text-yellow-600 dark:text-yellow-500">{t('(insecure)')}</span>
 											{/if}
 											{#if isMetrics && config.interval}
-												<span class="text-blue-600 dark:text-blue-400">every {config.interval}</span
+												<span class="text-blue-600 dark:text-blue-400">{t('every {{interval}}', { interval: config.interval })}</span
 												>
 											{/if}
 										</span>
@@ -292,14 +293,14 @@
 										<button
 											onclick={() => openEditForm(name)}
 											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
-											title="Edit"
+											title={t('Edit')}
 										>
 											{@html Edit}
 										</button>
 										<button
 											onclick={() => deleteExporter(name)}
 											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-600 dark:hover:text-red-400"
-											title="Delete"
+											title={t('Delete')}
 										>
 											{@html Trash}
 										</button>
@@ -312,7 +313,7 @@
 							class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30 p-6 text-center"
 						>
 							<p class="text-sm text-gray-500 dark:text-gray-500">
-								No {typeLabel.toLowerCase()} exporters configured
+								{t('No {{typeLabel}} exporters configured', { typeLabel: typeLabel.toLowerCase() })}
 							</p>
 						</div>
 					{/if}
@@ -323,7 +324,7 @@
 						class="flex cursor-pointer items-center justify-center gap-2 rounded-ig-md border border-dashed border-gray-300 dark:border-gray-700 px-4 py-3 text-sm text-gray-500 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900/50 hover:text-blue-600 dark:hover:text-blue-400"
 					>
 						<span class="h-4 w-4">{@html Plus}</span>
-						<span>Add {typeLabel} Exporter</span>
+						<span>{t('Add {{typeLabel}} Exporter', { typeLabel })}</span>
 					</button>
 				</div>
 			</div>
@@ -336,13 +337,13 @@
 					onclick={() => onClose()}
 					class="cursor-pointer rounded-ig-md border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 transition-all hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-800"
 				>
-					Cancel
+					{t('Cancel')}
 				</button>
 				<button
 					onclick={handleSave}
 					class="cursor-pointer rounded-ig-md bg-green-600 px-4 py-2 text-sm text-white transition-all hover:bg-green-500"
 				>
-					Save Changes
+					{t('Save Changes')}
 				</button>
 			</div>
 		</div>
@@ -372,13 +373,13 @@
 				class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-5 py-3"
 			>
 				<h3 id="form-modal-title" class="text-base font-semibold">
-					{editingName ? `Edit "${editingName}"` : `Add ${typeLabel} Exporter`}
+					{editingName ? t('Edit "{{name}}"', { name: editingName }) : t('Add {{typeLabel}} Exporter', { typeLabel })}
 				</h3>
 				<button
 					onclick={closeFormModal}
 					class="cursor-pointer rounded-ig-sm p-1 text-gray-500 dark:text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200"
-					title="Close"
-					aria-label="Close exporter form"
+					title={t('Close')}
+					aria-label={t('Close exporter form')}
 				>
 					<svg
 						aria-hidden="true"
@@ -399,29 +400,29 @@
 				<div class="flex flex-col gap-4">
 					<Input
 						bind:value={formName}
-						label="Exporter Name"
+						label={t('Exporter Name')}
 						placeholder={isMetrics ? 'my-metrics-exporter' : 'my-log-exporter'}
-						description="Unique identifier for this exporter"
+						description={t('Unique identifier for this exporter')}
 					/>
 
 					<Select
 						bind:value={formExporter}
 						options={exporterOptions}
-						label="Exporter Type"
-						description="The protocol to use for exporting telemetry data"
+						label={t('Exporter Type')}
+						description={t('The protocol to use for exporting telemetry data')}
 					/>
 
 					<Input
 						bind:value={formEndpoint}
-						label="Endpoint"
+						label={t('Endpoint')}
 						placeholder="127.0.0.1:4317"
-						description="The address of the OpenTelemetry collector"
+						description={t('The address of the OpenTelemetry collector')}
 					/>
 
 					<Toggle
 						bind:checked={formInsecure}
-						label="Insecure Connection"
-						description="Use insecure connection (no TLS)"
+						label={t('Insecure Connection')}
+						description={t('Use insecure connection (no TLS)')}
 					/>
 
 					{#if isMetrics}
@@ -429,35 +430,35 @@
 						<Select
 							bind:value={formTemporality}
 							options={temporalityOptions}
-							label="Temporality"
-							description="How metric values are reported over time"
+							label={t('Temporality')}
+							description={t('How metric values are reported over time')}
 						/>
 
 						<Input
 							bind:value={formInterval}
-							label="Interval"
+							label={t('Interval')}
 							placeholder="30s"
-							description="How often metrics are exported (e.g., 30s, 1m)"
+							description={t('How often metrics are exported (e.g., 30s, 1m)')}
 						/>
 
 						<Toggle
 							bind:checked={formCollectGoMetrics}
-							label="Collect Go Metrics"
-							description="Collect Go runtime metrics from the Inspektor Gadget process"
+							label={t('Collect Go Metrics')}
+							description={t('Collect Go runtime metrics from the Inspektor Gadget process')}
 						/>
 
 						<Toggle
 							bind:checked={formCollectIGMetrics}
-							label="Collect Inspektor Gadget Metrics"
-							description="Collect Inspektor Gadget internal metrics"
+							label={t('Collect Inspektor Gadget Metrics')}
+							description={t('Collect Inspektor Gadget internal metrics')}
 						/>
 					{:else}
 						<!-- Logs-specific fields -->
 						<Select
 							bind:value={formCompression}
 							options={compressionOptions}
-							label="Compression"
-							description="Compression algorithm for exported data"
+							label={t('Compression')}
+							description={t('Compression algorithm for exported data')}
 						/>
 					{/if}
 				</div>
@@ -471,14 +472,14 @@
 					onclick={closeFormModal}
 					class="cursor-pointer rounded-ig-md border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 transition-all hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700"
 				>
-					Cancel
+					{t('Cancel')}
 				</button>
 				<button
 					onclick={saveExporter}
 					disabled={!formValid}
 					class="cursor-pointer rounded-ig-md bg-blue-600 px-4 py-2 text-sm text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
 				>
-					{editingName ? 'Update' : 'Add'} Exporter
+					{editingName ? t('Update Exporter') : t('Add Exporter')}
 				</button>
 			</div>
 		</div>

@@ -3,6 +3,7 @@
 	import K8sAutocomplete from '$lib/plugins/builtin/params/k8s-autocomplete/K8sAutocomplete.svelte';
 	import AutocompleteInput from '$lib/components/forms/AutocompleteInput.svelte';
 	import type { WizardTargetParams } from './wizard-types';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		isKubernetes: boolean;
@@ -61,26 +62,26 @@
 	});
 
 	// Param definitions for K8s autocomplete fields
-	const namespaceParam = {
+	const namespaceParam = $derived({
 		key: 'namespace',
-		title: 'Namespace',
-		description: 'Kubernetes namespace to filter',
+		title: t('Namespace'),
+		description: t('Kubernetes namespace to filter'),
 		valueHint: 'k8s:namespace'
-	};
+	});
 
-	const podParam = {
+	const podParam = $derived({
 		key: 'pod',
-		title: 'Pod',
-		description: 'Pod name to filter',
+		title: t('Pod'),
+		description: t('Pod name to filter'),
 		valueHint: 'k8s:pod'
-	};
+	});
 
-	const labelsParam = {
+	const labelsParam = $derived({
 		key: 'labels',
-		title: 'Labels',
-		description: 'Pod labels to filter (key=value)',
+		title: t('Labels'),
+		description: t('Pod labels to filter (key=value)'),
 		valueHint: 'k8s:labels'
-	};
+	});
 </script>
 
 <div class="flex flex-col gap-4">
@@ -100,8 +101,8 @@
 		<div class="flex flex-row items-center gap-4">
 			<div class="w-1/3">
 				<div class="flex flex-col gap-1">
-					<div class="">Container Name</div>
-					<div class="mb-2 text-xs text-gray-500">Filter by container name</div>
+					<div class="">{t('Container Name')}</div>
+					<div class="mb-2 text-xs text-gray-500">{t('Filter by container name')}</div>
 				</div>
 			</div>
 			<div class="grow">
@@ -120,8 +121,8 @@
 		<div class="flex flex-row items-center gap-4">
 			<div class="w-1/3">
 				<div class="flex flex-col gap-1">
-					<div class="">Include Host</div>
-					<div class="mb-2 text-xs text-gray-500">Also show data from the host</div>
+					<div class="">{t('Include Host')}</div>
+					<div class="mb-2 text-xs text-gray-500">{t('Also show data from the host')}</div>
 				</div>
 			</div>
 			<div class="grow">
@@ -134,7 +135,7 @@
 						}}
 						class="h-4 w-4 rounded-ig-sm border-gray-300 text-blue-600 focus:ring-blue-500"
 					/>
-					<span class="text-sm text-gray-700 dark:text-gray-300">Show host data</span>
+					<span class="text-sm text-gray-700 dark:text-gray-300">{t('Show host data')}</span>
 				</label>
 			</div>
 		</div>

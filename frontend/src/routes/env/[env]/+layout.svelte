@@ -9,6 +9,7 @@
 	import type { Snippet } from 'svelte';
 	import { getContext } from 'svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -32,9 +33,9 @@
 			// Only show toast if we actually stopped/detached (was still running)
 			if (wasRunning) {
 				if (isAttached) {
-					toastStore.success(`Detached from "${instanceName}" successfully`);
+					toastStore.success(t('Detached from "{{instanceName}}" successfully', { instanceName }));
 				} else {
-					toastStore.success(`Instance "${instanceName}" stopped successfully`);
+					toastStore.success(t('Instance "{{instanceName}}" stopped successfully', { instanceName }));
 				}
 			}
 
@@ -46,11 +47,16 @@
 		} catch (err: any) {
 			// Show error toast
 			const errorMessage = err?.message || err?.toString() || 'Unknown error';
-			const action = isAttached ? 'detach from' : 'stop';
-			toastStore.error(`Failed to ${action} instance "${instanceName}": ${errorMessage}`, 7000, {
-				label: 'Retry',
-				onClick: () => closeInstance(instanceID)
-			});
+			toastStore.error(
+				isAttached
+					? t('Failed to detach from instance "{{instanceName}}": {{errorMessage}}', { instanceName, errorMessage })
+					: t('Failed to stop instance "{{instanceName}}": {{errorMessage}}', { instanceName, errorMessage }),
+				7000,
+				{
+					label: t('Retry'),
+					onClick: () => closeInstance(instanceID)
+				}
+			);
 		}
 	}
 </script>
@@ -68,8 +74,8 @@
 				><div class="flex flex-row items-center gap-2">
 					<button
 						class="small-icon rounded-4xl p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700"
-						title="Close tab"
-						aria-label="Close tab"
+						title={t('Close tab')}
+						aria-label={t('Close tab')}
 						onclick={(ev) => {
 							ev.preventDefault();
 							ev.stopPropagation();

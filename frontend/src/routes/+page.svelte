@@ -9,6 +9,7 @@
 	import { getContext, onMount } from 'svelte';
 	import { features } from '$lib/config/app-mode';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	import Panel from '$lib/components/Panel.svelte';
 	import Server from '$lib/icons/fa/server.svg?raw';
@@ -88,10 +89,10 @@
 		const hours = Math.floor(minutes / 60);
 		const days = Math.floor(hours / 24);
 
-		if (days > 0) return `${days}d ago`;
-		if (hours > 0) return `${hours}h ago`;
-		if (minutes > 0) return `${minutes}m ago`;
-		return 'just now';
+		if (days > 0) return t('{{count}}d ago', { count: days });
+		if (hours > 0) return t('{{count}}h ago', { count: hours });
+		if (minutes > 0) return t('{{count}}m ago', { count: minutes });
+		return t('just now');
 	}
 
 	function getGadgetName(image: string): string {
@@ -113,8 +114,8 @@
 			goto(resolve(`/env/${envId}/running/${res.id}`));
 		} catch (err: any) {
 			const errorMessage = err?.message || err?.toString() || 'Unknown error';
-			toastStore.error(`Failed to run gadget: ${errorMessage}`, 7000, {
-				label: 'Retry',
+			toastStore.error(t('Failed to run gadget: {{errorMessage}}', { errorMessage }), 7000, {
+				label: t('Retry'),
 				onClick: () => runGadget(gadget, envId)
 			});
 		}
@@ -169,28 +170,26 @@
 					<h1
 						class="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-6xl font-bold text-transparent"
 					>
-						Welcome!
+						{t('Welcome!')}
 					</h1>
-					<p class="text-2xl text-gray-600 dark:text-gray-400">The Inspektor awaits you.</p>
+					<p class="text-2xl text-gray-600 dark:text-gray-400">{t('The Inspektor awaits you.')}</p>
 				</div>
 				<p class="max-w-2xl text-lg text-gray-500">
-					Get started by setting up your first environment to begin exploring and debugging your
-					systems with Inspektor Gadget's powerful eBPF-based tools.
+					{t('Get started by setting up your first environment to begin exploring and debugging your systems with Inspektor Gadget\'s powerful eBPF-based tools.')}
 				</p>
 			</div>
 
 			<!-- Get Started Panel -->
 			{#if features.canCreateEnvironment}
 				<div class="mx-auto mb-16 max-w-3xl">
-					<Panel title="Get Started" icon={CirclePlus} color="blue" bodyPadding="large">
+					<Panel title={t('Get Started')} icon={CirclePlus} color="blue" bodyPadding="large">
 						<div class="flex flex-col gap-6">
 							<div class="flex flex-col gap-3">
 								<h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
-									Create Your First Environment
+									{t('Create Your First Environment')}
 								</h3>
 								<p class="text-gray-600 dark:text-gray-400">
-									Connect to a Kubernetes cluster or Linux host to start running gadgets. Use the
-									button in the upper left or click below.
+									{t('Connect to a Kubernetes cluster or Linux host to start running gadgets. Use the button in the upper left or click below.')}
 								</p>
 							</div>
 
@@ -199,27 +198,26 @@
 								class="group/btn flex items-center justify-center gap-2 rounded-ig-md bg-blue-600 px-6 py-3 font-medium text-white transition-all hover:bg-blue-500"
 							>
 								<div class="h-5 w-5">{@html CirclePlus}</div>
-								<span>Create New Environment</span>
+								<span>{t('Create New Environment')}</span>
 							</a>
 
 							<div class="flex flex-col gap-2 border-t border-gray-200 dark:border-gray-800 pt-4">
 								<p class="text-sm text-gray-600 dark:text-gray-400">
-									Haven't installed Inspektor Gadget yet?
+									{t("Haven't installed Inspektor Gadget yet?")}
 								</p>
 								<p class="text-sm text-gray-500">
-									For Kubernetes, you can use a 1-click installation directly from IG Desktop. Just
-									follow the step above and create a new environment.
+									{t('For Kubernetes, you can use a 1-click installation directly from IG Desktop. Just follow the step above and create a new environment.')}
 								</p>
 								<p class="text-sm text-gray-500">
-									Otherwise, check out the
+									{t('Otherwise, check out the')}
 									<button
 										onclick={() =>
 											openExternalURL('https://inspektor-gadget.io/docs/latest/quick-start')}
 										class="text-blue-400 underline hover:text-blue-300"
 									>
-										Quickstart Guide
+										{t('Quickstart Guide')}
 									</button>
-									to deploy Inspektor Gadget to your
+									{t('to deploy Inspektor Gadget to your')}
 									<button
 										onclick={() =>
 											openExternalURL(
@@ -227,15 +225,15 @@
 											)}
 										class="text-blue-400 underline hover:text-blue-300"
 									>
-										Kubernetes cluster
+										{t('Kubernetes cluster')}
 									</button>
-									or run it as a
+									{t('or run it as a')}
 									<button
 										onclick={() =>
 											openExternalURL('https://inspektor-gadget.io/docs/latest/quick-start#linux')}
 										class="text-blue-400 underline hover:text-blue-300"
 									>
-										daemon on your Linux machine
+										{t('daemon on your Linux machine')}
 									</button>.
 								</p>
 							</div>
@@ -252,10 +250,10 @@
 				<h1
 					class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-5xl font-bold text-transparent"
 				>
-					Ready to explore?
+					{t('Ready to explore?')}
 				</h1>
 				<p class="text-xl text-gray-600 dark:text-gray-400">
-					Your environments are set up. Choose where to start your investigation.
+					{t('Your environments are set up. Choose where to start your investigation.')}
 				</p>
 			</div>
 
@@ -269,13 +267,13 @@
 				<!-- Environments Panel (hidden in single-env and demo modes) -->
 				{#if !features.isSingleEnvironment && !features.isDemoMode}
 					<Panel
-						title="Environments"
+						title={t('Environments')}
 						icon={Server}
 						color="blue"
 						badge={Object.keys(environments).length}
 					>
 						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
-							Select an environment to manage and run gadgets
+							{t('Select an environment to manage and run gadgets')}
 						</p>
 						<div class="flex flex-col gap-2">
 							{#each Object.values(environments).slice(0, 4) as env}
@@ -297,7 +295,7 @@
 						</div>
 						{#if Object.keys(environments).length > 4}
 							<div class="mt-2 text-center text-xs text-gray-500">
-								+{Object.keys(environments).length - 4} more
+								{t('+{{count}} more', { count: Object.keys(environments).length - 4 })}
 							</div>
 						{/if}
 					</Panel>
@@ -305,10 +303,10 @@
 
 				<!-- Recent Gadgets Panel -->
 				<div class:lg:col-span-2={features.isSingleEnvironment || features.isDemoMode}>
-					<Panel title="Recent Activity" icon={History} color="purple">
+					<Panel title={t('Recent Activity')} icon={History} color="purple">
 						{#if allHistories.length > 0}
 							<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
-								Quick access to recently run gadgets
+								{t('Quick access to recently run gadgets')}
 							</p>
 							<div class="flex flex-col gap-2">
 								{#each allHistories as { gadget, envId, envName }}
@@ -339,9 +337,9 @@
 						{:else}
 							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
 								<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
-								<p class="text-sm text-gray-500">No gadgets run yet</p>
+								<p class="text-sm text-gray-500">{t('No gadgets run yet')}</p>
 								<p class="text-xs text-gray-400 dark:text-gray-600">
-									Your recent activity will appear here
+									{t('Your recent activity will appear here')}
 								</p>
 							</div>
 						{/if}
@@ -350,9 +348,9 @@
 
 				<!-- Discover Gadgets Panel -->
 				{#if features.canBrowseArtifactHub}
-					<Panel title="Discover Gadgets" icon={Grid} color="green">
+					<Panel title={t('Discover Gadgets')} icon={Grid} color="green">
 						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
-							Explore the Artifact Hub gadget gallery
+							{t('Explore the Artifact Hub gadget gallery')}
 						</p>
 
 						<!-- Featured categories -->
@@ -362,9 +360,9 @@
 								class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">
-									<div class="font-medium text-gray-800 dark:text-gray-200">All Gadgets</div>
+									<div class="font-medium text-gray-800 dark:text-gray-200">{t('All Gadgets')}</div>
 									<div class="text-xs text-gray-600 dark:text-gray-400">
-										Browse complete collection
+										{t('Browse complete collection')}
 									</div>
 								</div>
 								<div
@@ -379,9 +377,9 @@
 								class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">
-									<div class="font-medium text-gray-800 dark:text-gray-200">Security</div>
+									<div class="font-medium text-gray-800 dark:text-gray-200">{t('Security')}</div>
 									<div class="text-xs text-gray-600 dark:text-gray-400">
-										Security monitoring gadgets
+										{t('Security monitoring gadgets')}
 									</div>
 								</div>
 								<div
@@ -396,8 +394,8 @@
 								class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 transition-all hover:border-green-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
 								<div class="flex flex-col gap-1">
-									<div class="font-medium text-gray-800 dark:text-gray-200">Networking</div>
-									<div class="text-xs text-gray-600 dark:text-gray-400">Network analysis tools</div>
+									<div class="font-medium text-gray-800 dark:text-gray-200">{t('Networking')}</div>
+									<div class="text-xs text-gray-600 dark:text-gray-400">{t('Network analysis tools')}</div>
 								</div>
 								<div
 									class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
@@ -412,7 +410,7 @@
 							class="mt-auto flex items-center gap-2 pt-4 text-xs text-gray-400 dark:text-gray-600"
 						>
 							<div class="h-4 w-4">{@html ArtifactHub}</div>
-							<span>Powered by Artifact Hub</span>
+							<span>{t('Powered by Artifact Hub')}</span>
 						</div>
 					</Panel>
 				{/if}
@@ -425,7 +423,7 @@
 				<h3
 					class="mb-4 text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 uppercase"
 				>
-					Did You Know?
+					{t('Did You Know?')}
 				</h3>
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 					{#each selectedTips as tip}
@@ -438,9 +436,9 @@
 							<div class="text-{tip.color}-400">{@html tip.icon}</div>
 							<div>
 								<div class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-									{tip.title}
+									{t(tip.title)}
 								</div>
-								<div class="text-xs text-gray-600 dark:text-gray-400">{tip.description}</div>
+								<div class="text-xs text-gray-600 dark:text-gray-400">{t(tip.description)}</div>
 							</div>
 						</button>
 					{/each}
@@ -455,7 +453,7 @@
 {#snippet Resources()}
 	<!-- Resources & Community Panel -->
 	<div class="mx-auto max-w-7xl">
-		<Panel title="Resources & Community" icon={Book} color="purple" bodyPadding="large">
+		<Panel title={t('Resources & Community')} icon={Book} color="purple" bodyPadding="large">
 			<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 				<!-- Documentation Section -->
 				<div class="flex flex-col gap-3">
@@ -463,7 +461,7 @@
 						class="flex items-center gap-2 text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 uppercase"
 					>
 						<div class="h-4 w-4">{@html BookSmall}</div>
-						Documentation
+						{t('Documentation')}
 					</h3>
 					<div class="flex flex-col gap-2">
 						<button
@@ -472,7 +470,7 @@
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Link}</div>
-								<span class="text-gray-800 dark:text-gray-200">Website</span>
+								<span class="text-gray-800 dark:text-gray-200">{t('Website')}</span>
 							</div>
 							<div
 								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
@@ -487,7 +485,7 @@
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Link}</div>
-								<span class="text-gray-800 dark:text-gray-200">Blog</span>
+								<span class="text-gray-800 dark:text-gray-200">{t('Blog')}</span>
 							</div>
 							<div
 								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
@@ -502,7 +500,7 @@
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Book}</div>
-								<span class="text-gray-800 dark:text-gray-200">Quickstart Guide</span>
+								<span class="text-gray-800 dark:text-gray-200">{t('Quickstart Guide')}</span>
 							</div>
 							<div
 								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
@@ -518,7 +516,7 @@
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Book}</div>
-								<span class="text-gray-800 dark:text-gray-200">Gadget Development Guide</span>
+								<span class="text-gray-800 dark:text-gray-200">{t('Gadget Development Guide')}</span>
 							</div>
 							<div
 								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
@@ -535,7 +533,7 @@
 						class="flex items-center gap-2 text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 uppercase"
 					>
 						<div class="h-4 w-4">{@html GridSmall}</div>
-						Community
+						{t('Community')}
 					</h3>
 					<div class="flex flex-col gap-2">
 						<button
@@ -545,8 +543,8 @@
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html GridSmall}</div>
 								<div class="flex flex-col">
-									<span class="text-gray-800 dark:text-gray-200">Discord</span>
-									<span class="text-xs text-gray-500">Join our Discord community</span>
+									<span class="text-gray-800 dark:text-gray-200">{t('Discord')}</span>
+									<span class="text-xs text-gray-500">{t('Join our Discord community')}</span>
 								</div>
 							</div>
 							<div
@@ -563,8 +561,8 @@
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html GridSmall}</div>
 								<div class="flex flex-col">
-									<span class="text-gray-800 dark:text-gray-200">Slack</span>
-									<span class="text-xs text-gray-500">Connect on Slack</span>
+									<span class="text-gray-800 dark:text-gray-200">{t('Slack')}</span>
+									<span class="text-xs text-gray-500">{t('Connect on Slack')}</span>
 								</div>
 							</div>
 							<div
@@ -579,8 +577,7 @@
 						class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/30 dark:bg-gray-900/30 p-4"
 					>
 						<p class="text-sm text-gray-600 dark:text-gray-400">
-							Have questions or want to contribute? Join our community to connect with other users
-							and the Inspektor Gadget team.
+							{t('Have questions or want to contribute? Join our community to connect with other users and the Inspektor Gadget team.')}
 						</p>
 					</div>
 				</div>

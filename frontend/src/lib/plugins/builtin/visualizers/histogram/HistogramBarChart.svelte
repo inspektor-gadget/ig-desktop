@@ -5,6 +5,7 @@
 	import ChevronDown from '$lib/icons/chevron-down.svg?raw';
 	import type { AggregatedHistogram, HistogramFieldConfig } from '$lib/types/histogram';
 	import type { GroupableField } from '$lib/types/flamegraph';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		histograms: Map<string, AggregatedHistogram>;
@@ -196,7 +197,7 @@
 					aria-haspopup="menu"
 					aria-expanded={groupMenuOpen}
 				>
-					Group by
+					{t('Group by')}
 					{#if activeGroupCount > 0}
 						<span class="bg-blue-500 text-white text-[9px] py-px px-1.5 rounded-full font-semibold"
 							>{activeGroupCount}</span
@@ -212,7 +213,7 @@
 						<div
 							class="px-3 py-2 text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700"
 						>
-							Group by:
+							{t('Group by:')}
 						</div>
 						<div class="py-1">
 							{#each groupableFields as field (field.fieldName)}
@@ -248,7 +249,7 @@
 				class="py-1 px-2 border border-gray-300 dark:border-gray-600 rounded-ig-sm text-[11px] bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer"
 				bind:value={selectedGroup}
 			>
-				<option value={null}>All groups</option>
+				<option value={null}>{t('All groups')}</option>
 				{#each groupLabels as label (label)}
 					<option value={label}>{label}</option>
 				{/each}
@@ -259,10 +260,10 @@
 
 		<!-- Total count -->
 		<span class="text-[11px] text-gray-500 dark:text-gray-400">
-			Total: <span class="font-medium text-gray-700 dark:text-gray-300"
+			{t('Total:')} <span class="font-medium text-gray-700 dark:text-gray-300"
 				>{displayData.total.toLocaleString()}</span
 			>
-			{config.unit || 'events'}
+			{config.unit || t('events')}
 		</span>
 	</div>
 
@@ -297,7 +298,7 @@
 							transform="rotate(-90, {-margins.left + 12}, {boundedHeight / 2})"
 							class="text-[11px] font-medium"
 						>
-							Count
+							{t('Count')}
 						</text>
 					</g>
 
@@ -331,7 +332,7 @@
 							text-anchor="middle"
 							class="text-[11px] font-medium"
 						>
-							{config.unit ? `Bucket (${config.unit})` : 'Bucket'}
+							{config.unit ? t('Bucket ({{unit}})', { unit: config.unit }) : t('Bucket')}
 						</text>
 					</g>
 
@@ -358,7 +359,7 @@
 		</div>
 	{:else}
 		<div class="flex items-center justify-center h-50 text-gray-500 dark:text-gray-400 text-sm">
-			No data in snapshot.
+			{t('No data in snapshot.')}
 		</div>
 	{/if}
 

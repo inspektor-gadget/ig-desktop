@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 	import HistogramBarChart from './HistogramBarChart.svelte';
 	import HistogramHeatmap from './HistogramHeatmap.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 	import {
 		extractHistogramConfig,
 		extractGroupableFields,
@@ -173,7 +174,7 @@
 							: 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}"
 						onclick={() => (viewMode = 'heatmap')}
 					>
-						Heatmap
+						{t('Heatmap')}
 					</button>
 					<button
 						class="px-3 py-1 text-[11px] font-medium transition-colors border-l border-gray-300 dark:border-gray-600 {viewMode ===
@@ -182,13 +183,13 @@
 							: 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}"
 						onclick={() => (viewMode = 'barchart')}
 					>
-						Bar Chart
+						{t('Bar Chart')}
 					</button>
 				</div>
 
 				<!-- Info -->
 				<span class="text-[11px] text-gray-500 dark:text-gray-400">
-					{snapshotCount} snapshots &times; {bucketCount} buckets
+					{t('{{snapshotCount}} snapshots × {{bucketCount}} buckets', { snapshotCount, bucketCount })}
 				</span>
 			</div>
 		{/if}
@@ -214,7 +215,7 @@
 		</div>
 	{:else}
 		<div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400 text-sm">
-			No histogram configuration found
+			{t('No histogram configuration found')}
 		</div>
 	{/if}
 </div>

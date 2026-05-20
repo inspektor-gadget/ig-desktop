@@ -5,6 +5,7 @@
 	import Grid from '$lib/components/charts/Chart/Grid.svelte';
 	import { transformHistogramData, getStableColor } from '$lib/utils/chartConfig';
 	import type { ChartDimensions, DatasourceField } from '$lib/types/charts';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		data: Record<string, unknown>[];
@@ -174,7 +175,7 @@
 		<!-- Tooltip -->
 		{#if tooltipData}
 			<div class="tooltip-panel" style="left: {tooltipData.x}px; top: {tooltipData.y}px;">
-				<div class="tooltip-bucket">Bucket: {tooltipData.bucket}</div>
+				<div class="tooltip-bucket">{t('Bucket: {{bucket}}', { bucket: tooltipData.bucket })}</div>
 				{#each tooltipData.values as v (v.key)}
 					<div class="tooltip-row">
 						<span class="tooltip-color" style="background-color: {v.color}"></span>
@@ -198,7 +199,7 @@
 		{/if}
 	{:else}
 		<div class="flex h-full items-center justify-center text-sm text-gray-500">
-			Waiting for histogram data...
+			{t('Waiting for histogram data...')}
 		</div>
 	{/if}
 </div>

@@ -50,6 +50,7 @@
 	import { registerBuiltinPlugins } from '$lib/plugins/builtin';
 	import { loadLocalPlugins } from '$lib/services/plugin-loader.service';
 	import PluginHookRenderer from '$lib/components/PluginHookRenderer.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	let { children } = $props();
 
@@ -318,7 +319,7 @@
 						class="flex flex-row items-center gap-2 text-xs text-gray-500 dark:text-gray-400 uppercase"
 					>
 						<div class="flex">{@html BrandIcon}</div>
-						<div class="leading-none pt-px">Inspektor Gadget Desktop</div>
+						<div class="leading-none pt-px">{t('Inspektor Gadget Desktop')}</div>
 					</div>
 				</div>
 				<!-- Right spacer for balance -->
@@ -338,7 +339,7 @@
 					class="flex flex-row items-center gap-2 px-2 py-2 text-xs text-gray-500 dark:text-gray-600 uppercase"
 				>
 					<div>{@html BrandIcon}</div>
-					<div>Inspektor Gadget Desktop</div>
+					<div>{t('Inspektor Gadget Desktop')}</div>
 				</div>
 				<div
 					style="--wails-draggable: no-drag"
@@ -350,7 +351,7 @@
 						onclick={() => {
 							minimize();
 						}}
-						aria-label="Minimize window"
+						aria-label={t('Minimize window')}
 					>
 						{@html Minimize}
 					</button>
@@ -360,7 +361,7 @@
 						onclick={() => {
 							toggleMaximize();
 						}}
-						aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
+						aria-label={isMaximized ? t('Restore window') : t('Maximize window')}
 					>
 						{#if isMaximized}{@html Restore}{:else}{@html Maximize}{/if}
 					</button>
@@ -370,7 +371,7 @@
 						onclick={() => {
 							quitApp();
 						}}
-						aria-label="Close window"
+						aria-label={t('Close window')}
 					>
 						{@html Close}
 					</button>
@@ -387,13 +388,13 @@
 					{#if features.isSingleEnvironment}
 						<!-- Single-env mode: show Home button that links to the single environment -->
 						{#each Object.entries(environments) as [id, env]}
-							<NavbarLink href={resolve(`/env/${id}`)} title="Home">
+							<NavbarLink href={resolve(`/env/${id}`)} title={t('Home')}>
 								{@html BrandIconLarge}
 							</NavbarLink>
 						{/each}
 					{:else}
 						<!-- Full mode: show brand logo linking to home page -->
-						<NavbarLink href={resolve('/')} title="Home">{@html BrandIconLarge}</NavbarLink>
+						<NavbarLink href={resolve('/')} title={t('Home')}>{@html BrandIconLarge}</NavbarLink>
 						{#each Object.entries(environments) as [id, env]}
 							<NavbarLink href={resolve(`/env/${id}`)} title={env.name}>
 								<div class="grid" title={env.name}>
@@ -408,7 +409,7 @@
 						{/each}
 						<!--					<NavbarLink href="/k">{@html Kubernetes}</NavbarLink>-->
 						{#if features.canCreateEnvironment}
-							<NavbarLink href={resolve('/environment/create')} title="Create environment"
+							<NavbarLink href={resolve('/environment/create')} title={t('Create environment')}
 								>{@html Plus}</NavbarLink
 							>
 						{/if}
@@ -420,24 +421,24 @@
 				</div>
 				<div class="flex flex-col">
 					{#if features.canBrowseArtifactHub}
-						<NavbarLink href={resolve('/browse/artifacthub')} title="Gadgets on ArtifactHub"
+						<NavbarLink href={resolve('/browse/artifacthub')} title={t('Gadgets on ArtifactHub')}
 							>{@html ArtifactHub}</NavbarLink
 						>
 					{/if}
 					<NavbarLink
 						href="https://inspektor-gadget.io/docs/latest/"
 						target="_blank"
-						title="Documentation (external)">{@html Book}</NavbarLink
+						title={t('Documentation (external)')}>{@html Book}</NavbarLink
 					>
 					<NavbarLink
 						onclick={() => {
 							settingsDialog.open = true;
 						}}
-						title="Settings"
+						title={t('Settings')}
 					>
 						{@html Cog}
 					</NavbarLink>
-					<NavbarLink href={resolve('/info')} title="About">{@html Info}</NavbarLink>
+					<NavbarLink href={resolve('/info')} title={t('About')}>{@html Info}</NavbarLink>
 				</div>
 			</nav>
 			{@render children()}
@@ -449,9 +450,9 @@
 				<div class="flex items-center gap-1.5">
 					{#if currentEnvironment.environment}
 						{#if currentEnvironment.hasTLS()}
-							<span class="text-gray-500" title="Secure Connection">{@html Lock}</span>
+							<span class="text-gray-500" title={t('Secure Connection')}>{@html Lock}</span>
 						{:else}
-							<span class="text-red-400" title="Insecure Connection">{@html LockOpen}</span>
+							<span class="text-red-400" title={t('Insecure Connection')}>{@html LockOpen}</span>
 						{/if}
 					{/if}
 					<span
@@ -469,9 +470,9 @@
 							versionInfoModalOpen = true;
 						}}
 						class="text-blue-400 hover:text-blue-300"
-						title="Click for version details"
+						title={t('Click for version details')}
 					>
-						Update available: {updateInfo.latestVersion} (current: {version})
+						{t('Update available: {{latestVersion}} (current: {{version}})', { latestVersion: updateInfo.latestVersion, version })}
 					</button>
 				{:else}
 					<button
@@ -479,9 +480,9 @@
 							versionInfoModalOpen = true;
 						}}
 						class="hover:text-gray-700 dark:hover:text-gray-300"
-						title="Click for version details"
+						title={t('Click for version details')}
 					>
-						Version {version}
+						{t('Version {{version}}', { version })}
 					</button>
 				{/if}
 			</div>
@@ -490,12 +491,12 @@
 		<div
 			class="flex flex-1 items-center justify-center bg-gray-50 dark:bg-gray-950 align-middle font-mono text-gray-900 dark:text-gray-100"
 		>
-			Calling the Inspektor...
+			{t('Calling the Inspektor...')}
 		</div>
 		<div
 			class="border-t border-t-gray-200 bg-gray-100/70 dark:border-t-gray-700 dark:bg-gray-900/70 p-1 pl-2 text-xs text-gray-500 backdrop-blur-md"
 		>
-			Disconnected
+			{t('Disconnected')}
 		</div>
 	{/if}
 </div>
@@ -509,7 +510,7 @@
 			<div
 				class="flex flex-col gap-8 rounded-ig-lg border border-gray-300 bg-white/90 dark:border-gray-700 dark:bg-gray-900/90 p-16 backdrop-blur-lg"
 			>
-				<div class="text-lg text-gray-600 dark:text-gray-400">An error occurred</div>
+				<div class="text-lg text-gray-600 dark:text-gray-400">{t('An error occurred')}</div>
 				<div class="text-red-600 dark:text-red-400">{modalError}</div>
 				<div class="flex flex-row justify-end">
 					<button
@@ -517,7 +518,7 @@
 							modalError = null;
 						}}
 						class="flex cursor-pointer flex-row items-center gap-2 rounded-ig-sm bg-red-600 dark:bg-red-900 px-2 py-1 text-white hover:bg-red-500 dark:hover:bg-red-800"
-						>Close
+						>{t('Close')}
 					</button>
 				</div>
 			</div>
@@ -536,12 +537,12 @@
 			deployModalOpen = true;
 		}}
 		class="fixed right-4 bottom-4 z-40 flex items-center gap-3 rounded-ig-md border border-blue-800 bg-blue-900/90 px-4 py-3 text-white shadow-lg backdrop-blur-md transition-all hover:bg-blue-800/90"
-		title="View deployment progress"
+		title={t('View deployment progress')}
 	>
 		<div class="text-blue-400">{@html Server}</div>
 		<div class="flex flex-col items-start gap-0.5">
 			<div class="text-sm font-semibold">
-				{activeDeployment.status === 'deploying' ? 'Deploying...' : 'Configuring...'}
+				{activeDeployment.status === 'deploying' ? t('Deploying...') : t('Configuring...')}
 			</div>
 			{#if activeDeployment.status === 'deploying'}
 				<div class="flex items-center gap-2">

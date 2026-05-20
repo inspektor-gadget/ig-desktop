@@ -3,6 +3,7 @@
 	import BaseModal from './BaseModal.svelte';
 	import Button from './Button.svelte';
 	import { apiService } from '$lib/services/api.service.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		open?: boolean;
@@ -54,7 +55,7 @@
 			})
 			.catch((err) => {
 				console.error('Failed to check for updates:', err);
-				error = 'Failed to check for updates';
+				error = t('Failed to check for updates');
 			})
 			.finally(() => {
 				loading = false;
@@ -71,7 +72,7 @@
 	}
 </script>
 
-<BaseModal bind:open title="Version Information" icon={infoIcon} size="sm" onClose={handleClose}>
+<BaseModal bind:open title={t('Version Information')} icon={infoIcon} size="sm" onClose={handleClose}>
 	<div class="space-y-4">
 		{#if loading}
 			<div class="flex items-center justify-center py-8">
@@ -93,20 +94,20 @@
 		{:else}
 			<div class="space-y-3">
 				<div class="flex justify-between rounded-ig-md bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
-					<span class="text-gray-600 dark:text-gray-400">Current Version</span>
+					<span class="text-gray-600 dark:text-gray-400">{t('Current Version')}</span>
 					<span class="font-mono text-gray-800 dark:text-gray-200"
 						>{versionData.currentVersion}</span
 					>
 				</div>
 
 				<div class="flex justify-between rounded-ig-md bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
-					<span class="text-gray-600 dark:text-gray-400">Latest Version</span>
+					<span class="text-gray-600 dark:text-gray-400">{t('Latest Version')}</span>
 					<span class="font-mono text-gray-800 dark:text-gray-200">
 						{#if versionData.latestVersion}
 							<button
 								onclick={openReleasesPage}
 								class="text-blue-400 hover:text-blue-300 hover:underline"
-								title="Open releases page"
+								title={t('Open releases page')}
 							>
 								{versionData.latestVersion}
 							</button>
@@ -114,19 +115,19 @@
 								<span
 									class="ml-2 rounded-ig-sm bg-blue-500/20 px-2 py-0.5 text-xs text-blue-600 dark:text-blue-400"
 								>
-									Update available
+									{t('Update available')}
 								</span>
 							{/if}
 						{:else if error}
-							<span class="text-gray-500 dark:text-gray-500">Unable to fetch</span>
+							<span class="text-gray-500 dark:text-gray-500">{t('Unable to fetch')}</span>
 						{:else}
-							<span class="text-gray-500 dark:text-gray-500">Checking...</span>
+							<span class="text-gray-500 dark:text-gray-500">{t('Checking...')}</span>
 						{/if}
 					</span>
 				</div>
 
 				<div class="flex justify-between rounded-ig-md bg-gray-100 dark:bg-gray-900/50 px-4 py-3">
-					<span class="text-gray-600 dark:text-gray-400">Inspektor Gadget Library</span>
+					<span class="text-gray-600 dark:text-gray-400">{t('Inspektor Gadget Library')}</span>
 					<span class="font-mono text-gray-800 dark:text-gray-200"
 						>{versionData.igLibraryVersion}</span
 					>
@@ -144,7 +145,7 @@
 			{#if versionData.updateAvailable}
 				<div class="rounded-ig-md bg-blue-100 dark:bg-blue-900/20 px-4 py-3">
 					<p class="text-sm text-blue-700 dark:text-blue-300">
-						A new version is available! Click the button below to visit the releases page.
+						{t('A new version is available! Click the button below to visit the releases page.')}
 					</p>
 				</div>
 			{/if}
@@ -153,11 +154,11 @@
 
 	{#snippet footer()}
 		{#if versionData.updateAvailable}
-			<Button variant="primary" onclick={openReleasesPage}>View Releases</Button>
+			<Button variant="primary" onclick={openReleasesPage}>{t('View Releases')}</Button>
 		{/if}
 		<Button variant="secondary" onclick={checkForUpdates} disabled={loading}>
-			{loading ? 'Checking...' : 'Check Again'}
+			{loading ? t('Checking...') : t('Check Again')}
 		</Button>
-		<Button variant="secondary" onclick={handleClose}>Close</Button>
+		<Button variant="secondary" onclick={handleClose}>{t('Close')}</Button>
 	{/snippet}
 </BaseModal>

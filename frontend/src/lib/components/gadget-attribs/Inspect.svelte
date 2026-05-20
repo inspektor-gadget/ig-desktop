@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import type { GadgetContext } from '$lib/types';
+	import { t } from '$lib/i18n/index.svelte';
 
 	const gadget = getContext<GadgetContext>('gadget');
 
@@ -12,8 +13,8 @@
 		<table class="w-full max-w-full border-b border-ig-border">
 			<thead class="sticky top-0">
 				<tr class="bg-ig-surface text-xs uppercase">
-					<th class="border-r border-ig-border p-2 font-normal">Key</th>
-					<th class="p-2 font-normal">Value</th>
+					<th class="border-r border-ig-border p-2 font-normal">{t('Key')}</th>
+					<th class="p-2 font-normal">{t('Value')}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -29,7 +30,7 @@
 		</table>
 	{:else}
 		<div class="flex flex-1 items-center justify-center align-middle">
-			<div>No node selected.</div>
+			<div>{t('No node selected.')}</div>
 		</div>
 	{/if}
 </div>

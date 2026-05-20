@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Handle, Position } from '@xyflow/svelte';
 	import type { NetworkNodeData } from '$lib/types/networkmap';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		data: NetworkNodeData;
@@ -98,7 +99,7 @@
 		<div
 			class="handle-row relative flex items-center justify-center px-2 py-2 text-gray-400 dark:text-gray-500 text-xs"
 		>
-			<span>No ports</span>
+			<span>{t('No ports')}</span>
 			<div class="handle-wrapper handle-right">
 				<Handle
 					type="source"

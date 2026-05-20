@@ -4,6 +4,7 @@
 	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { t } from '$lib/i18n/index.svelte';
 
 	let { data } = $props();
 
@@ -45,7 +46,7 @@
 <div class="flex flex-1 flex-col overflow-hidden bg-gray-50/80 dark:bg-gray-950/80">
 	{#if isLoading}
 		<div class="flex flex-1 items-center justify-center">
-			<Spinner message="Loading plugin..." />
+			<Spinner message={t('Loading plugin...')} />
 		</div>
 	{:else if error}
 		<div class="flex flex-1 items-center justify-center p-8">
@@ -68,7 +69,7 @@
 					</svg>
 				</div>
 				<h2 class="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
-					Plugin Route Error
+					{t('Plugin Route Error')}
 				</h2>
 				<p class="mb-6 text-gray-600 dark:text-gray-400">{error}</p>
 				<button
@@ -76,7 +77,7 @@
 					class="inline-flex items-center gap-2 rounded-ig-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
 				>
 					<span class="flex h-4 w-4 [&>svg]:h-full [&>svg]:w-full">{@html ChevronLeft}</span>
-					Go Back
+					{t('Go Back')}
 				</button>
 			</div>
 		</div>
@@ -89,7 +90,7 @@
 		/>
 	{:else}
 		<div class="flex flex-1 items-center justify-center">
-			<Spinner message="Loading..." />
+			<Spinner message={t('Loading...')} />
 		</div>
 	{/if}
 </div>

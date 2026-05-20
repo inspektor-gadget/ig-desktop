@@ -5,6 +5,7 @@
 	import SearchIcon from '$lib/icons/search-small.svg?raw';
 	import CloseIcon from '$lib/icons/close-small.svg?raw';
 	import ChevronDown from '$lib/icons/chevron-down.svg?raw';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		data: FlameNode | null;
@@ -258,7 +259,7 @@
 	onkeydown={handleKeydown}
 	tabindex="0"
 	role="application"
-	aria-label="Flamegraph visualization"
+	aria-label={t('Flamegraph visualization')}
 >
 	<!-- Controls bar -->
 	<div
@@ -272,17 +273,17 @@
 			<input
 				bind:this={searchInputRef}
 				type="text"
-				placeholder="Search (regex)..."
+				placeholder={t('Search (regex)...')}
 				bind:value={searchQuery}
 				oninput={handleSearchInput}
-				aria-label="Search functions"
+				aria-label={t('Search functions')}
 				class="border-none bg-transparent py-1.5 px-1 text-xs w-44 outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
 			/>
 			{#if searchQuery}
 				<button
 					onclick={clearSearch}
-					title="Clear search"
-					aria-label="Clear search"
+					title={t('Clear search')}
+					aria-label={t('Clear search')}
 					class="flex items-center justify-center w-4 h-4 p-0 border-none bg-transparent text-gray-400 cursor-pointer rounded-ig-sm hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
 				>
 					{@html CloseIcon}
@@ -294,11 +295,11 @@
 				class:!border-blue-500={caseSensitive}
 				class:!text-white={caseSensitive}
 				onclick={toggleCaseSensitive}
-				title="Case sensitive (Ctrl+I)"
-				aria-label="Toggle case sensitivity"
+				title={t('Case sensitive (Ctrl+I)')}
+				aria-label={t('Toggle case sensitivity')}
 				aria-pressed={caseSensitive}
 			>
-				Aa
+				{t('Aa')}
 			</button>
 		</div>
 
@@ -307,7 +308,7 @@
 			<span
 				class="text-[11px] text-gray-500 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 py-0.5 px-2 rounded-ig-sm"
 			>
-				{formatNumber(matchedSamples)} / {formatNumber(totalValue)} samples ({getPercentage(
+				{formatNumber(matchedSamples)} / {formatNumber(totalValue)} {t('samples')} ({getPercentage(
 					matchedSamples,
 					totalValue
 				).toFixed(1)}%)
@@ -331,7 +332,7 @@
 					aria-expanded={groupMenuOpen}
 					aria-controls="group-menu"
 				>
-					Group by
+					{t('Group by')}
 					{#if activeGroupCount > 0}
 						<span class="bg-blue-500 text-white text-[9px] py-px px-1.5 rounded-full font-semibold"
 							>{activeGroupCount}</span
@@ -343,15 +344,15 @@
 					<div
 						id="group-menu"
 						role="menu"
-						aria-label="Group by options"
+						aria-label={t('Group by options')}
 						class="absolute top-full left-0 mt-1 min-w-52 max-h-70 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-ig-sm shadow-lg z-50"
 					>
 						<div
 							class="px-3 py-2 text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700"
 						>
-							Group by:
+							{t('Group by:')}
 						</div>
-						<div class="py-1" role="group" aria-label="Grouping field toggles">
+						<div class="py-1" role="group" aria-label={t('Grouping field toggles')}>
 							{#each groupableFields as field (field.fieldName)}
 								{@const tooltipText = field.description
 									? `${field.fieldName}\n${field.description}`
@@ -390,16 +391,16 @@
 				class="py-1 px-2.5 border border-gray-300 dark:border-gray-600 rounded-ig-sm text-[11px] cursor-pointer bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
 				onclick={handleBack}
 				disabled={zoomHistory.length === 0}
-				title="Go back (Backspace)"
+				title={t('Go back (Backspace)')}
 			>
-				Back
+				{t('Back')}
 			</button>
 			<button
 				class="py-1 px-2.5 border border-gray-300 dark:border-gray-600 rounded-ig-sm text-[11px] cursor-pointer bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-400"
 				onclick={handleReset}
-				title="Reset zoom (Escape)"
+				title={t('Reset zoom (Escape)')}
 			>
-				Reset
+				{t('Reset')}
 			</button>
 		{/if}
 
@@ -408,9 +409,9 @@
 			class="text-[11px] text-gray-500 dark:text-gray-400 max-w-50 overflow-hidden text-ellipsis whitespace-nowrap"
 		>
 			{#if zoomedNode}
-				Zoomed: <span class="font-mono text-gray-700 dark:text-gray-300">{zoomedNode.name}</span>
+				{t('Zoomed: ')}<span class="font-mono text-gray-700 dark:text-gray-300">{zoomedNode.name}</span>
 			{:else}
-				Click to zoom
+				{t('Click to zoom')}
 			{/if}
 		</span>
 	</div>
@@ -423,7 +424,7 @@
 				height={svgHeight}
 				class="block"
 				role="img"
-				aria-label="Flamegraph chart"
+				aria-label={t('Flamegraph chart')}
 			>
 				{#each renderNodes as { node, x, width, depth, isHighlighted } (node.name + '-' + x.toFixed(6) + '-' + depth)}
 					{@const xPx = x * containerWidth}
@@ -478,9 +479,9 @@
 	{:else}
 		<div class="flex items-center justify-center h-50 text-gray-500 text-sm">
 			{#if !data}
-				Waiting for stack trace data...
+				{t('Waiting for stack trace data...')}
 			{:else}
-				No stack frames to display
+				{t('No stack frames to display')}
 			{/if}
 		</div>
 	{/if}
@@ -512,7 +513,7 @@
 				).toFixed(2)}%)
 			</div>
 			{#if tooltipDepth !== 0 && tooltipNode.name !== 'all'}
-				<div class="text-gray-400 dark:text-gray-500 text-[10px] mt-1 italic">Click to zoom</div>
+				<div class="text-gray-400 dark:text-gray-500 text-[10px] mt-1 italic">{t('Click to zoom')}</div>
 			{/if}
 		</div>
 	{/if}

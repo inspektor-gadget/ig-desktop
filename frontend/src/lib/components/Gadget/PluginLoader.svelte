@@ -5,6 +5,7 @@
 	import type { PluginBundle, CompiledPlugin } from '$lib/types/plugin';
 	import { getPluginEntrypoint } from '$lib/types/plugin';
 	import WarningIcon from '$lib/icons/warning.svg?raw';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		/** The plugin bundle to load */
@@ -66,7 +67,7 @@
 	}
 </script>
 
-<BaseModal bind:open title="Custom Plugin" size="lg" onClose={handleClose}>
+<BaseModal bind:open title={t('Custom Plugin')} size="lg" onClose={handleClose}>
 	<div class="space-y-4">
 		<!-- Security Warning -->
 		<div
@@ -76,11 +77,10 @@
 				{@html WarningIcon}
 			</div>
 			<div>
-				<h3 class="font-semibold text-amber-400">Security Notice</h3>
+				<h3 class="font-semibold text-amber-400">{t('Security Notice')}</h3>
 				<p class="mt-1 text-sm text-amber-300/90">
-					This gadget includes a custom plugin with {fileCount} file{fileCount === 1 ? '' : 's'}.
-					Plugins can execute JavaScript code in your browser. Only approve plugins from sources you
-					trust.
+					{t('This gadget includes a custom plugin with {{count}} file', { count: fileCount })}.
+					{t('Plugins can execute JavaScript code in your browser. Only approve plugins from sources you trust.')}
 				</p>
 			</div>
 		</div>
@@ -93,15 +93,15 @@
 						{bundle.name}
 					</h4>
 					<p class="mt-1 text-sm text-ig-text-muted">
-						{fileCount} file{fileCount === 1 ? '' : 's'} &middot; {(totalSize / 1024).toFixed(1)} KB &middot;
-						Entry: {entrypoint}
+						{t('{{count}} file', { count: fileCount })} &middot; {(totalSize / 1024).toFixed(1)} KB &middot;
+						{t('Entry: {{entrypoint}}', { entrypoint })}
 					</p>
 				</div>
 				<button
 					onclick={togglePreview}
 					class="text-sm font-medium text-ig-primary hover:text-ig-primary-hover transition-colors"
 				>
-					{showPreview ? 'Hide' : 'Preview'} source
+					{showPreview ? t('Hide source') : t('Preview source')}
 				</button>
 			</div>
 		</div>
@@ -123,7 +123,7 @@
 						>
 							{file}
 							{#if file === entrypoint}
-								<span class="ml-1 text-blue-500">(entry)</span>
+								<span class="ml-1 text-blue-500">{t('(entry)')}</span>
 							{/if}
 						</button>
 					{/each}
@@ -142,7 +142,7 @@
 								selectedFile && navigator.clipboard.writeText(bundle.files[selectedFile])}
 							class="text-xs text-ig-text-muted hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
 						>
-							Copy
+							{t('Copy')}
 						</button>
 					</div>
 					<pre class="max-h-64 overflow-auto bg-gray-900 p-4 text-sm text-gray-300"><code
@@ -155,16 +155,16 @@
 		<!-- Error Display -->
 		{#if error}
 			<div class="rounded-ig-md border border-red-500/50 bg-red-500/10 p-4 text-red-400">
-				<h4 class="font-semibold">Compilation Error</h4>
+				<h4 class="font-semibold">{t('Compilation Error')}</h4>
 				<pre class="mt-2 text-sm whitespace-pre-wrap">{error}</pre>
 			</div>
 		{/if}
 	</div>
 
 	{#snippet footer()}
-		<Button variant="secondary" onclick={handleReject} disabled={isLoading}>Reject</Button>
+		<Button variant="secondary" onclick={handleReject} disabled={isLoading}>{t('Reject')}</Button>
 		<Button variant="primary" onclick={handleApprove} loading={isLoading}>
-			{isLoading ? 'Compiling...' : 'Approve & Load'}
+			{isLoading ? t('Compiling...') : t('Approve & Load')}
 		</Button>
 	{/snippet}
 </BaseModal>

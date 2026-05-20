@@ -4,6 +4,7 @@
 	import dagre from '@dagrejs/dagre';
 	import AddressNode from './AddressNode.svelte';
 	import type { NetworkNode, NetworkEdge } from '$lib/types/networkmap';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		nodes: NetworkNode[];
@@ -181,7 +182,7 @@
 	<div
 		class="absolute top-2 left-2 text-xs text-gray-500 dark:text-gray-400 bg-white/90 dark:bg-gray-800/90 px-2 py-1 rounded-ig-sm pointer-events-none z-10"
 	>
-		{nodeCount} nodes, {edgeCount} connections
+		{t('{{count}} node', { count: nodeCount })}, {t('{{count}} connection', { count: edgeCount })}
 	</div>
 </div>
 

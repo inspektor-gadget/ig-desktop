@@ -12,6 +12,7 @@
 	import Inspect from './gadget-attribs/Inspect.svelte';
 	import type { GadgetInfo } from '$lib/types';
 	import { configuration } from '$lib/stores/configuration.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	let { gadgetInfo, onclose = () => {} }: { gadgetInfo: GadgetInfo; onclose?: () => void } =
 		$props();
@@ -47,7 +48,7 @@
 <div class="flex flex-row bg-ig-surface">
 	{#each tabs as tab, id}
 		<button
-			title={tab.name}
+			title={t(tab.name)}
 			onclick={() => {
 				tabIndex = id;
 			}}
@@ -61,7 +62,7 @@
 	<button
 		class="flex cursor-pointer items-center justify-center border-b border-b-ig-border px-3 text-ig-text-muted transition-colors hover:text-ig-text-secondary"
 		onclick={onclose}
-		title="Close Inspector"
+		title={t('Close Inspector')}
 	>
 		<span class="rounded-ig-sm p-1 transition-colors hover:bg-ig-border">{@html Close}</span>
 	</button>

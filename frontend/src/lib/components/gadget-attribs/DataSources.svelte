@@ -7,6 +7,7 @@
 	import { preferences } from '$lib/shared/preferences.svelte.js';
 	import { configuration } from '$lib/stores/configuration.svelte.js';
 	import type { GadgetInfo, GadgetDatasource, GadgetDatasourceField } from '$lib/types';
+	import { t } from '$lib/i18n/index.svelte';
 
 	let { gadgetInfo }: { gadgetInfo: GadgetInfo } = $props();
 
@@ -249,9 +250,9 @@
 <!-- Fixed Header (outside scroll) -->
 <div class="shrink-0 border-b border-ig-border bg-ig-surface">
 	<div class="flex items-center justify-between px-2 py-1.5">
-		<span class="font-medium">Data Sources</span>
+		<span class="font-medium">{t('Data Sources')}</span>
 		<button
-			title="Toggle developer mode"
+			title={t('Toggle developer mode')}
 			class="cursor-pointer transition-colors hover:text-ig-primary"
 			class:text-ig-text-muted={!showAnnotations}
 			onclick={() => {
@@ -267,7 +268,7 @@
 		<input
 			type="text"
 			bind:value={searchQuery}
-			placeholder="Search fields..."
+			placeholder={t('Search fields...')}
 			class="w-full rounded-ig-sm border border-ig-border-strong bg-ig-surface px-2 py-1 text-sm focus:border-ig-primary focus:outline-none"
 		/>
 	</div>
@@ -291,7 +292,7 @@
 						{@html ChevronRight}
 					</span>
 					<span class="flex-1 font-medium">{ds.name}</span>
-					<span class="text-xs text-ig-text-muted">{countFields(ds)} fields</span>
+					<span class="text-xs text-ig-text-muted">{countFields(ds)} {t('fields')}</span>
 				</button>
 			</div>
 
@@ -318,12 +319,12 @@
 						{/each}
 					</div>
 				{:else if searchQuery}
-					<div class="px-4 py-3 text-sm text-ig-text-muted">No matching fields</div>
+					<div class="px-4 py-3 text-sm text-ig-text-muted">{t('No matching fields')}</div>
 				{/if}
 			{/if}
 		{/each}
 	{:else}
-		<div class="p-4 text-center text-sm text-ig-text-muted">No data sources available</div>
+		<div class="p-4 text-center text-sm text-ig-text-muted">{t('No data sources available')}</div>
 	{/if}
 </div>
 
@@ -346,7 +347,7 @@
 					class="flex h-3.5 w-3.5 shrink-0 cursor-pointer items-center justify-center text-ig-text-muted transition-colors hover:text-ig-text-secondary"
 					class:rotate-90={isExpanded}
 					onclick={() => toggleField(dsName, node.field.fullName)}
-					title={isExpanded ? 'Collapse' : 'Expand'}
+					title={isExpanded ? t('Collapse') : t('Expand')}
 				>
 					<span class="scale-[0.6]">{@html ChevronRight}</span>
 				</button>
@@ -358,7 +359,7 @@
 					class:dark:text-gray-600={isHidden}
 					class:text-ig-primary={!isHidden}
 					onclick={() => toggleFieldVisibility(dsName, node.field.fullName)}
-					title={isHidden ? 'Show column' : 'Hide column'}
+					title={isHidden ? t('Show column') : t('Hide column')}
 				>
 					{#if isHidden}
 						<span class="scale-[0.6]">{@html EyeSlash}</span>
@@ -400,7 +401,7 @@
 				class:dark:text-gray-600={isHidden}
 				class:text-ig-primary={!isHidden}
 				onclick={() => toggleFieldVisibility(dsName, node.field.fullName)}
-				title={isHidden ? 'Show column' : 'Hide column'}
+				title={isHidden ? t('Show column') : t('Hide column')}
 			>
 				{#if isHidden}
 					<span class="scale-[0.6]">{@html EyeSlash}</span>

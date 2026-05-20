@@ -37,6 +37,8 @@
 		children?: Snippet;
 	}
 
+	import { t } from '$lib/i18n/index.svelte';
+
 	let {
 		open = $bindable(false),
 		onClose,
@@ -126,7 +128,7 @@
 						<button
 							onclick={closeModal}
 							class="rounded-ig-md p-2 text-ig-text-muted transition-colors hover:bg-ig-border hover:text-ig-text-secondary"
-							aria-label="Close modal"
+							aria-label={t('Close modal')}
 						>
 							<svg
 								aria-hidden="true"

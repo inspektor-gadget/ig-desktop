@@ -15,6 +15,7 @@
 	import { resolvePluginIcon } from '$lib/utils/plugin-icons';
 	import PluginHookRenderer from '$lib/components/PluginHookRenderer.svelte';
 	import type { CellClickHandler, CellContextMenuHandler } from '$lib/types/cell-interaction';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		ds: Datasource;
@@ -398,8 +399,8 @@
 					class:text-ig-text-muted={activeTab !== 'table'}
 					class:hover:text-ig-text-secondary={activeTab !== 'table'}
 					onclick={() => (menuOpen = !menuOpen)}
-					title="Column visibility"
-					aria-label="Toggle column visibility menu"
+					title={t('Column visibility')}
+					aria-label={t('Toggle column visibility menu')}
 					aria-haspopup="menu"
 					aria-expanded={menuOpen}
 					aria-controls="column-menu"
@@ -411,15 +412,15 @@
 					<div
 						id="column-menu"
 						role="menu"
-						aria-label="Column visibility options"
+						aria-label={t('Column visibility options')}
 						class="absolute right-0 top-full mt-1 z-50 min-w-48 max-h-80 overflow-y-auto rounded-ig-md border border-ig-border-strong bg-ig-surface shadow-xl"
 					>
 						<div
 							class="px-3 py-2 text-xs font-semibold text-ig-text-muted uppercase border-b border-ig-border"
 						>
-							Columns
+							{t('Columns')}
 						</div>
-						<div class="py-1" role="group" aria-label="Column toggles">
+						<div class="py-1" role="group" aria-label={t('Column toggles')}>
 							{#each tableMenuController.toggleableFields as field (field.fullName)}
 								<label
 									class="flex items-center gap-2 px-3 py-1.5 hover:bg-ig-surface-raised cursor-pointer text-sm"
@@ -466,7 +467,7 @@
 							class:hover:text-ig-text={singleSelectedIndex > 0}
 							disabled={singleSelectedIndex === 0}
 							onclick={goToNewerSnapshot}
-							title="Newer snapshot"
+							title={t('Newer snapshot')}
 						>
 							{@html ChevronLeft}
 						</button>
@@ -480,7 +481,7 @@
 							class:hover:text-ig-text={singleSelectedIndex < snapshotCount - 1}
 							disabled={singleSelectedIndex >= snapshotCount - 1}
 							onclick={goToOlderSnapshot}
-							title="Older snapshot"
+							title={t('Older snapshot')}
 						>
 							{@html ChevronRight}
 						</button>
@@ -488,7 +489,7 @@
 				{:else}
 					<!-- Multi-selection info -->
 					<span class="text-ig-text-muted">
-						{selectedSnapshotIndices.size} of {snapshotCount} snapshots
+						{t('{{count}} snapshots', { count: selectedSnapshotIndices.size })}
 					</span>
 				{/if}
 
@@ -499,7 +500,7 @@
 						onclick={selectAll}
 						title="Select all snapshots (merge all data)"
 					>
-						Select All
+						{t('Select All')}
 					</button>
 				{/if}
 			</div>
@@ -512,18 +513,18 @@
 						title="Server-side filtering may have limited the results. The sorted view shows only the events received, not necessarily all matching events."
 					>
 						<span class="h-3.5 w-3.5 flex-shrink-0">{@html InfoIcon}</span>
-						<span class="truncate">Sorted locally (results may be partial)</span>
+						<span class="truncate">{t('Sorted locally (results may be partial)')}</span>
 						<button
 							class="ml-1 rounded-ig-sm px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-100 transition-colors hover:bg-amber-200 dark:hover:bg-amber-800/50"
 							onclick={resetSort}
-							title="Reset sorting to default order"
+							title={t('Reset sorting to default order')}
 						>
-							Reset
+							{t('Reset')}
 						</button>
 					</div>
 				{:else if selectedSnapshotIndices.size === 1}
 					<span class="truncate text-ig-text-muted">
-						Drag to select range, Ctrl+click to toggle
+						{t('Drag to select range, Ctrl+click to toggle')}
 					</span>
 				{/if}
 			</div>
@@ -531,9 +532,9 @@
 			<div class="flex flex-shrink-0 items-center gap-2 text-ig-text-muted">
 				<!-- Event count info -->
 				<span>
-					{selectedEventCount} events
+					{selectedEventCount} {t('events')}
 					{#if selectedSnapshotIndices.size > 1}
-						(merged)
+						{t('(merged)')}
 					{/if}
 				</span>
 
@@ -542,10 +543,10 @@
 					<button
 						class="flex items-center gap-1 rounded-ig-sm bg-green-700 px-2 py-0.5 text-green-100 transition-colors hover:bg-green-600"
 						onclick={goToLatest}
-						title="Return to latest snapshot"
+						title={t('Return to latest snapshot')}
 					>
 						<span class="h-4 w-4">{@html ArrowRotateLeft}</span>
-						<span>Latest</span>
+						<span>{t('Latest')}</span>
 					</button>
 				{/if}
 			</div>

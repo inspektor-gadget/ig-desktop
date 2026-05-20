@@ -3,6 +3,7 @@
 	import Title from '$lib/components/params/Title.svelte';
 	import AutocompleteInput from '$lib/components/forms/AutocompleteInput.svelte';
 	import { getK8sRecents } from '$lib/utils/env-preferences';
+	import { t } from '$lib/i18n/index.svelte';
 
 	interface Param {
 		key: string;
@@ -359,7 +360,7 @@
 		bind:value
 		{options}
 		{loading}
-		placeholder={param.defaultValue || `Select ${resourceType}...`}
+		placeholder={param.defaultValue || t('Select {{resourceType}}...', { resourceType })}
 		multiSelect={isMultiSelect}
 		allowCustom={true}
 		onSearch={handleSearch}
