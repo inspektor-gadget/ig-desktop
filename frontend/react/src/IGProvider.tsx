@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
-import { initializeIG, type ITransportAdapter } from '@inspektor-gadget/frontend';
+import { initializeIG, setLanguage, type ITransportAdapter } from '@inspektor-gadget/frontend';
 
 interface IGContextValue {
 	adapter: ITransportAdapter;
@@ -14,6 +14,8 @@ interface IGProviderProps {
 	basePath?: string;
 	/** Navigation handler called when IG components want to navigate */
 	onNavigate?: (url: string) => void;
+	/** Language code for IG components (e.g. 'en', 'de'). Follow the host app's locale. */
+	language?: string;
 	children: ReactNode;
 }
 
@@ -28,11 +30,25 @@ interface IGProviderProps {
  * </IGProvider>
  * ```
  */
-export function IGProvider({ adapter, basePath, onNavigate, children }: IGProviderProps) {
+export function IGProvider({
+	adapter,
+	basePath,
+	onNavigate,
+	language,
+	children
+}: IGProviderProps) {
 	useEffect(() => {
-		initializeIG({ adapter, basePath, onNavigate });
+		initializeIG({ adapter, basePath, onNavigate, language });
 		return () => adapter.disconnect();
+		// `language` is handled by the dedicated effect below, so it is
+		// intentionally omitted here to avoid re-initializing the adapter.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [adapter, basePath, onNavigate]);
+
+	// Keep IG components in sync when the host app changes language.
+	useEffect(() => {
+		if (language) setLanguage(language);
+	}, [language]);
 
 	return <IGContext.Provider value={{ adapter }}>{children}</IGContext.Provider>;
 }

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import '../app.css';
+	// Initialize i18next (language detection) on app boot.
+	import '$lib/i18n/config';
 	import { setContext, onMount } from 'svelte';
 
 	import Logo from '$lib/components/Logo.svelte';

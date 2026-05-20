@@ -9,5 +9,12 @@ export {
 	DemoAdapter,
 	WasmAdapter,
 	ElectronIPCAdapter,
-	initializeIG
+	initializeIG,
+	// i18n — plain i18next, usable from React without a React i18n binding.
+	igI18n,
+	t,
+	setLanguage,
+	getLanguage,
+	onLanguageChange,
+	supportedLanguages
 } from '@inspektor-gadget/frontend';

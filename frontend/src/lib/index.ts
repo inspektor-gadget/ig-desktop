@@ -84,6 +84,11 @@ export { default as NavbarLink } from './components/NavbarLink.svelte';
 export { default as DeployModalWrapper } from './components/wrappers/DeployModalWrapper.svelte';
 export { default as GadgetWrapper } from './components/wrappers/GadgetWrapper.svelte';
 
+// --- Internationalization (i18next core, no React/Svelte binding) ---
+export { igI18n, i18nReady } from './i18n/config';
+export { t, setLanguage, getLanguage, onLanguageChange } from './i18n/index.svelte';
+export { supportedLanguages } from './i18n/supported-languages';
+
 // --- Theming ---
 export { setTheme, resetTheme } from './themes/set-theme';
 export type { IGThemeTokens } from './themes/set-theme';
@@ -103,18 +108,24 @@ import { setNavigationHandler } from './compat/app-navigation';
 import { websocketService } from './services/websocket.service.svelte';
 import { messageRouter } from './services/message-router.service.svelte';
 import { registerBuiltinPlugins } from './plugins/builtin';
+import { setLanguage } from './i18n/index.svelte';
 
 /**
  * Initialize the IG frontend library for use in a non-SvelteKit host.
  * Call this before mounting any Svelte components.
+ *
+ * Pass `language` to follow a host application's locale (e.g. a Headlamp
+ * plugin). When omitted, the language is auto-detected from the browser.
  */
 export function initializeIG(options: {
 	adapter: ITransportAdapter;
 	basePath?: string;
 	onNavigate?: (url: string) => void;
+	language?: string;
 }): void {
 	registerBuiltinPlugins();
 	if (options.basePath) setBasePath(options.basePath);
 	if (options.onNavigate) setNavigationHandler(options.onNavigate);
+	if (options.language) setLanguage(options.language);
 	websocketService.initialize(options.adapter, (message) => messageRouter.route(message));
 }
