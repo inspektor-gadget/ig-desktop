@@ -28,13 +28,23 @@
 	}
 </script>
 
-<BaseModal bind:open title={t('Check for Updates')} icon={updateIcon} size="sm" onClose={handleDecline}>
+<BaseModal
+	bind:open
+	title={t('Check for Updates')}
+	icon={updateIcon}
+	size="sm"
+	onClose={handleDecline}
+>
 	<div class="space-y-4">
 		<p class="text-gray-700 dark:text-gray-300">
-			{t('Would you like Inspektor Gadget Desktop to automatically check for updates when it starts?')}
+			{t(
+				'Would you like Inspektor Gadget Desktop to automatically check for updates when it starts?'
+			)}
 		</p>
 		<p class="text-sm text-gray-500 dark:text-gray-500">
-			{t('This will connect to GitHub to fetch the latest release information. You can change this setting anytime in Settings.')}
+			{t(
+				'This will connect to GitHub to fetch the latest release information. You can change this setting anytime in Settings.'
+			)}
 		</p>
 	</div>
 

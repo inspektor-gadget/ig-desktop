@@ -348,7 +348,9 @@
 		if (!force && isDeploying) {
 			if (
 				!confirm(
-					t('Deployment is in progress. You can return to this modal later. Are you sure you want to close?')
+					t(
+						'Deployment is in progress. You can return to this modal later. Are you sure you want to close?'
+					)
 				)
 			) {
 				return;
@@ -425,11 +427,17 @@
 					<div class="flex flex-col gap-6">
 						<p class="text-sm text-gray-600 dark:text-gray-400">
 							{#if undeploy}
-								{t('Configure the undeployment for Inspektor Gadget. The existing deployment will be completely removed from your cluster.')}
+								{t(
+									'Configure the undeployment for Inspektor Gadget. The existing deployment will be completely removed from your cluster.'
+								)}
 							{:else if redeploy}
-								{t('Configure the redeployment for Inspektor Gadget. The existing deployment will be uninstalled first, then reinstalled using the official Inspektor Gadget Helm chart.')}
+								{t(
+									'Configure the redeployment for Inspektor Gadget. The existing deployment will be uninstalled first, then reinstalled using the official Inspektor Gadget Helm chart.'
+								)}
 							{:else}
-								{t('Configure the Helm deployment for Inspektor Gadget. The deployment will be performed using the official Inspektor Gadget Helm chart.')}
+								{t(
+									'Configure the Helm deployment for Inspektor Gadget. The deployment will be performed using the official Inspektor Gadget Helm chart.'
+								)}
 							{/if}
 						</p>
 
@@ -455,7 +463,9 @@
 								bind:value={chartVersion}
 								label={t('Chart Version (Optional)')}
 								placeholder="latest"
-								description={t("Leave empty to use the latest version, or specify a version like '0.43.0'")}
+								description={t(
+									"Leave empty to use the latest version, or specify a version like '0.43.0'"
+								)}
 							/>
 
 							<!-- Loading indicator -->
@@ -586,7 +596,9 @@
 										? t('Loading default values...')
 										: 'key: value\nnested:\n  key: value'}
 									rows={16}
-									description={t('Full Helm values. Changes here will sync with the settings above.')}
+									description={t(
+										'Full Helm values. Changes here will sync with the settings above.'
+									)}
 									class="font-mono text-sm"
 									disabled={loadingChartValues}
 								/>
@@ -652,7 +664,11 @@
 							<div class="transition-transform duration-200" class:rotate-180={showDebugConsole}>
 								{@html ChevronDown}
 							</div>
-							<span>{t('Output Console ({{count}} entries)', { count: currentDeployment?.debugLogs?.length || 0 })}</span>
+							<span
+								>{t('Output Console ({{count}} entries)', {
+									count: currentDeployment?.debugLogs?.length || 0
+								})}</span
+							>
 						</button>
 
 						<!-- Debug Console -->
@@ -747,10 +763,19 @@
 							</h3>
 							<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 								{undeploy
-									? t('Inspektor Gadget has been successfully undeployed from namespace {{namespace}}', { namespace: currentDeployment?.config.namespace })
+									? t(
+											'Inspektor Gadget has been successfully undeployed from namespace {{namespace}}',
+											{ namespace: currentDeployment?.config.namespace }
+										)
 									: redeploy
-										? t('Inspektor Gadget has been successfully redeployed to namespace {{namespace}}', { namespace: currentDeployment?.config.namespace })
-										: t('Inspektor Gadget has been successfully deployed to namespace {{namespace}}', { namespace: currentDeployment?.config.namespace })}
+										? t(
+												'Inspektor Gadget has been successfully redeployed to namespace {{namespace}}',
+												{ namespace: currentDeployment?.config.namespace }
+											)
+										: t(
+												'Inspektor Gadget has been successfully deployed to namespace {{namespace}}',
+												{ namespace: currentDeployment?.config.namespace }
+											)}
 							</p>
 						</div>
 

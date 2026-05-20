@@ -362,10 +362,12 @@
 				{formatTime(tooltipData.cell.timestamp)}
 			</div>
 			<div class="text-gray-600 dark:text-gray-300">
-				{t('Bucket:')} {tooltipData.cell.bucketLabel}
+				{t('Bucket:')}
+				{tooltipData.cell.bucketLabel}
 			</div>
 			<div class="text-gray-500 dark:text-gray-400">
-				{t('Count:')} {tooltipData.cell.value.toLocaleString()}
+				{t('Count:')}
+				{tooltipData.cell.value.toLocaleString()}
 			</div>
 		</div>
 	{/if}

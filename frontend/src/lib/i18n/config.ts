@@ -17,9 +17,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import { supportedLanguages } from './supported-languages';
 
 /** Lazy loaders for every locale catalog, keyed by `./locales/<lng>/<ns>.json`. */
-const localeLoaders = import.meta.glob<{ default: Record<string, string> }>(
-	'./locales/*/*.json'
-);
+const localeLoaders = import.meta.glob<{ default: Record<string, string> }>('./locales/*/*.json');
 
 /** i18next backend that resolves a catalog to its lazily-imported Vite chunk. */
 const lazyBackend: BackendModule = {

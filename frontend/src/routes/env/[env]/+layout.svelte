@@ -35,7 +35,9 @@
 				if (isAttached) {
 					toastStore.success(t('Detached from "{{instanceName}}" successfully', { instanceName }));
 				} else {
-					toastStore.success(t('Instance "{{instanceName}}" stopped successfully', { instanceName }));
+					toastStore.success(
+						t('Instance "{{instanceName}}" stopped successfully', { instanceName })
+					);
 				}
 			}
 
@@ -49,8 +51,14 @@
 			const errorMessage = err?.message || err?.toString() || 'Unknown error';
 			toastStore.error(
 				isAttached
-					? t('Failed to detach from instance "{{instanceName}}": {{errorMessage}}', { instanceName, errorMessage })
-					: t('Failed to stop instance "{{instanceName}}": {{errorMessage}}', { instanceName, errorMessage }),
+					? t('Failed to detach from instance "{{instanceName}}": {{errorMessage}}', {
+							instanceName,
+							errorMessage
+						})
+					: t('Failed to stop instance "{{instanceName}}": {{errorMessage}}', {
+							instanceName,
+							errorMessage
+						}),
 				7000,
 				{
 					label: t('Retry'),

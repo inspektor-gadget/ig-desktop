@@ -1,6 +1,6 @@
 interface Request {
-	resolve: (value: any) => void;
-	reject: (error: any) => void;
+	resolve: (value: unknown) => void;
+	reject: (error: unknown) => void;
 }
 
 interface WebSocketLike {
@@ -9,16 +9,16 @@ interface WebSocketLike {
 
 interface Command {
 	reqID?: string;
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 let reqID = 0;
-let requests: Record<string, Request> = {};
+const requests: Record<string, Request> = {};
 let ws: WebSocket | WebSocketLike;
 
 export const appState = $state({
 	api: {
-		request(cmd: Command): Promise<any> {
+		request(cmd: Command): Promise<unknown> {
 			reqID++;
 			cmd.reqID = '' + reqID; // stringify
 			const prom = new Promise((resolve, reject) => {

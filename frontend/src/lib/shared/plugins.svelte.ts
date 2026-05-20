@@ -1,4 +1,5 @@
 import * as svelte from 'svelte/compiler';
+import type { Component } from 'svelte';
 // import * as $ from "svelte/internal/client";
 
 // see https://github.com/sveltejs/svelte/blob/svelte%405.0.0-next.271/sites/svelte-5-preview/src/lib/workers/workers.d.ts
@@ -10,7 +11,7 @@ import * as svelte from 'svelte/compiler';
  * @param source - The raw Svelte component source code.
  * @returns A promise that resolves to the compiled component.
  */
-export async function loadAndCompileComponent(source: string): Promise<any> {
+export async function loadAndCompileComponent(source: string): Promise<Component> {
 	// Compile the Svelte component source.
 	const { js, css } = svelte.compile(source, {
 		generate: 'client', // For a DOM app (could be "ssr" for SSR)

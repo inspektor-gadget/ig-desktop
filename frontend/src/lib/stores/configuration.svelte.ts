@@ -4,11 +4,10 @@
  */
 
 import { configurationSchema } from '$lib/config';
-import type { Setting } from '$lib/config.types';
 
 const STORAGE_KEY = 'ig-configuration';
 
-type SettingValue = boolean | string | number | Record<string, unknown> | unknown[];
+type SettingValue = boolean | string | number | Record<string, unknown> | unknown[] | null;
 type SettingsData = Record<string, SettingValue>;
 
 class ConfigurationStore {

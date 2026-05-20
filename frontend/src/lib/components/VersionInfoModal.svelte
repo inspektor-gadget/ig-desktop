@@ -2,7 +2,7 @@
 	import { openExternalURL } from '$lib/utils/external-links';
 	import BaseModal from './BaseModal.svelte';
 	import Button from './Button.svelte';
-	import { apiService } from '$lib/services/api.service.svelte';
+	import { apiService, type CheckForUpdatesResponse } from '$lib/services/api.service.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
@@ -38,7 +38,7 @@
 		error = '';
 
 		apiService
-			.request({ cmd: 'checkForUpdates' })
+			.request<CheckForUpdatesResponse>({ cmd: 'checkForUpdates' })
 			.then((data) => {
 				if (data) {
 					versionData = {
@@ -72,7 +72,13 @@
 	}
 </script>
 
-<BaseModal bind:open title={t('Version Information')} icon={infoIcon} size="sm" onClose={handleClose}>
+<BaseModal
+	bind:open
+	title={t('Version Information')}
+	icon={infoIcon}
+	size="sm"
+	onClose={handleClose}
+>
 	<div class="space-y-4">
 		{#if loading}
 			<div class="flex items-center justify-center py-8">

@@ -146,7 +146,9 @@
 		<div class="flex h-full items-center justify-center text-gray-500 dark:text-gray-400">
 			<div class="text-center">
 				<p class="text-lg">{t('Network map not available')}</p>
-				<p class="text-sm mt-2">{t("This datasource doesn't have the required src/dst address fields")}</p>
+				<p class="text-sm mt-2">
+					{t("This datasource doesn't have the required src/dst address fields")}
+				</p>
 			</div>
 		</div>
 	{/if}

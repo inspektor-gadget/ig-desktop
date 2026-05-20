@@ -293,7 +293,10 @@
 			if (detached) {
 				// Show info toast for headless instances (success confirmed when instance appears in list)
 				const displayName = instanceName || 'Unnamed instance';
-				toastStore.info(t('Starting headless instance "{{displayName}}"...', { displayName }), 3000);
+				toastStore.info(
+					t('Starting headless instance "{{displayName}}"...', { displayName }),
+					3000
+				);
 				goto(resolve(`/env/${environmentID}`));
 			} else {
 				goto(resolve(`/env/${environmentID}/running/${res.id}`));
@@ -425,7 +428,9 @@
 					<Panel title={t('Select Environment')} icon={Server} color="blue">
 						<div class="flex flex-col gap-4">
 							<p class="text-sm text-gray-600 dark:text-gray-400">
-								{t('Choose an environment to run this gadget on. Environments define where and how the gadget will execute.')}
+								{t(
+									'Choose an environment to run this gadget on. Environments define where and how the gadget will execute.'
+								)}
 							</p>
 
 							{#if Object.keys(environments).length === 0}
@@ -469,7 +474,8 @@
 								<div
 									class="mt-2 rounded-ig-md border border-blue-200/30 dark:border-blue-900/30 bg-blue-50/20 dark:bg-blue-950/20 p-3 text-xs text-blue-700/80 dark:text-blue-300/80"
 								>
-									<span class="font-semibold">{t('Tip:')}</span> {t('You can also use the environment selector in the top-right corner.')}
+									<span class="font-semibold">{t('Tip:')}</span>
+									{t('You can also use the environment selector in the top-right corner.')}
 								</div>
 							{/if}
 						</div>
@@ -600,7 +606,9 @@
 											value="existing"
 											class="h-4 w-4 cursor-pointer border-gray-300 text-violet-600 focus:ring-violet-600"
 										/>
-										<span class="text-sm text-gray-700 dark:text-gray-300">{t('Add to Existing')}</span>
+										<span class="text-sm text-gray-700 dark:text-gray-300"
+											>{t('Add to Existing')}</span
+										>
 									</label>
 								</div>
 

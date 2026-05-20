@@ -14,7 +14,6 @@ import type {
 	RegisteredPlugin,
 	VisualizerComponent
 } from '$lib/types/plugin-system';
-import { PLUGIN_CAPABILITIES } from '$lib/types/plugin-system';
 import type {
 	PluginManifest,
 	VisualizerConditions,
@@ -188,27 +187,6 @@ function matchesVisualizerConditions(ds: Datasource, conditions: VisualizerCondi
 	return true;
 }
 
-/**
- * Get the scope string for a plugin based on its source.
- */
-function getPluginScope(source: PluginSource, pluginId: string): string {
-	switch (source) {
-		case 'builtin':
-			return 'builtin';
-		case 'local':
-			return 'local';
-		case 'gadget':
-			// Extract gadget image from plugin ID (e.g., 'gadget:myimage:viz' -> 'gadget:myimage')
-			const parts = pluginId.split(':');
-			if (parts.length >= 2) {
-				return `gadget:${parts[1]}`;
-			}
-			return 'gadget';
-		default:
-			return 'unknown';
-	}
-}
-
 class PluginRegistry {
 	/** All registered plugins by ID */
 	private plugins = $state<Map<string, RegisteredPlugin>>(new Map());
@@ -245,6 +223,7 @@ class PluginRegistry {
 
 	/** All hooks grouped by hookId */
 	readonly hooksByHookId = $derived.by(() => {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local map rebuilt by the derived, not reactive state
 		const map = new Map<string, RegisteredHook[]>();
 		for (const hook of this._hooks.values()) {
 			const hookId = hook.hook.hookId;
@@ -262,6 +241,7 @@ class PluginRegistry {
 
 	/** All routes grouped by plugin ID */
 	readonly routesByPluginId = $derived.by(() => {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local map rebuilt by the derived, not reactive state
 		const map = new Map<string, RegisteredRoute[]>();
 		for (const route of this._routes.values()) {
 			const pluginId = route.manifest.id;
@@ -559,6 +539,7 @@ class PluginRegistry {
 			const sandboxed = source === 'gadget';
 
 			// Collect all unique components to compile
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient map, local to compilation
 			const componentsToCompile = new Map<string, string>();
 
 			if (manifest.visualizers) {
@@ -588,6 +569,7 @@ class PluginRegistry {
 			}
 
 			// Compile each unique component
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient map, local to compilation
 			const compiledComponents = new Map<string, VisualizerComponent>();
 
 			for (const [componentFile, id] of componentsToCompile) {
@@ -810,7 +792,7 @@ class PluginRegistry {
 				await import(/* @vite-ignore */ url);
 			} catch (e) {
 				moduleUrls.forEach((u) => URL.revokeObjectURL(u));
-				throw new Error(`Failed to load cached module ${path}: ${e}`);
+				throw new Error(`Failed to load cached module ${path}: ${e}`, { cause: e });
 			}
 		}
 
@@ -830,7 +812,7 @@ class PluginRegistry {
 			return { exports: module.default, moduleUrls };
 		} catch (e) {
 			moduleUrls.forEach((u) => URL.revokeObjectURL(u));
-			throw new Error(`Failed to load cached entrypoint: ${e}`);
+			throw new Error(`Failed to load cached entrypoint: ${e}`, { cause: e });
 		}
 	}
 
@@ -951,9 +933,7 @@ class PluginRegistry {
 	 * Get data processors for a specific processing stage.
 	 * Returns plugins with data processors matching the stage, sorted by order.
 	 */
-	getDataProcessorsForStage(
-		stage: 'pre-buffer' | 'post-buffer'
-	): Array<
+	getDataProcessorsForStage(stage: 'pre-buffer' | 'post-buffer'): Array<
 		RegisteredPlugin & {
 			dataProcessor: import('$lib/types/plugin-manifest').DataProcessorCapability;
 		}

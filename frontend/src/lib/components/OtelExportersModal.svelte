@@ -284,7 +284,8 @@
 												<span class="text-yellow-600 dark:text-yellow-500">{t('(insecure)')}</span>
 											{/if}
 											{#if isMetrics && config.interval}
-												<span class="text-blue-600 dark:text-blue-400">{t('every {{interval}}', { interval: config.interval })}</span
+												<span class="text-blue-600 dark:text-blue-400"
+													>{t('every {{interval}}', { interval: config.interval })}</span
 												>
 											{/if}
 										</span>
@@ -373,7 +374,9 @@
 				class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-5 py-3"
 			>
 				<h3 id="form-modal-title" class="text-base font-semibold">
-					{editingName ? t('Edit "{{name}}"', { name: editingName }) : t('Add {{typeLabel}} Exporter', { typeLabel })}
+					{editingName
+						? t('Edit "{{name}}"', { name: editingName })
+						: t('Add {{typeLabel}} Exporter', { typeLabel })}
 				</h3>
 				<button
 					onclick={closeFormModal}

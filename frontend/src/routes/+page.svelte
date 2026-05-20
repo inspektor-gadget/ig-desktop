@@ -175,7 +175,9 @@
 					<p class="text-2xl text-gray-600 dark:text-gray-400">{t('The Inspektor awaits you.')}</p>
 				</div>
 				<p class="max-w-2xl text-lg text-gray-500">
-					{t('Get started by setting up your first environment to begin exploring and debugging your systems with Inspektor Gadget\'s powerful eBPF-based tools.')}
+					{t(
+						"Get started by setting up your first environment to begin exploring and debugging your systems with Inspektor Gadget's powerful eBPF-based tools."
+					)}
 				</p>
 			</div>
 
@@ -189,7 +191,9 @@
 									{t('Create Your First Environment')}
 								</h3>
 								<p class="text-gray-600 dark:text-gray-400">
-									{t('Connect to a Kubernetes cluster or Linux host to start running gadgets. Use the button in the upper left or click below.')}
+									{t(
+										'Connect to a Kubernetes cluster or Linux host to start running gadgets. Use the button in the upper left or click below.'
+									)}
 								</p>
 							</div>
 
@@ -206,7 +210,9 @@
 									{t("Haven't installed Inspektor Gadget yet?")}
 								</p>
 								<p class="text-sm text-gray-500">
-									{t('For Kubernetes, you can use a 1-click installation directly from IG Desktop. Just follow the step above and create a new environment.')}
+									{t(
+										'For Kubernetes, you can use a 1-click installation directly from IG Desktop. Just follow the step above and create a new environment.'
+									)}
 								</p>
 								<p class="text-sm text-gray-500">
 									{t('Otherwise, check out the')}
@@ -395,7 +401,9 @@
 							>
 								<div class="flex flex-col gap-1">
 									<div class="font-medium text-gray-800 dark:text-gray-200">{t('Networking')}</div>
-									<div class="text-xs text-gray-600 dark:text-gray-400">{t('Network analysis tools')}</div>
+									<div class="text-xs text-gray-600 dark:text-gray-400">
+										{t('Network analysis tools')}
+									</div>
 								</div>
 								<div
 									class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
@@ -516,7 +524,8 @@
 						>
 							<div class="flex items-center gap-3">
 								<div class="text-purple-400">{@html Book}</div>
-								<span class="text-gray-800 dark:text-gray-200">{t('Gadget Development Guide')}</span>
+								<span class="text-gray-800 dark:text-gray-200">{t('Gadget Development Guide')}</span
+								>
 							</div>
 							<div
 								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
@@ -577,7 +586,9 @@
 						class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/30 dark:bg-gray-900/30 p-4"
 					>
 						<p class="text-sm text-gray-600 dark:text-gray-400">
-							{t('Have questions or want to contribute? Join our community to connect with other users and the Inspektor Gadget team.')}
+							{t(
+								'Have questions or want to contribute? Join our community to connect with other users and the Inspektor Gadget team.'
+							)}
 						</p>
 					</div>
 				</div>

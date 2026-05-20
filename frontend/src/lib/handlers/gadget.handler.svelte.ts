@@ -278,6 +278,7 @@ class EventBuffer {
 		this.buffer = [];
 
 		// Group events by instance for efficient processing
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient grouping map, discarded after flush
 		const eventsByInstance = new Map<string, GadgetEventMessage[]>();
 		for (const msg of toProcess) {
 			if (!eventsByInstance.has(msg.instanceID)) {

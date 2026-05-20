@@ -39,7 +39,9 @@
 >
 	<div class="space-y-4">
 		<p class="text-gray-700 dark:text-gray-300">
-			{t('Would you like to help improve Inspektor Gadget Desktop by sharing anonymous usage data?')}
+			{t(
+				'Would you like to help improve Inspektor Gadget Desktop by sharing anonymous usage data?'
+			)}
 		</p>
 		<div
 			class="rounded-ig-md border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 p-3 text-sm text-gray-600 dark:text-gray-400"

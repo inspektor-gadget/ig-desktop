@@ -240,10 +240,17 @@
 			// Show error toast
 			const errorMessage = err?.message || err?.toString() || 'Unknown error';
 			const instanceName = instance.name || instance.id.substring(0, 8);
-			toastStore.error(t('Failed to remove instance "{{instanceName}}": {{errorMessage}}', { instanceName, errorMessage }), 7000, {
-				label: t('Retry'),
-				onClick: () => removeInstance(instance)
-			});
+			toastStore.error(
+				t('Failed to remove instance "{{instanceName}}": {{errorMessage}}', {
+					instanceName,
+					errorMessage
+				}),
+				7000,
+				{
+					label: t('Retry'),
+					onClick: () => removeInstance(instance)
+				}
+			);
 		}
 	}
 
@@ -288,7 +295,10 @@
 			if (gadgetRunRequest.detached) {
 				// Show info toast for headless instances (success confirmed when instance appears in list)
 				const displayName = gadgetRunRequest.instanceName || t('Unnamed instance');
-				toastStore.info(t('Starting headless instance "{{displayName}}"...', { displayName }), 3000);
+				toastStore.info(
+					t('Starting headless instance "{{displayName}}"...', { displayName }),
+					3000
+				);
 				getList(env.id);
 			} else {
 				goto(resolve(`/env/${env.id}/running/${res.id}`));
@@ -653,7 +663,9 @@
 							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
 								<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
 								<div class="text-sm text-gray-500">
-									{t('No sessions yet. Enable session recording when running a gadget to capture runs.')}
+									{t(
+										'No sessions yet. Enable session recording when running a gadget to capture runs.'
+									)}
 								</div>
 							</div>
 						{:else}
@@ -682,7 +694,9 @@
 			<div class="flex flex-col gap-6">
 				<!-- Environment Name -->
 				<div class="flex flex-col gap-2">
-					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">{t('Name')}</span>
+					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
+						>{t('Name')}</span
+					>
 					<div
 						class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200"
 					>
@@ -702,7 +716,9 @@
 
 				<!-- Runtime -->
 				<div class="flex flex-col gap-2">
-					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase">{t('Runtime')}</span>
+					<span class="text-sm font-semibold tracking-wide text-gray-500 uppercase"
+						>{t('Runtime')}</span
+					>
 					<div
 						class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-gray-800 dark:text-gray-200"
 					>

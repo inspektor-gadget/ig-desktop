@@ -7,6 +7,12 @@
 type EnvironmentMode = 'wails' | 'browser';
 type Platform = 'mac' | 'windows' | 'linux' | 'unknown';
 
+/** Non-standard browser globals injected by native Wails webviews. */
+type WailsWebviewWindow = Window & {
+	webkit?: { messageHandlers?: { external?: unknown } };
+	chrome?: { webview?: unknown };
+};
+
 /**
  * Detects the current runtime environment.
  * Returns 'wails' if running in the Wails desktop app, 'browser' otherwise.
@@ -33,12 +39,12 @@ function detectEnvironment(): EnvironmentMode {
 	}
 
 	// Check for webkit message handlers (macOS Wails webview)
-	if ('webkit' in window && (window as any).webkit?.messageHandlers?.external) {
+	if ('webkit' in window && (window as WailsWebviewWindow).webkit?.messageHandlers?.external) {
 		return 'wails';
 	}
 
 	// Check for Chrome webview (Windows Wails webview)
-	if ('chrome' in window && (window as any).chrome?.webview) {
+	if ('chrome' in window && (window as WailsWebviewWindow).chrome?.webview) {
 		return 'wails';
 	}
 

@@ -308,10 +308,8 @@
 			<span
 				class="text-[11px] text-gray-500 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 py-0.5 px-2 rounded-ig-sm"
 			>
-				{formatNumber(matchedSamples)} / {formatNumber(totalValue)} {t('samples')} ({getPercentage(
-					matchedSamples,
-					totalValue
-				).toFixed(1)}%)
+				{formatNumber(matchedSamples)} / {formatNumber(totalValue)}
+				{t('samples')} ({getPercentage(matchedSamples, totalValue).toFixed(1)}%)
 			</span>
 		{/if}
 
@@ -409,7 +407,9 @@
 			class="text-[11px] text-gray-500 dark:text-gray-400 max-w-50 overflow-hidden text-ellipsis whitespace-nowrap"
 		>
 			{#if zoomedNode}
-				{t('Zoomed: ')}<span class="font-mono text-gray-700 dark:text-gray-300">{zoomedNode.name}</span>
+				{t('Zoomed: ')}<span class="font-mono text-gray-700 dark:text-gray-300"
+					>{zoomedNode.name}</span
+				>
 			{:else}
 				{t('Click to zoom')}
 			{/if}
@@ -513,7 +513,9 @@
 				).toFixed(2)}%)
 			</div>
 			{#if tooltipDepth !== 0 && tooltipNode.name !== 'all'}
-				<div class="text-gray-400 dark:text-gray-500 text-[10px] mt-1 italic">{t('Click to zoom')}</div>
+				<div class="text-gray-400 dark:text-gray-500 text-[10px] mt-1 italic">
+					{t('Click to zoom')}
+				</div>
 			{/if}
 		</div>
 	{/if}

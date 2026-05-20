@@ -13,15 +13,39 @@ export interface ListPluginsResponse {
 	pluginsDir: string;
 }
 
+/** Response to the `checkForUpdates` command. */
+export interface CheckForUpdatesResponse {
+	currentVersion?: string;
+	latestVersion?: string;
+	igLibraryVersion?: string;
+	updateAvailable?: boolean;
+	releasesUrl?: string;
+	error?: string;
+}
+
+/** Response to the `getVersion` command. */
+export interface GetVersionResponse {
+	version?: string;
+}
+
 export type RequestCommand = {
 	cmd: string;
 	reqID?: string;
-	[key: string]: any;
+	[key: string]: unknown;
+};
+
+/** A parsed response message (type 1) from the server. */
+type ResponseMessage = {
+	reqID?: string;
+	success?: boolean;
+	error?: unknown;
+	data?: unknown;
 };
 
 type PendingRequest = {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- type-erased registry: each pending request resolves to a different shape
 	resolve: (data: any) => void;
-	reject: (error: any) => void;
+	reject: (error: unknown) => void;
 };
 
 /**
@@ -36,11 +60,11 @@ export class ApiService {
 	 * @param cmd - The command object to send
 	 * @returns Promise that resolves with the response data
 	 */
-	request(cmd: RequestCommand): Promise<any> {
+	request<T = unknown>(cmd: RequestCommand): Promise<T> {
 		this.reqID++;
 		cmd.reqID = '' + this.reqID; // stringify
 
-		const prom = new Promise((resolve, reject) => {
+		const prom = new Promise<T>((resolve, reject) => {
 			this.requests[cmd.reqID!] = { resolve, reject };
 		});
 
@@ -52,7 +76,7 @@ export class ApiService {
 	 * Handle a response message (type 1) from the server.
 	 * @param msg - The parsed message object
 	 */
-	handleResponse(msg: any): void {
+	handleResponse(msg: ResponseMessage): void {
 		if (msg.reqID && this.requests[msg.reqID]) {
 			if (!msg.success) {
 				this.requests[msg.reqID].reject(msg.error);

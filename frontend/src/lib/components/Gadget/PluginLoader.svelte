@@ -80,7 +80,9 @@
 				<h3 class="font-semibold text-amber-400">{t('Security Notice')}</h3>
 				<p class="mt-1 text-sm text-amber-300/90">
 					{t('This gadget includes a custom plugin with {{count}} file', { count: fileCount })}.
-					{t('Plugins can execute JavaScript code in your browser. Only approve plugins from sources you trust.')}
+					{t(
+						'Plugins can execute JavaScript code in your browser. Only approve plugins from sources you trust.'
+					)}
 				</p>
 			</div>
 		</div>

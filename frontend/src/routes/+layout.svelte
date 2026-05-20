@@ -31,7 +31,11 @@
 	import { deployments } from '$lib/shared/deployments.svelte';
 	import Server from '$lib/icons/server.svg?raw';
 	import { websocketService } from '$lib/services/websocket.service.svelte';
-	import { apiService } from '$lib/services/api.service.svelte';
+	import {
+		apiService,
+		type CheckForUpdatesResponse,
+		type GetVersionResponse
+	} from '$lib/services/api.service.svelte';
 	import { messageRouter } from '$lib/services/message-router.service.svelte';
 	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
 	import { configuration } from '$lib/stores/configuration.svelte';
@@ -89,7 +93,7 @@
 	function checkForUpdates() {
 		updateInfo.checking = true;
 		apiService
-			.request({ cmd: 'checkForUpdates' })
+			.request<CheckForUpdatesResponse>({ cmd: 'checkForUpdates' })
 			.then((data) => {
 				if (data) {
 					updateInfo.updateAvailable = data.updateAvailable || false;
@@ -147,7 +151,7 @@
 	$effect(() => {
 		if (websocketService.connected) {
 			apiService
-				.request({ cmd: 'getVersion' })
+				.request<GetVersionResponse>({ cmd: 'getVersion' })
 				.then((data) => {
 					if (data?.version) {
 						version = data.version;
@@ -472,7 +476,10 @@
 						class="text-blue-400 hover:text-blue-300"
 						title={t('Click for version details')}
 					>
-						{t('Update available: {{latestVersion}} (current: {{version}})', { latestVersion: updateInfo.latestVersion, version })}
+						{t('Update available: {{latestVersion}} (current: {{version}})', {
+							latestVersion: updateInfo.latestVersion,
+							version
+						})}
 					</button>
 				{:else}
 					<button

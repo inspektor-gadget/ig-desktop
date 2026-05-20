@@ -427,8 +427,12 @@
 										? 'bg-ig-primary text-ig-text-on-primary hover:bg-ig-primary-hover'
 										: 'bg-ig-border text-ig-text-secondary hover:bg-ig-border-strong'}"
 									title={searchModeFilter
-										? t('Filter mode: hiding non-matching entries (click to switch to highlight mode, double-click to open settings)')
-										: t('Highlight mode: showing all entries with matches highlighted (click to switch to filter mode, double-click to open settings)')}
+										? t(
+												'Filter mode: hiding non-matching entries (click to switch to highlight mode, double-click to open settings)'
+											)
+										: t(
+												'Highlight mode: showing all entries with matches highlighted (click to switch to filter mode, double-click to open settings)'
+											)}
 									aria-label={searchModeFilter
 										? t('Search mode: filter (switch to highlight)')
 										: t('Search mode: highlight (switch to filter)')}
@@ -445,8 +449,12 @@
 										? ''
 										: 'rounded-r-ig-md'}"
 									title={searchHighlightInFilterMode
-										? t('Text highlighting enabled (click to disable, double-click to open settings)')
-										: t('Text highlighting disabled (click to enable, double-click to open settings)')}
+										? t(
+												'Text highlighting enabled (click to disable, double-click to open settings)'
+											)
+										: t(
+												'Text highlighting disabled (click to enable, double-click to open settings)'
+											)}
 									aria-label={searchHighlightInFilterMode
 										? t('Disable text highlighting')
 										: t('Enable text highlighting')}

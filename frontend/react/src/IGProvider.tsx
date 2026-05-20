@@ -30,13 +30,7 @@ interface IGProviderProps {
  * </IGProvider>
  * ```
  */
-export function IGProvider({
-	adapter,
-	basePath,
-	onNavigate,
-	language,
-	children
-}: IGProviderProps) {
+export function IGProvider({ adapter, basePath, onNavigate, language, children }: IGProviderProps) {
 	useEffect(() => {
 		initializeIG({ adapter, basePath, onNavigate, language });
 		return () => adapter.disconnect();

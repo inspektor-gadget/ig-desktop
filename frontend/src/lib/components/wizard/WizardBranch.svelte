@@ -62,7 +62,9 @@
 			<div class="flex flex-col gap-1">
 				<span class="font-medium text-blue-700 dark:text-blue-300">{t('Telemetry Setup')}</span>
 				<span class="text-blue-600 dark:text-blue-400">
-					{t('Telemetry gadgets export metrics to configured backends. Ensure Inspektor Gadget is deployed with telemetry exporters enabled.')}
+					{t(
+						'Telemetry gadgets export metrics to configured backends. Ensure Inspektor Gadget is deployed with telemetry exporters enabled.'
+					)}
 				</span>
 			</div>
 		</div>

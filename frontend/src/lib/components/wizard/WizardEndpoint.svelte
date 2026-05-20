@@ -185,7 +185,8 @@
 			{#if hasMultipleGadgets}
 				{t('This will create {{count}} headless instances', { count: gadgetSpecs.length })}
 			{:else}
-				{t('This will create a headless instance named')} <span class="font-mono font-medium"
+				{t('This will create a headless instance named')}
+				<span class="font-mono font-medium"
 					>{gadgetSpecs[0]?.suggestedInstanceName || t('unnamed')}</span
 				>
 			{/if}
@@ -222,7 +223,11 @@
 				: t('Configure and run with more options')}
 		>
 			<span>{@html CogSmall}</span>
-			<span>{hasMultipleGadgets ? t('Configure ({{gadgetName}})', { gadgetName: gadgetNames[0] }) : t('Configure')}</span>
+			<span
+				>{hasMultipleGadgets
+					? t('Configure ({{gadgetName}})', { gadgetName: gadgetNames[0] })
+					: t('Configure')}</span
+			>
 		</button>
 		<button
 			onclick={handleRunNow}

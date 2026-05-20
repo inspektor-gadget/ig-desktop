@@ -189,7 +189,10 @@
 
 				<!-- Info -->
 				<span class="text-[11px] text-gray-500 dark:text-gray-400">
-					{t('{{snapshotCount}} snapshots × {{bucketCount}} buckets', { snapshotCount, bucketCount })}
+					{t('{{snapshotCount}} snapshots × {{bucketCount}} buckets', {
+						snapshotCount,
+						bucketCount
+					})}
 				</span>
 			</div>
 		{/if}

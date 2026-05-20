@@ -243,7 +243,9 @@
 							<div class="text-sm font-medium text-gray-800 dark:text-gray-200">
 								{getGadgetName(run.gadgetImage)}
 							</div>
-							<div class="text-xs text-gray-500">{t('{{count}} events', { count: run.eventCount })}</div>
+							<div class="text-xs text-gray-500">
+								{t('{{count}} events', { count: run.eventCount })}
+							</div>
 						</div>
 						<div class="flex items-center gap-1">
 							<Button variant="secondary" size="sm" onclick={() => viewResults(run.id)}

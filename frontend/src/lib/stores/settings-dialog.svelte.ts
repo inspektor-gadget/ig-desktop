@@ -9,7 +9,7 @@ interface SettingsDialogState {
 	targetSetting: string | null;
 }
 
-let state = $state<SettingsDialogState>({
+const state = $state<SettingsDialogState>({
 	open: false,
 	targetCategory: null,
 	targetSetting: null

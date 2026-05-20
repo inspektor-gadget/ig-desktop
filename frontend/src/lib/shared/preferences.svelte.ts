@@ -1,4 +1,4 @@
-type PreferenceValue = number | boolean | string | any[];
+type PreferenceValue = number | boolean | string | unknown[];
 
 interface PreferencesData {
 	[key: string]: PreferenceValue;

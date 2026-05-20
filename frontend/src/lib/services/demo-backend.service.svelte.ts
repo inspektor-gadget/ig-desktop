@@ -16,13 +16,12 @@ import type {
 	Environment,
 	SessionItem,
 	SessionWithRuns,
-	GadgetRun,
 	RecordedEvent,
 	GadgetInfo,
 	GadgetRunRequest
 } from '$lib/types';
 import { base } from '$app/paths';
-import { setEnvPref, getEnvPref } from '$lib/utils/env-preferences';
+import { setEnvPref } from '$lib/utils/env-preferences';
 
 /**
  * Demo session data structure - loaded from JSON files
@@ -66,9 +65,11 @@ type MessageHandler = (message: string) => void;
  */
 export class DemoBackendService {
 	private config: DemoConfig | null = null;
+	/* eslint-disable svelte/prefer-svelte-reactivity -- internal storage, not reactive UI state */
 	private sessions: Map<string, DemoSession> = new Map();
 	private recents: Map<string, DemoRunData> = new Map(); // image -> data
 	private instances: Map<string, DemoRunData> = new Map(); // id -> data
+	/* eslint-enable svelte/prefer-svelte-reactivity */
 	private messageHandler: MessageHandler | null = null;
 
 	/**

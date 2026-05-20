@@ -532,7 +532,8 @@
 			<div class="flex flex-shrink-0 items-center gap-2 text-ig-text-muted">
 				<!-- Event count info -->
 				<span>
-					{selectedEventCount} {t('events')}
+					{selectedEventCount}
+					{t('events')}
 					{#if selectedSnapshotIndices.size > 1}
 						{t('(merged)')}
 					{/if}

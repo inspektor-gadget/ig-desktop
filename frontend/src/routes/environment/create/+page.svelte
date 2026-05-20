@@ -175,7 +175,9 @@
 
 		<Panel title={t('Runtime')} icon={Code} color="gray">
 			<div class="flex flex-col gap-3">
-				<div class="text-sm text-gray-600 dark:text-gray-400">{t('Select your target runtime')}</div>
+				<div class="text-sm text-gray-600 dark:text-gray-400">
+					{t('Select your target runtime')}
+				</div>
 				<div class="grid grid-cols-2 gap-3">
 					{#if runtimes}
 						{#each runtimes as rt}
@@ -317,11 +319,14 @@
 								{t('Inspektor Gadget Not Detected')}
 							</h3>
 							<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-								{t('Inspektor Gadget does not appear to be deployed in your Kubernetes cluster. You can deploy it now using the official Helm chart.')}
+								{t(
+									'Inspektor Gadget does not appear to be deployed in your Kubernetes cluster. You can deploy it now using the official Helm chart.'
+								)}
 							</p>
 							{#if deploymentStatus?.error}
 								<p class="mt-2 text-xs text-red-600 dark:text-red-400">
-									{t('Note:')} {deploymentStatus.error}
+									{t('Note:')}
+									{deploymentStatus.error}
 								</p>
 							{/if}
 						</div>

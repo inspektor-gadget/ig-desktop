@@ -260,7 +260,8 @@
 
 		<!-- Total count -->
 		<span class="text-[11px] text-gray-500 dark:text-gray-400">
-			{t('Total:')} <span class="font-medium text-gray-700 dark:text-gray-300"
+			{t('Total:')}
+			<span class="font-medium text-gray-700 dark:text-gray-300"
 				>{displayData.total.toLocaleString()}</span
 			>
 			{config.unit || t('events')}

@@ -168,7 +168,9 @@
 								<div
 									class="flex items-center gap-2 rounded-ig-md bg-blue-600/10 px-3 py-1.5 transition-all group-hover:bg-blue-600/20"
 								>
-									<span class="text-xs font-medium text-blue-600 dark:text-blue-400">{t('Run')}</span>
+									<span class="text-xs font-medium text-blue-600 dark:text-blue-400"
+										>{t('Run')}</span
+									>
 									<div class="text-blue-600 dark:text-blue-400">
 										{@html Play}
 									</div>
