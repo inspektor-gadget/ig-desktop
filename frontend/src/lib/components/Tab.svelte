@@ -15,6 +15,7 @@
 	const active = $derived(exact ? page.url.pathname === href : page.url.pathname.startsWith(href));
 </script>
 
+<!-- eslint-disable svelte/no-navigation-without-resolve -- href is a caller-provided, already-resolved route -->
 <a
 	{href}
 	class:flex-0={shrink}
@@ -26,3 +27,4 @@
 		: 'h-full flex-1 cursor-default content-center border-r border-b border-ig-border border-t-ig-border-strong bg-ig-surface-raised p-2 text-nowrap overflow-ellipsis hover:bg-ig-border hover:text-ig-text-muted'}
 	>{@render children()}</a
 >
+<!-- eslint-enable svelte/no-navigation-without-resolve -->

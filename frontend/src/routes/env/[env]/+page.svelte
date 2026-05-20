@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import { getErrorMessage } from '$lib/utils/errors';
+	import type { ApiContext } from '$lib/types/context';
 	import { page } from '$app/state';
 	import { environments } from '$lib/shared/environments.svelte';
-	import { instances } from '$lib/shared/instances.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { GadgetInstance, GadgetRunRequest, SessionItem } from '$lib/types';
@@ -18,18 +19,17 @@
 	import { features } from '$lib/config/app-mode';
 	import { t } from '$lib/i18n/index.svelte';
 
-	import Browser from '$lib/icons/fa/browser.svg?raw';
-	import Trash from '$lib/icons/fa/trash.svg?raw';
-	import PlaySmall from '$lib/icons/fa/play.svg?raw';
-	import History from '$lib/icons/fa/clock-rotate-left.svg?raw';
-	import Info from '$lib/icons/fa/info.svg?raw';
-	import Server from '$lib/icons/fa/server.svg?raw';
-	import Cog from '$lib/icons/cog-small.svg?raw';
-	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
-	import ChevronRight from '$lib/icons/chevron-right.svg?raw';
-	import Grid from '$lib/icons/grid-small.svg?raw';
-	import Refresh from '$lib/icons/refresh-small.svg?raw';
-	import { preferences } from '$lib/shared/preferences.svelte';
+	import Browser from '$lib/icons/fa/browser.svelte';
+	import Trash from '$lib/icons/fa/trash.svelte';
+	import PlaySmall from '$lib/icons/fa/play.svelte';
+	import History from '$lib/icons/fa/clock-rotate-left.svelte';
+	import Info from '$lib/icons/fa/info.svelte';
+	import Server from '$lib/icons/fa/server.svelte';
+	import Cog from '$lib/icons/cog-small.svelte';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import ChevronRight from '$lib/icons/chevron-right.svelte';
+	import Grid from '$lib/icons/grid-small.svelte';
+	import Refresh from '$lib/icons/refresh-small.svelte';
 	import { formatAbsoluteTime, formatRelativeTime } from '$lib/utils/time';
 	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
 	import {
@@ -43,9 +43,9 @@
 	import GadgetWizard from '$lib/components/wizard/GadgetWizard.svelte';
 	import wizardTreeConfig from '$lib/data/gadget-wizard-tree.json';
 	import type { WizardTreeConfig } from '$lib/components/wizard/wizard-types';
-	import GadgetIcon from '$lib/icons/gadget.svg?raw';
+	import GadgetIcon from '$lib/icons/gadget.svelte';
 
-	const api: any = getContext('api');
+	const api = getContext<ApiContext>('api');
 
 	let sessions = $state<SessionItem[]>([]);
 	let loadingSessions = $state(true);
@@ -62,7 +62,6 @@
 
 	let detachedInstances = $state<GadgetInstance[]>([]);
 
-	let targetState = $state(0);
 	let currentEnvId = $state<string | null>(null);
 
 	let gadgetURL = $state('');
@@ -167,23 +166,20 @@
 	});
 
 	async function getList(requestedEnvId: string) {
-		targetState = 0;
 		currentEnvironment.setConnectionStatus('connecting');
 		try {
-			const tmp = await api.request({
+			const tmp = await api.request<{ gadgetInstances?: GadgetInstance[] }>({
 				cmd: 'listInstances',
 				data: { environmentID: requestedEnvId }
 			});
 			// Only update state if this is still the current environment
 			if (requestedEnvId === currentEnvId) {
 				detachedInstances = tmp.gadgetInstances || []; // TODO: check why this can return empty
-				targetState = 1;
 				currentEnvironment.setConnectionStatus('connected');
 			}
 		} catch (err) {
 			// Only update state if this is still the current environment
 			if (requestedEnvId === currentEnvId) {
-				targetState = 2;
 				currentEnvironment.setConnectionStatus('error', (err as Error).message);
 			}
 		}
@@ -209,7 +205,7 @@
 	}
 
 	async function attachInstance(instance: GadgetInstance) {
-		const res = await api.request({
+		const res = await api.request<{ id: string }>({
 			cmd: 'attachInstance',
 			data: { environmentID: env.id, image: instance.id, instanceName: instance.name }
 		});
@@ -236,9 +232,9 @@
 			toastStore.success(t('Instance "{{instanceName}}" removed successfully', { instanceName }));
 
 			getList(env.id);
-		} catch (err: any) {
+		} catch (err) {
 			// Show error toast
-			const errorMessage = err?.message || err?.toString() || 'Unknown error';
+			const errorMessage = getErrorMessage(err);
 			const instanceName = instance.name || instance.id.substring(0, 8);
 			toastStore.error(
 				t('Failed to remove instance "{{instanceName}}": {{errorMessage}}', {
@@ -284,7 +280,7 @@
 		};
 
 		try {
-			const res = await api.request({
+			const res = await api.request<{ id: string }>({
 				cmd: 'runGadget',
 				data: requestData
 			});
@@ -303,9 +299,9 @@
 			} else {
 				goto(resolve(`/env/${env.id}/running/${res.id}`));
 			}
-		} catch (err: any) {
+		} catch (err) {
 			// Show error toast
-			const errorMessage = err?.message || err?.toString() || 'Unknown error';
+			const errorMessage = getErrorMessage(err);
 			toastStore.error(
 				gadgetRunRequest.detached
 					? t('Failed to start headless instance: {{errorMessage}}', { errorMessage })
@@ -332,8 +328,8 @@
 			await api.deleteSession(sessionId);
 			toastStore.success(t('Session deleted successfully'));
 			await loadSessions();
-		} catch (err: any) {
-			const errorMessage = err?.message || err?.toString() || 'Unknown error';
+		} catch (err) {
+			const errorMessage = getErrorMessage(err);
 			toastStore.error(t('Failed to delete session: {{errorMessage}}', { errorMessage }), 7000, {
 				label: t('Retry'),
 				onClick: () => handleDeleteSession(sessionId)
@@ -344,7 +340,7 @@
 
 {#if !env}
 	<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-		<div class="text-gray-400 dark:text-gray-600">{@html Server}</div>
+		<div class="text-gray-400 dark:text-gray-600"><Server /></div>
 		<div class="text-sm text-gray-500">{t('Environment not found')}</div>
 	</div>
 {:else}
@@ -364,7 +360,7 @@
 							class="flex cursor-pointer items-center gap-2 rounded-ig-md border border-orange-300 dark:border-orange-800 bg-orange-100/20 dark:bg-orange-900/20 px-3 py-2 text-sm text-orange-600 dark:text-orange-400 transition-all hover:border-orange-500/50 hover:bg-orange-100/40 dark:hover:bg-orange-900/40"
 							title={t('Show Gadget Wizard')}
 						>
-							<span>{@html GadgetIcon}</span>
+							<span><GadgetIcon /></span>
 							<span>{t('Wizard')}</span>
 						</button>
 					{/if}
@@ -373,7 +369,7 @@
 						class="cursor-pointer rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-3 text-gray-600 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-blue-400"
 						title={t('Environment Settings')}
 					>
-						{@html Cog}
+						<Cog />
 					</button>
 				</div>
 			</div>
@@ -398,14 +394,16 @@
 						</p>
 						<div class="flex flex-col gap-2 md:flex-row">
 							{#if features.canBrowseArtifactHub}
+								<!-- eslint-disable svelte/no-navigation-without-resolve -- route path is resolved via resolve(); the env query string is appended separately -->
 								<a
 									href={`${resolve('/browse/artifacthub')}?env=${env.id}`}
 									title={t('Discover Gadgets')}
 									class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 md:w-auto md:justify-start"
 								>
-									<span class="text-blue-400">{@html Grid}</span>
+									<span class="text-blue-400"><Grid /></span>
 									<span class="text-gray-800 dark:text-gray-200">{t('Discover')}</span>
 								</a>
+								<!-- eslint-enable svelte/no-navigation-without-resolve -->
 							{/if}
 							<div class="grow">
 								<AutocompleteInput
@@ -427,7 +425,7 @@
 								title={t('Run Gadget')}
 								class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-ig-md border border-blue-300 dark:border-blue-800 bg-blue-100/20 dark:bg-blue-900/20 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 transition-all hover:border-blue-500/50 hover:bg-blue-100/40 dark:hover:bg-blue-900/40 disabled:cursor-not-allowed disabled:border-gray-300 dark:disabled:border-gray-800 disabled:bg-gray-100/20 dark:disabled:bg-gray-900/20 disabled:text-gray-400 dark:disabled:text-gray-600 md:w-auto"
 							>
-								<span>{@html PlaySmall}</span>
+								<span><PlaySmall /></span>
 								<span>{t('Run')}</span>
 							</button>
 						</div>
@@ -454,7 +452,7 @@
 								class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-300 dark:disabled:text-gray-700"
 								title={t('Previous page')}
 							>
-								{@html ChevronLeft}
+								<ChevronLeft />
 							</button>
 							<span class="text-xs text-gray-500">{currentPage + 1} / {totalPages}</span>
 							<button
@@ -463,11 +461,11 @@
 								class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-300 dark:disabled:text-gray-700"
 								title={t('Next page')}
 							>
-								{@html ChevronRight}
+								<ChevronRight />
 							</button>
 						{/snippet}
 
-						{#each paginatedHistory as entry, idx}
+						{#each paginatedHistory as entry, idx (entry.timestamp ?? idx)}
 							<div
 								class="group/item flex flex-col gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4 transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 							>
@@ -497,7 +495,7 @@
 										</div>
 										{#if entry.params && Object.keys(entry.params).length > 0}
 											<div class="flex flex-row flex-wrap gap-2 text-xs">
-												{#each Object.entries(entry.params) as [key, value]}
+												{#each Object.entries(entry.params) as [key, value] (key)}
 													<span
 														class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-950/50 px-2 py-1 font-mono"
 														><span class="text-gray-500">{key}:</span>
@@ -515,7 +513,7 @@
 												const actualIdx = currentPage * ITEMS_PER_PAGE + idx;
 												history.splice(actualIdx, 1);
 												setEnvPref(env.id, 'gadget-history', history);
-											}}>{@html Trash}</button
+											}}><Trash /></button
 										>
 										{#if !features.isDemoMode}
 											<button
@@ -534,7 +532,7 @@
 														params.set('instanceName', entry.instanceName);
 													}
 													goto(resolve(`/gadgets/run/${entry.image}?${params.toString()}`));
-												}}>{@html Cog}</button
+												}}><Cog /></button
 											>
 										{/if}
 										<button
@@ -542,7 +540,7 @@
 											title={t('Run again')}
 											onclick={() => {
 												runGadget(entry);
-											}}>{@html PlaySmall}</button
+											}}><PlaySmall /></button
 										>
 									</div>
 								</div>
@@ -564,14 +562,14 @@
 							onclick={() => currentEnvId && getList(currentEnvId)}
 							title={t('Refresh')}
 							class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400"
-							>{@html Refresh}</button
+							><Refresh /></button
 						>
 						<a
 							href="https://inspektor-gadget.io/docs/latest/reference/headless"
 							title={t('Documentation')}
 							target="_blank"
 							class="text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400"
-							>{@html Info}</a
+							><Info /></a
 						>
 					{/snippet}
 
@@ -600,7 +598,7 @@
 									</tr>
 								</thead>
 								<tbody>
-									{#each detachedInstances as instance}
+									{#each detachedInstances as instance (instance.id)}
 										<tr
 											class="group/item border-b border-gray-200 dark:border-gray-800 transition-all last:border-b-0 hover:bg-gray-100/50 dark:hover:bg-gray-900/50"
 										>
@@ -621,14 +619,14 @@
 														title={t('Attach')}
 														onclick={() => {
 															attachInstance(instance);
-														}}>{@html Browser}</button
+														}}><Browser /></button
 													>
 													<button
 														class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
 														title={t('Delete')}
 														onclick={() => {
 															removeInstance(instance);
-														}}>{@html Trash}</button
+														}}><Trash /></button
 													>
 												</div>
 											</td>
@@ -639,7 +637,7 @@
 						</div>
 					{:else}
 						<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-							<div class="text-gray-400 dark:text-gray-600">{@html Server}</div>
+							<div class="text-gray-400 dark:text-gray-600"><Server /></div>
 							<div class="text-sm text-gray-500">{t('No running instances found')}</div>
 						</div>
 					{/if}
@@ -656,12 +654,12 @@
 					>
 						{#if loadingSessions}
 							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-								<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
+								<div class="text-gray-400 dark:text-gray-600"><History /></div>
 								<div class="text-sm text-gray-500">{t('Loading sessions...')}</div>
 							</div>
 						{:else if sessions.length === 0}
 							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-								<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
+								<div class="text-gray-400 dark:text-gray-600"><History /></div>
 								<div class="text-sm text-gray-500">
 									{t(
 										'No sessions yet. Enable session recording when running a gadget to capture runs.'
@@ -670,7 +668,7 @@
 							</div>
 						{:else}
 							<div class="flex flex-col gap-3">
-								{#each sessions as session}
+								{#each sessions as session (session.id)}
 									<SessionItemComponent
 										{session}
 										onDelete={() => handleDeleteSession(session.id)}
@@ -735,7 +733,7 @@
 						<div
 							class="flex flex-col gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4"
 						>
-							{#each Object.entries(env.params) as [key, value]}
+							{#each Object.entries(env.params) as [key, value] (key)}
 								<div class="flex flex-col gap-1">
 									<div class="text-xs font-medium text-gray-500">{key}</div>
 									<div class="font-mono text-sm text-gray-700 dark:text-gray-300">{value}</div>
@@ -757,7 +755,7 @@
 							</p>
 						</div>
 						<Button variant="danger" onclick={() => deleteEnvironment()} class="justify-center">
-							<span>{@html Trash}</span>
+							<span><Trash /></span>
 							<span>{t('Delete Environment')}</span>
 						</Button>
 					</div>

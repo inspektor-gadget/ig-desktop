@@ -4,7 +4,7 @@
 	import { pluginService } from '$lib/services/plugin.service';
 	import type { PluginBundle, CompiledPlugin } from '$lib/types/plugin';
 	import { getPluginEntrypoint } from '$lib/types/plugin';
-	import WarningIcon from '$lib/icons/warning.svg?raw';
+	import WarningIcon from '$lib/icons/warning.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
@@ -74,7 +74,7 @@
 			class="flex items-start gap-3 rounded-ig-md border border-amber-500/50 bg-amber-500/10 p-4"
 		>
 			<div class="flex-shrink-0 text-amber-500">
-				{@html WarningIcon}
+				<WarningIcon />
 			</div>
 			<div>
 				<h3 class="font-semibold text-amber-400">{t('Security Notice')}</h3>
@@ -115,7 +115,7 @@
 				<div
 					class="flex items-center gap-1 border-b border-ig-border bg-ig-surface-raised px-2 py-1 overflow-x-auto"
 				>
-					{#each fileList as file}
+					{#each fileList as file (file)}
 						<button
 							onclick={() => (selectedFile = file)}
 							class="px-3 py-1.5 text-xs font-medium rounded-ig-sm transition-colors whitespace-nowrap {selectedFile ===

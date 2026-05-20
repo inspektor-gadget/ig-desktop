@@ -1,12 +1,12 @@
 <script lang="ts">
-	import ArtifactHub from '$lib/icons/artifacthub.svg?raw';
-	import Signed from '$lib/icons/signature-locked.svg?raw';
-	import Unsigned from '$lib/icons/signature-slash.svg?raw';
-	import Play from '$lib/icons/play-small.svg?raw';
-	import Star from '$lib/icons/star-sharp.svg?raw';
+	import ArtifactHub from '$lib/icons/artifacthub.svelte';
+	import Signed from '$lib/icons/signature-locked.svelte';
+	import Unsigned from '$lib/icons/signature-slash.svelte';
+	import Play from '$lib/icons/play-small.svelte';
+	import Star from '$lib/icons/star-sharp.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
-	import Search from '$lib/icons/search-small.svg?raw';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import Search from '$lib/icons/search-small.svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { t } from '$lib/i18n/index.svelte';
@@ -70,20 +70,20 @@
 					class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
 					title={t('Go back')}
 				>
-					{@html ChevronLeft}
+					<ChevronLeft />
 				</button>
 				<div class="text-xl">{t('Gadget Gallery')}</div>
 			</div>
 			<div class="flex flex-col">
 				<div class="text-right text-xs">{t('powered by')}</div>
-				<div>{@html ArtifactHub}</div>
+				<div><ArtifactHub /></div>
 			</div>
 		</div>
 		<div class="flex flex-row justify-between bg-gray-200 dark:bg-gray-800 p-4">
 			<div></div>
 			<div class="relative">
 				<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-					<span class="h-4 w-4 text-gray-600 dark:text-gray-400">{@html Search}</span>
+					<span class="h-4 w-4 text-gray-600 dark:text-gray-400"><Search /></span>
 				</div>
 				<input
 					bind:value={search}
@@ -111,7 +111,8 @@
 			<div
 				class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
 			>
-				{#each results as entry}
+				{#each results as entry (`${entry.repository.name}/${entry.normalized_name}`)}
+					<!-- eslint-disable svelte/no-navigation-without-resolve -- route path is resolved via resolve(); the optional env query string is appended separately -->
 					<a
 						href={`${resolve(`/browse/artifacthub/${entry.repository.name}/${entry.normalized_name}/${entry.version}`)}${environmentID ? `?env=${environmentID}` : ''}`}
 						class="group relative flex flex-col justify-between gap-3 rounded-ig-lg border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 p-5 shadow-lg shadow-gray-200/50 dark:shadow-gray-950/50 transition-all hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
@@ -153,13 +154,13 @@
 										title={entry.signed ? t('Signed') : t('Not Signed')}
 									>
 										{#if entry.signed}
-											<div class="text-green-600 dark:text-green-400">{@html Signed}</div>
+											<div class="text-green-600 dark:text-green-400"><Signed /></div>
 										{:else}
-											<div class="text-gray-500">{@html Unsigned}</div>
+											<div class="text-gray-500"><Unsigned /></div>
 										{/if}
 									</div>
 									<div class="flex flex-row items-center gap-1.5" title={t('Stars')}>
-										<div class="text-yellow-500 dark:text-yellow-400">{@html Star}</div>
+										<div class="text-yellow-500 dark:text-yellow-400"><Star /></div>
 										<div class="text-sm font-medium text-gray-700 dark:text-gray-300">
 											{entry.stars}
 										</div>
@@ -172,12 +173,13 @@
 										>{t('Run')}</span
 									>
 									<div class="text-blue-600 dark:text-blue-400">
-										{@html Play}
+										<Play />
 									</div>
 								</div>
 							</div>
 						</div>
 					</a>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				{/each}
 			</div>
 		</div>

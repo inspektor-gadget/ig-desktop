@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import type { Snippet, Component } from 'svelte';
 
 	/**
 	 * Reusable modal component with backdrop, ESC key handling, and customizable slots.
@@ -21,8 +21,8 @@
 		onClose?: () => void;
 		/** Modal title displayed in header */
 		title?: string;
-		/** SVG icon string to display in header */
-		icon?: string;
+		/** Icon component to display in header */
+		icon?: Component;
 		/** Show close button in header (default: true) */
 		showCloseButton?: boolean;
 		/** Modal size variant */
@@ -92,7 +92,6 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
 		onclick={handleBackdropClick}
@@ -115,8 +114,9 @@
 					class="flex items-center gap-3 border-b border-ig-border bg-ig-surface-raised px-6 py-4 rounded-t-ig-lg"
 				>
 					{#if icon}
+						{@const Icon = icon}
 						<div class="flex-shrink-0 text-ig-primary">
-							{@html icon}
+							<Icon />
 						</div>
 					{/if}
 					{#if title}

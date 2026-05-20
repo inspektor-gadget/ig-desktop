@@ -9,7 +9,7 @@ interface PageState {
 	params: Record<string, string>;
 }
 
-let _page: PageState = {
+const _page: PageState = {
 	url: new URL('http://localhost'),
 	params: {}
 };

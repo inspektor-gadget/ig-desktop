@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext, untrack } from 'svelte';
+	import type { ApiContext } from '$lib/types/context';
 	import Title from '$lib/components/params/Title.svelte';
 	import AutocompleteInput from '$lib/components/forms/AutocompleteInput.svelte';
 	import { getK8sRecents } from '$lib/utils/env-preferences';
@@ -18,7 +19,7 @@
 	interface Config {
 		get: (param: Param) => string | string[];
 		set: (param: Param, value: string | string[]) => void;
-		getAll: () => Record<string, any>;
+		getAll: () => Record<string, unknown>;
 		getByValueHint: (valueHint: string) => string | undefined;
 		valueHintToKey: Record<string, string>;
 	}
@@ -26,12 +27,24 @@
 	interface Props {
 		param: Param;
 		config: Config;
-		values?: Record<string, any>;
+		values?: Record<string, unknown>;
 	}
 
-	let { param, config, values = {} }: Props = $props();
+	let { param, config }: Props = $props();
 
-	const api: any = getContext('api');
+	const api = getContext<ApiContext>('api');
+
+	type K8sAutocompleteItem = string | { value?: string; name?: string; label?: string };
+	type K8sAutocompleteResponse = { items?: K8sAutocompleteItem[] } | K8sAutocompleteItem[];
+
+	/** Normalize a backend autocomplete entry (string or object) to an option. */
+	function toAutocompleteOption(item: K8sAutocompleteItem): { value: string; label?: string } {
+		if (typeof item === 'string') return { value: item };
+		return {
+			value: item.value || item.name || '',
+			label: item.label || item.name || item.value
+		};
+	}
 	const environmentID = getContext<() => string | null>('environmentID');
 
 	// Determine if this is a multi-select field
@@ -51,7 +64,6 @@
 	let loading = $state(false);
 	let recentOptions = $state<Array<{ value: string; label?: string; isRecent?: boolean }>>([]);
 	let prefetchedOptions = $state<Array<{ value: string; label?: string }>>([]);
-	let lastSearchQuery = $state<string>(''); // Track last search to detect when cleared
 
 	// Parse valueHint to determine resource type
 	const resourceType = $derived(param.valueHint?.replace('k8s:', '') || '');
@@ -145,7 +157,7 @@
 
 		try {
 			// Build request data
-			const requestData: Record<string, any> = {
+			const requestData: Record<string, unknown> = {
 				environmentID: envID,
 				resourceType,
 				...dependencies
@@ -182,27 +194,24 @@
 			console.log('[K8sAutocomplete] Fetching resources:', { cmd, requestData });
 
 			// Add timeout
-			const timeout = new Promise((_, reject) =>
+			const timeout = new Promise<never>((_, reject) =>
 				setTimeout(() => reject(new Error('Request timeout after 10 seconds')), 10000)
 			);
 
-			const response = await Promise.race([api.request({ cmd, data: requestData }), timeout]);
+			const response = await Promise.race([
+				api.request<K8sAutocompleteResponse>({ cmd, data: requestData }),
+				timeout
+			]);
 
 			console.log('[K8sAutocomplete] Response received:', response);
 
 			// Transform response to options format
 			let apiResults: Array<{ value: string; label?: string }> = [];
 
-			if (response && response.items && Array.isArray(response.items)) {
-				apiResults = response.items.map((item: any) => ({
-					value: item.value || item.name || item,
-					label: item.label || item.name || item.value || item
-				}));
+			if (response && !Array.isArray(response) && Array.isArray(response.items)) {
+				apiResults = response.items.map(toAutocompleteOption);
 			} else if (Array.isArray(response)) {
-				apiResults = response.map((item: any) => ({
-					value: typeof item === 'string' ? item : item.value || item.name,
-					label: typeof item === 'string' ? item : item.label || item.name || item.value
-				}));
+				apiResults = response.map(toAutocompleteOption);
 			} else {
 				console.warn('[K8sAutocomplete] Unexpected response format:', response);
 			}
@@ -248,7 +257,7 @@
 		loading = true;
 
 		try {
-			const requestData: Record<string, any> = {
+			const requestData: Record<string, unknown> = {
 				environmentID: envID,
 				resourceType,
 				...deps
@@ -278,20 +287,14 @@
 
 			console.log('[K8sAutocomplete] Pre-fetching:', { cmd, requestData });
 
-			const response = await api.request({ cmd, data: requestData });
+			const response = await api.request<K8sAutocompleteResponse>({ cmd, data: requestData });
 
 			let apiResults: Array<{ value: string; label?: string }> = [];
 
-			if (response && response.items && Array.isArray(response.items)) {
-				apiResults = response.items.map((item: any) => ({
-					value: item.value || item.name || item,
-					label: item.label || item.name || item.value || item
-				}));
+			if (response && !Array.isArray(response) && Array.isArray(response.items)) {
+				apiResults = response.items.map(toAutocompleteOption);
 			} else if (Array.isArray(response)) {
-				apiResults = response.map((item: any) => ({
-					value: typeof item === 'string' ? item : item.value || item.name,
-					label: typeof item === 'string' ? item : item.label || item.name || item.value
-				}));
+				apiResults = response.map(toAutocompleteOption);
 			}
 
 			prefetchedOptions = apiResults;
@@ -309,8 +312,6 @@
 
 	// Handle search input
 	function handleSearch(query: string) {
-		lastSearchQuery = query;
-
 		if (query.length > 0) {
 			// User is typing - fetch with search query
 			fetchResources(query);
@@ -360,7 +361,10 @@
 		bind:value
 		{options}
 		{loading}
-		placeholder={param.defaultValue || t('Select {{resourceType}}...', { resourceType })}
+		placeholder={param.defaultValue ||
+			t('Select {{resourceType}}...', {
+				resourceType: resourceType.replace(/\w/, (c) => c.toUpperCase())
+			})}
 		multiSelect={isMultiSelect}
 		allowCustom={true}
 		onSearch={handleSearch}

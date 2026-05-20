@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { t } from '$lib/i18n/index.svelte';
@@ -76,7 +76,7 @@
 					onclick={goBack}
 					class="inline-flex items-center gap-2 rounded-ig-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
 				>
-					<span class="flex h-4 w-4 [&>svg]:h-full [&>svg]:w-full">{@html ChevronLeft}</span>
+					<span class="flex h-4 w-4 [&>svg]:h-full [&>svg]:w-full"><ChevronLeft /></span>
 					{t('Go Back')}
 				</button>
 			</div>

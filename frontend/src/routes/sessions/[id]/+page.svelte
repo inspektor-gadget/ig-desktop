@@ -1,28 +1,28 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import type { ApiContext } from '$lib/types/context';
 	import { page } from '$app/stores';
 	import { resolve } from '$app/paths';
 	import { formatAbsoluteTime, formatRelativeTime } from '$lib/utils/time';
-	import type { SessionWithRuns } from '$lib/types';
+	import type { SessionWithRuns, GadgetRun } from '$lib/types';
 	import { instances } from '$lib/shared/instances.svelte';
 	import { ReplayService } from '$lib/services/replay.service';
 	import { EventRingBuffer } from '$lib/utils/ring-buffer';
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import Gadget from '$lib/components/Gadget.svelte';
-	import Play from '$lib/icons/play-small.svg?raw';
-	import Eye from '$lib/icons/fa/eye.svg?raw';
-	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
+	import Play from '$lib/icons/play-small.svelte';
+	import Eye from '$lib/icons/fa/eye.svelte';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 
-	const api: any = getContext('api');
+	const api = getContext<ApiContext>('api');
 	const replayService = new ReplayService();
 
 	let session = $state<SessionWithRuns | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let activeRunId = $state<string | null>(null);
-	let activePlaybackMode = $state<'instant' | 'realtime'>('instant');
 	let loadedRuns = $state<Set<string>>(new Set());
 	let isPlaying = $state(false);
 	let playbackProgress = $state<Map<string, number>>(new Map());
@@ -53,14 +53,12 @@
 	}
 
 	async function viewResults(runId: string) {
-		activePlaybackMode = 'instant';
 		activeRunId = runId;
 		await loadRunData(runId, 'instant');
 		loadedRuns.add(runId);
 	}
 
 	async function playbackRealtime(runId: string) {
-		activePlaybackMode = 'realtime';
 		activeRunId = runId;
 		await loadRunData(runId, 'realtime');
 		loadedRuns.add(runId);
@@ -72,7 +70,7 @@
 
 	function createReplayInstance(
 		instanceId: string,
-		run: any,
+		run: GadgetRun,
 		environmentId: string,
 		mode: 'snapshot' | 'replay'
 	) {
@@ -198,7 +196,7 @@
 						class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
 						title={t('Back to Environment')}
 					>
-						{@html ChevronLeft}
+						<ChevronLeft />
 					</a>
 					<div>
 						<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -232,7 +230,7 @@
 			<div
 				class="flex gap-2 overflow-x-auto border-b border-gray-200 dark:border-gray-800 bg-gray-100/60 dark:bg-gray-950/60 px-2 py-2"
 			>
-				{#each session.runs as run}
+				{#each session.runs as run (run.id)}
 					<div
 						class="flex items-center gap-3 rounded-ig-md border px-4 py-2 whitespace-nowrap transition-colors
 							   {activeRunId === run.id
@@ -249,10 +247,10 @@
 						</div>
 						<div class="flex items-center gap-1">
 							<Button variant="secondary" size="sm" onclick={() => viewResults(run.id)}
-								>{@html Eye}</Button
+								><Eye /></Button
 							>
 							<Button variant="secondary" size="sm" onclick={() => playbackRealtime(run.id)}
-								>{@html Play}</Button
+								><Play /></Button
 							>
 						</div>
 					</div>

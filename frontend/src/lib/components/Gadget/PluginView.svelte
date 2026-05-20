@@ -60,20 +60,6 @@
 	});
 
 	$effect(() => {
-		if (mountedInstance && typeof (mountedInstance as any).$set === 'function') {
-			try {
-				(mountedInstance as any).$set({
-					ds,
-					events: eventsArray,
-					eventVersion
-				});
-			} catch (e) {
-				// Component may not support $set
-			}
-		}
-	});
-
-	$effect(() => {
 		if (!plugin.css) return;
 
 		const styleId = `plugin-css-${plugin.id}`;

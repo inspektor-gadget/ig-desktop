@@ -5,9 +5,9 @@
 		values = {},
 		showAdvanced = true
 	}: {
-		params: any[];
+		params: GadgetParam[];
 		showDescriptions?: boolean;
-		values?: Record<string, any>;
+		values?: Record<string, string>;
 		showAdvanced?: boolean;
 	} = $props();
 
@@ -17,8 +17,14 @@
 	import Number from './params/Number.svelte';
 	import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
 	import type { GadgetParam } from '$lib/types';
+	import type { Component } from 'svelte';
 
-	function getComponentForParam(param: GadgetParam) {
+	// Param input components have heterogeneous prop shapes (each setting type
+	// declares its own props), so this registry is intentionally type-erased.
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	type ParamComponent = Component<any>;
+
+	function getComponentForParam(param: GadgetParam): ParamComponent {
 		// Check plugin registry first for custom param inputs
 		const plugin = pluginRegistry.getParamInputForParam(param);
 		if (plugin?.component) {
@@ -47,11 +53,17 @@
 		return Text;
 	}
 
+	type ParamGroupItem = GadgetParam & {
+		component: ParamComponent;
+		advanced: string | boolean;
+		hide: string | boolean;
+	};
+
 	// this rebuilds params into an array of groups, sorted lexicographically, with the default
 	// being an empty key ('')
-	let categories: Array<{ key: string; items: any[] }> = $derived(
+	let categories: Array<{ key: string; items: ParamGroupItem[] }> = $derived(
 		Object.entries(
-			params.reduce((acc, param) => {
+			params.reduce<Record<string, ParamGroupItem[]>>((acc, param) => {
 				// Look for a tag that starts with "group:"
 				const groupTag = param.tags?.find((tag: string) => tag.startsWith('group:')) || '';
 
@@ -79,8 +91,8 @@
 			}, {})
 		)
 			.sort(([aKey], [bKey]) => aKey.localeCompare(bKey))
-			.map(([key, items]: [string, any]) => ({ key, items: items as any[] }))
-			.filter((e: any) => e.items.length !== 0)
+			.map(([key, items]) => ({ key, items }))
+			.filter((e) => e.items.length !== 0)
 	);
 
 	// Create a mapping of valueHints to parameter keys for dependency tracking
@@ -98,10 +110,10 @@
 	const config = $derived({
 		values,
 		valueHintToKey,
-		get: (param: any) => {
+		get: (param: GadgetParam) => {
 			return config.values[(param.prefix || '') + param.key];
 		},
-		set: (param: any, value: any) => {
+		set: (param: GadgetParam, value: string | string[]) => {
 			// Delete if value is falsy, empty string, or empty array
 			if (!value || value === '' || (Array.isArray(value) && value.length === 0)) {
 				delete config.values[(param.prefix || '') + param.key];
@@ -123,12 +135,12 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	{#each categories as { key, items }}
+	{#each categories as { key, items } (key)}
 		<div class="flex flex-col">
 			{#if key}
 				<div class="mb-4 text-lg">{key}</div>
 			{/if}
-			{#each items as param}
+			{#each items as param (param.key)}
 				<div
 					class:pl-4={key}
 					class="flex flex-row gap-4 border-b-gray-200 dark:border-b-gray-800 py-2 text-sm last:border-b-0"

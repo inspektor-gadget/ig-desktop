@@ -1,4 +1,5 @@
 <script lang="ts" generics="T">
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { useVirtualScroll } from './useVirtualScroll.svelte';
 
 	/**
@@ -168,7 +169,7 @@
 
 	// Derive the current set of selected indices (adjusted for prepended items)
 	const selectedIndices = $derived.by(() => {
-		const result = new Set<number>();
+		const result = new SvelteSet<number>();
 		for (const entry of selectionEntries) {
 			const lengthDiff = items.length - entry.itemsLength;
 			const adjustedIndex = entry.index + lengthDiff;
@@ -330,7 +331,8 @@
 
 	// Reset when columns change (triggers recalculation)
 	$effect(() => {
-		columns; // dependency
+		// Track columns so the effect re-runs when the column set changes.
+		void columns;
 		widthsInitialized = false;
 	});
 
@@ -587,7 +589,7 @@
 		const end = Math.max(dragStartIndex, dragCurrentIndex);
 
 		// Build set of indices in drag range
-		const dragRangeIndices = new Set<number>();
+		const dragRangeIndices = new SvelteSet<number>();
 		for (let i = start; i <= end; i++) {
 			dragRangeIndices.add(i);
 		}
@@ -601,7 +603,7 @@
 			selectionEntries = dragSelection;
 		} else if (dragModifyMode === 'add') {
 			// Add drag range to existing selection (union)
-			const merged = new Map<number, { index: number; itemsLength: number }>();
+			const merged = new SvelteMap<number, { index: number; itemsLength: number }>();
 
 			// Add pre-drag selection
 			for (const entry of selectionBeforeDrag) {
@@ -655,7 +657,7 @@
 		const viewTop = scrollTop;
 		const viewBottom = scrollTop + viewportHeight;
 
-		let newScrollTop = scrollTop;
+		let newScrollTop: number;
 
 		if (rowTop < viewTop) {
 			// Row is above viewport - scroll up to show it at top
@@ -681,7 +683,7 @@
 		const pageSize = Math.max(1, Math.floor(viewportHeight / rowHeight) - 1);
 		const maxIndex = items.length - 1;
 		const currentFocus = focusedIndex;
-		let newIndex = currentFocus;
+		let newIndex: number;
 
 		switch (event.key) {
 			case 'ArrowUp':
@@ -796,7 +798,7 @@
 			>
 				{#if columnWidths.length > 0}
 					<colgroup>
-						{#each columnWidths as width}
+						{#each columnWidths as width, i (i)}
 							<col style="width: {width}px;" />
 						{/each}
 					</colgroup>
@@ -811,7 +813,7 @@
 						})}
 					{:else}
 						<tr bind:this={headerRow} aria-label="Column headers">
-							{#each columns as column, i}
+							{#each columns as column, i (column.key)}
 								<th
 									scope="col"
 									aria-label={column.label}
@@ -868,13 +870,13 @@
 				>
 					{#if columnWidths.length > 0}
 						<colgroup>
-							{#each columnWidths as width}
+							{#each columnWidths as width, i (i)}
 								<col style="width: {width}px;" />
 							{/each}
 						</colgroup>
 					{/if}
 					<tbody role="rowgroup">
-						{#each visibleItems as item, i}
+						{#each visibleItems as item, i (scrollState.startIndex + i)}
 							{@const actualIndex = scrollState.startIndex + i}
 							{@const isFocused = actualIndex === focusedIndex}
 							{@const isSelected = isIndexSelected(actualIndex)}

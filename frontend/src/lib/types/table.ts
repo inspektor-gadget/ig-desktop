@@ -38,7 +38,7 @@ export interface TableColumn {
 	/** Decimal places for float display (null = no formatting) */
 	precision?: number | null;
 	/** Custom renderer function */
-	render?: (value: any, row: any) => string | { html: string };
+	render?: (value: unknown, row: EnrichedRow) => string | { html: string };
 
 	// Behavior
 	/** Whether column can be sorted */
@@ -55,11 +55,11 @@ export interface TableColumn {
  * EnrichedRow wraps original row data with hook-added enrichments.
  * This keeps original data immutable while allowing async enhancement.
  */
-export interface EnrichedRow<T = any> {
+export interface EnrichedRow<T = unknown> {
 	/** Original row data from gadget */
 	data: T;
 	/** Hook-added data (e.g., threat scores, related events) */
-	enrichments: Record<string, any>;
+	enrichments: Record<string, unknown>;
 	/** Processing status for async operations */
 	status: {
 		/** Async processing in progress */

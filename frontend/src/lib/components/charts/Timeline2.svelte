@@ -250,7 +250,7 @@
 			// an alternative with <basic-shape> and <geometry-box> under Chrome).
 			// -> Basic helper to prevent things to break if multiple components
 			// are generated on the same page. In observable, consider using DOM.uid() instead.
-			if (!window.hasOwnProperty('TimeSeriesChartCounter')) {
+			if (!Object.hasOwn(window, 'TimeSeriesChartCounter')) {
 				window.TimeSeriesChartCounter = 0;
 			}
 			const clipId = `timeserieschart-clip-${++window.TimeSeriesChartCounter}`;
@@ -269,13 +269,13 @@
 			const pathFn = {};
 			const tooltipMetrics = [];
 
-			for (const [i, s] of this._series.entries()) {
+			for (const s of this._series) {
 				const yPrepared =
-					s.hasOwnProperty('negativeY') && s.negativeY
+					Object.hasOwn(s, 'negativeY') && s.negativeY
 						? (d) => yScale(-d[s.metric])
 						: (d) => yScale(d[s.metric]);
 
-				if (s.hasOwnProperty('lineColor')) {
+				if (Object.hasOwn(s, 'lineColor')) {
 					pathCnt++;
 
 					const line = d3
@@ -300,31 +300,31 @@
 					pathFn[`path-${pathCnt}`] = line;
 				}
 
-				if (s.hasOwnProperty('fillColor')) {
+				if (Object.hasOwn(s, 'fillColor')) {
 					let baseline;
 					let defined;
 
 					pathCnt++;
 
-					if (s.hasOwnProperty('fillToMetric') && s.fillToMetric) {
+					if (Object.hasOwn(s, 'fillToMetric') && s.fillToMetric) {
 						baseline =
-							s.hasOwnProperty('negativeY') && s.negativeY
+							Object.hasOwn(s, 'negativeY') && s.negativeY
 								? (d) => yScale(-d[s.fillToMetric])
 								: (d) => yScale(d[s.fillToMetric]);
 						defined = (d) => d[s.metric] !== null && d[s.metric] >= d[s.fillToMetric];
-					} else if (s.hasOwnProperty('fillToZero') && s.fillToZero) {
-						baseline = (d) => yScale(0);
+					} else if (Object.hasOwn(s, 'fillToZero') && s.fillToZero) {
+						baseline = () => yScale(0);
 						defined = (d) => d[s.metric] !== null && d[s.metric] >= 0;
 					} else {
 						baseline =
-							s.hasOwnProperty('negativeY') && s.negativeY
-								? (d) => yScale(yScale.domain()[1])
-								: (d) => yScale(yScale.domain()[0]);
+							Object.hasOwn(s, 'negativeY') && s.negativeY
+								? () => yScale(yScale.domain()[1])
+								: () => yScale(yScale.domain()[0]);
 						defined = (d) => d[s.metric] !== null;
 					}
 
 					const [y0, y1] =
-						s.hasOwnProperty('negativeY') && s.negativeY
+						Object.hasOwn(s, 'negativeY') && s.negativeY
 							? [yPrepared, baseline]
 							: [baseline, yPrepared];
 
@@ -350,7 +350,7 @@
 					pathFn[`path-${pathCnt}`] = area;
 				}
 
-				if (s.hasOwnProperty('tooltip') && s.tooltip) {
+				if (Object.hasOwn(s, 'tooltip') && s.tooltip) {
 					tooltipMetrics.push({ metric: s.metric, label: s.label });
 				}
 			}
@@ -505,10 +505,10 @@
 						})
 						.on('touchmove mousemove', mouseMoved);
 
-					svg.append((d) => context.node());
-					svg.append((d) => tooltip.node());
+					svg.append(() => context.node());
+					svg.append(() => tooltip.node());
 				} else {
-					svg.append((d) => context.node());
+					svg.append(() => context.node());
 				}
 			}
 
@@ -597,7 +597,7 @@
 			for (const s of this._series) {
 				const aggs = {};
 
-				if (s.hasOwnProperty('legend') && s.legend) {
+				if (Object.hasOwn(s, 'legend') && s.legend) {
 					if (legendValues.includes('Min')) {
 						aggs.min = d3.min(data, (d) => d[s.metric]);
 					}
@@ -625,12 +625,12 @@
 				// Calculate the y scale domain if needed.
 				// Will use existing values when possible.
 				if (this._yMin === undefined) {
-					if (s.hasOwnProperty('negativeY') && s.negativeY) {
-						yDomain[0] = aggs.hasOwnProperty('max')
+					if (Object.hasOwn(s, 'negativeY') && s.negativeY) {
+						yDomain[0] = Object.hasOwn(aggs, 'max')
 							? Math.min(yDomain[0], -aggs.max)
 							: Math.min(yDomain[0], -d3.max(data, (d) => d[s.metric]));
 					} else {
-						yDomain[0] = aggs.hasOwnProperty('min')
+						yDomain[0] = Object.hasOwn(aggs, 'min')
 							? Math.min(yDomain[0], aggs.min)
 							: Math.min(
 									yDomain[0],
@@ -640,12 +640,12 @@
 				}
 
 				if (this._yMax === undefined) {
-					if (s.hasOwnProperty('negativeY') && s.negativeY) {
-						yDomain[1] = aggs.hasOwnProperty('min')
+					if (Object.hasOwn(s, 'negativeY') && s.negativeY) {
+						yDomain[1] = Object.hasOwn(aggs, 'min')
 							? Math.max(yDomain[1], -aggs.min)
 							: Math.max(yDomain[1], -d3.min(data, (d) => d[s.metric]));
 					} else {
-						yDomain[1] = aggs.hasOwnProperty('max')
+						yDomain[1] = Object.hasOwn(aggs, 'max')
 							? Math.max(yDomain[1], aggs.max)
 							: Math.max(
 									yDomain[1],
@@ -674,7 +674,6 @@
 	});
 
 	let width;
-	let height;
 	let svg;
 
 	const options = {

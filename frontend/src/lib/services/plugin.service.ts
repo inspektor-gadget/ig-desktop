@@ -17,10 +17,15 @@ import type {
 	CompiledFile
 } from '$lib/types/plugin';
 import { getPluginEntrypoint, validatePluginBundle } from '$lib/types/plugin';
+// The plugin runtime shim must compose Svelte's internal client APIs to execute
+// JIT-compiled plugin modules; no public API exposes these. Disables are scoped
+// to these two imports only.
+/* eslint-disable svelte/no-svelte-internal */
 // @ts-expect-error - svelte/internal/client is not typed but needed for runtime compilation
 import * as svelteInternalClient from 'svelte/internal/client';
 // @ts-expect-error - svelte/internal/disclose-version is not typed but needed for runtime compilation
 import * as svelteInternalDiscloseVersion from 'svelte/internal/disclose-version';
+/* eslint-enable svelte/no-svelte-internal */
 import * as svelte from 'svelte';
 import CompilerWorker from '$lib/workers/svelte-compiler.worker?worker';
 
@@ -29,6 +34,13 @@ const svelteRuntime = {
 	...svelteInternalDiscloseVersion,
 	...svelte
 };
+
+declare global {
+	/** Svelte runtime shim exposed for JIT-compiled plugin modules. */
+	var __svelte_runtime__: Record<string, unknown> | undefined;
+	/** Registry of executed plugin module exports, keyed by plugin id. */
+	var __plugin_modules__: Record<string, Record<string, unknown>> | undefined;
+}
 
 class PluginService {
 	private runtimeInitialized = false;
@@ -47,7 +59,7 @@ class PluginService {
 	 */
 	ensureRuntimeInitialized(): void {
 		if (!this.runtimeInitialized) {
-			(globalThis as any).__svelte_runtime__ = svelteRuntime;
+			globalThis.__svelte_runtime__ = svelteRuntime;
 			this.runtimeInitialized = true;
 		}
 	}
@@ -173,10 +185,10 @@ class PluginService {
 		const compiledModules: Record<string, string> = {};
 
 		// Initialize plugin module registry
-		if (!(globalThis as any).__plugin_modules__) {
-			(globalThis as any).__plugin_modules__ = {};
+		if (!globalThis.__plugin_modules__) {
+			globalThis.__plugin_modules__ = {};
 		}
-		(globalThis as any).__plugin_modules__[pluginId] = {};
+		globalThis.__plugin_modules__[pluginId] = {};
 
 		// Execute dependency modules first (already sorted by worker)
 		for (const file of files) {
@@ -194,7 +206,7 @@ class PluginService {
 				await import(/* @vite-ignore */ url);
 			} catch (e) {
 				moduleUrls.forEach((u) => URL.revokeObjectURL(u));
-				throw new Error(`Failed to load module ${file.path}: ${e}`);
+				throw new Error(`Failed to load module ${file.path}`, { cause: e });
 			}
 
 			if (file.css) {
@@ -228,7 +240,7 @@ class PluginService {
 			};
 		} catch (e) {
 			moduleUrls.forEach((u) => URL.revokeObjectURL(u));
-			throw new Error(`Failed to load entrypoint: ${e}`);
+			throw new Error(`Failed to load entrypoint`, { cause: e });
 		}
 	}
 
@@ -240,8 +252,8 @@ class PluginService {
 		plugin.moduleUrls.forEach((url) => URL.revokeObjectURL(url));
 
 		// Clean up module registry
-		if ((globalThis as any).__plugin_modules__?.[plugin.id]) {
-			delete (globalThis as any).__plugin_modules__[plugin.id];
+		if (globalThis.__plugin_modules__?.[plugin.id]) {
+			delete globalThis.__plugin_modules__[plugin.id];
 		}
 	}
 

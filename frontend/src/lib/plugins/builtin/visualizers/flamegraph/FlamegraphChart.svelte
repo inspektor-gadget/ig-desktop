@@ -2,9 +2,9 @@
 	import type { FlameNode, FlamegraphRenderNode, GroupableField } from '$lib/types/flamegraph';
 	import { getPercentage } from '$lib/utils/flamegraphConfig';
 	import { clickOutside } from '$lib/utils/click-outside';
-	import SearchIcon from '$lib/icons/search-small.svg?raw';
-	import CloseIcon from '$lib/icons/close-small.svg?raw';
-	import ChevronDown from '$lib/icons/chevron-down.svg?raw';
+	import SearchIcon from '$lib/icons/search-small.svelte';
+	import CloseIcon from '$lib/icons/close-small.svelte';
+	import ChevronDown from '$lib/icons/chevron-down.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
@@ -269,7 +269,7 @@
 		<div
 			class="flex items-center gap-1 px-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-ig-sm focus-within:border-ig-primary focus-within:ring-2 focus-within:ring-ig-primary-muted"
 		>
-			<span class="w-3.5 h-3.5 text-gray-400 flex-shrink-0">{@html SearchIcon}</span>
+			<span class="w-3.5 h-3.5 text-gray-400 flex-shrink-0"><SearchIcon /></span>
 			<input
 				bind:this={searchInputRef}
 				type="text"
@@ -286,7 +286,7 @@
 					aria-label={t('Clear search')}
 					class="flex items-center justify-center w-4 h-4 p-0 border-none bg-transparent text-gray-400 cursor-pointer rounded-ig-sm hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
 				>
-					{@html CloseIcon}
+					<CloseIcon />
 				</button>
 			{/if}
 			<button
@@ -336,7 +336,7 @@
 							>{activeGroupCount}</span
 						>
 					{/if}
-					<span class="w-3 h-3 opacity-60 flex items-center">{@html ChevronDown}</span>
+					<span class="w-3 h-3 opacity-60 flex items-center"><ChevronDown /></span>
 				</button>
 				{#if groupMenuOpen}
 					<div

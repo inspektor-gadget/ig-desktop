@@ -284,7 +284,7 @@
 				: ''}"
 		>
 			{#if multiSelect}
-				{#each selectedValues as tag}
+				{#each selectedValues as tag (tag)}
 					<span
 						class="inline-flex items-center gap-1 rounded-ig-sm border border-ig-border-strong bg-ig-border px-2 py-1 text-sm text-ig-text"
 					>
@@ -383,7 +383,7 @@
 				bind:this={dropdownRef}
 				class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-ig-md border border-ig-border-strong bg-ig-surface shadow-lg"
 			>
-				{#each filteredOptions() as option, index}
+				{#each filteredOptions() as option, index (option.value)}
 					{@const isSelected = multiSelect
 						? selectedValues.includes(option.value)
 						: value === option.value}

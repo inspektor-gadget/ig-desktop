@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import type { ApiContext } from '$lib/types/context';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Panel from '$lib/components/Panel.svelte';
@@ -7,19 +8,19 @@
 	import K8sDeployModal from '$lib/components/K8sDeployModal.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { deployments } from '$lib/shared/deployments.svelte';
-	import Plus from '$lib/icons/circle-plus.svg?raw';
-	import Server from '$lib/icons/server-small.svg?raw';
-	import Refresh from '$lib/icons/refresh-small.svg?raw';
-	import Info from '$lib/icons/info.svg?raw';
-	import Trash from '$lib/icons/fa/trash.svg?raw';
-	import Code from '$lib/icons/code.svg?raw';
-	import Adjustments from '$lib/icons/adjustments.svg?raw';
-	import type { IGDeploymentStatus, RuntimeInfo } from '$lib/types';
+	import Plus from '$lib/icons/circle-plus.svelte';
+	import Server from '$lib/icons/server-small.svelte';
+	import Refresh from '$lib/icons/refresh-small.svelte';
+	import Info from '$lib/icons/info.svelte';
+	import Trash from '$lib/icons/fa/trash.svelte';
+	import Code from '$lib/icons/code.svelte';
+	import Adjustments from '$lib/icons/adjustments.svelte';
+	import type { IGDeploymentStatus, RuntimeInfo, GadgetParam } from '$lib/types';
 	import Input from '$lib/components/forms/Input.svelte';
 	import Select from '$lib/components/forms/Select.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 
-	const api: any = getContext('api');
+	const api = getContext<ApiContext>('api');
 
 	// Watch for successful deployments and refresh status
 	$effect(() => {
@@ -48,21 +49,24 @@
 	let deployModalOpen = $state(false);
 
 	async function loadRuntimes() {
-		const res = await api.request({ cmd: 'getRuntimes' });
+		const res = await api.request<RuntimeInfo[]>({ cmd: 'getRuntimes' });
 		console.log(res);
 		runtimes = res;
 	}
 
 	loadRuntimes();
 
-	let runtimeParams = $state<any[]>([]);
-	let values = $state<Record<string, any>>({});
+	let runtimeParams = $state<GadgetParam[]>([]);
+	let values = $state<Record<string, string>>({});
 	let name = $state('');
 	let selectedContext = $state<string>('');
 
 	async function setRuntime(rt: string) {
 		selectedRuntime = rt;
-		const res = await api.request({ cmd: 'getRuntimeParams', data: { runtime: rt } });
+		const res = await api.request<GadgetParam[]>({
+			cmd: 'getRuntimeParams',
+			data: { runtime: rt }
+		});
 		runtimeParams = res;
 
 		// Preselect first context for K8s runtime
@@ -78,7 +82,7 @@
 	async function checkDeploymentStatus() {
 		checkingDeployment = true;
 		try {
-			const res = await api.request({
+			const res = await api.request<IGDeploymentStatus>({
 				cmd: 'checkIGDeployment',
 				data: { namespace: 'gadget', kubeContext: selectedContext }
 			});
@@ -105,7 +109,7 @@
 			params.context = selectedContext;
 		}
 
-		const res = await api.request({
+		const res = await api.request<{ id: string }>({
 			cmd: 'createEnvironment',
 			data: { name: name, params: params, runtime: selectedRuntime }
 		});
@@ -180,7 +184,7 @@
 				</div>
 				<div class="grid grid-cols-2 gap-3">
 					{#if runtimes}
-						{#each runtimes as rt}
+						{#each runtimes as rt (rt.key)}
 							<div
 								role="button"
 								tabindex="0"
@@ -295,14 +299,14 @@
 							onclick={openRedeployModal}
 							class="flex items-center justify-center gap-2 rounded-ig-md border border-purple-600 bg-purple-100/20 dark:bg-purple-900/20 px-4 py-2.5 text-sm text-purple-600 dark:text-purple-400 transition-all hover:bg-purple-100/50 dark:hover:bg-purple-900/50"
 						>
-							<span>{@html Refresh}</span>
+							<span><Refresh /></span>
 							<span>{t('Redeploy Inspektor Gadget')}</span>
 						</button>
 						<button
 							onclick={openUndeployModal}
 							class="flex items-center justify-center gap-2 rounded-ig-md border border-red-600 bg-red-100/20 dark:bg-red-900/20 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 transition-all hover:bg-red-100/50 dark:hover:bg-red-900/50"
 						>
-							<span>{@html Trash}</span>
+							<span><Trash /></span>
 							<span>{t('Undeploy Inspektor Gadget')}</span>
 						</button>
 					</div>
@@ -313,7 +317,7 @@
 					class="flex flex-col gap-4 rounded-ig-md border border-blue-300/50 dark:border-blue-800/50 bg-blue-100/10 dark:bg-blue-900/10 p-4"
 				>
 					<div class="flex items-start gap-3">
-						<div class="text-blue-600 dark:text-blue-400">{@html Info}</div>
+						<div class="text-blue-600 dark:text-blue-400"><Info /></div>
 						<div class="flex-1">
 							<h3 class="font-semibold text-blue-600 dark:text-blue-400">
 								{t('Inspektor Gadget Not Detected')}
@@ -335,7 +339,7 @@
 						onclick={openDeployModal}
 						class="flex items-center justify-center gap-2 rounded-ig-md bg-blue-600 dark:bg-blue-800 px-4 py-2.5 text-sm text-white transition-all hover:bg-blue-500 dark:hover:bg-blue-700"
 					>
-						<span>{@html Server}</span>
+						<span><Server /></span>
 						<span>{t('Deploy Inspektor Gadget')}</span>
 					</button>
 				</div>
@@ -367,7 +371,7 @@
 			class="flex cursor-pointer flex-row gap-2 rounded-ig-sm bg-green-600 dark:bg-green-800 px-4 py-2 text-white hover:bg-green-500 dark:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-200 dark:disabled:bg-green-950 disabled:text-gray-500"
 			onclick={createEnvironment}
 		>
-			<span>{@html Plus}</span>
+			<span><Plus /></span>
 			<span>{t('Create Environment')}</span>
 		</button>
 	</div>

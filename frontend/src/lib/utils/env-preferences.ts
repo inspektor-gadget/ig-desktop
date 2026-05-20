@@ -7,7 +7,7 @@
  * This allows for automatic cleanup when environments are deleted.
  */
 
-import { preferences } from '$lib/shared/preferences.svelte';
+import type { GadgetRunRequest } from '$lib/types';
 
 /**
  * Get all localStorage keys for a specific environment
@@ -20,7 +20,7 @@ export function getEnvKeys(environmentID: string): string[] {
 /**
  * Get an environment-scoped preference value
  */
-export function getEnvPref<T = any>(environmentID: string, key: string): T | undefined {
+export function getEnvPref<T = unknown>(environmentID: string, key: string): T | undefined {
 	const fullKey = `env:${environmentID}:${key}`;
 	const value = localStorage.getItem(fullKey);
 	if (value === null) return undefined;
@@ -34,7 +34,7 @@ export function getEnvPref<T = any>(environmentID: string, key: string): T | und
 /**
  * Set an environment-scoped preference value
  */
-export function setEnvPref(environmentID: string, key: string, value: any): void {
+export function setEnvPref(environmentID: string, key: string, value: unknown): void {
 	const fullKey = `env:${environmentID}:${key}`;
 	localStorage.setItem(fullKey, JSON.stringify(value));
 
@@ -121,19 +121,21 @@ export function saveGadgetURLRecent(environmentID: string, url: string): void {
  * Deep comparison of two objects
  * Used for comparing gadget run requests
  */
-function deepEqual(obj1: any, obj2: any): boolean {
+function deepEqual(obj1: unknown, obj2: unknown): boolean {
 	if (obj1 === obj2) return true;
 	if (obj1 == null || obj2 == null) return false;
 	if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return false;
 
-	const keys1 = Object.keys(obj1);
-	const keys2 = Object.keys(obj2);
+	const a = obj1 as Record<string, unknown>;
+	const b = obj2 as Record<string, unknown>;
+	const keys1 = Object.keys(a);
+	const keys2 = Object.keys(b);
 
 	if (keys1.length !== keys2.length) return false;
 
 	for (const key of keys1) {
 		if (!keys2.includes(key)) return false;
-		if (!deepEqual(obj1[key], obj2[key])) return false;
+		if (!deepEqual(a[key], b[key])) return false;
 	}
 
 	return true;
@@ -150,11 +152,10 @@ function deepEqual(obj1: any, obj2: any): boolean {
  */
 export function addGadgetToHistory(
 	environmentID: string,
-	request: any,
+	request: GadgetRunRequest,
 	maxEntries: number = 50
 ): void {
-	const historyKey = `env:${environmentID}:gadget-history`;
-	const history = (getEnvPref<any[]>(environmentID, 'gadget-history') || []) as any[];
+	const history = getEnvPref<GadgetRunRequest[]>(environmentID, 'gadget-history') || [];
 
 	// Find if this exact gadget+params combination exists
 	const existingIndex = history.findIndex((item) => {
@@ -162,7 +163,7 @@ export function addGadgetToHistory(
 		return item.image === request.image && deepEqual(item.params, request.params);
 	});
 
-	let updated: any[];
+	let updated: GadgetRunRequest[];
 	if (existingIndex >= 0) {
 		// Exists - remove from current position and add to front with new timestamp
 		const existing = history[existingIndex];

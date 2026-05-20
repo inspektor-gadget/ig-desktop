@@ -86,6 +86,7 @@ export interface GadgetDatasourceField {
 	flags?: number;
 	tags?: string[];
 	annotations?: Record<string, string>;
+	order?: number;
 	[key: string]: unknown;
 }
 

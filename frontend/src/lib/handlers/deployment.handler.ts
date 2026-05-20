@@ -1,17 +1,24 @@
 import { deployments } from '$lib/shared/deployments.svelte';
 
+interface DeploymentEventData {
+	deploymentId?: string;
+	progress?: number;
+	message?: string;
+	error?: string;
+}
+
 /**
  * Parse deployment data, handling both string and object formats.
  */
-function parseDeploymentData(data: any): any {
-	return typeof data === 'string' ? JSON.parse(data) : data;
+function parseDeploymentData(data: unknown): DeploymentEventData {
+	return (typeof data === 'string' ? JSON.parse(data) : data) as DeploymentEventData;
 }
 
 /**
  * Handle deployment progress update (type 200).
  * Updates progress percentage and current step message.
  */
-export function handleDeploymentProgress(msg: any): void {
+export function handleDeploymentProgress(msg: { data?: unknown }): void {
 	const progressData = parseDeploymentData(msg.data);
 	console.log('[Layout] Deployment progress event:', progressData);
 
@@ -24,7 +31,7 @@ export function handleDeploymentProgress(msg: any): void {
 			progress: progressData.progress,
 			currentStep: progressData.message
 		});
-		deployments.addLog(progressData.deploymentId, progressData.message);
+		deployments.addLog(progressData.deploymentId, progressData.message ?? '');
 	} else {
 		console.error('[Layout] Deployment progress missing deploymentId:', progressData);
 	}
@@ -34,7 +41,7 @@ export function handleDeploymentProgress(msg: any): void {
  * Handle deployment completion (type 201).
  * Marks the deployment as successfully completed.
  */
-export function handleDeploymentComplete(msg: any): void {
+export function handleDeploymentComplete(msg: { data?: unknown }): void {
 	const completeData = parseDeploymentData(msg.data);
 	console.log('[Layout] Deployment complete event:', completeData);
 
@@ -58,7 +65,7 @@ export function handleDeploymentComplete(msg: any): void {
  * Handle deployment error (type 202).
  * Marks the deployment as failed with an error message.
  */
-export function handleDeploymentError(msg: any): void {
+export function handleDeploymentError(msg: { data?: unknown }): void {
 	const errorData = parseDeploymentData(msg.data);
 	console.log('[Layout] Deployment error event:', errorData);
 

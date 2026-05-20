@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import WizardTargets from './WizardTargets.svelte';
@@ -11,9 +12,9 @@
 	} from './wizard-types';
 	import type { Environment, GadgetRunRequest } from '$lib/types';
 
-	import PlaySmall from '$lib/icons/fa/play.svg?raw';
-	import CogSmall from '$lib/icons/cog-small.svg?raw';
-	import ChevronDown from '$lib/icons/chevron-down.svg?raw';
+	import PlaySmall from '$lib/icons/fa/play.svelte';
+	import CogSmall from '$lib/icons/cog-small.svelte';
+	import ChevronDown from '$lib/icons/chevron-down.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 	// Note: Breadcrumbs and back navigation are handled by parent GadgetWizard
 
@@ -33,7 +34,7 @@
 
 	// Target filters collapse state - remembered per endpoint
 	const STORAGE_KEY = 'wizard-filters-expanded';
-	let filtersExpanded = $state(false);
+	let filtersExpanded = $derived(getFilterExpanded(nodeId));
 
 	// localStorage helpers for filter expanded state
 	function getFilterExpanded(id: string): boolean {
@@ -59,11 +60,6 @@
 			// Ignore localStorage errors
 		}
 	}
-
-	// Load expanded state when nodeId changes
-	$effect(() => {
-		filtersExpanded = getFilterExpanded(nodeId);
-	});
 
 	// Toggle and persist filter visibility
 	function toggleFilters() {
@@ -136,7 +132,7 @@
 		if (!spec) return;
 
 		const fullImage = treeConfig.gadgetPrefix + spec.gadget;
-		const searchParams = new URLSearchParams();
+		const searchParams = new SvelteURLSearchParams();
 		searchParams.set('env', env.id);
 
 		const allParams = {
@@ -204,7 +200,7 @@
 				class:rotate-0={filtersExpanded}
 				class:-rotate-90={!filtersExpanded}
 			>
-				{@html ChevronDown}
+				<ChevronDown />
 			</span>
 			<span>{t('Target Filters')}</span>
 		</button>
@@ -222,7 +218,7 @@
 				? t('Configure first gadget with more options')
 				: t('Configure and run with more options')}
 		>
-			<span>{@html CogSmall}</span>
+			<span><CogSmall /></span>
 			<span
 				>{hasMultipleGadgets
 					? t('Configure ({{gadgetName}})', { gadgetName: gadgetNames[0] })
@@ -233,7 +229,7 @@
 			onclick={handleRunNow}
 			class="flex cursor-pointer items-center gap-2 rounded-ig-md border border-orange-300 dark:border-orange-800 bg-orange-100/20 dark:bg-orange-900/20 px-4 py-2 text-sm text-orange-600 dark:text-orange-400 transition-all hover:border-orange-500/50 hover:bg-orange-100/40 dark:hover:bg-orange-900/40"
 		>
-			<span>{@html PlaySmall}</span>
+			<span><PlaySmall /></span>
 			<span>
 				{#if hasMultipleGadgets}
 					{detached

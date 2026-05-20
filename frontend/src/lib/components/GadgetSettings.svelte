@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { Component as SvelteComponent } from 'svelte';
-	import Server from '$lib/icons/server.svg?raw';
-	import Book from '$lib/icons/book.svg?raw';
-	import Bug from '$lib/icons/bug.svg?raw';
-	import Layers from '$lib/icons/layers.svg?raw';
-	import Close from '$lib/icons/close-small.svg?raw';
+	import Server from '$lib/icons/server.svelte';
+	import Book from '$lib/icons/book.svelte';
+	import Bug from '$lib/icons/bug.svelte';
+	import Layers from '$lib/icons/layers.svelte';
+	import Close from '$lib/icons/close-small.svelte';
 
 	import DataSources from './gadget-attribs/DataSources.svelte';
 	import Metadata from './gadget-attribs/Metadata.svelte';
@@ -20,12 +20,12 @@
 	// Tab components have varying props - some take gadgetInfo, some use context
 	type TabComponent = SvelteComponent<{ gadgetInfo?: GadgetInfo }>;
 
-	const regularTabs: Array<{ class: TabComponent; name: string; icon: string }> = [
+	const regularTabs: Array<{ class: TabComponent; name: string; icon: SvelteComponent }> = [
 		{ class: DataSources as TabComponent, name: 'Data Sources', icon: Server },
 		{ class: Inspect as TabComponent, name: 'Inspect', icon: Layers }
 	];
 
-	const developerTabs: Array<{ class: TabComponent; name: string; icon: string }> = [
+	const developerTabs: Array<{ class: TabComponent; name: string; icon: SvelteComponent }> = [
 		{ class: Metadata as TabComponent, name: 'Gadget Metadata', icon: Book },
 		{ class: GadgetInfoComponent as TabComponent, name: 'GadgetInfo', icon: Bug }
 	];
@@ -46,7 +46,8 @@
 </script>
 
 <div class="flex flex-row bg-ig-surface">
-	{#each tabs as tab, id}
+	{#each tabs as tab, id (tab.name)}
+		{@const TabIcon = tab.icon}
 		<button
 			title={t(tab.name)}
 			onclick={() => {
@@ -55,8 +56,9 @@
 			class={tabIndex === id
 				? 'cursor-pointer border-t border-r border-b border-t-ig-text-muted border-r-ig-border border-b-transparent bg-ig-surface-raised p-2'
 				: 'cursor-pointer border-t border-r border-b border-t-transparent border-r-ig-border border-b-ig-border p-2'}
-			>{@html tab.icon}</button
 		>
+			<TabIcon />
+		</button>
 	{/each}
 	<div class="flex-1 border-b border-b-ig-border"></div>
 	<button
@@ -64,7 +66,7 @@
 		onclick={onclose}
 		title={t('Close Inspector')}
 	>
-		<span class="rounded-ig-sm p-1 transition-colors hover:bg-ig-border">{@html Close}</span>
+		<span class="rounded-ig-sm p-1 transition-colors hover:bg-ig-border"><Close /></span>
 	</button>
 </div>
 

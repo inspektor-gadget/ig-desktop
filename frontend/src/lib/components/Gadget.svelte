@@ -4,12 +4,12 @@
 	import Log from './Gadget/Log.svelte';
 	import Input from './forms/Input.svelte';
 
-	import Play from '$lib/icons/play-small.svg?raw';
-	import Stop from '$lib/icons/stop-small.svg?raw';
-	import Adjustments from '$lib/icons/adjustments-small.svg?raw';
-	import ChevronLeft from '$lib/icons/chevron-left-small.svg?raw';
-	import ChevronRight from '$lib/icons/chevron-right-small.svg?raw';
-	import FilterIcon from '$lib/icons/filter-small.svg?raw';
+	import Play from '$lib/icons/play-small.svelte';
+	import Stop from '$lib/icons/stop-small.svelte';
+	import Adjustments from '$lib/icons/adjustments-small.svelte';
+	import ChevronLeft from '$lib/icons/chevron-left-small.svelte';
+	import ChevronRight from '$lib/icons/chevron-right-small.svelte';
+	import FilterIcon from '$lib/icons/filter-small.svelte';
 	import { instances } from '$lib/shared/instances.svelte';
 	import { environments } from '$lib/shared/environments.svelte';
 	import { getContext, setContext } from 'svelte';
@@ -160,7 +160,8 @@
 
 	// Reset to first match when search query changes
 	$effect(() => {
-		searchQuery; // track dependency
+		// Track searchQuery so the effect re-runs when it changes.
+		void searchQuery;
 		currentMatchIndex = -1;
 	});
 
@@ -304,7 +305,7 @@
 												: 'border-ig-border-strong bg-transparent text-ig-text-muted'}"
 											title={instance.running ? t('Running') : t('Stopped')}
 										>
-											{@html Play}
+											<Play />
 										</div>
 										<button
 											onclick={() => stopInstance(instanceID)}
@@ -320,7 +321,7 @@
 													? t('Detached')
 													: t('Stopped')}
 										>
-											{@html Stop}
+											<Stop />
 											{#if instance.running && instance.attached}
 												<span class="text-sm">{t('Detach')}</span>
 											{/if}
@@ -437,7 +438,7 @@
 										? t('Search mode: filter (switch to highlight)')
 										: t('Search mode: highlight (switch to filter)')}
 								>
-									{@html FilterIcon}
+									<FilterIcon />
 								</button>
 								<button
 									onclick={toggleHighlightInFilterMode}
@@ -540,16 +541,16 @@
 									preferences.set('gadget.show-inspector', !showInspector);
 								}}
 							>
-								{@html Adjustments}
-								<span class="flex items-center text-ig-text-muted"
-									>{@html showInspector ? ChevronLeft : ChevronRight}</span
-								>
+								<Adjustments />
+								<span class="flex items-center text-ig-text-muted">
+									{#if showInspector}<ChevronLeft />{:else}<ChevronRight />{/if}
+								</span>
 							</button>
 						{/if}
 					</div>
 				{/if}
 				<div class="flex flex-1 flex-col justify-stretch overflow-y-auto overscroll-none">
-					{#each normalizedDataSources as ds, id}
+					{#each normalizedDataSources as ds (ds.name)}
 						{#if ds.annotations?.['view.hidden'] !== 'true'}
 							<DatasourceView
 								{ds}

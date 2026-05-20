@@ -1,16 +1,18 @@
 <script lang="ts">
 	import { getContext, setContext, onMount } from 'svelte';
+	import { getErrorMessage } from '$lib/utils/errors';
+	import type { ApiContext } from '$lib/types/context';
 	import Params from '$lib/components/Params.svelte';
 	import Panel from '$lib/components/Panel.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
-	import Play from '$lib/icons/play.svg?raw';
-	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
-	import ChevronRight from '$lib/icons/chevron-right.svg?raw';
-	import Copy from '$lib/icons/copy.svg?raw';
-	import Cog from '$lib/icons/cog.svg?raw';
-	import Code from '$lib/icons/code.svg?raw';
-	import File from '$lib/icons/file.svg?raw';
-	import Server from '$lib/icons/server.svg?raw';
+	import Play from '$lib/icons/play.svelte';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import ChevronRight from '$lib/icons/chevron-right.svelte';
+	import Copy from '$lib/icons/copy.svelte';
+	import Cog from '$lib/icons/cog.svelte';
+	import Code from '$lib/icons/code.svelte';
+	import File from '$lib/icons/file.svelte';
+	import Server from '$lib/icons/server.svelte';
 	import { environments } from '$lib/shared/environments.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -38,14 +40,14 @@
 		}
 	});
 
-	let { data }: { data: any } = $props();
+	let { data }: { data: { url: string } } = $props();
 
-	const api: any = getContext('api');
+	const api = getContext<ApiContext>('api');
 
 	let environmentID = $state<string | null>(null);
 	let detached = $state(false);
 	let instanceName = $state('');
-	let values = $state<Record<string, any>>({});
+	let values = $state<Record<string, string>>({});
 	let commandType = $state<'ig' | 'gadgetctl' | 'kubectl'>('ig');
 	let showAdvanced = $state(true);
 
@@ -82,8 +84,6 @@
 			recordGadgetRun = false;
 		}
 	});
-
-	let validated = $derived(environmentID);
 
 	function canRun(): boolean {
 		if (!environmentID) return false;
@@ -168,7 +168,7 @@
 		if (!environmentID) return;
 
 		// retryTrigger is used to force re-fetch when retry button is clicked
-		retryTrigger;
+		void retryTrigger;
 
 		// Reset states when environment changes
 		error = null;
@@ -176,8 +176,11 @@
 		gadgetInfo = null;
 
 		api
-			.request({ cmd: 'getGadgetInfo', data: { url: data.url, environmentID: environmentID } })
-			.then((res: any) => {
+			.request<GadgetInfo | null>({
+				cmd: 'getGadgetInfo',
+				data: { url: data.url, environmentID: environmentID }
+			})
+			.then((res) => {
 				if (!res) {
 					error = t('Could not fetch gadget information. Is the given URL correct?');
 					originalError = null;
@@ -187,7 +190,7 @@
 				originalError = null;
 				gadgetInfo = res;
 			})
-			.catch((err: any) => {
+			.catch((err) => {
 				console.error('Failed to fetch gadget information:', err);
 				originalError = err?.message || String(err);
 				error = t(
@@ -275,7 +278,7 @@
 		}
 
 		try {
-			const res = await api.request({ cmd: 'runGadget', data: gadgetRunRequest });
+			const res = await api.request<{ id: string }>({ cmd: 'runGadget', data: gadgetRunRequest });
 
 			// Track gadget run if analytics is enabled
 			analyticsService.trackRunGadget(data.url);
@@ -301,9 +304,9 @@
 			} else {
 				goto(resolve(`/env/${environmentID}/running/${res.id}`));
 			}
-		} catch (err: any) {
+		} catch (err) {
 			// Show error toast
-			const errorMessage = err?.message || err?.toString() || 'Unknown error';
+			const errorMessage = getErrorMessage(err);
 			toastStore.error(
 				detached
 					? t('Failed to start headless instance: {{errorMessage}}', { errorMessage })
@@ -333,7 +336,7 @@
 			class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
 			title={t('Go back')}
 		>
-			{@html ChevronLeft}
+			<ChevronLeft />
 		</button>
 		<div>{data.url}</div>
 	</div>
@@ -356,7 +359,7 @@
 				class="col-start-1 row-start-1 appearance-none rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 pr-8 pl-3"
 			>
 				<option value="">{t('Select environment')}</option>
-				{#each Object.entries(environments) as [id, environment]}
+				{#each Object.entries(environments) as [id, environment] (id)}
 					<option value={environment.id}>{environment.name}</option>
 				{/each}
 			</select>
@@ -437,7 +440,7 @@
 								<div
 									class="flex flex-col items-center justify-center rounded-ig-md border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-100/30 dark:bg-gray-900/30 p-8 text-center"
 								>
-									<div class="mb-3 text-gray-500">{@html Server}</div>
+									<div class="mb-3 text-gray-500"><Server /></div>
 									<p class="text-sm font-medium text-gray-600 dark:text-gray-400">
 										{t('No environments configured')}
 									</p>
@@ -447,7 +450,7 @@
 								</div>
 							{:else}
 								<div class="flex flex-col gap-2">
-									{#each Object.entries(environments) as [id, environment]}
+									{#each Object.entries(environments) as [id, environment] (id)}
 										<button
 											onclick={() => {
 												environmentID = environment.id;
@@ -465,7 +468,7 @@
 											<div
 												class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-blue-400"
 											>
-												{@html ChevronRight}
+												<ChevronRight />
 											</div>
 										</button>
 									{/each}
@@ -662,7 +665,7 @@
 						class="cursor-pointer rounded-ig-sm p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
 						title={t('Copy to clipboard')}
 					>
-						{@html Copy}
+						<Copy />
 					</button>
 				{/snippet}
 
@@ -725,7 +728,7 @@
 						title={t('Copy to clipboard')}
 						aria-label={t('Copy gadget manifest to clipboard')}
 					>
-						{@html Copy}
+						<Copy />
 					</button>
 				{/snippet}
 
@@ -753,7 +756,7 @@
 				onclick={runGadget}
 				class="flex cursor-pointer flex-row gap-2 rounded-ig-sm bg-green-600 dark:bg-green-800 py-2 pr-4 pl-2 text-white hover:bg-green-500 dark:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-200 dark:disabled:bg-green-950 disabled:text-gray-500"
 			>
-				<span>{@html Play}</span>
+				<span><Play /></span>
 				<span>{t('Run Gadget')}</span>
 			</button>
 		</div>

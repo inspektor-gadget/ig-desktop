@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import type { Snippet, Component } from 'svelte';
 
 	interface PanelProps {
 		/**
@@ -7,9 +7,9 @@
 		 */
 		title: string;
 		/**
-		 * SVG icon markup to display in the header
+		 * Icon component to display in the header
 		 */
-		icon?: string;
+		icon?: Component;
 		/**
 		 * Color theme for the panel (affects border, icon, and hover states).
 		 * Use 'accent' to follow the IG theme's primary color.
@@ -103,7 +103,8 @@
 	>
 		<div class="flex flex-1 items-center gap-3">
 			{#if icon}
-				<div class={colorClasses.icon}>{@html icon}</div>
+				{@const Icon = icon}
+				<div class={colorClasses.icon}><Icon /></div>
 			{/if}
 			<h2 class="text-lg font-semibold">{title}</h2>
 			{#if badge !== undefined}

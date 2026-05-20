@@ -19,7 +19,7 @@ export class ElectronIPCAdapter implements ITransportAdapter {
 		throw new Error('ElectronIPCAdapter not yet implemented');
 	}
 
-	send(message: string): void {
+	send(_message: string): void {
 		// TODO: Send message through Electron IPC
 		throw new Error('ElectronIPCAdapter not yet implemented');
 	}

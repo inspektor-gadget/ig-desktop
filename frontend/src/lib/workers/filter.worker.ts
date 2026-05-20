@@ -13,7 +13,7 @@ import { entryMatchesSearch } from '$lib/utils/search-match';
 export interface FilterRequest {
 	type: 'filter';
 	id: number;
-	events: any[];
+	events: Record<string, unknown>[];
 	query: string;
 	fieldNames: string[];
 }
@@ -21,7 +21,7 @@ export interface FilterRequest {
 export interface IncrementalFilterRequest {
 	type: 'filter-incremental';
 	id: number;
-	newEvents: any[];
+	newEvents: Record<string, unknown>[];
 	query: string;
 	fieldNames: string[];
 }
@@ -33,14 +33,14 @@ export interface ResetRequest {
 export interface FilterResponse {
 	type: 'filter-result';
 	id: number;
-	filteredEvents: any[];
+	filteredEvents: Record<string, unknown>[];
 	matchIndices: number[];
 }
 
 type WorkerRequest = FilterRequest | IncrementalFilterRequest | ResetRequest;
 
 // Worker state - maintains filtered results between incremental updates
-let currentFilteredEvents: any[] = [];
+let currentFilteredEvents: Record<string, unknown>[] = [];
 let currentQuery = '';
 let currentFieldNames: string[] = [];
 
@@ -63,7 +63,7 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
 		currentFieldNames = fieldNames;
 
 		// Full refilter
-		const filteredEvents: any[] = [];
+		const filteredEvents: Record<string, unknown>[] = [];
 		const matchIndices: number[] = [];
 
 		const len = events.length;
@@ -101,7 +101,7 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
 
 		// Filter only the new events and prepend to existing results
 		// (new events are prepended to the array, so they should appear first)
-		const newMatches: any[] = [];
+		const newMatches: Record<string, unknown>[] = [];
 		const len = newEvents.length;
 		for (let i = 0; i < len; i++) {
 			if (entryMatchesSearch(newEvents[i], lowerQuery, fieldNames)) {

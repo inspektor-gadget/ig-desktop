@@ -1,9 +1,10 @@
 <script lang="ts">
 	import Title from '$lib/components/params/Title.svelte';
 	import { getContext } from 'svelte';
-	import Delete from '$lib/icons/fa/trash.svg?raw';
-	import SortUp from '$lib/icons/fa/sort-up.svg?raw';
-	import SortDown from '$lib/icons/fa/sort-down.svg?raw';
+	import type { Component } from 'svelte';
+	import Delete from '$lib/icons/fa/trash.svelte';
+	import SortUp from '$lib/icons/fa/sort-up.svelte';
+	import SortDown from '$lib/icons/fa/sort-down.svelte';
 	import type { GadgetParam, ParamConfig, GadgetInfo } from '$lib/types';
 	import { t } from '$lib/i18n/index.svelte';
 
@@ -25,7 +26,7 @@
 		config: ParamConfig;
 	}
 
-	const sortOperations: Record<SortDirection, { icon: string; title: string }> = {
+	const sortOperations: Record<SortDirection, { icon: Component; title: string }> = {
 		'-': { icon: SortUp, title: 'Descending' },
 		'': { icon: SortDown, title: 'Ascending' }
 	};
@@ -147,6 +148,7 @@
 </div>
 <div class="flex flex-col gap-1">
 	{#each sortEntries as entry, idx (idx)}
+		{@const SortDirIcon = sortOperations[entry.sorting].icon}
 		<div class="flex flex-row items-start items-stretch gap-1">
 			<div class="grid">
 				<svg
@@ -176,14 +178,14 @@
 					onclick={() => toggleSortDirection(entry)}
 					class="cursor-pointer rounded-ig-sm bg-gray-100 dark:bg-gray-800 p-2 hover:bg-gray-200 dark:hover:bg-gray-700"
 				>
-					{@html sortOperations[entry.sorting].icon}
+					<SortDirIcon />
 				</button>
 			</div>
 			<button
 				class="flex cursor-pointer flex-row items-center gap-2 rounded-ig-sm bg-red-200 dark:bg-red-900 text-red-800 dark:text-red-100 px-2 py-1 hover:bg-red-300 dark:hover:bg-red-800"
 				onclick={() => removeSortEntry(idx)}
 			>
-				<span>{@html Delete}</span>
+				<span><Delete /></span>
 			</button>
 		</div>
 	{/each}

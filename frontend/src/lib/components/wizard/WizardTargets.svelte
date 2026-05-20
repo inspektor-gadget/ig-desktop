@@ -11,6 +11,7 @@
 		environmentID: string;
 	}
 
+	// eslint-disable-next-line no-useless-assignment -- $bindable() reads the parent-bound value; the rule cannot model rune semantics
 	let { isKubernetes, params = $bindable(), environmentID }: Props = $props();
 
 	// Set up the environmentID context that K8sAutocomplete expects

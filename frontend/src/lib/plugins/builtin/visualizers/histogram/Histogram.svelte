@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import type { GadgetContext } from '$lib/types/context';
 	import HistogramBarChart from './HistogramBarChart.svelte';
 	import HistogramHeatmap from './HistogramHeatmap.svelte';
 	import { t } from '$lib/i18n/index.svelte';
@@ -21,22 +22,13 @@
 		multipleSnapshots?: HistogramSnapshot[];
 	}
 
-	let {
-		ds,
-		events,
-		snapshotData,
-		multipleSnapshots,
-		eventVersion = 0,
-		isRunning = true,
-		instanceID = '',
-		context
-	}: Props = $props();
+	let { ds, events, snapshotData, multipleSnapshots, eventVersion = 0, context }: Props = $props();
 
 	// View mode state - default to heatmap
 	let viewMode = $state<ViewMode>('heatmap');
 
 	// Get gadget info from context (plugin context or Svelte context fallback)
-	const gadgetContext: any = getContext('gadget');
+	const gadgetContext = getContext<GadgetContext>('gadget');
 	const gadgetImage = $derived(context?.gadgetImage || gadgetContext?.info?.imageName || '');
 
 	// Configuration key for group field selection (per gadget + datasource)

@@ -6,7 +6,7 @@
  */
 
 import type { EventRingBuffer } from '$lib/utils/ring-buffer';
-import type { Datasource, DatasourceField } from './charts';
+import type { Datasource } from './charts';
 import type { GadgetInfo, GadgetParam, ParamConfig } from './index';
 import type { PluginCapabilities } from './plugin-system';
 

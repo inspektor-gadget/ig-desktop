@@ -20,7 +20,7 @@ export class WasmAdapter implements ITransportAdapter {
 		throw new Error('WasmAdapter not yet implemented');
 	}
 
-	send(message: string): void {
+	send(_message: string): void {
 		// TODO: Send message through WASM gRPC client
 		throw new Error('WasmAdapter not yet implemented');
 	}

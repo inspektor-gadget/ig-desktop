@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Cog from '$lib/icons/cog.svg?raw';
+	import Cog from '$lib/icons/cog.svelte';
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import type { SettingType } from '$lib/config.types';
 	import { getFullConfigurationSchema } from '$lib/config';
@@ -63,7 +63,10 @@
 		}
 	});
 
-	// Map setting types to their components
+	// Map setting types to their components.
+	// The five setting components accept differently-typed `value`/`setting` props
+	// (boolean/string/number), so this registry is intentionally type-erased.
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const settingComponents: Record<SettingType, Component<any>> = {
 		toggle: SettingToggle,
 		select: SettingSelect,
@@ -90,7 +93,7 @@
 			class="w-48 border-r border-gray-200 bg-gray-100/50 dark:border-gray-800 dark:bg-gray-900/50"
 		>
 			<nav class="p-2">
-				{#each visibleCategories as category}
+				{#each visibleCategories as category (category.id)}
 					<button
 						onclick={() => (activeCategory = category.id)}
 						class="mb-1 flex w-full items-center gap-3 rounded-ig-md px-3 py-2 text-sm transition-all {activeCategory ===
@@ -108,7 +111,7 @@
 		<div class="flex flex-1 flex-col">
 			<!-- Settings Body -->
 			<div class="flex-1 overflow-y-auto p-6">
-				{#each visibleCategories as category}
+				{#each visibleCategories as category (category.id)}
 					{#if activeCategory === category.id}
 						<div class="space-y-6">
 							<div>
@@ -117,7 +120,7 @@
 								</h3>
 
 								<div class="space-y-4">
-									{#each category.settings as setting}
+									{#each category.settings as setting (setting.key)}
 										{@const value = configuration.get(setting.key)}
 										{@const SettingComponent = settingComponents[setting.type]}
 										<div

@@ -10,8 +10,9 @@ const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 export default ts.config(
 	includeIgnoreFile(gitignorePath),
 	{
-		// Generated / vendored output — not source, not linted
-		ignores: ['dist-lib/**', 'wailsjs/**', 'bindings/**', 'static/**']
+		// Generated / vendored output and the separate React wrapper package
+		// (linted with its own React tooling) — not linted here.
+		ignores: ['dist-lib/**', 'wailsjs/**', 'bindings/**', 'static/**', 'react/**']
 	},
 	js.configs.recommended,
 	...ts.configs.recommended,
@@ -33,6 +34,20 @@ export default ts.config(
 			parserOptions: {
 				parser: ts.parser
 			}
+		}
+	},
+	{
+		// Treat a leading underscore as an explicit "intentionally unused" marker
+		// for parameters required by a signature/interface.
+		rules: {
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_'
+				}
+			]
 		}
 	}
 );

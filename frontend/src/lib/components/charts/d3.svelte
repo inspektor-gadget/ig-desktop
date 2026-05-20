@@ -58,7 +58,7 @@
 	<svg>
 		<!-- y axis -->
 		<g class="axis y-axis" transform="translate(0, {padding.top})">
-			{#each yTicks as tick}
+			{#each yTicks as tick (tick)}
 				<g class="tick tick-{tick}" transform="translate(0, {yScale(tick) - padding.bottom})">
 					<line x2="100%" />
 					<text y="-4">{tick}</text>
@@ -68,7 +68,7 @@
 
 		<!-- x axis -->
 		<g class="axis x-axis">
-			{#each xTicks as tick}
+			{#each xTicks as tick (tick)}
 				<g class="tick tick-{tick}" transform="translate({xScale(tick)},{height})">
 					<line y1="-{height}" y2="-{padding.bottom}" x1="0" x2="0" />
 					<text y="-2">{width > 380 ? tick : formatMobile(tick)}</text>

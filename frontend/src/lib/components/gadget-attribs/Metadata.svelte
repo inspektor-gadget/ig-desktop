@@ -4,10 +4,7 @@
 
 	let { gadgetInfo } = $props();
 
-	let metadata = $state('');
-	$effect(() => {
-		metadata = atob(gadgetInfo.metadata);
-	});
+	const metadata = $derived(atob(gadgetInfo.metadata));
 </script>
 
 <!-- Fixed Header -->

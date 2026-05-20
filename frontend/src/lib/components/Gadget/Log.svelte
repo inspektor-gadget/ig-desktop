@@ -1,7 +1,8 @@
 <script lang="ts">
-	import Bug from '$lib/icons/bug.svg?raw';
-	import Filter from '$lib/icons/filter-small.svg?raw';
-	import Trash from '$lib/icons/trash-small.svg?raw';
+	import { SvelteSet } from 'svelte/reactivity';
+	import Bug from '$lib/icons/bug.svelte';
+	import Filter from '$lib/icons/filter-small.svelte';
+	import Trash from '$lib/icons/trash-small.svelte';
 	import { preferences } from '$lib/shared/preferences.svelte';
 	import { instances } from '$lib/shared/instances.svelte';
 	import type { LogEntry } from '$lib/types';
@@ -84,7 +85,7 @@
 		} else {
 			enabledSeverities.add(key);
 		}
-		enabledSeverities = new Set(enabledSeverities);
+		enabledSeverities = new SvelteSet(enabledSeverities);
 		// Save to preferences
 		preferences.set('log-severity-filter', Array.from(enabledSeverities));
 	}
@@ -149,7 +150,7 @@
 				/>
 			</svg>
 		</button>
-		<div class="pr-2">{@html Bug}</div>
+		<div class="pr-2"><Bug /></div>
 		<h2 class="text-sm font-medium">{t('Log')}</h2>
 		{#if hasErrors}
 			<!-- Red octagon (stop sign) for errors -->
@@ -188,7 +189,7 @@
 					onclick={() => (dropdownOpen = !dropdownOpen)}
 					class="flex items-center gap-1.5 rounded-ig-md border border-ig-border bg-ig-surface-raised px-3 py-1.5 text-sm text-ig-text-secondary transition-colors hover:border-ig-border-strong hover:bg-ig-border focus:border-ig-primary focus:ring-2 focus:ring-ig-primary-muted focus:outline-none"
 				>
-					<span class="h-4 w-4">{@html Filter}</span>
+					<span class="h-4 w-4"><Filter /></span>
 					<span>{t('Severity')}</span>
 					<svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
 						<path
@@ -203,7 +204,7 @@
 						id="severity-dropdown"
 						class="absolute right-0 z-50 mt-1 w-48 rounded-ig-md border border-ig-border bg-ig-surface py-1 shadow-xl"
 					>
-						{#each severityLevels as level}
+						{#each severityLevels as level (level.key)}
 							<label
 								class="flex cursor-pointer items-center gap-3 px-3 py-1.5 hover:bg-ig-surface-raised"
 							>
@@ -234,7 +235,7 @@
 				title={t('Clear logs')}
 				aria-label={t('Clear logs')}
 			>
-				<span class="h-4 w-4">{@html Trash}</span>
+				<span class="h-4 w-4"><Trash /></span>
 			</button>
 		</div>
 	{/if}

@@ -35,7 +35,7 @@ export type RequestCommand = {
 };
 
 /** A parsed response message (type 1) from the server. */
-type ResponseMessage = {
+export type ResponseMessage = {
 	reqID?: string;
 	success?: boolean;
 	error?: unknown;

@@ -1,9 +1,10 @@
 <script lang="ts">
-	import CodeIcon from '$lib/icons/code-small.svg?raw';
-	import ChevronRight from '$lib/icons/chevron-right.svg?raw';
-	import Eye from '$lib/icons/fa/eye.svg?raw';
-	import EyeSlash from '$lib/icons/fa/eye-slash.svg?raw';
-	import SearchIcon from '$lib/icons/search-small.svg?raw';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+	import CodeIcon from '$lib/icons/code-small.svelte';
+	import ChevronRight from '$lib/icons/chevron-right.svelte';
+	import Eye from '$lib/icons/fa/eye.svelte';
+	import EyeSlash from '$lib/icons/fa/eye-slash.svelte';
+	import SearchIcon from '$lib/icons/search-small.svelte';
 	import { preferences } from '$lib/shared/preferences.svelte.js';
 	import { configuration } from '$lib/stores/configuration.svelte.js';
 	import type { GadgetInfo, GadgetDatasource, GadgetDatasourceField } from '$lib/types';
@@ -29,14 +30,14 @@
 		if (!fields?.length) return [];
 
 		// Create index map for quick parent lookup
-		const indexMap = new Map<number, GadgetDatasourceField>();
+		const indexMap = new SvelteMap<number, GadgetDatasourceField>();
 		fields.forEach((f, i) => {
 			const idx = (f as { index?: number }).index ?? i;
 			indexMap.set(idx, f);
 		});
 
 		// Build tree: group children under parents
-		const childrenMap = new Map<number, FieldNode[]>();
+		const childrenMap = new SvelteMap<number, FieldNode[]>();
 		const roots: FieldNode[] = [];
 
 		// Sort by order property if present, then by index
@@ -120,7 +121,7 @@
 	});
 
 	function toggleDataSource(dsName: string) {
-		const newSet = new Set(collapsedDataSources);
+		const newSet = new SvelteSet(collapsedDataSources);
 		if (newSet.has(dsName)) {
 			newSet.delete(dsName);
 		} else {
@@ -131,7 +132,7 @@
 
 	function toggleField(dsName: string, fieldFullName: string) {
 		const key = `${dsName}:${fieldFullName}`;
-		const newSet = new Set(collapsedFields);
+		const newSet = new SvelteSet(collapsedFields);
 		if (newSet.has(key)) {
 			newSet.delete(key);
 		} else {
@@ -162,7 +163,7 @@
 		if (!overrides) return defaultHidden;
 
 		// Apply toggle logic (same as Table.svelte)
-		const result = new Set(defaultHidden);
+		const result = new SvelteSet(defaultHidden);
 		for (const fieldName of overrides) {
 			if (result.has(fieldName)) {
 				result.delete(fieldName);
@@ -176,7 +177,7 @@
 	function toggleFieldVisibility(dsName: string, fieldFullName: string) {
 		if (!imageName) return;
 		const key = visibilityKey(dsName);
-		const overrides = new Set((configuration.get(key) as string[]) || []);
+		const overrides = new SvelteSet((configuration.get(key) as string[]) || []);
 		if (overrides.has(fieldFullName)) {
 			overrides.delete(fieldFullName);
 		} else {
@@ -259,12 +260,12 @@
 				preferences.set('inspector.show-annotations', !showAnnotations);
 			}}
 		>
-			{@html CodeIcon}
+			<CodeIcon />
 		</button>
 	</div>
 	<!-- Search Bar -->
 	<div class="flex items-center gap-2 px-2 pb-1.5">
-		<span class="text-ig-text-muted">{@html SearchIcon}</span>
+		<span class="text-ig-text-muted"><SearchIcon /></span>
 		<input
 			type="text"
 			bind:value={searchQuery}
@@ -289,7 +290,7 @@
 					onclick={() => toggleDataSource(ds.name)}
 				>
 					<span class="text-ig-text-muted transition-transform" class:rotate-90={!isCollapsed}>
-						{@html ChevronRight}
+						<ChevronRight />
 					</span>
 					<span class="flex-1 font-medium">{ds.name}</span>
 					<span class="text-xs text-ig-text-muted">{countFields(ds)} {t('fields')}</span>
@@ -302,7 +303,7 @@
 					<div
 						class="border-b border-ig-border bg-ig-surface-raised px-3 py-1 text-[9px] leading-tight"
 					>
-						{#each Object.entries(ds.annotations) as [key, value]}
+						{#each Object.entries(ds.annotations) as [key, value] (key)}
 							<div class="font-mono">
 								<span class="text-ig-text-muted">{key}:</span>
 								<span class="text-ig-text-secondary">{value}</span>
@@ -314,7 +315,7 @@
 				<!-- Hierarchical Field Tree -->
 				{#if filteredTree.length > 0}
 					<div class="py-1">
-						{#each filteredTree as node}
+						{#each filteredTree as node (node.field.fullName)}
 							{@render fieldNode(node, 0, ds.name, hiddenFields)}
 						{/each}
 					</div>
@@ -349,7 +350,7 @@
 					onclick={() => toggleField(dsName, node.field.fullName)}
 					title={isExpanded ? t('Collapse') : t('Expand')}
 				>
-					<span class="scale-[0.6]">{@html ChevronRight}</span>
+					<span class="scale-[0.6]"><ChevronRight /></span>
 				</button>
 
 				<!-- Visibility toggle -->
@@ -362,9 +363,9 @@
 					title={isHidden ? t('Show column') : t('Hide column')}
 				>
 					{#if isHidden}
-						<span class="scale-[0.6]">{@html EyeSlash}</span>
+						<span class="scale-[0.6]"><EyeSlash /></span>
 					{:else}
-						<span class="scale-[0.6]">{@html Eye}</span>
+						<span class="scale-[0.6]"><Eye /></span>
 					{/if}
 				</button>
 
@@ -404,9 +405,9 @@
 				title={isHidden ? t('Show column') : t('Hide column')}
 			>
 				{#if isHidden}
-					<span class="scale-[0.6]">{@html EyeSlash}</span>
+					<span class="scale-[0.6]"><EyeSlash /></span>
 				{:else}
-					<span class="scale-[0.6]">{@html Eye}</span>
+					<span class="scale-[0.6]"><Eye /></span>
 				{/if}
 			</button>
 
@@ -419,7 +420,7 @@
 
 	<!-- Render children if expanded -->
 	{#if hasChildren && isExpanded}
-		{#each node.children as child}
+		{#each node.children as child (child.field.fullName)}
 			{@render fieldNode(child, depth + 1, dsName, hiddenFields)}
 		{/each}
 	{/if}
@@ -446,7 +447,7 @@
 		<!-- Tags -->
 		{#if node.field.tags?.length}
 			<div class="mt-0.5 flex flex-wrap gap-0.5">
-				{#each node.field.tags as tag}
+				{#each node.field.tags as tag (tag)}
 					<span class="rounded-ig-sm bg-ig-surface-raised px-1 py-0 text-[9px]">{tag}</span>
 				{/each}
 			</div>
@@ -488,7 +489,7 @@
 		<!-- Annotations -->
 		{#if node.field.annotations && Object.keys(node.field.annotations).length > 0}
 			<div class="mt-0.5 text-[9px] leading-tight">
-				{#each Object.entries(node.field.annotations).filter(([k]) => k !== 'description') as [k, v]}
+				{#each Object.entries(node.field.annotations).filter(([k]) => k !== 'description') as [k, v] (k)}
 					<div class="font-mono">
 						<span class="text-ig-text-muted">{k}:</span>
 						<span class="text-ig-text-muted">{v}</span>

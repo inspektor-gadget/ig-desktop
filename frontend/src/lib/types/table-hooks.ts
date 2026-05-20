@@ -89,7 +89,7 @@ export interface CellHook {
 	 * @param column - Column being rendered
 	 * @returns String content or { html: string } for HTML rendering
 	 */
-	render: (value: any, row: EnrichedRow, column: TableColumn) => string | { html: string };
+	render: (value: unknown, row: EnrichedRow, column: TableColumn) => string | { html: string };
 }
 
 /**

@@ -6,7 +6,7 @@
 
 <h1 class="p-2">{t('Parameters')}</h1>
 <ul class="mb-2 px-2 text-sm">
-	{#each gadgetInfo.params as param}
+	{#each gadgetInfo.params as param (param.key)}
 		<li class="border-b border-b-ig-border py-2 last:border-b-0">
 			<div class="">{param.title || param.key}</div>
 			{#if param.description}

@@ -8,6 +8,8 @@
  */
 
 import type { TableColumn, EnrichedRow } from '$lib/types/table';
+import type { Environment } from '$lib/types';
+import type { DatasourceField } from '$lib/types/charts';
 
 /**
  * Converts a gadget field to a TableColumn definition.
@@ -16,7 +18,7 @@ import type { TableColumn, EnrichedRow } from '$lib/types/table';
  * @param env - Optional environment info for runtime-specific visibility rules
  * @returns TableColumn configuration
  */
-export function gadgetFieldToColumn(field: any, env?: any): TableColumn {
+export function gadgetFieldToColumn(field: DatasourceField, env?: Environment): TableColumn {
 	const isFloat = field.kind === 'Float32' || field.kind === 'Float64';
 	const precisionAnnotation = field.annotations?.['columns.precision'];
 	return {
@@ -42,7 +44,7 @@ export function gadgetFieldToColumn(field: any, env?: any): TableColumn {
  * @param field - Gadget field descriptor
  * @returns Alignment value ('left', 'right', or 'center')
  */
-export function getColumnAlignment(field: any): 'left' | 'right' | 'center' {
+export function getColumnAlignment(field: DatasourceField): 'left' | 'right' | 'center' {
 	const explicitAlign = field.annotations?.['columns.alignment'];
 	if (explicitAlign === 'left' || explicitAlign === 'right' || explicitAlign === 'center') {
 		return explicitAlign;
@@ -86,7 +88,7 @@ export function isNumericKind(kind: string | undefined): boolean {
  * @param env - Optional environment info
  * @returns true if column should be hidden
  */
-function shouldHideColumn(field: any, env?: any): boolean {
+function shouldHideColumn(field: DatasourceField, env?: Environment): boolean {
 	// Explicit hidden annotation
 	if (field.annotations?.['columns.hidden'] === 'true') return true;
 

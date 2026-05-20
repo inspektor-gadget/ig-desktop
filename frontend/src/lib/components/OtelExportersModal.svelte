@@ -3,9 +3,9 @@
 	import Input from '$lib/components/forms/Input.svelte';
 	import Select from '$lib/components/forms/Select.svelte';
 	import Toggle from '$lib/components/forms/Toggle.svelte';
-	import Trash from '$lib/icons/trash.svg?raw';
-	import Plus from '$lib/icons/plus.svg?raw';
-	import Edit from '$lib/icons/pencil.svg?raw';
+	import Trash from '$lib/icons/trash.svelte';
+	import Plus from '$lib/icons/plus.svelte';
+	import Edit from '$lib/icons/pencil.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 
 	/**
@@ -296,14 +296,14 @@
 											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
 											title={t('Edit')}
 										>
-											{@html Edit}
+											<Edit />
 										</button>
 										<button
 											onclick={() => deleteExporter(name)}
 											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 dark:text-gray-400 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-600 dark:hover:text-red-400"
 											title={t('Delete')}
 										>
-											{@html Trash}
+											<Trash />
 										</button>
 									</div>
 								</div>
@@ -324,7 +324,7 @@
 						onclick={openAddForm}
 						class="flex cursor-pointer items-center justify-center gap-2 rounded-ig-md border border-dashed border-gray-300 dark:border-gray-700 px-4 py-3 text-sm text-gray-500 dark:text-gray-400 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900/50 hover:text-blue-600 dark:hover:text-blue-400"
 					>
-						<span class="h-4 w-4">{@html Plus}</span>
+						<span class="h-4 w-4"><Plus /></span>
 						<span>{t('Add {{typeLabel}} Exporter', { typeLabel })}</span>
 					</button>
 				</div>

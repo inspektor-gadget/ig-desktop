@@ -72,6 +72,7 @@
 {/snippet}
 
 {#if href}
+	<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href is caller-provided: internal routes are resolved by callers, or it may be an external URL -->
 	<a {href} {target} onclick={handleClick} class="group relative block" {title} aria-label={title}>
 		{@render content()}
 	</a>

@@ -4,18 +4,17 @@
 	import '$lib/i18n/config';
 	import { setContext, onMount } from 'svelte';
 
-	import Logo from '$lib/components/Logo.svelte';
-	import BrandIcon from '$lib/icons/ig/small.svg?raw';
-	import BrandIconLarge from '$lib/icons/ig/large.svg?raw';
-	import Gadget from '$lib/icons/gadget.svg?raw';
-	import Plus from '$lib/icons/circle-plus.svg?raw';
-	import Info from '$lib/icons/info.svg?raw';
-	import Book from '$lib/icons/book.svg?raw';
-	import Close from '$lib/icons/close-small.svg?raw';
-	import Maximize from '$lib/icons/fa/window-maximize.svg?raw';
-	import Minimize from '$lib/icons/fa/window-minimize.svg?raw';
-	import Restore from '$lib/icons/fa/window-restore.svg?raw';
-	import ArtifactHub from '$lib/icons/artifacthub-logo.svg?raw';
+	import BrandIcon from '$lib/icons/ig/small.svelte';
+	import BrandIconLarge from '$lib/icons/ig/large.svelte';
+	import Gadget from '$lib/icons/gadget.svelte';
+	import Plus from '$lib/icons/circle-plus.svelte';
+	import Info from '$lib/icons/info.svelte';
+	import Book from '$lib/icons/book.svelte';
+	import Close from '$lib/icons/close-small.svelte';
+	import Maximize from '$lib/icons/fa/window-maximize.svelte';
+	import Minimize from '$lib/icons/fa/window-minimize.svelte';
+	import Restore from '$lib/icons/fa/window-restore.svelte';
+	import ArtifactHub from '$lib/icons/artifacthub-logo.svelte';
 	import NavbarLink from '$lib/components/NavbarLink.svelte';
 	import K8sDeployModal from '$lib/components/K8sDeployModal.svelte';
 	import ConfirmationModal from '$lib/components/ConfirmationModal.svelte';
@@ -29,7 +28,7 @@
 	import { appState } from './state.svelte.js';
 	import { environments } from '$lib/shared/environments.svelte.js';
 	import { deployments } from '$lib/shared/deployments.svelte';
-	import Server from '$lib/icons/server.svg?raw';
+	import Server from '$lib/icons/server.svelte';
 	import { websocketService } from '$lib/services/websocket.service.svelte';
 	import {
 		apiService,
@@ -41,9 +40,9 @@
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
 	import { environment } from '$lib/services/environment.service.svelte';
-	import Lock from '$lib/icons/fa/lock.svg?raw';
-	import LockOpen from '$lib/icons/fa/lock-open.svg?raw';
-	import Cog from '$lib/icons/cog.svg?raw';
+	import Lock from '$lib/icons/fa/lock.svelte';
+	import LockOpen from '$lib/icons/fa/lock-open.svelte';
+	import Cog from '$lib/icons/cog.svelte';
 	import { APP_MODE, features } from '$lib/config/app-mode';
 	import { loadSingleEnvConfig } from '$lib/services/config-loader.service';
 	import { resolve } from '$app/paths';
@@ -61,9 +60,6 @@
 	// Deployment modal state
 	let deployModalOpen = $state(false);
 	let activeDeploymentId: string | undefined = $state(undefined);
-
-	// Configuration modal state - use settingsDialog store for deep-linking support
-	let configModalOpen = $derived(settingsDialog.open);
 
 	// Update check modal state (for opt-in on second start)
 	let updateCheckModalOpen = $state(false);
@@ -322,7 +318,7 @@
 					<div
 						class="flex flex-row items-center gap-2 text-xs text-gray-500 dark:text-gray-400 uppercase"
 					>
-						<div class="flex">{@html BrandIcon}</div>
+						<div class="flex"><BrandIcon /></div>
 						<div class="leading-none pt-px">{t('Inspektor Gadget Desktop')}</div>
 					</div>
 				</div>
@@ -342,7 +338,7 @@
 				<div
 					class="flex flex-row items-center gap-2 px-2 py-2 text-xs text-gray-500 dark:text-gray-600 uppercase"
 				>
-					<div>{@html BrandIcon}</div>
+					<div><BrandIcon /></div>
 					<div>{t('Inspektor Gadget Desktop')}</div>
 				</div>
 				<div
@@ -357,7 +353,7 @@
 						}}
 						aria-label={t('Minimize window')}
 					>
-						{@html Minimize}
+						<Minimize />
 					</button>
 					<button
 						type="button"
@@ -367,7 +363,7 @@
 						}}
 						aria-label={isMaximized ? t('Restore window') : t('Maximize window')}
 					>
-						{#if isMaximized}{@html Restore}{:else}{@html Maximize}{/if}
+						{#if isMaximized}<Restore />{:else}<Maximize />{/if}
 					</button>
 					<button
 						type="button"
@@ -377,7 +373,7 @@
 						}}
 						aria-label={t('Close window')}
 					>
-						{@html Close}
+						<Close />
 					</button>
 				</div>
 			</div>
@@ -391,19 +387,19 @@
 				<div class="flex flex-col select-none">
 					{#if features.isSingleEnvironment}
 						<!-- Single-env mode: show Home button that links to the single environment -->
-						{#each Object.entries(environments) as [id, env]}
+						{#each Object.entries(environments) as [id] (id)}
 							<NavbarLink href={resolve(`/env/${id}`)} title={t('Home')}>
-								{@html BrandIconLarge}
+								<BrandIconLarge />
 							</NavbarLink>
 						{/each}
 					{:else}
 						<!-- Full mode: show brand logo linking to home page -->
-						<NavbarLink href={resolve('/')} title={t('Home')}>{@html BrandIconLarge}</NavbarLink>
-						{#each Object.entries(environments) as [id, env]}
+						<NavbarLink href={resolve('/')} title={t('Home')}><BrandIconLarge /></NavbarLink>
+						{#each Object.entries(environments) as [id, env] (id)}
 							<NavbarLink href={resolve(`/env/${id}`)} title={env.name}>
 								<div class="grid" title={env.name}>
 									<div class="col-start-1 row-start-1 text-gray-200 dark:text-gray-600 opacity-80">
-										{@html Gadget}
+										<Gadget />
 									</div>
 									<div class="z-10 col-start-1 row-start-1 flex justify-center text-lg shadow">
 										{env.name.substring(0, 3)}
@@ -411,10 +407,9 @@
 								</div>
 							</NavbarLink>
 						{/each}
-						<!--					<NavbarLink href="/k">{@html Kubernetes}</NavbarLink>-->
 						{#if features.canCreateEnvironment}
 							<NavbarLink href={resolve('/environment/create')} title={t('Create environment')}
-								>{@html Plus}</NavbarLink
+								><Plus /></NavbarLink
 							>
 						{/if}
 					{/if}
@@ -426,13 +421,13 @@
 				<div class="flex flex-col">
 					{#if features.canBrowseArtifactHub}
 						<NavbarLink href={resolve('/browse/artifacthub')} title={t('Gadgets on ArtifactHub')}
-							>{@html ArtifactHub}</NavbarLink
+							><ArtifactHub /></NavbarLink
 						>
 					{/if}
 					<NavbarLink
 						href="https://inspektor-gadget.io/docs/latest/"
 						target="_blank"
-						title={t('Documentation (external)')}>{@html Book}</NavbarLink
+						title={t('Documentation (external)')}><Book /></NavbarLink
 					>
 					<NavbarLink
 						onclick={() => {
@@ -440,9 +435,9 @@
 						}}
 						title={t('Settings')}
 					>
-						{@html Cog}
+						<Cog />
 					</NavbarLink>
-					<NavbarLink href={resolve('/info')} title={t('About')}>{@html Info}</NavbarLink>
+					<NavbarLink href={resolve('/info')} title={t('About')}><Info /></NavbarLink>
 				</div>
 			</nav>
 			{@render children()}
@@ -454,9 +449,9 @@
 				<div class="flex items-center gap-1.5">
 					{#if currentEnvironment.environment}
 						{#if currentEnvironment.hasTLS()}
-							<span class="text-gray-500" title={t('Secure Connection')}>{@html Lock}</span>
+							<span class="text-gray-500" title={t('Secure Connection')}><Lock /></span>
 						{:else}
-							<span class="text-red-400" title={t('Insecure Connection')}>{@html LockOpen}</span>
+							<span class="text-red-400" title={t('Insecure Connection')}><LockOpen /></span>
 						{/if}
 					{/if}
 					<span
@@ -546,7 +541,7 @@
 		class="fixed right-4 bottom-4 z-40 flex items-center gap-3 rounded-ig-md border border-blue-800 bg-blue-900/90 px-4 py-3 text-white shadow-lg backdrop-blur-md transition-all hover:bg-blue-800/90"
 		title={t('View deployment progress')}
 	>
-		<div class="text-blue-400">{@html Server}</div>
+		<div class="text-blue-400"><Server /></div>
 		<div class="flex flex-col items-start gap-0.5">
 			<div class="text-sm font-semibold">
 				{activeDeployment.status === 'deploying' ? t('Deploying...') : t('Configuring...')}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { openExternalURL } from '$lib/utils/external-links';
+	import { getErrorMessage } from '$lib/utils/errors';
 	import { environments } from '$lib/shared/environments.svelte.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -7,23 +8,24 @@
 	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
 	import { getEnvPref } from '$lib/utils/env-preferences';
 	import { getContext, onMount } from 'svelte';
+	import type { ApiContext } from '$lib/types/context';
 	import { features } from '$lib/config/app-mode';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 
 	import Panel from '$lib/components/Panel.svelte';
-	import Server from '$lib/icons/fa/server.svg?raw';
-	import History from '$lib/icons/fa/clock-rotate-left.svg?raw';
-	import Grid from '$lib/icons/grid.svg?raw';
-	import GridSmall from '$lib/icons/grid-small.svg?raw';
-	import ChevronRight from '$lib/icons/chevron-right.svg?raw';
-	import ArtifactHub from '$lib/icons/artifacthub-logo.svg?raw';
-	import Book from '$lib/icons/book.svg?raw';
-	import BookSmall from '$lib/icons/book-small.svg?raw';
-	import Link from '$lib/icons/link.svg?raw';
-	import CirclePlus from '$lib/icons/circle-plus.svg?raw';
+	import Server from '$lib/icons/fa/server.svelte';
+	import History from '$lib/icons/fa/clock-rotate-left.svelte';
+	import Grid from '$lib/icons/grid.svelte';
+	import GridSmall from '$lib/icons/grid-small.svelte';
+	import ChevronRight from '$lib/icons/chevron-right.svelte';
+	import ArtifactHub from '$lib/icons/artifacthub-logo.svelte';
+	import Book from '$lib/icons/book.svelte';
+	import BookSmall from '$lib/icons/book-small.svelte';
+	import Link from '$lib/icons/link.svelte';
+	import CirclePlus from '$lib/icons/circle-plus.svelte';
 
-	const api: any = getContext('api');
+	const api = getContext<ApiContext>('api');
 
 	// Clear current environment when on home page
 	$effect(() => {
@@ -71,14 +73,14 @@
 
 	// Listen to custom events to refresh when env prefs change
 	onMount(() => {
-		const handleEnvPrefChange = (e: CustomEvent) => {
-			const key = e.detail?.key;
+		const handleEnvPrefChange = (e: Event) => {
+			const key = (e as CustomEvent).detail?.key;
 			if (key?.startsWith('env:') && key?.includes(':gadget-history')) {
 				allHistories = loadHistories();
 			}
 		};
-		window.addEventListener('envPrefChange', handleEnvPrefChange as EventListener);
-		return () => window.removeEventListener('envPrefChange', handleEnvPrefChange as EventListener);
+		window.addEventListener('envPrefChange', handleEnvPrefChange);
+		return () => window.removeEventListener('envPrefChange', handleEnvPrefChange);
 	});
 
 	function formatRelativeTime(timestamp: number): string {
@@ -104,7 +106,7 @@
 
 	async function runGadget(gadget: GadgetRunRequest, envId: string) {
 		try {
-			const res = await api.request({
+			const res = await api.request<{ id: string }>({
 				cmd: 'runGadget',
 				data: {
 					...gadget,
@@ -112,8 +114,8 @@
 				}
 			});
 			goto(resolve(`/env/${envId}/running/${res.id}`));
-		} catch (err: any) {
-			const errorMessage = err?.message || err?.toString() || 'Unknown error';
+		} catch (err) {
+			const errorMessage = getErrorMessage(err);
 			toastStore.error(t('Failed to run gadget: {{errorMessage}}', { errorMessage }), 7000, {
 				label: t('Retry'),
 				onClick: () => runGadget(gadget, envId)
@@ -201,7 +203,7 @@
 								href={resolve('/environment/create')}
 								class="group/btn flex items-center justify-center gap-2 rounded-ig-md bg-blue-600 px-6 py-3 font-medium text-white transition-all hover:bg-blue-500"
 							>
-								<div class="h-5 w-5">{@html CirclePlus}</div>
+								<div class="h-5 w-5"><CirclePlus /></div>
 								<span>{t('Create New Environment')}</span>
 							</a>
 
@@ -282,7 +284,7 @@
 							{t('Select an environment to manage and run gadgets')}
 						</p>
 						<div class="flex flex-col gap-2">
-							{#each Object.values(environments).slice(0, 4) as env}
+							{#each Object.values(environments).slice(0, 4) as env (env.id)}
 								<button
 									onclick={() => goto(resolve(`/env/${env.id}`))}
 									class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
@@ -294,7 +296,7 @@
 									<div
 										class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-blue-400"
 									>
-										{@html ChevronRight}
+										<ChevronRight />
 									</div>
 								</button>
 							{/each}
@@ -315,7 +317,7 @@
 								{t('Quick access to recently run gadgets')}
 							</p>
 							<div class="flex flex-col gap-2">
-								{#each allHistories as { gadget, envId, envName }}
+								{#each allHistories as { gadget, envId, envName } (`${envId}:${gadget.image}:${gadget.timestamp ?? ''}`)}
 									<button
 										onclick={() => runGadget(gadget, envId)}
 										class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
@@ -335,14 +337,14 @@
 										<div
 											class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-purple-400"
 										>
-											{@html ChevronRight}
+											<ChevronRight />
 										</div>
 									</button>
 								{/each}
 							</div>
 						{:else}
 							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-								<div class="text-gray-400 dark:text-gray-600">{@html History}</div>
+								<div class="text-gray-400 dark:text-gray-600"><History /></div>
 								<p class="text-sm text-gray-500">{t('No gadgets run yet')}</p>
 								<p class="text-xs text-gray-400 dark:text-gray-600">
 									{t('Your recent activity will appear here')}
@@ -374,7 +376,7 @@
 								<div
 									class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
 								>
-									{@html ChevronRight}
+									<ChevronRight />
 								</div>
 							</a>
 
@@ -391,7 +393,7 @@
 								<div
 									class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
 								>
-									{@html ChevronRight}
+									<ChevronRight />
 								</div>
 							</a>
 
@@ -408,7 +410,7 @@
 								<div
 									class="text-gray-400 dark:text-gray-600 transition-all group-hover/item:translate-x-1 group-hover/item:text-green-400"
 								>
-									{@html ChevronRight}
+									<ChevronRight />
 								</div>
 							</a>
 						</div>
@@ -417,7 +419,7 @@
 						<div
 							class="mt-auto flex items-center gap-2 pt-4 text-xs text-gray-400 dark:text-gray-600"
 						>
-							<div class="h-4 w-4">{@html ArtifactHub}</div>
+							<div class="h-4 w-4"><ArtifactHub /></div>
 							<span>{t('Powered by Artifact Hub')}</span>
 						</div>
 					</Panel>
@@ -434,14 +436,15 @@
 					{t('Did You Know?')}
 				</h3>
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-					{#each selectedTips as tip}
+					{#each selectedTips as tip (tip.url)}
+						{@const TipIcon = tip.icon}
 						<button
 							onclick={() => {
 								openExternalURL(tip.url);
 							}}
 							class="group/tip flex gap-2 rounded-ig-md border border-transparent bg-gray-200 dark:bg-gray-800 p-4 text-left shadow-sm shadow-gray-200/90 dark:shadow-gray-950/90 transition-all hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-100/50 dark:hover:bg-gray-900/50"
 						>
-							<div class="text-{tip.color}-400">{@html tip.icon}</div>
+							<div class="text-{tip.color}-400"><TipIcon /></div>
 							<div>
 								<div class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
 									{t(tip.title)}
@@ -468,7 +471,7 @@
 					<h3
 						class="flex items-center gap-2 text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 uppercase"
 					>
-						<div class="h-4 w-4">{@html BookSmall}</div>
+						<div class="h-4 w-4"><BookSmall /></div>
 						{t('Documentation')}
 					</h3>
 					<div class="flex flex-col gap-2">
@@ -477,13 +480,13 @@
 							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
-								<div class="text-purple-400">{@html Link}</div>
+								<div class="text-purple-400"><Link /></div>
 								<span class="text-gray-800 dark:text-gray-200">{t('Website')}</span>
 							</div>
 							<div
 								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
-								{@html ChevronRight}
+								<ChevronRight />
 							</div>
 						</button>
 
@@ -492,13 +495,13 @@
 							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
-								<div class="text-purple-400">{@html Link}</div>
+								<div class="text-purple-400"><Link /></div>
 								<span class="text-gray-800 dark:text-gray-200">{t('Blog')}</span>
 							</div>
 							<div
 								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
-								{@html ChevronRight}
+								<ChevronRight />
 							</div>
 						</button>
 
@@ -507,13 +510,13 @@
 							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
-								<div class="text-purple-400">{@html Book}</div>
+								<div class="text-purple-400"><Book /></div>
 								<span class="text-gray-800 dark:text-gray-200">{t('Quickstart Guide')}</span>
 							</div>
 							<div
 								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
-								{@html ChevronRight}
+								<ChevronRight />
 							</div>
 						</button>
 
@@ -523,14 +526,14 @@
 							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
-								<div class="text-purple-400">{@html Book}</div>
+								<div class="text-purple-400"><Book /></div>
 								<span class="text-gray-800 dark:text-gray-200">{t('Gadget Development Guide')}</span
 								>
 							</div>
 							<div
 								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
-								{@html ChevronRight}
+								<ChevronRight />
 							</div>
 						</button>
 					</div>
@@ -541,7 +544,7 @@
 					<h3
 						class="flex items-center gap-2 text-sm font-semibold tracking-wide text-gray-600 dark:text-gray-400 uppercase"
 					>
-						<div class="h-4 w-4">{@html GridSmall}</div>
+						<div class="h-4 w-4"><GridSmall /></div>
 						{t('Community')}
 					</h3>
 					<div class="flex flex-col gap-2">
@@ -550,7 +553,7 @@
 							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
-								<div class="text-purple-400">{@html GridSmall}</div>
+								<div class="text-purple-400"><GridSmall /></div>
 								<div class="flex flex-col">
 									<span class="text-gray-800 dark:text-gray-200">{t('Discord')}</span>
 									<span class="text-xs text-gray-500">{t('Join our Discord community')}</span>
@@ -559,7 +562,7 @@
 							<div
 								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
-								{@html ChevronRight}
+								<ChevronRight />
 							</div>
 						</button>
 
@@ -568,7 +571,7 @@
 							class="group/link flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
 							<div class="flex items-center gap-3">
-								<div class="text-purple-400">{@html GridSmall}</div>
+								<div class="text-purple-400"><GridSmall /></div>
 								<div class="flex flex-col">
 									<span class="text-gray-800 dark:text-gray-200">{t('Slack')}</span>
 									<span class="text-xs text-gray-500">{t('Connect on Slack')}</span>
@@ -577,7 +580,7 @@
 							<div
 								class="text-gray-400 dark:text-gray-600 transition-all group-hover/link:translate-x-1 group-hover/link:text-purple-400"
 							>
-								{@html ChevronRight}
+								<ChevronRight />
 							</div>
 						</button>
 					</div>

@@ -1,14 +1,17 @@
 <script lang="ts">
-	import Table from '$lib/icons/table-column.svg?raw';
-	import Dots from '$lib/icons/dots-vertical.svg?raw';
+	import { SvelteSet } from 'svelte/reactivity';
+	import Table from '$lib/icons/table-column.svelte';
+	import Dots from '$lib/icons/dots-vertical.svelte';
 	import { getContext } from 'svelte';
 	import { environments } from '$lib/shared/environments.svelte';
 	import { page } from '$app/state';
 	import { t } from '$lib/i18n/index.svelte';
 	import VirtualTableBody from '$lib/components/VirtualTable/VirtualTableBody.svelte';
+	import RawHtml from '$lib/components/RawHtml.svelte';
 	import type { TableHookRegistry } from '$lib/types/table-hooks';
 	import type { TableColumn, EnrichedRow, TableMenuController } from '$lib/types/table';
 	import type { GadgetContext } from '$lib/types';
+	import type { DatasourceField } from '$lib/types/charts';
 	import {
 		gadgetFieldToColumn,
 		wrapRowsForEnrichment,
@@ -18,9 +21,6 @@
 	import { entryMatchesSearch } from '$lib/utils/search-match';
 	import type { SearchableVisualizerProps } from '$lib/types/plugin-api';
 	import type { CellClickHandler, CellContextMenuHandler } from '$lib/types/cell-interaction';
-
-	// Re-export for backwards compatibility
-	export type { TableMenuController };
 
 	interface Props extends SearchableVisualizerProps {
 		/** Whether to show highlight matches even in filter mode */
@@ -49,7 +49,6 @@
 		snapshotData,
 		eventVersion = 0,
 		isRunning = true,
-		instanceID = '',
 		context,
 		searchQuery = '',
 		searchModeFilter = true,
@@ -144,9 +143,7 @@
 	// Get fields that are hidden by default (have the hidden flag 0x0004)
 	const defaultHiddenFields = $derived(
 		new Set(
-			ds.fields
-				.filter((field: any) => (field.flags & 0x0004) !== 0)
-				.map((field: any) => field.fullName)
+			ds.fields.filter((field) => (field.flags & 0x0004) !== 0).map((field) => field.fullName)
 		)
 	);
 
@@ -159,7 +156,7 @@
 
 		// Start with default hidden fields, then apply user overrides
 		// Stored values represent columns whose visibility differs from default
-		const result = new Set(defaultHiddenFields);
+		const result = new SvelteSet(defaultHiddenFields);
 		for (const fieldName of stored) {
 			if (result.has(fieldName)) {
 				// Field was default-hidden but user showed it
@@ -220,7 +217,8 @@
 
 	// Reset sortInitialized when key changes (gadget/datasource switch)
 	$effect(() => {
-		sortConfigKey; // dependency
+		// Track sortConfigKey so the effect re-runs when the gadget/datasource changes.
+		void sortConfigKey;
 		sortInitialized = false;
 	});
 
@@ -288,7 +286,7 @@
 	// ============================================================
 
 	// State for worker-filtered results (only used when searching)
-	let workerFilteredEvents = $state<any[]>([]);
+	let workerFilteredEvents = $state<Record<string, unknown>[]>([]);
 	let computedMatchIndices = $state<number[]>([]);
 	// Track if we've received first filter result to avoid showing empty view
 	let hasReceivedFilterResult = $state(false);
@@ -544,7 +542,7 @@
 	// Check if a row matches the search (for highlight mode row background)
 	// No caching needed - virtual table only renders visible rows (~30-50)
 	// and the match check is fast (simple string search)
-	function isRowMatch(entry: any): boolean {
+	function isRowMatch(entry: Record<string, unknown>): boolean {
 		if (!isHighlightMode) return false;
 		return entryMatchesSearch(entry, lowerSearchQuery, visibleFieldNames);
 	}
@@ -586,7 +584,7 @@
 
 	// Optimized: Get highlighted HTML for a cell value
 	// Returns empty string for no highlight, HTML string when highlighting
-	function getHighlightedContent(value: any): string {
+	function getHighlightedContent(value: unknown): string {
 		if (value == null) return '';
 		const str = typeof value === 'string' ? value : String(value);
 
@@ -622,8 +620,8 @@
 	 * @param column - TableColumn for hook matching (optional, for future use)
 	 */
 	function renderCellValue(
-		entry: any,
-		field: any,
+		entry: Record<string, unknown>,
+		field: DatasourceField,
 		column?: TableColumn
 	): { html: string } | string {
 		let value = entry[field.fullName];
@@ -653,7 +651,7 @@
 		if (shouldHighlightText) {
 			return { html: getHighlightedContent(value) };
 		}
-		return value ?? '';
+		return String(value ?? '');
 	}
 
 	/** Checks if a field should be visible based on its flags */
@@ -708,32 +706,23 @@
 	// All toggleable fields (filtered by runtime/flags but not user visibility)
 	const toggleableFields = $derived(
 		ds.fields
-			.filter(
-				/** @param {any} field */
-				(field: any) => {
-					if (env?.runtime === 'grpc-ig') {
-						if (field.tags?.indexOf('kubernetes') >= 0) return false;
-					}
-					if (field.annotations['columns.hidden'] === 'true') {
-						return false;
-					}
-					return visible(field.flags);
+			.filter((field) => {
+				if (env?.runtime === 'grpc-ig') {
+					if (field.tags?.includes('kubernetes')) return false;
 				}
-			)
-			.sort(
-				/**
-				 * @param {any} a
-				 * @param {any} b
-				 */
-				(a: any, b: any) => {
-					return (a.order || 0) - (b.order || 0);
+				if (field.annotations['columns.hidden'] === 'true') {
+					return false;
 				}
-			)
+				return visible(field.flags);
+			})
+			.sort((a, b) => {
+				return (a.order || 0) - (b.order || 0);
+			})
 	);
 
 	// Fields that are currently visible (respecting user visibility settings)
 	const visibleFields = $derived(
-		toggleableFields.filter((field: any) => isColumnVisible(field.fullName))
+		toggleableFields.filter((field) => isColumnVisible(field.fullName))
 	);
 
 	// Expose menu controller to parent when callback is provided
@@ -748,18 +737,18 @@
 	});
 
 	// Field names for search matching (cached for performance)
-	const visibleFieldNames = $derived(visibleFields.map((f: any) => f.fullName));
+	const visibleFieldNames = $derived(visibleFields.map((f) => f.fullName));
 
 	// Merge gadget columns with hook columns
 	const allColumns = $derived.by(() => {
-		const gadgetCols = visibleFields.map((f: any) => gadgetFieldToColumn(f, env));
+		const gadgetCols = visibleFields.map((f) => gadgetFieldToColumn(f, env));
 		const hookCols = hookRegistry?.columnHooks.flatMap((h) => h.columns) || [];
 		return [...gadgetCols, ...hookCols].sort((a, b) => (a.order || 0) - (b.order || 0));
 	});
 
 	// Convert visibleFields to columns format for VirtualTableBody
 	const columns = $derived(
-		visibleFields.map((field: any) => ({
+		visibleFields.map((field) => ({
 			key: field.fullName,
 			label: field.fullName,
 			description: field.annotations?.description,
@@ -777,7 +766,7 @@
 	);
 
 	/** Opens inspector with the selected row data */
-	function inspect(data: any) {
+	function inspect(data: Record<string, unknown>) {
 		const snapshot = { fields: $state.snapshot(ds.fields), entry: $state.snapshot(data) };
 		gadgetContext.inspect = snapshot;
 	}
@@ -787,20 +776,20 @@
 	 * Formats selected rows as CSV or JSON based on settings and copies to clipboard.
 	 */
 	function handleCopy(event: {
-		items: any[];
+		items: Record<string, unknown>[];
 		indices: number[];
 		columns: { key: string; label: string }[];
 		excludeHeaders: boolean;
 	}) {
 		const format = (configuration.get('copyFormat') as string) || 'csv';
-		const fieldNames = visibleFields.map((f: any) => f.fullName);
+		const fieldNames = visibleFields.map((f) => f.fullName);
 
 		let text: string;
 
 		if (format === 'json') {
 			// JSON format: array of objects with only visible fields
 			const data = event.items.map((item) => {
-				const obj: Record<string, any> = {};
+				const obj: Record<string, unknown> = {};
 				for (const fieldName of fieldNames) {
 					obj[fieldName] = item[fieldName];
 				}
@@ -853,7 +842,7 @@
 		<div
 			class="flex h-10 flex-row items-center bg-ig-surface p-2 text-base font-normal flex-shrink-0"
 		>
-			<div class="pr-2">{@html Table}</div>
+			<div class="pr-2"><Table /></div>
 			<h2 class="px-2">{ds.name}</h2>
 			<div class="flex-1"></div>
 			<div class="relative">
@@ -867,7 +856,7 @@
 					aria-expanded={menuOpen}
 					aria-controls="column-menu"
 				>
-					{@html Dots}
+					<Dots />
 				</button>
 				{#if menuOpen}
 					<div
@@ -882,7 +871,7 @@
 							{t('Columns')}
 						</div>
 						<div class="py-1" role="group" aria-label={t('Column toggles')}>
-							{#each toggleableFields as field}
+							{#each toggleableFields as field (field.fullName)}
 								<label
 									class="flex items-center gap-2 px-3 py-1.5 hover:bg-ig-surface-raised cursor-pointer text-sm"
 								>
@@ -914,7 +903,7 @@
 				initialColumnWidths={storedColumnWidths}
 				oncolumnresize={handleColumnResize}
 				oncolumnreset={handleColumnReset}
-				rowClass={(entry, index, isFocused, isSelected) => {
+				rowClass={(entry, index) => {
 					const isCurrent = isCurrentMatch(index);
 					const isMatch = isRowMatch(entry);
 					return `cursor-pointer hover:bg-ig-surface-raised ${isCurrent ? 'search-current-match' : isMatch ? 'search-highlight-row' : ''}`;
@@ -923,9 +912,9 @@
 				onVisibleRangeChange={handleVisibleRangeChange}
 				oncopy={handleCopy}
 			>
-				{#snippet header(cols, { startResize, resizingIndex, setHeaderRow, resetColumnWidth })}
+				{#snippet header(_cols, { startResize, resizingIndex, setHeaderRow, resetColumnWidth })}
 					<tr class="bg-ig-surface" use:setHeaderRow aria-label={t('Column headers')}>
-						{#each visibleFields as field, i}
+						{#each visibleFields as field, i (field.fullName)}
 							{@const isSorted = sortColumn === field.fullName}
 							<th
 								scope="col"
@@ -1023,8 +1012,8 @@
 						{/each}
 					</tr>
 				{/snippet}
-				{#snippet row(entry, index)}
-					{#each visibleFields as field, i}
+				{#snippet row(entry)}
+					{#each visibleFields as field, i (field.fullName)}
 						{@const cellValue = renderCellValue(entry, field, allColumns[i])}
 						{@const isClickable = field.annotations?.['interaction.clickable'] === 'true'}
 						<td
@@ -1062,7 +1051,7 @@
 							}}
 						>
 							{#if typeof cellValue === 'object' && 'html' in cellValue}
-								{@html cellValue.html}
+								<RawHtml html={cellValue.html} />
 							{:else}
 								{cellValue}
 							{/if}

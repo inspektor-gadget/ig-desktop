@@ -14,15 +14,7 @@
 
 	type Props = VisualizerPluginProps;
 
-	let {
-		ds,
-		events,
-		snapshotData,
-		eventVersion = 0,
-		isRunning = true,
-		instanceID = '',
-		context
-	}: Props = $props();
+	let { ds, events, snapshotData, eventVersion = 0 }: Props = $props();
 
 	// Extract network map config from datasource
 	const networkMapConfig = $derived(extractNetworkMapConfig(ds));

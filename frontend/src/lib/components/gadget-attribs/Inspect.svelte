@@ -18,7 +18,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each inspect.fields as field}
+				{#each inspect.fields as field (field.fullName)}
 					<tr>
 						<td class="border-r border-ig-border px-2 py-1 text-ig-text-secondary"
 							>{field.fullName}</td

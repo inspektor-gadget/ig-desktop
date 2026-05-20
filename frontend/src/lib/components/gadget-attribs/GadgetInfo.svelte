@@ -4,10 +4,7 @@
 
 	let { gadgetInfo } = $props();
 
-	let gadgetInfoSource = $state('');
-	$effect(() => {
-		gadgetInfoSource = JSON.stringify(gadgetInfo, null, '  ');
-	});
+	const gadgetInfoSource = $derived(JSON.stringify(gadgetInfo, null, '  '));
 </script>
 
 <!-- Fixed Header -->

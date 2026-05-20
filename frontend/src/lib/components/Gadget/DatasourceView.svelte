@@ -1,11 +1,13 @@
 <script lang="ts">
+	import { SvelteSet } from 'svelte/reactivity';
 	import type { TableMenuController } from '$lib/types/table';
 	import SnapshotTimeline from './SnapshotTimeline.svelte';
-	import Dots from '$lib/icons/dots-vertical.svg?raw';
-	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
-	import ChevronRight from '$lib/icons/chevron-right.svg?raw';
-	import ArrowRotateLeft from '$lib/icons/arrow-rotate-left.svg?raw';
-	import InfoIcon from '$lib/icons/info-small.svg?raw';
+	import RawHtml from '$lib/components/RawHtml.svelte';
+	import Dots from '$lib/icons/dots-vertical.svelte';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import ChevronRight from '$lib/icons/chevron-right.svelte';
+	import ArrowRotateLeft from '$lib/icons/arrow-rotate-left.svelte';
+	import InfoIcon from '$lib/icons/info-small.svelte';
 	import { preferences } from '$lib/shared/preferences.svelte';
 	import { getArraySnapshots } from '$lib/handlers/gadget.handler.svelte';
 	import { clickOutside } from '$lib/utils/click-outside';
@@ -94,7 +96,7 @@
 	}
 
 	// Snapshot navigation state for array datasources - now supports multi-selection
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Using $state with Set for performance; reassignment-based reactivity is sufficient here
+	// (reassignment-based reactivity: the whole Set is replaced, never mutated in place)
 	let selectedSnapshotIndices = $state<Set<number>>(new Set([0])); // Default: latest selected
 	let lastSelectedIndex = $state(0); // For shift-click range selection
 	let isPinned = $state(false); // true when user manually selected a non-latest snapshot
@@ -122,13 +124,13 @@
 	const snapshotCount = $derived(snapshots.length);
 
 	// Track the batchIds we're viewing to maintain position when new snapshots arrive
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Using $state with Set for performance
+	// (reassignment-based reactivity: the whole Set is replaced, never mutated in place)
 	let pinnedBatchIds = $state<Set<number>>(new Set());
 
 	// When pinned and new snapshots arrive, adjust indices to keep viewing the same snapshots
 	$effect(() => {
 		if (isPinned && pinnedBatchIds.size > 0 && snapshots.length > 0) {
-			const newIndices = new Set<number>();
+			const newIndices = new SvelteSet<number>();
 			for (const batchId of pinnedBatchIds) {
 				const newIndex = snapshots.findIndex((s) => s.batchId === batchId);
 				if (newIndex !== -1) {
@@ -144,7 +146,7 @@
 	// Ensure selected indices stay in bounds
 	$effect(() => {
 		if (snapshotCount > 0) {
-			const validIndices = new Set<number>();
+			const validIndices = new SvelteSet<number>();
 			for (const idx of selectedSnapshotIndices) {
 				if (idx < snapshotCount) {
 					validIndices.add(idx);
@@ -219,14 +221,14 @@
 			// Shift+click: select range from last selected to current
 			const start = Math.min(lastSelectedIndex, index);
 			const end = Math.max(lastSelectedIndex, index);
-			const newSelection = new Set<number>();
+			const newSelection = new SvelteSet<number>();
 			for (let i = start; i <= end; i++) {
 				newSelection.add(i);
 			}
 			selectedSnapshotIndices = newSelection;
 		} else if (isCtrlOrCmd) {
 			// Ctrl/Cmd+click: toggle individual selection
-			const newSelection = new Set(selectedSnapshotIndices);
+			const newSelection = new SvelteSet(selectedSnapshotIndices);
 			if (newSelection.has(index)) {
 				// Don't allow deselecting the last item
 				if (newSelection.size > 1) {
@@ -251,7 +253,7 @@
 		} else {
 			isPinned = true;
 			// Track batch IDs for all selected snapshots
-			const newPinnedIds = new Set<number>();
+			const newPinnedIds = new SvelteSet<number>();
 			for (const idx of selectedSnapshotIndices) {
 				const batchId = snapshots[idx]?.batchId;
 				if (batchId !== undefined) {
@@ -264,14 +266,14 @@
 
 	// Select all snapshots
 	function selectAll() {
-		const allIndices = new Set<number>();
+		const allIndices = new SvelteSet<number>();
 		for (let i = 0; i < snapshotCount; i++) {
 			allIndices.add(i);
 		}
 		selectedSnapshotIndices = allIndices;
 		isPinned = true;
 		// Track batch IDs for all snapshots
-		const newPinnedIds = new Set<number>();
+		const newPinnedIds = new SvelteSet<number>();
 		for (const snapshot of snapshots) {
 			newPinnedIds.add(snapshot.batchId);
 		}
@@ -314,7 +316,7 @@
 
 	// Handle drag range selection from timeline
 	function selectRange(startIndex: number, endIndex: number) {
-		const newSelection = new Set<number>();
+		const newSelection = new SvelteSet<number>();
 		for (let i = startIndex; i <= endIndex; i++) {
 			newSelection.add(i);
 		}
@@ -327,7 +329,7 @@
 			pinnedBatchIds = new Set();
 		} else {
 			isPinned = true;
-			const newPinnedIds = new Set<number>();
+			const newPinnedIds = new SvelteSet<number>();
 			for (const idx of newSelection) {
 				const batchId = snapshots[idx]?.batchId;
 				if (batchId !== undefined) {
@@ -354,7 +356,7 @@
 			class="sticky top-0 left-0 z-20 flex h-10 flex-shrink-0 flex-row items-center border-t border-ig-border-strong bg-ig-surface px-2 text-base font-normal"
 		>
 			<div class="flex h-6 w-6 items-center justify-center pr-2">
-				{@html activeVisualizerIcon}
+				<RawHtml html={activeVisualizerIcon} />
 			</div>
 
 			<h2 class="px-1">{ds.name}</h2>
@@ -382,7 +384,7 @@
 							class:hover:text-ig-text-secondary={!isActive}
 							onclick={() => setTab(tabId)}
 						>
-							{@html resolvePluginIcon(visualizer.visualizer.icon)}
+							<RawHtml html={resolvePluginIcon(visualizer.visualizer.icon)} />
 							<span>{visualizer.visualizer.displayName}</span>
 						</button>
 					{/each}
@@ -406,7 +408,7 @@
 					aria-controls="column-menu"
 					disabled={activeTab !== 'table'}
 				>
-					{@html Dots}
+					<Dots />
 				</button>
 				{#if menuOpen && activeTab === 'table' && tableMenuController}
 					<div
@@ -469,7 +471,7 @@
 							onclick={goToNewerSnapshot}
 							title={t('Newer snapshot')}
 						>
-							{@html ChevronLeft}
+							<ChevronLeft />
 						</button>
 						<span class="min-w-16 text-center text-ig-text-muted">
 							{singleSelectedIndex + 1} / {snapshotCount}
@@ -483,7 +485,7 @@
 							onclick={goToOlderSnapshot}
 							title={t('Older snapshot')}
 						>
-							{@html ChevronRight}
+							<ChevronRight />
 						</button>
 					</div>
 				{:else}
@@ -512,7 +514,7 @@
 						class="inline-flex items-center gap-1.5 rounded-ig-sm bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 text-amber-800 dark:text-amber-200"
 						title="Server-side filtering may have limited the results. The sorted view shows only the events received, not necessarily all matching events."
 					>
-						<span class="h-3.5 w-3.5 flex-shrink-0">{@html InfoIcon}</span>
+						<span class="h-3.5 w-3.5 flex-shrink-0"><InfoIcon /></span>
 						<span class="truncate">{t('Sorted locally (results may be partial)')}</span>
 						<button
 							class="ml-1 rounded-ig-sm px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-100 transition-colors hover:bg-amber-200 dark:hover:bg-amber-800/50"
@@ -546,7 +548,7 @@
 						onclick={goToLatest}
 						title={t('Return to latest snapshot')}
 					>
-						<span class="h-4 w-4">{@html ArrowRotateLeft}</span>
+						<span class="h-4 w-4"><ArrowRotateLeft /></span>
 						<span>{t('Latest')}</span>
 					</button>
 				{/if}

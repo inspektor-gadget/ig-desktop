@@ -5,9 +5,9 @@
 	import type { WizardTreeConfig, WizardBranchNode, WizardEndpointNode } from './wizard-types';
 	import type { Environment, GadgetRunRequest } from '$lib/types';
 
-	import Gadget from '$lib/icons/gadget.svg?raw';
-	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
-	import Close from '$lib/icons/close-small.svg?raw';
+	import Gadget from '$lib/icons/gadget.svelte';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import Close from '$lib/icons/close-small.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
@@ -102,7 +102,7 @@
 			<div class="flex size-6 items-center justify-center">
 				{#if isAtRoot}
 					<!-- At root: show gadget icon -->
-					<div class="text-orange-500 dark:text-orange-400 [&>svg]:size-5">{@html Gadget}</div>
+					<div class="text-orange-500 dark:text-orange-400 [&>svg]:size-5"><Gadget /></div>
 				{:else}
 					<!-- Not at root: show back button -->
 					<button
@@ -110,7 +110,7 @@
 						class="-m-1 cursor-pointer rounded-ig-sm p-1 text-orange-500 dark:text-orange-400 transition-all hover:bg-orange-100 dark:hover:bg-orange-900/30 [&>svg]:size-5"
 						title={t('Go back')}
 					>
-						{@html ChevronLeft}
+						<ChevronLeft />
 					</button>
 				{/if}
 			</div>
@@ -123,7 +123,7 @@
 				title={t('Hide Wizard')}
 				aria-label={t('Hide Wizard')}
 			>
-				{@html Close}
+				<Close />
 			</button>
 		</div>
 	</div>

@@ -32,7 +32,7 @@
 		y2={dimension === 'x' ? 0 : dimensions.boundedHeight}
 	/>
 
-	{#each ticks as tick, i}
+	{#each ticks as tick (tick)}
 		<text
 			class="Axis__tick"
 			transform={`translate(${(dimension === 'x' ? [scale(tick), 25] : [-16, scale(tick)]).join(

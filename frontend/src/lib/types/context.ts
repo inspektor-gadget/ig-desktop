@@ -17,7 +17,7 @@ import type {
  * Use: const api = getContext<ApiContext>('api');
  */
 export interface ApiContext {
-	request(cmd: { cmd: string; data?: unknown }): Promise<unknown>;
+	request<T = unknown>(cmd: { cmd: string; data?: unknown }): Promise<T>;
 	listSessions(environmentId: string): Promise<SessionItem[]>;
 	deleteSession(sessionId: string): Promise<void>;
 	getSession(sessionId: string): Promise<SessionWithRuns>;

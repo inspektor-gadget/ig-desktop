@@ -18,7 +18,7 @@
 </script>
 
 <linearGradient {id} {x1} {x2} {y1} {y2} gradientUnits="userSpaceOnUse" spreadMethod="pad">
-	{#each colors as color, i}
+	{#each colors as color, i (i)}
 		<stop offset={getOffset(i, colors.length)} stop-color={color} />
 	{/each}
 </linearGradient>

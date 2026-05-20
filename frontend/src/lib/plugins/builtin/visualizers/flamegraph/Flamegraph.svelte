@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import type { GadgetContext } from '$lib/types/context';
 	import FlamegraphChart from './FlamegraphChart.svelte';
 	import {
 		extractFlamegraphConfig,
@@ -13,18 +14,10 @@
 
 	type Props = VisualizerPluginProps;
 
-	let {
-		ds,
-		events,
-		snapshotData,
-		eventVersion = 0,
-		isRunning = true,
-		instanceID = '',
-		context
-	}: Props = $props();
+	let { ds, events, snapshotData, eventVersion = 0, context }: Props = $props();
 
 	// Get gadget info from context (plugin context or Svelte context fallback)
-	const gadgetContext: any = getContext('gadget');
+	const gadgetContext = getContext<GadgetContext>('gadget');
 	const gadgetImage = $derived(context?.gadgetImage || gadgetContext?.info?.imageName || '');
 
 	// Configuration key for group field selection (per gadget + datasource)

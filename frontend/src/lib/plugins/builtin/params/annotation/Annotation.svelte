@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Title from '$lib/components/params/Title.svelte';
 	import { getContext } from 'svelte';
-	import Delete from '$lib/icons/fa/trash.svg?raw';
+	import Delete from '$lib/icons/fa/trash.svelte';
 	import Select from '$lib/components/forms/Select.svelte';
 	import Input from '$lib/components/forms/Input.svelte';
 	import type { GadgetParam, ParamConfig, GadgetInfo } from '$lib/types';
@@ -152,7 +152,7 @@
 				class="flex cursor-pointer flex-row items-center gap-2 rounded-ig-sm bg-red-200 dark:bg-red-900 text-red-800 dark:text-red-100 px-2 py-1 hover:bg-red-300 dark:hover:bg-red-800"
 				onclick={() => removeAnnotation(idx)}
 			>
-				<span>{@html Delete}</span>
+				<span><Delete /></span>
 			</button>
 		</div>
 	{/each}

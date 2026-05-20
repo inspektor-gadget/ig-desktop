@@ -101,7 +101,7 @@
 			class="virtual-scroll-content"
 			style="transform: translateY({scrollState.offsetY}px); will-change: transform;"
 		>
-			{#each visibleItems as item, i}
+			{#each visibleItems as item, i (scrollState.startIndex + i)}
 				{@render row(item, scrollState.startIndex + i)}
 			{/each}
 		</div>

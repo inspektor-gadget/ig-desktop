@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { SvelteSet } from 'svelte/reactivity';
 	import * as d3 from 'd3';
 	import { clickOutside } from '$lib/utils/click-outside';
-	import ChevronDown from '$lib/icons/chevron-down.svg?raw';
+	import ChevronDown from '$lib/icons/chevron-down.svelte';
 	import type { HeatmapData, HeatmapCell } from '$lib/types/histogram';
 	import type { GroupableField } from '$lib/types/flamegraph';
 	import { t } from '$lib/i18n/index.svelte';
@@ -106,7 +107,7 @@
 
 	// Toggle group field
 	function toggleGroupField(fieldName: string) {
-		const newFields = new Set(activeGroupFields);
+		const newFields = new SvelteSet(activeGroupFields);
 		if (newFields.has(fieldName)) {
 			newFields.delete(fieldName);
 		} else {
@@ -180,7 +181,7 @@
 							>{activeGroupCount}</span
 						>
 					{/if}
-					<span class="w-3 h-3 opacity-60 flex items-center">{@html ChevronDown}</span>
+					<span class="w-3 h-3 opacity-60 flex items-center"><ChevronDown /></span>
 				</button>
 				{#if groupMenuOpen}
 					<div
@@ -244,7 +245,7 @@
 
 					<!-- Y-axis (bucket labels) -->
 					<g class="text-[10px] fill-gray-500 dark:fill-gray-400">
-						{#each data.bucketLabels as label, i}
+						{#each data.bucketLabels as label, i (i)}
 							<text
 								x={-8}
 								y={(data.bucketLabels.length - 1 - i) * cellHeight + cellHeight / 2}
@@ -271,7 +272,7 @@
 						transform="translate(0, {data.bucketLabels.length * cellHeight})"
 						class="text-[10px] fill-gray-500 dark:fill-gray-400"
 					>
-						{#each timeTickIndices as i}
+						{#each timeTickIndices as i (i)}
 							{@const x = i * cellWidth + cellWidth / 2}
 							{@const time = data.timeLabels[i]}
 							<text
@@ -299,7 +300,7 @@
 				<g transform="translate({containerWidth - margins.right + 20}, {margins.top})">
 					<defs>
 						<linearGradient id="heatmap-gradient" x1="0" x2="0" y1="1" y2="0">
-							{#each Array(legendSteps + 1) as _, i}
+							{#each Array.from({ length: legendSteps + 1 }, (_, i) => i) as i (i)}
 								{@const t = i / legendSteps}
 								<stop
 									offset="{t * 100}%"

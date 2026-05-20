@@ -1,12 +1,14 @@
 <script lang="ts">
-	import List from '$lib/icons/list.svg?raw';
-	import Delete from '$lib/icons/close-small.svg?raw';
+	import { getErrorMessage } from '$lib/utils/errors';
+	import List from '$lib/icons/list.svelte';
+	import Delete from '$lib/icons/close-small.svelte';
 	import Tab from '$lib/components/Tab.svelte';
 	import { instances } from '$lib/shared/instances.svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { Snippet } from 'svelte';
+	import type { ApiContext } from '$lib/types/context';
 	import { getContext } from 'svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { t } from '$lib/i18n/index.svelte';
@@ -17,7 +19,7 @@
 		Object.keys(instances).filter((key) => instances[key].environment === page.params.env)
 	);
 
-	const api: any = getContext('api');
+	const api = getContext<ApiContext>('api');
 
 	async function closeInstance(instanceID: string) {
 		const instance = instances[instanceID];
@@ -27,7 +29,7 @@
 		const wasRunning = instance?.running;
 
 		try {
-			const res = await api.request({ cmd: 'stopInstance', data: { id: instanceID } });
+			await api.request({ cmd: 'stopInstance', data: { id: instanceID } });
 			console.log('stopped');
 
 			// Only show toast if we actually stopped/detached (was still running)
@@ -46,9 +48,9 @@
 				goto(resolve(`/env/${page.params.env}`));
 			}
 			delete instances[instanceID];
-		} catch (err: any) {
+		} catch (err) {
 			// Show error toast
-			const errorMessage = err?.message || err?.toString() || 'Unknown error';
+			const errorMessage = getErrorMessage(err);
 			toastStore.error(
 				isAttached
 					? t('Failed to detach from instance "{{instanceName}}": {{errorMessage}}', {
@@ -73,8 +75,8 @@
 	<div
 		class="nowrap flex w-full flex-row items-center overscroll-x-auto text-sm text-gray-600 dark:text-gray-500"
 	>
-		<Tab href={resolve(`/env/${page.params.env}`)} shrink={true} exact={true}>{@html List}</Tab>
-		{#each instanceKeys as instanceKey}
+		<Tab href={resolve(`/env/${page.params.env}`)} shrink={true} exact={true}><List /></Tab>
+		{#each instanceKeys as instanceKey (instanceKey)}
 			<Tab
 				href={resolve(`/env/${page.params.env}/running/${instanceKey}`)}
 				shrink={false}
@@ -89,7 +91,7 @@
 							ev.stopPropagation();
 							closeInstance(instanceKey);
 							return false;
-						}}>{@html Delete}</button
+						}}><Delete /></button
 					>
 					<div>{instances[instanceKey].name || instances[instanceKey].gadgetInfo.imageName}</div>
 				</div></Tab

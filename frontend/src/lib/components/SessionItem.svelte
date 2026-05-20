@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { SessionItem } from '$lib/types';
+	import { resolve } from '$app/paths';
 	import { formatAbsoluteTime, formatRelativeTime } from '$lib/utils/time';
-	import Trash from '$lib/icons/fa/trash.svg?raw';
+	import Trash from '$lib/icons/fa/trash.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
@@ -16,8 +17,9 @@
 	class="group/item rounded-ig-md border border-ig-border bg-ig-surface-raised p-4 transition-all hover:border-ig-success/50 hover:bg-ig-border"
 >
 	<div class="flex flex-row items-start justify-between gap-4">
+		<!-- eslint-disable svelte/no-navigation-without-resolve -- route path is resolved via resolve(); the highlightEnvironment query string is appended separately -->
 		<a
-			href="/sessions/{session.id}?highlightEnvironment={session.environmentId}"
+			href={`${resolve(`/sessions/${session.id}`)}?highlightEnvironment=${session.environmentId}`}
 			class="flex flex-1 flex-col gap-2"
 		>
 			<div class="flex flex-row items-center gap-2">
@@ -39,10 +41,11 @@
 				{/if}
 			</div>
 		</a>
+		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		<button
 			onclick={() => onDelete?.()}
 			class="cursor-pointer rounded-ig-sm p-1.5 text-ig-text-muted transition-all hover:bg-ig-border hover:text-ig-error"
-			title={t('Delete session')}>{@html Trash}</button
+			title={t('Delete session')}><Trash /></button
 		>
 	</div>
 </div>

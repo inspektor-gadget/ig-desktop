@@ -7,7 +7,6 @@
  * after setBasePath() is called.
  */
 
-// eslint-disable-next-line import/no-mutable-exports
 export let base = '';
 
 export function setBasePath(path: string): void {

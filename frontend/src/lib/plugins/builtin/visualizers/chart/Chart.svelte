@@ -22,16 +22,7 @@
 		fillGaps?: boolean;
 	}
 
-	let {
-		ds,
-		events,
-		snapshotData,
-		eventVersion = 0,
-		isRunning = true,
-		instanceID = '',
-		context,
-		fillGaps = true
-	}: Props = $props();
+	let { ds, events, snapshotData, eventVersion = 0, fillGaps = true }: Props = $props();
 
 	// Convert ring buffer to array for chart processing
 	// eventVersion dependency triggers re-read when new events arrive

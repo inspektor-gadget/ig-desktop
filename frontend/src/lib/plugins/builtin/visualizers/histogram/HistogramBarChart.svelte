@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { SvelteSet } from 'svelte/reactivity';
 	import * as d3 from 'd3';
 	import { clickOutside } from '$lib/utils/click-outside';
 	import { formatBucketLabel, getGroupKeys } from '$lib/utils/histogramConfig';
-	import ChevronDown from '$lib/icons/chevron-down.svg?raw';
+	import ChevronDown from '$lib/icons/chevron-down.svelte';
 	import type { AggregatedHistogram, HistogramFieldConfig } from '$lib/types/histogram';
 	import type { GroupableField } from '$lib/types/flamegraph';
 	import { t } from '$lib/i18n/index.svelte';
@@ -80,7 +81,7 @@
 
 	// Toggle group field
 	function toggleGroupField(fieldName: string) {
-		const newFields = new Set(activeGroupFields);
+		const newFields = new SvelteSet(activeGroupFields);
 		if (newFields.has(fieldName)) {
 			newFields.delete(fieldName);
 		} else {
@@ -203,7 +204,7 @@
 							>{activeGroupCount}</span
 						>
 					{/if}
-					<span class="w-3 h-3 opacity-60 flex items-center">{@html ChevronDown}</span>
+					<span class="w-3 h-3 opacity-60 flex items-center"><ChevronDown /></span>
 				</button>
 				{#if groupMenuOpen}
 					<div
@@ -274,7 +275,7 @@
 			<svg width={containerWidth} {height} class="block text-gray-500 dark:text-gray-400">
 				<g transform="translate({margins.left}, {margins.top})">
 					<!-- Grid lines -->
-					{#each yTicks as tick}
+					{#each yTicks as tick (tick)}
 						<line
 							x1={0}
 							y1={yScale(tick)}
@@ -286,7 +287,7 @@
 
 					<!-- Y-axis -->
 					<g class="text-[10px] fill-gray-500 dark:fill-gray-400">
-						{#each yTicks as tick}
+						{#each yTicks as tick (tick)}
 							<text x={-8} y={yScale(tick)} text-anchor="end" dominant-baseline="middle">
 								{formatValue(tick)}
 							</text>
@@ -315,7 +316,7 @@
 							y2={0}
 							class="stroke-gray-300 dark:stroke-gray-600"
 						/>
-						{#each bucketLabels as label, i}
+						{#each bucketLabels as label (label)}
 							{@const x = (xScale(label) || 0) + xScale.bandwidth() / 2}
 							<text
 								{x}
@@ -338,7 +339,7 @@
 					</g>
 
 					<!-- Bars -->
-					{#each displayData.values as value, i}
+					{#each displayData.values as value, i (i)}
 						{@const label = bucketLabels[i]}
 						{@const x = xScale(label) || 0}
 						{@const barHeight = boundedHeight - yScale(value)}

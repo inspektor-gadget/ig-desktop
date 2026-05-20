@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+	import type { ApiContext } from '$lib/types/context';
 	import yaml from 'js-yaml';
 	import { deployments } from '$lib/shared/deployments.svelte';
 	import type { DeploymentConfig } from '$lib/types';
 	import { t } from '$lib/i18n/index.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
-	import Server from '$lib/icons/server.svg?raw';
-	import Play from '$lib/icons/play-circle.svg?raw';
-	import ExclamationCircle from '$lib/icons/close-circle.svg?raw';
-	import Certificate from '$lib/icons/certificate.svg?raw';
-	import ChevronDown from '$lib/icons/chevron-down.svg?raw';
-	import ChevronRight from '$lib/icons/chevron-right.svg?raw';
+	import Server from '$lib/icons/server.svelte';
+	import Play from '$lib/icons/play-circle.svelte';
+	import ExclamationCircle from '$lib/icons/close-circle.svelte';
+	import Certificate from '$lib/icons/certificate.svelte';
+	import ChevronDown from '$lib/icons/chevron-down.svelte';
+	import ChevronRight from '$lib/icons/chevron-right.svelte';
 	import Input from '$lib/components/forms/Input.svelte';
 	import Textarea from '$lib/components/forms/Textarea.svelte';
 	import Toggle from '$lib/components/forms/Toggle.svelte';
@@ -36,7 +37,7 @@
 		kubeContext = ''
 	}: Props = $props();
 
-	const api: any = getContext('api');
+	const api = getContext<ApiContext>('api');
 
 	// Default address for Prometheus metrics endpoint
 	const DEFAULT_METRICS_LISTEN_ADDRESS = '0.0.0.0:2224';
@@ -53,7 +54,7 @@
 	let chartValuesError = $state<string | null>(null);
 
 	// Parsed YAML values object for programmatic updates
-	let valuesObject = $state<Record<string, any>>({});
+	let valuesObject = $state<Record<string, unknown>>({});
 
 	// UI-exposed settings derived from values
 	let verifyImageSignatures = $state(false);
@@ -94,26 +95,26 @@
 	);
 
 	// Helper to get nested value from object
-	function getNestedValue(obj: Record<string, any>, path: string): any {
+	function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
 		const keys = path.split('.');
-		let current = obj;
+		let current: unknown = obj;
 		for (const key of keys) {
 			if (current === undefined || current === null) return undefined;
-			current = current[key];
+			current = (current as Record<string, unknown>)[key];
 		}
 		return current;
 	}
 
 	// Helper to set nested value in object (mutates the object)
-	function setNestedValue(obj: Record<string, any>, path: string, value: any): void {
+	function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
 		const keys = path.split('.');
-		let current = obj;
+		let current: Record<string, unknown> = obj;
 		for (let i = 0; i < keys.length - 1; i++) {
 			const key = keys[i];
 			if (current[key] === undefined || current[key] === null) {
 				current[key] = {};
 			}
-			current = current[key];
+			current = current[key] as Record<string, unknown>;
 		}
 		current[keys[keys.length - 1]] = value;
 	}
@@ -121,7 +122,7 @@
 	// Parse YAML and extract UI values
 	function parseValuesFromYaml(yamlStr: string): void {
 		try {
-			valuesObject = (yaml.load(yamlStr) as Record<string, any>) || {};
+			valuesObject = (yaml.load(yamlStr) as Record<string, unknown>) || {};
 			// Extract UI-exposed values
 			const verifyImage = getNestedValue(valuesObject, 'config.operator.oci.verify-image');
 			verifyImageSignatures = verifyImage === true;
@@ -137,7 +138,7 @@
 				valuesObject,
 				'config.operator.otel-metrics.otel-metrics-listen-address'
 			);
-			otelMetricsListenAddress = metricsListenAddr || DEFAULT_METRICS_LISTEN_ADDRESS;
+			otelMetricsListenAddress = (metricsListenAddr as string) || DEFAULT_METRICS_LISTEN_ADDRESS;
 		} catch (err) {
 			console.error('Failed to parse YAML:', err);
 			valuesObject = {};
@@ -154,7 +155,7 @@
 	}
 
 	// Update a specific value in the YAML
-	function updateYamlValue(path: string, value: any): void {
+	function updateYamlValue(path: string, value: unknown): void {
 		setNestedValue(valuesObject, path, value);
 		// Trigger Svelte reactivity by reassigning the object
 		valuesObject = { ...valuesObject };
@@ -186,8 +187,8 @@
 		if (Object.keys(exporters).length === 0) {
 			// Remove the exporters key if empty
 			const otelLogs = getNestedValue(valuesObject, 'config.operator.otel-logs');
-			if (otelLogs && otelLogs.exporters) {
-				delete otelLogs.exporters;
+			if (otelLogs && typeof otelLogs === 'object') {
+				delete (otelLogs as Record<string, unknown>).exporters;
 			}
 			// Trigger Svelte reactivity
 			valuesObject = { ...valuesObject };
@@ -202,8 +203,8 @@
 		if (Object.keys(exporters).length === 0) {
 			// Remove the exporters key if empty
 			const otelMetrics = getNestedValue(valuesObject, 'config.operator.otel-metrics');
-			if (otelMetrics && otelMetrics.exporters) {
-				delete otelMetrics.exporters;
+			if (otelMetrics && typeof otelMetrics === 'object') {
+				delete (otelMetrics as Record<string, unknown>).exporters;
 			}
 			// Trigger Svelte reactivity
 			valuesObject = { ...valuesObject };
@@ -225,7 +226,7 @@
 		chartValuesError = null;
 
 		try {
-			const res = await api.request({
+			const res = await api.request<{ values?: string }>({
 				cmd: 'getChartValues',
 				data: { chartVersion: chartVersion.trim() || undefined }
 			});
@@ -292,7 +293,7 @@
 			);
 
 			// Start deployment via API - backend will generate the ID
-			const res = await api.request({
+			const res = await api.request<{ deploymentId?: string }>({
 				cmd: 'deployIG',
 				data: { ...config, redeploy, undeploy }
 			});
@@ -374,7 +375,6 @@
 </script>
 
 {#if open}
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 text-gray-900 dark:text-white"
 		onclick={handleBackdropClick}
@@ -392,7 +392,7 @@
 				class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-6 py-4"
 			>
 				<div class="flex items-center gap-3">
-					<div class:text-blue-400={!undeploy} class:text-red-400={undeploy}>{@html Server}</div>
+					<div class:text-blue-400={!undeploy} class:text-red-400={undeploy}><Server /></div>
 					<h2 id="deploy-modal-title" class="text-lg font-semibold">
 						{undeploy
 							? t('Undeploy Inspektor Gadget from Kubernetes')
@@ -524,7 +524,7 @@
 												{/if}
 											</span>
 										</div>
-										<span class="text-gray-500 dark:text-gray-400">{@html ChevronRight}</span>
+										<span class="text-gray-500 dark:text-gray-400"><ChevronRight /></span>
 									</button>
 									<button
 										onclick={() => (otelMetricsModalOpen = true)}
@@ -542,7 +542,7 @@
 												{/if}
 											</span>
 										</div>
-										<span class="text-gray-500 dark:text-gray-400">{@html ChevronRight}</span>
+										<span class="text-gray-500 dark:text-gray-400"><ChevronRight /></span>
 									</button>
 
 									<!-- Prometheus Listener -->
@@ -617,7 +617,7 @@
 							class:hover:bg-red-700={undeploy}
 							class:disabled:bg-red-950={undeploy}
 						>
-							<span>{@html Play}</span>
+							<span><Play /></span>
 							<span>{undeploy ? t('Undeploy') : redeploy ? t('Redeploy') : t('Deploy')}</span>
 						</button>
 					</div>
@@ -662,7 +662,7 @@
 							class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 transition-all hover:text-gray-700 dark:hover:text-gray-300"
 						>
 							<div class="transition-transform duration-200" class:rotate-180={showDebugConsole}>
-								{@html ChevronDown}
+								<ChevronDown />
 							</div>
 							<span
 								>{t('Output Console ({{count}} entries)', {
@@ -677,7 +677,7 @@
 								<div
 									class="max-h-64 overflow-y-auto rounded-ig-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3 font-mono text-xs"
 								>
-									{#each currentDeployment.debugLogs as log}
+									{#each currentDeployment.debugLogs as log, i (i)}
 										<div class="text-gray-600 dark:text-gray-400">{log}</div>
 									{/each}
 								</div>
@@ -693,7 +693,7 @@
 								<div
 									class="max-h-64 overflow-y-auto rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-4 font-mono text-xs"
 								>
-									{#each currentDeployment.logs as log}
+									{#each currentDeployment.logs as log, i (i)}
 										<div class="text-gray-600 dark:text-gray-400">{log}</div>
 									{/each}
 								</div>
@@ -703,7 +703,7 @@
 				{:else if hasError}
 					<!-- Error State -->
 					<div class="flex flex-col items-center gap-4 text-center">
-						<div class="text-red-500 dark:text-red-400">{@html ExclamationCircle}</div>
+						<div class="text-red-500 dark:text-red-400"><ExclamationCircle /></div>
 						<div>
 							<h3 class="text-lg font-semibold text-red-500 dark:text-red-400">
 								{t('Deployment Failed')}
@@ -719,7 +719,7 @@
 								<div
 									class="max-h-48 overflow-y-auto rounded-ig-md border border-red-300 dark:border-red-800/50 bg-red-50 dark:bg-red-900/10 p-4 text-left font-mono text-xs"
 								>
-									{#each currentDeployment.logs as log}
+									{#each currentDeployment.logs as log, i (i)}
 										<div class="text-gray-600 dark:text-gray-400">{log}</div>
 									{/each}
 								</div>
@@ -745,7 +745,7 @@
 							class:text-red-500={undeploy}
 							class:dark:text-red-400={undeploy}
 						>
-							{@html Certificate}
+							<Certificate />
 						</div>
 						<div>
 							<h3

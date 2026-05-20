@@ -3,16 +3,17 @@
 	import { getContext } from 'svelte';
 	import { openExternalURL } from '$lib/utils/external-links';
 	import Panel from '$lib/components/Panel.svelte';
-	import ArtifactHub from '$lib/icons/artifacthub.svg?raw';
-	import Play from '$lib/icons/play-circle.svg?raw';
-	import ChevronLeft from '$lib/icons/chevron-left.svg?raw';
-	import Book from '$lib/icons/book.svg?raw';
-	import Code from '$lib/icons/code.svg?raw';
+	import RawHtml from '$lib/components/RawHtml.svelte';
+	import ArtifactHub from '$lib/icons/artifacthub.svelte';
+	import Play from '$lib/icons/play-circle.svelte';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import Book from '$lib/icons/book.svelte';
+	import Code from '$lib/icons/code.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
-	import Signed from '$lib/icons/signature-locked.svg?raw';
-	import Unsigned from '$lib/icons/signature-slash.svg?raw';
-	import Star from '$lib/icons/star-sharp.svg?raw';
-	import Link from '$lib/icons/href.svg?raw';
+	import Signed from '$lib/icons/signature-locked.svelte';
+	import Unsigned from '$lib/icons/signature-slash.svelte';
+	import Star from '$lib/icons/star-sharp.svelte';
+	import Link from '$lib/icons/href.svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import type { ApiContext } from '$lib/types';
@@ -140,12 +141,12 @@
 				class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
 				title={t('Go back')}
 			>
-				{@html ChevronLeft}
+				<ChevronLeft />
 			</button>
 		</div>
 		<div class="flex flex-col">
 			<div class="text-right text-xs">{t('powered by')}</div>
-			<div>{@html ArtifactHub}</div>
+			<div><ArtifactHub /></div>
 		</div>
 	</div>
 	<div class="flex grow flex-col overflow-auto bg-gray-50/80 dark:bg-gray-950/80 p-8">
@@ -205,7 +206,7 @@
 					>
 						<!-- Stars -->
 						<div class="flex items-center gap-2">
-							<div class="text-yellow-500 dark:text-yellow-400">{@html Star}</div>
+							<div class="text-yellow-500 dark:text-yellow-400"><Star /></div>
 							<span class="text-sm font-semibold text-gray-800 dark:text-gray-200"
 								>{pkg.stars || 0}</span
 							>
@@ -214,7 +215,7 @@
 						<!-- Signed Status -->
 						<div class="flex items-center gap-2">
 							<div class={pkg.signed ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}>
-								{@html pkg.signed ? Signed : Unsigned}
+								{#if pkg.signed}<Signed />{:else}<Unsigned />{/if}
 							</div>
 							<span
 								class="{pkg.signed
@@ -224,7 +225,7 @@
 								{pkg.signed ? t('Signed') : t('Unsigned')}
 							</span>
 							{#if pkg.signed && pkg.signatures}
-								{#each pkg.signatures as sig}
+								{#each pkg.signatures as sig (sig)}
 									<span
 										class="rounded-ig-sm bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs text-green-600 dark:text-green-400"
 										>{sig}</span
@@ -240,7 +241,7 @@
 								onclick={() => openExternalURL(repoUrl)}
 								class="flex items-center gap-2 text-blue-600 dark:text-blue-400 transition-colors hover:text-blue-500 dark:hover:text-blue-300"
 							>
-								<div>{@html Link}</div>
+								<div><Link /></div>
 								<span class="text-sm font-medium underline">{t('Repository')}</span>
 							</button>
 						{/if}
@@ -252,7 +253,7 @@
 								onclick={() => openExternalURL(artifactHubUrl)}
 								class="flex items-center gap-2 text-purple-600 dark:text-purple-400 transition-colors hover:text-purple-500 dark:hover:text-purple-300"
 							>
-								<div>{@html Link}</div>
+								<div><Link /></div>
 								<span class="text-sm font-medium underline">{t('ArtifactHub')}</span>
 							</button>
 						{/if}
@@ -272,14 +273,14 @@
 							class="marked overflow-auto rounded-ig-sm p-4 whitespace-pre-wrap"
 							onclick={handleLinkClick}
 						>
-							{@html marked(pkg.readme || '')}
+							<RawHtml html={marked(pkg.readme || '', { async: false })} />
 						</div>
 					</Panel>
 				</div>
 				<div class="w-1/3">
 					<Panel title={t('Images')} icon={Code} color="green">
 						<div class="flex flex-col gap-3">
-							{#each pkg.containers_images as image}
+							{#each pkg.containers_images as image (image.image)}
 								<a
 									href={resolve(
 										`/gadgets/run/${image.image}${environmentID ? `?env=${environmentID}` : ''}`
@@ -293,14 +294,14 @@
 											<div
 												class="rounded-ig-md bg-green-600/10 p-2 text-green-600 dark:text-green-400 transition-colors group-hover:bg-green-600/20"
 											>
-												{@html Play}
+												<Play />
 											</div>
 											<div class="flex-1 font-medium text-gray-800 dark:text-gray-200">
 												{image.name}
 											</div>
 										</div>
 										<div class="flex flex-row flex-wrap gap-1.5">
-											{#each image.platforms as platform}
+											{#each image.platforms as platform (platform)}
 												<div
 													class="rounded-full bg-gray-200 dark:bg-gray-800 px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400"
 												>
