@@ -135,11 +135,13 @@
 		});
 	});
 
-	// Aggregate data by timestamp when no key fields are defined
-	// This ensures multiple entries at the same timestamp are summed into one point
+	// Aggregate data by timestamp (and `metrics.aggregation.bucket`) when no
+	// key fields are defined. With key fields, per-(key, bucket) aggregation
+	// happens inside `groupEventsByKeys`. Both paths read the datasource
+	// annotations via `aggregateByTimestamp`.
 	const finalChartData = $derived.by(() => {
 		if (keyFields.length === 0 && effectiveMetricFields.length > 0) {
-			return aggregateByTimestamp(chartData, effectiveMetricFields, 'timestamp');
+			return aggregateByTimestamp(chartData, effectiveMetricFields, 'timestamp', ds);
 		}
 		return chartData;
 	});
@@ -167,7 +169,7 @@
 			};
 		}
 
-		return groupEventsByKeys(finalChartData, keyFields, effectiveMetricFields);
+		return groupEventsByKeys(finalChartData, keyFields, effectiveMetricFields, ds);
 	});
 
 	// Check if we're using key-based grouping

@@ -307,15 +307,23 @@ export function extractSeriesFromDatasource(ds: {
 /**
  * Group events by unique key combinations and create series for each.
  *
+ * Within each group, events are reduced via {@link aggregateByTimestamp}
+ * so the aggregation function and bucket size set via
+ * `metrics.aggregation` / `metrics.aggregation.bucket` annotations apply
+ * per-(key, bucket). When every metric field opts out via
+ * `metrics.aggregation=none`, events are plotted individually.
+ *
  * @param events - Array of event data
  * @param keyFields - Fields that define the grouping keys
  * @param metricFields - Fields containing the metric values
+ * @param ds - Datasource (passed through to the aggregator for annotation lookup)
  * @returns Object with grouped data and dynamic series configs
  */
 export function groupEventsByKeys(
 	events: Record<string, unknown>[],
 	keyFields: DatasourceField[],
-	metricFields: DatasourceField[]
+	metricFields: DatasourceField[],
+	ds?: { annotations?: Record<string, string> }
 ): {
 	groupedData: Map<string, Record<string, unknown>[]>;
 	seriesConfigs: ChartSeriesConfig[];
@@ -331,6 +339,19 @@ export function groupEventsByKeys(
 			groupedData.set(keyValues, []);
 		}
 		groupedData.get(keyValues)!.push(event);
+	}
+
+	// Within each group, collapse events that fall in the same (bucketed)
+	// timestamp using the per-field aggregation function. Snapshot-style
+	// gadgets (top_*, profile, ...) emit many rows per snapshot all
+	// sharing `_receivedAt`; without this collapse the chart would plot
+	// one data point per row. For streaming events with unique
+	// timestamps, the bucket falls back to fetch-interval if declared,
+	// otherwise the operation is a no-op (one event per (key, timestamp)).
+	if (metricFields.length > 0) {
+		for (const [key, groupEvents] of groupedData) {
+			groupedData.set(key, aggregateByTimestamp(groupEvents, metricFields, 'timestamp', ds));
+		}
 	}
 
 	// Create series config for each unique key combination and metric field
@@ -634,54 +655,265 @@ export function calculateCounterRates(
 }
 
 /**
- * Aggregate events by timestamp, summing metric values.
- * Used when no key fields are defined to combine multiple events at the same timestamp.
+ * Supported aggregation functions for `metrics.aggregation` annotation.
  *
- * @param events - Array of events sorted by timestamp (oldest first)
- * @param metricFields - Fields containing metric values to sum
+ * - `sum`/`min`/`max`/`avg`/`first`/`last`/`count` — straightforward reducers.
+ * - `p50`/`p90`/`p95`/`p99` — linear-interpolation percentiles over the
+ *   sorted bucket values.
+ * - `none` — disable bucketing for the metric; every event is plotted as
+ *   its own data point. When every metric field on the datasource is
+ *   `none`, the aggregator short-circuits and returns the input events
+ *   unchanged.
+ */
+export type AggregationFn =
+	| 'sum'
+	| 'min'
+	| 'max'
+	| 'avg'
+	| 'first'
+	| 'last'
+	| 'count'
+	| 'p50'
+	| 'p90'
+	| 'p95'
+	| 'p99'
+	| 'none';
+
+const AGGREGATION_FNS: readonly AggregationFn[] = [
+	'sum',
+	'min',
+	'max',
+	'avg',
+	'first',
+	'last',
+	'count',
+	'p50',
+	'p90',
+	'p95',
+	'p99',
+	'none'
+] as const;
+
+const DEFAULT_AGGREGATION: AggregationFn = 'sum';
+
+/**
+ * Parse a Go-style duration string into milliseconds.
+ *
+ * Supports `ms`, `s`, `m`, `h`, and bare numbers (interpreted as ms).
+ * Returns 0 for empty/invalid input — callers treat 0 as "no bucketing"
+ * (i.e. exact-timestamp matching).
+ *
+ * @example
+ *   parseDurationMs('500ms') // 500
+ *   parseDurationMs('2s')    // 2000
+ *   parseDurationMs('1m')    // 60000
+ *   parseDurationMs('')      // 0
+ */
+export function parseDurationMs(value: string | undefined | null): number {
+	if (!value) return 0;
+	const trimmed = String(value).trim();
+	if (!trimmed) return 0;
+	const match = /^(-?\d+(?:\.\d+)?)\s*(ms|s|m|h)?$/i.exec(trimmed);
+	if (!match) return 0;
+	const num = Number(match[1]);
+	if (!Number.isFinite(num) || num <= 0) return 0;
+	switch ((match[2] || 'ms').toLowerCase()) {
+		case 'ms':
+			return num;
+		case 's':
+			return num * 1000;
+		case 'm':
+			return num * 60_000;
+		case 'h':
+			return num * 3_600_000;
+		default:
+			return 0;
+	}
+}
+
+function parseAggregationFn(value: string | undefined | null): AggregationFn | null {
+	if (!value) return null;
+	const v = String(value).trim().toLowerCase() as AggregationFn;
+	return AGGREGATION_FNS.includes(v) ? v : null;
+}
+
+interface AggregationConfig {
+	fn: AggregationFn;
+	bucketMs: number;
+}
+
+/**
+ * Resolve aggregation configuration for a single metric field.
+ *
+ * Aggregation function (precedence):
+ *   1. field `metrics.aggregation`
+ *   2. datasource `metrics.aggregation`
+ *   3. {@link DEFAULT_AGGREGATION} (`sum`)
+ *
+ * Bucket size (precedence):
+ *   1. datasource `metrics.aggregation.bucket`
+ *   2. datasource `fetch-interval` (the IG-wide annotation declared in
+ *      pkg/gadget-service/api/consts.go)
+ *   3. `0` — exact-timestamp matching
+ */
+export function resolveAggregation(
+	ds: { annotations?: Record<string, string> } | undefined,
+	field?: DatasourceField
+): AggregationConfig {
+	const dsAnn = ds?.annotations || {};
+	const fieldAnn = field?.annotations || {};
+
+	const fn =
+		parseAggregationFn(fieldAnn['metrics.aggregation']) ||
+		parseAggregationFn(dsAnn['metrics.aggregation']) ||
+		DEFAULT_AGGREGATION;
+
+	const bucketMs =
+		parseDurationMs(dsAnn['metrics.aggregation.bucket']) ||
+		parseDurationMs(dsAnn['fetch-interval']);
+
+	return { fn, bucketMs };
+}
+
+function reduceBucket(values: number[], fn: AggregationFn): number {
+	if (!values.length) return 0;
+	switch (fn) {
+		case 'sum':
+			return values.reduce((a, b) => a + b, 0);
+		case 'min':
+			return values.reduce((a, b) => (a < b ? a : b));
+		case 'max':
+			return values.reduce((a, b) => (a > b ? a : b));
+		case 'avg':
+			return values.reduce((a, b) => a + b, 0) / values.length;
+		case 'first':
+			return values[0];
+		case 'last':
+			return values[values.length - 1];
+		case 'count':
+			return values.length;
+		case 'p50':
+		case 'p90':
+		case 'p95':
+		case 'p99': {
+			const p = fn === 'p50' ? 0.5 : fn === 'p90' ? 0.9 : fn === 'p95' ? 0.95 : 0.99;
+			const sorted = [...values].sort((a, b) => a - b);
+			if (sorted.length === 1) return sorted[0];
+			const idx = p * (sorted.length - 1);
+			const lo = Math.floor(idx);
+			const hi = Math.ceil(idx);
+			if (lo === hi) return sorted[lo];
+			return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+		}
+		case 'none':
+		default:
+			// `none` is handled at a higher level — this branch is defensive.
+			return values[0];
+	}
+}
+
+function bucketKey(tsMs: number, bucketMs: number): number {
+	if (bucketMs <= 0) return tsMs;
+	return Math.floor(tsMs / bucketMs) * bucketMs;
+}
+
+/**
+ * Aggregate events by (bucketed) timestamp, applying per-field reducers.
+ *
+ * Behaviour is driven entirely by datasource and field annotations:
+ *
+ *   - `metrics.aggregation` selects the reducer per field
+ *     ({@link DEFAULT_AGGREGATION} when unset).
+ *   - `metrics.aggregation.bucket` rounds timestamps to a multiple of
+ *     the given duration before bucketing; falls back to the datasource
+ *     `fetch-interval` annotation, then to `0` (exact-timestamp match).
+ *
+ * If every metric field resolves to `none`, the input events are
+ * returned untouched — useful for streaming gadgets where each event is
+ * a distinct sample that should be plotted individually.
+ *
+ * Events come in oldest-first; output is sorted by bucketed timestamp.
+ *
+ * @param events - Array of events
+ * @param metricFields - Fields containing metric values
  * @param timestampField - Field name containing the timestamp (default: 'timestamp')
- * @returns Array of aggregated events with one entry per unique timestamp
+ * @param ds - Datasource (for annotation lookup)
  */
 export function aggregateByTimestamp(
 	events: Record<string, unknown>[],
 	metricFields: DatasourceField[],
-	timestampField: string = 'timestamp'
+	timestampField: string = 'timestamp',
+	ds?: { annotations?: Record<string, string> }
 ): Record<string, unknown>[] {
 	if (!events.length || !metricFields.length) {
 		return events;
 	}
 
-	const metricFieldNames = metricFields.map((f) => f.fullName);
-	const aggregated = new Map<number, Record<string, unknown>>();
+	const configs = metricFields.map((field) => ({
+		field,
+		...resolveAggregation(ds, field)
+	}));
+
+	// If every metric field opts out of aggregation, skip the whole pass.
+	if (configs.every((c) => c.fn === 'none')) {
+		return events;
+	}
+
+	// Bucket size is datasource-wide; take the largest non-zero bucket
+	// across metric fields (fields can't disagree on bucket size today, but
+	// per-field-level overrides are forward-compatible).
+	const bucketMs = configs.reduce((max, c) => (c.bucketMs > max ? c.bucketMs : max), 0);
+
+	type BucketState = {
+		event: Record<string, unknown>;
+		values: Map<string, number[]>;
+	};
+	const buckets = new Map<number, BucketState>();
 
 	for (const event of events) {
-		const ts = event[timestampField];
-		const timestamp = ts instanceof Date ? ts.getTime() : Number(ts) || 0;
+		const tsRaw = event[timestampField];
+		const tsMs = tsRaw instanceof Date ? tsRaw.getTime() : Number(tsRaw) || 0;
+		const bucketTs = bucketKey(tsMs, bucketMs);
 
-		if (aggregated.has(timestamp)) {
-			// Add to existing aggregation
-			const existing = aggregated.get(timestamp)!;
-			for (const fieldName of metricFieldNames) {
-				const currentValue = Number(existing[fieldName]) || 0;
-				const newValue = Number(event[fieldName]) || 0;
-				existing[fieldName] = currentValue + newValue;
-			}
-		} else {
-			// Start new aggregation - copy the event
-			const newEntry: Record<string, unknown> = {
-				[timestampField]: event[timestampField],
+		let state = buckets.get(bucketTs);
+		if (!state) {
+			// Preserve the first event's timestamp/metadata for the bucket.
+			// When bucketMs > 0 we override the timestamp with the bucket
+			// boundary so all buckets line up on the x-axis.
+			const newEvent: Record<string, unknown> = {
+				[timestampField]:
+					bucketMs > 0
+						? tsRaw instanceof Date
+							? new Date(bucketTs)
+							: bucketTs
+						: event[timestampField],
 				_batchId: event._batchId,
 				_receivedAt: event._receivedAt
 			};
-			for (const fieldName of metricFieldNames) {
-				newEntry[fieldName] = Number(event[fieldName]) || 0;
+			state = { event: newEvent, values: new Map() };
+			buckets.set(bucketTs, state);
+		}
+
+		for (const { field } of configs) {
+			let arr = state.values.get(field.fullName);
+			if (!arr) {
+				arr = [];
+				state.values.set(field.fullName, arr);
 			}
-			aggregated.set(timestamp, newEntry);
+			arr.push(Number(event[field.fullName]) || 0);
 		}
 	}
 
-	// Return sorted by timestamp
-	return Array.from(aggregated.values()).sort((a, b) => {
+	// Reduce each bucket using the per-field aggregation function.
+	const out: Record<string, unknown>[] = [];
+	for (const state of buckets.values()) {
+		for (const { field, fn } of configs) {
+			state.event[field.fullName] = reduceBucket(state.values.get(field.fullName) || [], fn);
+		}
+		out.push(state.event);
+	}
+
+	return out.sort((a, b) => {
 		const tsA = a[timestampField];
 		const tsB = b[timestampField];
 		const timeA = tsA instanceof Date ? tsA.getTime() : Number(tsA) || 0;
