@@ -11,6 +11,7 @@
 	import { preferences } from '$lib/shared/preferences.svelte';
 	import { getArraySnapshots } from '$lib/handlers/gadget.handler.svelte';
 	import { clickOutside } from '$lib/utils/click-outside';
+	import { datasourceTitle } from '$lib/utils/datasource';
 	import type { Datasource } from '$lib/types/charts';
 	import type { EventRingBuffer } from '$lib/utils/ring-buffer';
 	import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
@@ -359,7 +360,7 @@
 				<RawHtml html={activeVisualizerIcon} />
 			</div>
 
-			<h2 class="px-1">{ds.name}</h2>
+			<h2 class="px-1">{datasourceTitle(ds)}</h2>
 
 			<!-- Plugin hooks for header controls (e.g., wireshark filter) -->
 			<div class="flex-1 flex items-center justify-center">

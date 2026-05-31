@@ -19,6 +19,7 @@
 	} from '$lib/utils/table-adapters';
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import { entryMatchesSearch } from '$lib/utils/search-match';
+	import { datasourceTitle } from '$lib/utils/datasource';
 	import type { SearchableVisualizerProps } from '$lib/types/plugin-api';
 	import type { CellClickHandler, CellContextMenuHandler } from '$lib/types/cell-interaction';
 
@@ -843,7 +844,7 @@
 			class="flex h-10 flex-row items-center bg-ig-surface p-2 text-base font-normal flex-shrink-0"
 		>
 			<div class="pr-2"><Table /></div>
-			<h2 class="px-2">{ds.name}</h2>
+			<h2 class="px-2">{datasourceTitle(ds)}</h2>
 			<div class="flex-1"></div>
 			<div class="relative">
 				<button
