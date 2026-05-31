@@ -84,6 +84,14 @@ export { default as NavbarLink } from './components/NavbarLink.svelte';
 export { default as DeployModalWrapper } from './components/wrappers/DeployModalWrapper.svelte';
 export { default as GadgetWrapper } from './components/wrappers/GadgetWrapper.svelte';
 
+// --- Toast notifications ---
+// `toastStore` is the global toast store used by IG Desktop's Svelte
+// components. In library mode, hosts can `subscribe()` to forward
+// toasts into their own snackbar / notification system; the in-app
+// `ToastContainer` is only mounted by the full Wails app layout.
+export { toastStore } from './stores/toast.svelte';
+export type { Toast, ToastType, ToastAction, ToastSubscriber } from './stores/toast.svelte';
+
 // --- Internationalization (i18next core, no React/Svelte binding) ---
 export { igI18n, i18nReady } from './i18n/config';
 export { t, setLanguage, getLanguage, onLanguageChange } from './i18n/index.svelte';

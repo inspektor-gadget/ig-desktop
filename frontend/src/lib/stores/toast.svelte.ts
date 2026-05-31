@@ -18,13 +18,37 @@ export interface Toast {
 	action?: ToastAction;
 }
 
+/**
+ * Handler invoked for every new toast shown via `toastStore.show()`.
+ * Used by non-Svelte hosts (e.g. a Headlamp React plugin) to forward
+ * toasts into the host's own snackbar / notification system.
+ */
+export type ToastSubscriber = (toast: Toast) => void;
+
 class ToastStore {
 	private state = $state<{ toasts: Toast[] }>({
 		toasts: []
 	});
 
+	private subscribers = new Set<ToastSubscriber>();
+
 	get toasts(): Toast[] {
 		return this.state.toasts;
+	}
+
+	/**
+	 * Subscribe to new toasts. The handler is invoked once for every
+	 * toast added via `show()` (and therefore by `success/error/info/
+	 * warning`). Returns an unsubscribe function.
+	 *
+	 * Subscribers are fan-out only — they do not replace the in-app
+	 * `ToastContainer` rendering and can coexist with it.
+	 */
+	subscribe(handler: ToastSubscriber): () => void {
+		this.subscribers.add(handler);
+		return () => {
+			this.subscribers.delete(handler);
+		};
 	}
 
 	/**
@@ -38,6 +62,17 @@ class ToastStore {
 
 		// Add to state
 		this.state.toasts = [...this.state.toasts, newToast];
+
+		// Notify external subscribers (e.g. a host snackbar bridge).
+		// Wrapped in try/catch so a misbehaving subscriber can't break
+		// the in-app toast container or other subscribers.
+		for (const handler of this.subscribers) {
+			try {
+				handler(newToast);
+			} catch (err) {
+				console.error('Toast subscriber threw:', err);
+			}
+		}
 
 		// Auto-dismiss if duration is set
 		if (toast.duration) {
