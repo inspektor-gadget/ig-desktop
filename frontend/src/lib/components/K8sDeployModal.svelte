@@ -26,6 +26,7 @@
 		redeploy?: boolean;
 		undeploy?: boolean;
 		kubeContext?: string;
+		gadgetNamespace?: string;
 	}
 
 	let {
@@ -34,7 +35,8 @@
 		deploymentId,
 		redeploy = false,
 		undeploy = false,
-		kubeContext = ''
+		kubeContext = '',
+		gadgetNamespace = 'gadget'
 	}: Props = $props();
 
 	const api = getContext<ApiContext>('api');
@@ -249,6 +251,19 @@
 		if (open && !undeploy && !chartValuesLoaded && !loadingChartValues) {
 			fetchChartValues();
 		}
+	});
+
+	// Sync the namespace prop into the local state whenever the modal opens.
+	// This ensures redeploy/undeploy default to the namespace where Inspektor
+	// Gadget was actually detected rather than the hard-coded "gadget" default.
+	let wasOpen = $state(false);
+	$effect(() => {
+		if (open && !wasOpen) {
+			if (gadgetNamespace) {
+				namespace = gadgetNamespace;
+			}
+		}
+		wasOpen = open;
 	});
 
 	// Reset chart values state when chart version changes

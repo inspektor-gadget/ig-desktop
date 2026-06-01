@@ -42,11 +42,18 @@
 		}
 	});
 
+	const DEFAULT_GADGET_NAMESPACE = 'gadget';
+	const GADGET_NAMESPACE_PARAM = 'gadget-namespace';
+
 	let runtimes = $state<RuntimeInfo[] | null>(null);
 	let selectedRuntime = $state<string | null>(null);
 	let deploymentStatus = $state<IGDeploymentStatus | null>(null);
 	let checkingDeployment = $state(false);
 	let deployModalOpen = $state(false);
+	// Namespace currently used as the starting point when probing the cluster
+	// and as the default for redeploy/undeploy. Updated whenever detection
+	// successfully finds an Inspektor Gadget installation.
+	let currentNamespace = $state(DEFAULT_GADGET_NAMESPACE);
 
 	async function loadRuntimes() {
 		const res = await api.request<RuntimeInfo[]>({ cmd: 'getRuntimes' });
@@ -84,9 +91,21 @@
 		try {
 			const res = await api.request<IGDeploymentStatus>({
 				cmd: 'checkIGDeployment',
-				data: { namespace: 'gadget', kubeContext: selectedContext }
+				data: { namespace: currentNamespace, kubeContext: selectedContext }
 			});
 			deploymentStatus = res;
+
+			if (res?.deployed && res.namespace) {
+				// Remember the namespace where IG was actually found so subsequent
+				// rechecks probe it first and so the environment uses it for all
+				// gRPC operations (port-forward, pod discovery, ...).
+				currentNamespace = res.namespace;
+				values[GADGET_NAMESPACE_PARAM] = res.namespace;
+			} else if (!res?.deployed) {
+				// Detection failed: drop any previously stored value so the user
+				// isn't pinned to a stale namespace.
+				delete values[GADGET_NAMESPACE_PARAM];
+			}
 		} catch (err) {
 			console.error('Failed to check deployment status:', err);
 			deploymentStatus = { deployed: false, error: String(err) };
@@ -361,6 +380,7 @@
 	redeploy={isRedeploy}
 	undeploy={isUndeploy}
 	kubeContext={selectedContext}
+	gadgetNamespace={deploymentStatus?.namespace || currentNamespace}
 />
 
 <div class="flex flex-row justify-between bg-white dark:bg-gray-950 p-4">

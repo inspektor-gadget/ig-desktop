@@ -80,6 +80,9 @@ func NewDeployer(config *DeployConfig) (*Deployer, error) {
 	if config.KubeConfig != "" {
 		settings.KubeConfig = config.KubeConfig
 	}
+	if config.KubeContext != "" {
+		settings.KubeContext = config.KubeContext
+	}
 
 	return &Deployer{
 		config:       config,
@@ -235,12 +238,33 @@ func (d *Deployer) Redeploy(ctx context.Context) error {
 	return nil
 }
 
-func (d *Deployer) uninstall(ctx context.Context) error {
+// newActionConfig builds a Helm action.Configuration that targets the
+// user-selected kubeconfig file and context, falling back to defaults
+// when either field is empty. All Helm operations must go through this
+// helper so they consistently honour the environment's selected context
+// instead of silently using kubectl's default current-context.
+func (d *Deployer) newActionConfig() (*action.Configuration, error) {
 	actionConfig := new(action.Configuration)
 	configFlags := genericclioptions.NewConfigFlags(true)
 	configFlags.Namespace = &d.config.Namespace
+	if d.config.KubeContext != "" {
+		ctx := d.config.KubeContext
+		configFlags.Context = &ctx
+	}
+	if d.config.KubeConfig != "" {
+		kc := d.config.KubeConfig
+		configFlags.KubeConfig = &kc
+	}
 
 	if err := actionConfig.Init(configFlags, d.config.Namespace, os.Getenv("HELM_DRIVER"), log.Debugf); err != nil {
+		return nil, err
+	}
+	return actionConfig, nil
+}
+
+func (d *Deployer) uninstall(ctx context.Context) error {
+	actionConfig, err := d.newActionConfig()
+	if err != nil {
 		return err
 	}
 
@@ -248,7 +272,7 @@ func (d *Deployer) uninstall(ctx context.Context) error {
 	client.Wait = true
 	client.Timeout = 5 * time.Minute
 
-	_, err := client.Run(d.config.ReleaseName)
+	_, err = client.Run(d.config.ReleaseName)
 	return err
 }
 
@@ -356,12 +380,7 @@ func (d *Deployer) updateRepo(ctx context.Context) error {
 }
 
 func (d *Deployer) createNamespace(ctx context.Context) error {
-	// Create action configuration
-	actionConfig := new(action.Configuration)
-	configFlags := genericclioptions.NewConfigFlags(true)
-	configFlags.Namespace = &d.config.Namespace
-
-	if err := actionConfig.Init(configFlags, d.config.Namespace, os.Getenv("HELM_DRIVER"), log.Debugf); err != nil {
+	if _, err := d.newActionConfig(); err != nil {
 		return err
 	}
 
@@ -371,11 +390,8 @@ func (d *Deployer) createNamespace(ctx context.Context) error {
 }
 
 func (d *Deployer) installChart(ctx context.Context) error {
-	actionConfig := new(action.Configuration)
-	configFlags := genericclioptions.NewConfigFlags(true)
-	configFlags.Namespace = &d.config.Namespace
-
-	if err := actionConfig.Init(configFlags, d.config.Namespace, os.Getenv("HELM_DRIVER"), log.Debugf); err != nil {
+	actionConfig, err := d.newActionConfig()
+	if err != nil {
 		return err
 	}
 
@@ -408,12 +424,8 @@ func (d *Deployer) installChart(ctx context.Context) error {
 }
 
 func (d *Deployer) verifyDeployment(ctx context.Context) error {
-	// Create action configuration
-	actionConfig := new(action.Configuration)
-	configFlags := genericclioptions.NewConfigFlags(true)
-	configFlags.Namespace = &d.config.Namespace
-
-	if err := actionConfig.Init(configFlags, d.config.Namespace, os.Getenv("HELM_DRIVER"), log.Debugf); err != nil {
+	actionConfig, err := d.newActionConfig()
+	if err != nil {
 		return err
 	}
 
