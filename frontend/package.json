@@ -60,7 +60,7 @@
 		"js-yaml": "^4.3.0",
 		"marked": "^18.0.4",
 		"monaco-editor": "^0.55.1",
-		"posthog-js": "^1.376.4"
+		"posthog-js": "^1.409.4"
 	},
 	"overrides": {
 		"cookie": "1.1.1"
