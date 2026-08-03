@@ -3,7 +3,7 @@ module github.com/inspektor-gadget/ig-desktop
 go 1.26.0
 
 require (
-	github.com/coder/websocket v1.8.14
+	github.com/coder/websocket v1.8.15
 	github.com/google/uuid v1.6.0
 	github.com/inspektor-gadget/inspektor-gadget v0.54.1
 	github.com/sirupsen/logrus v1.9.4
