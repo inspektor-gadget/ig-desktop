@@ -29,6 +29,7 @@ import (
 	apiTypes "github.com/inspektor-gadget/ig-desktop/pkg/api"
 	grpcruntime "github.com/inspektor-gadget/ig-desktop/pkg/grpc-runtime"
 	json2 "github.com/inspektor-gadget/ig-desktop/pkg/json"
+	"github.com/inspektor-gadget/ig-desktop/pkg/operators/virtual"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/datasource"
 )
 
@@ -209,7 +210,7 @@ func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req Run
 	}
 
 	options := []gadgetcontext.Option{
-		gadgetcontext.WithDataOperators(xop),
+		gadgetcontext.WithDataOperators(virtual.New(), xop),
 		gadgetcontext.WithLogger(logger.NewFromGenericLogger(gadgetLogger)),
 		gadgetcontext.WithUseInstance(false),
 	}
@@ -282,7 +283,7 @@ func (s *Service) Attach(ctx context.Context, runtime *grpcruntime.Runtime, req 
 	}))
 
 	options := []gadgetcontext.Option{
-		gadgetcontext.WithDataOperators(xop),
+		gadgetcontext.WithDataOperators(virtual.New(), xop),
 		gadgetcontext.WithLogger(logger.NewFromGenericLogger(NewLogger(s.send, instanceID, logger.DebugLevel))),
 		gadgetcontext.WithUseInstance(true),
 	}
