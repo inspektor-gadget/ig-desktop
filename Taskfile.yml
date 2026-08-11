@@ -39,11 +39,18 @@ tasks:
       - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
 
   igd:
-    summary: Builds the standalone web server (no Wails dependencies)
+    summary: Builds the standalone web server with its frontend embedded
     cmds:
       - task: frontend:build
       - mkdir -p {{.BIN_DIR}}
       - go build -ldflags "{{.VERSION_LDFLAGS}}" -tags production,withoutebpf -o {{.BIN_DIR}}/igd ./cmd/igd
+
+  igd:single-env:
+    summary: Builds the standalone web server for a preconfigured environment
+    cmds:
+      - task: frontend:build:single-env
+      - mkdir -p {{.BIN_DIR}}
+      - go build -ldflags "{{.VERSION_LDFLAGS}}" -tags production,withoutebpf -o {{.BIN_DIR}}/igd-single-env ./cmd/igd
 
   igd:dev:
     summary: Runs the web server in development mode
@@ -58,3 +65,8 @@ tasks:
     cmds:
       - npm run build
 
+  frontend:build:single-env:
+    summary: Builds the frontend in single-environment mode
+    dir: frontend
+    cmds:
+      - npm run build:single-env

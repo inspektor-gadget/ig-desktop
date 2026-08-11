@@ -39,6 +39,14 @@ func NewStorage(dir string) *Storage {
 // Add creates a new environment and persists it to disk
 func (s *Storage) Add(environment *Environment) error {
 	environment.ID = uuid.New().String()
+	return s.Set(environment)
+}
+
+// Set persists an environment with its existing ID.
+func (s *Storage) Set(environment *Environment) error {
+	if err := uuid.Validate(environment.ID); err != nil {
+		return &api.ErrInvalidEnvironmentID{ID: environment.ID}
+	}
 	filename := filepath.Join(s.dir, environment.ID+".json")
 	d, _ := json.Marshal(environment)
 	return os.WriteFile(filename, d, 0o644)

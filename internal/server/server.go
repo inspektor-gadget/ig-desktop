@@ -37,6 +37,7 @@ type Server struct {
 	clients    map[transport.Transport]struct{}
 	clientsMu  sync.Mutex
 	listenAddr string
+	config     []byte
 
 	// AllowedOrigins specifies which origins are allowed for WebSocket connections.
 	// If empty, all origins are allowed (not recommended for production).
@@ -54,6 +55,9 @@ type Config struct {
 	// AllowedOrigins specifies which origins are allowed for WebSocket connections.
 	// If empty, all origins are allowed (not recommended for production).
 	AllowedOrigins []string
+
+	// SingleEnvConfig is served as /config.json when configured.
+	SingleEnvConfig []byte
 }
 
 // New creates a new HTTP server with the given configuration.
@@ -64,6 +68,7 @@ func New(cfg Config) *Server {
 		mux:            http.NewServeMux(),
 		clients:        make(map[transport.Transport]struct{}),
 		listenAddr:     cfg.ListenAddr,
+		config:         cfg.SingleEnvConfig,
 		AllowedOrigins: cfg.AllowedOrigins,
 	}
 
@@ -77,6 +82,14 @@ func New(cfg Config) *Server {
 func (s *Server) setupRoutes() {
 	// WebSocket endpoint
 	s.mux.HandleFunc("/api/v1/ws", s.handleWebSocket)
+
+	if len(s.config) > 0 {
+		s.mux.HandleFunc("/config.json", func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Cache-Control", "no-store")
+			_, _ = w.Write(s.config)
+		})
+	}
 
 	// Static file server for the frontend
 	// Use a custom handler to serve index.html for SPA routing

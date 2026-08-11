@@ -17,7 +17,8 @@ export class WebSocketAdapter implements ITransportAdapter {
 	}
 
 	async connect(): Promise<void> {
-		const wsUrl = this.url || `ws://${window.location.host}/api/v1/ws`;
+		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+		const wsUrl = this.url || `${protocol}//${window.location.host}/api/v1/ws`;
 		this.ws = new WebSocket(wsUrl);
 
 		this.ws.addEventListener('error', () => {
