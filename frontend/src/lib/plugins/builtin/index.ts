@@ -18,7 +18,10 @@ import {
 	histogramManifest,
 	Histogram,
 	networkMapManifest,
-	NetworkMap
+	NetworkMap,
+	dnsManifest,
+	DnsTransactions,
+	DnsNetwork
 } from './visualizers';
 
 // Import param inputs
@@ -59,6 +62,10 @@ export function registerBuiltinPlugins(): void {
 		visualizers: { networkmap: NetworkMap }
 	});
 
+	pluginRegistry.registerBuiltinPlugin(dnsManifest, {
+		visualizers: { 'dns-transactions': DnsTransactions, 'dns-network': DnsNetwork }
+	});
+
 	// Register param input plugins
 	pluginRegistry.registerBuiltinPlugin(k8sAutocompleteManifest, {
 		paramInputs: { 'k8s-autocomplete': K8sAutocomplete }
@@ -83,7 +90,8 @@ export {
 	chartManifest,
 	flamegraphManifest,
 	histogramManifest,
-	networkMapManifest
+	networkMapManifest,
+	dnsManifest
 } from './visualizers';
 
 export {

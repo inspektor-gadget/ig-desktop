@@ -14,8 +14,8 @@ export interface NetworkHandle {
 	proto: string;
 	/** Port number */
 	port: number;
-	/** Whether this handle acts as source or target */
-	type: 'source' | 'target';
+	/** Whether this handle acts as source, target, or both */
+	type: 'source' | 'target' | 'both';
 	/** Number of connections using this handle */
 	connectionCount: number;
 	/** Whether the handle has recent activity */
@@ -58,6 +58,12 @@ export interface NetworkNodeData extends Record<string, unknown> {
  * XYFlow node type for network map.
  */
 export type NetworkNode = Node<NetworkNodeData, 'address'>;
+
+export interface NetworkNamespaceGroupData extends Record<string, unknown> {
+	label: string;
+}
+
+export type NetworkNamespaceGroupNode = Node<NetworkNamespaceGroupData, 'networkNamespaceGroup'>;
 
 /**
  * Data stored in each network map edge.
@@ -148,7 +154,8 @@ export const DEFAULT_EPHEMERAL_PORT_THRESHOLD = 32768;
 export interface NetworkMapOptions {
 	/**
 	 * Threshold for collapsing ephemeral ports.
-	 * Ports >= this value are grouped. Set to 0 to disable.
+	 * Ports >= this value are grouped and low-to-high events are normalized
+	 * to high-to-low direction. Set to 0 to disable both behaviors.
 	 */
 	ephemeralPortThreshold: number;
 }

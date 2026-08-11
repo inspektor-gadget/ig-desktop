@@ -38,3 +38,8 @@ export function formatAbsoluteTime(timestamp: number | undefined): string {
 		second: '2-digit'
 	});
 }
+
+/** Formats a timestamp as second-precision UTC RFC 3339. */
+export function formatRfc3339Time(timestamp: number | undefined): string {
+	return timestamp ? new Date(timestamp).toISOString().replace(/\.\d{3}Z$/, 'Z') : '';
+}

@@ -19,6 +19,7 @@ import {
 	NODE_ACTIVITY_TIMEOUT,
 	DEFAULT_EPHEMERAL_PORT_THRESHOLD
 } from '$lib/types/networkmap';
+import { mergeHandleType, shouldReverseByPort } from '$lib/utils/networkmap/portDirection';
 
 /**
  * Hardcoded field name patterns for network map detection.
@@ -339,6 +340,8 @@ function getOrCreateHandle(
 			if (!aIsHigh && bIsHigh) return -1;
 			return a.port - b.port;
 		});
+	} else {
+		handle.type = mergeHandleType(handle.type, type);
 	}
 	return handle;
 }
@@ -385,61 +388,69 @@ export function processEvents(
 
 		const srcKeyFields = isLocalTraffic ? config.sharedKeyFields : config.srcKeyFields;
 		const dstKeyFields = isLocalTraffic ? config.sharedKeyFields : config.dstKeyFields;
+		const reverse = shouldReverseByPort(srcPort, dstPort, ephemeralPortThreshold);
+
+		const sourceAddr = reverse ? dstAddr : srcAddr;
+		const sourcePort = reverse ? effectiveDstPort : effectiveSrcPort;
+		const sourceKeyFields = reverse ? dstKeyFields : srcKeyFields;
+		const targetAddr = reverse ? srcAddr : dstAddr;
+		const targetPort = reverse ? effectiveSrcPort : effectiveDstPort;
+		const targetKeyFields = reverse ? srcKeyFields : dstKeyFields;
 
 		// Build node IDs and labels using keying fields
-		const srcNodeId = buildNodeId(srcAddr, srcKeyFields, event);
-		const srcLabels = buildNodeLabels(srcAddr, srcKeyFields, event);
-		const dstNodeId = buildNodeId(dstAddr, dstKeyFields, event);
-		const dstLabels = buildNodeLabels(dstAddr, dstKeyFields, event);
+		const sourceNodeId = buildNodeId(sourceAddr, sourceKeyFields, event);
+		const sourceLabels = buildNodeLabels(sourceAddr, sourceKeyFields, event);
+		const targetNodeId = buildNodeId(targetAddr, targetKeyFields, event);
+		const targetLabels = buildNodeLabels(targetAddr, targetKeyFields, event);
 
 		// Get or create source node
-		const srcNode = getOrCreateNode(nodesMap, srcNodeId, srcAddr, srcLabels, now);
-		srcNode.data.connectionCount++;
-		srcNode.data.isActive = true;
-		srcNode.data.lastSeen = now;
+		const sourceNode = getOrCreateNode(nodesMap, sourceNodeId, sourceAddr, sourceLabels, now);
+		sourceNode.data.connectionCount++;
+		sourceNode.data.isActive = true;
+		sourceNode.data.lastSeen = now;
 
 		// Get or create source handle (ephemeral collapse applied)
-		const srcHandle = getOrCreateHandle(
-			srcNode,
+		const sourceHandle = getOrCreateHandle(
+			sourceNode,
 			effectiveProto,
-			effectiveSrcPort,
+			sourcePort,
 			'source',
 			now,
 			ephemeralPortThreshold
 		);
-		srcHandle.connectionCount++;
-		srcHandle.isActive = true;
-		srcHandle.lastSeen = now;
+		sourceHandle.connectionCount++;
+		sourceHandle.isActive = true;
+		sourceHandle.lastSeen = now;
 
 		// Get or create destination node
-		const dstNode = getOrCreateNode(nodesMap, dstNodeId, dstAddr, dstLabels, now);
-		dstNode.data.connectionCount++;
-		dstNode.data.isActive = true;
-		dstNode.data.lastSeen = now;
+		const targetNode = getOrCreateNode(nodesMap, targetNodeId, targetAddr, targetLabels, now);
+		targetNode.data.connectionCount++;
+		targetNode.data.isActive = true;
+		targetNode.data.lastSeen = now;
 
 		// Get or create destination handle (ephemeral collapse applied)
-		const dstHandle = getOrCreateHandle(
-			dstNode,
+		const targetHandle = getOrCreateHandle(
+			targetNode,
 			effectiveProto,
-			effectiveDstPort,
+			targetPort,
 			'target',
 			now,
 			ephemeralPortThreshold
 		);
-		dstHandle.connectionCount++;
-		dstHandle.isActive = true;
-		dstHandle.lastSeen = now;
+		targetHandle.connectionCount++;
+		targetHandle.isActive = true;
+		targetHandle.lastSeen = now;
 
 		// Get or create edge (using node IDs for source/target)
-		const edgeId = getEdgeId(srcNodeId, srcHandle.id, dstNodeId, dstHandle.id);
+		const edgeId = getEdgeId(sourceNodeId, sourceHandle.id, targetNodeId, targetHandle.id);
 		let edge = edgesMap.get(edgeId);
 		if (!edge) {
 			edge = {
 				id: edgeId,
-				source: srcNodeId,
-				target: dstNodeId,
-				sourceHandle: srcHandle.id,
-				targetHandle: dstHandle.id,
+				source: sourceNodeId,
+				target: targetNodeId,
+				sourceHandle: sourceHandle.id,
+				targetHandle: targetHandle.id,
 				data: {
 					count: 0,
 					proto: effectiveProto,

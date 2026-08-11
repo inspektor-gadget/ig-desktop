@@ -9,7 +9,11 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"moduleResolution": "bundler"
+		"moduleResolution": "bundler",
+		// Allows relative ".ts" import specifiers (e.g. in dns/ correlator tests),
+		// which Node's built-in test runner requires for ESM resolution. Safe with
+		// noEmit (inherited from .svelte-kit/tsconfig.json).
+		"allowImportingTsExtensions": true
 	}
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files

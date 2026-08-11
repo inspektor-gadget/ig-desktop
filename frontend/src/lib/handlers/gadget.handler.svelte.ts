@@ -228,16 +228,16 @@ async function cleanupProcessors(instanceID: string): Promise<void> {
 /**
  * Push any synthetic events that were emitted by processors.
  */
-function pushSyntheticEvents(instanceID: string): void {
+function pushSyntheticEvents(instanceID: string): number {
 	const instance = instances[instanceID];
-	if (!instance?.events) return;
+	if (!instance?.events) return 0;
 
 	const syntheticEvents = drainSyntheticEvents(instanceID);
 	for (const event of syntheticEvents) {
 		event._synthetic = true;
 		instance.events.push(event);
-		instance.eventCount++;
 	}
+	return syntheticEvents.length;
 }
 
 /**
@@ -291,6 +291,7 @@ class EventBuffer {
 		for (const [instanceID, msgs] of eventsByInstance) {
 			const instance = instances[instanceID];
 			if (!instance?.events) continue;
+			let pushedCount = 0;
 
 			// Get datasource for processors (streaming events typically have datasourceID)
 			const datasourceID =
@@ -309,12 +310,13 @@ class EventBuffer {
 
 				if (processed !== null) {
 					instance.events.push(processed);
-					instance.eventCount++;
+					pushedCount++;
 				}
 			}
 
 			// Push any synthetic events emitted by processors
-			pushSyntheticEvents(instanceID);
+			pushedCount += pushSyntheticEvents(instanceID);
+			if (pushedCount > 0) instance.eventCount += pushedCount;
 		}
 
 		this.flushing = false;
@@ -461,7 +463,8 @@ export async function handleGadgetArrayData(msg: GadgetArrayDataMessage): Promis
 
 	// If all events were filtered out, still need to handle synthetic events
 	if (events.length === 0) {
-		pushSyntheticEvents(msg.instanceID);
+		const syntheticCount = pushSyntheticEvents(msg.instanceID);
+		if (syntheticCount > 0) instance.eventCount += syntheticCount;
 		return;
 	}
 
@@ -518,8 +521,6 @@ export async function handleGadgetArrayData(msg: GadgetArrayDataMessage): Promis
 		instance.events.push(event);
 	}
 
-	instance.eventCount += events.length;
-
 	// Push any synthetic events emitted by processors
-	pushSyntheticEvents(msg.instanceID);
+	instance.eventCount += events.length + pushSyntheticEvents(msg.instanceID);
 }

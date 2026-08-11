@@ -35,6 +35,12 @@
 		onchange?: (e: Event) => void;
 		/** Additional CSS classes */
 		class?: string;
+		/**
+		 * Accessible name for the `<select>` when no visible `label` is
+		 * rendered (e.g. a compact toolbar filter). Ignored when `label` is
+		 * set, since the `<label for>` association already provides one.
+		 */
+		ariaLabel?: string;
 	}
 
 	let {
@@ -47,7 +53,8 @@
 		description,
 		required = false,
 		onchange,
-		class: className = ''
+		class: className = '',
+		ariaLabel
 	}: Props = $props();
 
 	// Generate a unique ID for the select element
@@ -101,7 +108,15 @@
 		</svg>
 
 		<!-- Select element -->
-		<select id={selectId} bind:value {disabled} {required} {onchange} class={selectClasses}>
+		<select
+			id={selectId}
+			bind:value
+			{disabled}
+			{required}
+			{onchange}
+			class={selectClasses}
+			aria-label={!label ? ariaLabel : undefined}
+		>
 			{#if placeholder}
 				<option value="" disabled selected>{placeholder}</option>
 			{/if}

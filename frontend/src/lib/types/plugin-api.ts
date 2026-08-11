@@ -31,6 +31,14 @@ export interface VisualizerPluginProps {
 	isRunning?: boolean;
 	/** Unique instance ID for this gadget run */
 	instanceID?: string;
+	/**
+	 * Whether this visualizer's tab is currently the active/visible one.
+	 * Hidden (inactive) visualizers are kept mounted (not destroyed) so tab
+	 * switches don't lose state, but should avoid recurring recomputation or
+	 * scheduling work while inactive. Defaults to `true` when omitted (e.g.
+	 * standalone usage outside a tabbed datasource view).
+	 */
+	isActiveTab?: boolean;
 	/** Plugin context for accessing app services (optional for builtin components) */
 	context?: PluginContext;
 }

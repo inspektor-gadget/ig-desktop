@@ -14,6 +14,14 @@ html.dark body {
 	scrollbar-color: rgba(107, 114, 128, 0.6) #09090b;
 }
 
+.svelte-flow .svelte-flow__attribution {
+	background: var(--ig-color-surface-raised);
+}
+
+.svelte-flow .svelte-flow__attribution a {
+	color: var(--ig-color-text-secondary);
+}
+
 /* Light mode gradient */
 .bg-gradient-overlay {
 	position: relative;

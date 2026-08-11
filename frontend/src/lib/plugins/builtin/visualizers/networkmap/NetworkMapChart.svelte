@@ -1,133 +1,45 @@
 <script lang="ts">
 	import { SvelteFlow, Controls, Background, MiniMap } from '@xyflow/svelte';
 	import '@xyflow/svelte/dist/style.css';
-	import dagre from '@dagrejs/dagre';
+	import { untrack } from 'svelte';
 	import AddressNode from './AddressNode.svelte';
-	import type { NetworkNode, NetworkEdge } from '$lib/types/networkmap';
+	import NamespaceGroupNode from './NamespaceGroupNode.svelte';
+	import type { NetworkNode, NetworkEdge, NetworkNamespaceGroupNode } from '$lib/types/networkmap';
+	import { layoutNetworkMap, networkMapTopologyKey } from '$lib/utils/networkMapLayout';
 	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		nodes: NetworkNode[];
 		edges: NetworkEdge[];
-		onNodesChange?: (nodes: NetworkNode[]) => void;
 	}
 
-	let { nodes, edges, onNodesChange }: Props = $props();
+	let { nodes, edges }: Props = $props();
 
 	// XYFlow's NodeTypes type is complex - using type assertion for compatibility
 	const nodeTypes = {
-		address: AddressNode
+		address: AddressNode,
+		networkNamespaceGroup: NamespaceGroupNode
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	} as Record<string, any>;
 
-	// Track node positions separately (not reactive to avoid circular deps)
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Intentional: non-reactive to avoid circular dependency in effect
-	let nodePositions: Map<string, { x: number; y: number }> = new Map();
-	// Track which nodes have been manually positioned by the user
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Intentional: non-reactive set for tracking user-moved nodes
-	let userPositionedNodes: Set<string> = new Set();
-	// Track known node IDs to detect new nodes
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Intentional: non-reactive set for tracking known nodes
-	let knownNodeIds: Set<string> = new Set();
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Intentional: drag positions don't drive reactivity
+	let userPositions: Map<string, { x: number; y: number }> = new Map();
+	let topologyKey = '';
 
 	// Track layouted nodes in state
-	let layoutedNodes = $state<NetworkNode[]>([]);
-
-	// Apply Dagre layout only to new nodes, preserving existing positions
-	function applyLayoutToNewNodes(
-		inputNodes: NetworkNode[],
-		inputEdges: NetworkEdge[]
-	): NetworkNode[] {
-		if (inputNodes.length === 0) return inputNodes;
-
-		// Find nodes that need layout (new nodes not yet positioned)
-		const nodesToLayout = inputNodes.filter(
-			(n) => !knownNodeIds.has(n.id) && !userPositionedNodes.has(n.id)
-		);
-
-		// If no new nodes need layout, just apply existing positions
-		if (nodesToLayout.length === 0) {
-			return inputNodes.map((node) => {
-				const existingPos = nodePositions.get(node.id);
-				if (existingPos) {
-					return { ...node, position: existingPos };
-				}
-				return node;
-			});
-		}
-
-		// Run dagre on ALL nodes to get proper layout considering connections
-		const g = new dagre.graphlib.Graph();
-		g.setGraph({
-			rankdir: 'LR',
-			nodesep: 80,
-			ranksep: 150,
-			marginx: 50,
-			marginy: 50
-		});
-		g.setDefaultEdgeLabel(() => ({}));
-
-		for (const node of inputNodes) {
-			const handleCount = node.data.handles.length || 1;
-			const labelCount = node.data.labels?.length || 1;
-			const height = 32 + labelCount * 14 + handleCount * 28;
-			g.setNode(node.id, { width: 180, height });
-		}
-
-		for (const edge of inputEdges) {
-			g.setEdge(edge.source, edge.target);
-		}
-
-		dagre.layout(g);
-
-		// Apply positions: use Dagre for new nodes, preserve existing for others
-		return inputNodes.map((node) => {
-			// If user positioned this node, keep their position
-			if (userPositionedNodes.has(node.id)) {
-				const userPos = nodePositions.get(node.id);
-				if (userPos) {
-					return { ...node, position: userPos };
-				}
-			}
-
-			// If node already has a position and isn't new, keep it
-			if (knownNodeIds.has(node.id)) {
-				const existingPos = nodePositions.get(node.id);
-				if (existingPos) {
-					return { ...node, position: existingPos };
-				}
-			}
-
-			// New node - use Dagre position
-			const pos = g.node(node.id);
-			if (pos) {
-				const handleCount = node.data.handles.length || 1;
-				const labelCount = node.data.labels?.length || 1;
-				const position = {
-					x: pos.x - 90,
-					y: pos.y - (16 + labelCount * 7 + handleCount * 14)
-				};
-				nodePositions.set(node.id, position);
-				knownNodeIds.add(node.id);
-				return { ...node, position };
-			}
-
-			knownNodeIds.add(node.id);
-			return node;
-		});
-	}
+	let layoutedNodes = $state<(NetworkNode | NetworkNamespaceGroupNode)[]>([]);
 
 	// Handle node drag end - save user position
-	function handleNodeDragStop({ targetNode }: { targetNode: NetworkNode | null }) {
-		if (targetNode) {
-			const position = { x: targetNode.position.x, y: targetNode.position.y };
-			nodePositions.set(targetNode.id, position);
-			userPositionedNodes.add(targetNode.id);
-
-			// Notify parent of position change
-			if (onNodesChange) {
-				onNodesChange(layoutedNodes.map((n) => (n.id === targetNode.id ? { ...n, position } : n)));
-			}
+	function handleNodeDragStop({
+		targetNode
+	}: {
+		targetNode: NetworkNode | NetworkNamespaceGroupNode | null;
+	}) {
+		if (targetNode?.type === 'address') {
+			userPositions.set(targetNode.id, {
+				x: targetNode.position.x,
+				y: targetNode.position.y
+			});
 		}
 	}
 
@@ -135,13 +47,34 @@
 	$effect(() => {
 		if (nodes.length === 0) {
 			layoutedNodes = [];
-			nodePositions.clear();
-			userPositionedNodes.clear();
-			knownNodeIds.clear();
+			userPositions.clear();
+			topologyKey = '';
 			return;
 		}
 
-		layoutedNodes = applyLayoutToNewNodes(nodes, edges);
+		const nextTopologyKey = networkMapTopologyKey(nodes);
+		if (nextTopologyKey !== topologyKey) {
+			const currentIds = new Set(nodes.map((node) => node.id));
+			for (const id of userPositions.keys()) {
+				if (!currentIds.has(id)) userPositions.delete(id);
+			}
+			const layout = layoutNetworkMap(nodes, edges);
+			layoutedNodes = layout.nodes.map((node) => {
+				const userPosition = userPositions.get(node.id);
+				return userPosition ? { ...node, position: userPosition } : node;
+			});
+			topologyKey = nextTopologyKey;
+			return;
+		}
+
+		const currentNodes = new Map(nodes.map((node) => [node.id, node]));
+		const previousNodes = untrack(() => layoutedNodes);
+		layoutedNodes = previousNodes.map((node) => {
+			const current = currentNodes.get(node.id);
+			const refreshed = current ? { ...node, data: current.data } : node;
+			const userPosition = userPositions.get(node.id);
+			return userPosition ? { ...refreshed, position: userPosition } : refreshed;
+		});
 	});
 
 	// Stats for overlay
@@ -167,15 +100,21 @@
 		minZoom={0.1}
 		maxZoom={2}
 		defaultEdgeOptions={{
-			type: 'smoothstep',
+			type: 'default',
 			animated: false
 		}}
 		class="!bg-transparent"
+		nodesConnectable={false}
 		onnodedragstop={handleNodeDragStop}
 	>
 		<Controls position="bottom-right" />
 		<Background />
-		<MiniMap position="bottom-left" pannable zoomable />
+		<MiniMap
+			position="bottom-left"
+			pannable
+			zoomable
+			nodeColor={(node) => (node.type === 'networkNamespaceGroup' ? 'transparent' : '#9ca3af')}
+		/>
 	</SvelteFlow>
 
 	<!-- Stats overlay -->

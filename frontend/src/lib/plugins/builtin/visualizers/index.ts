@@ -23,3 +23,8 @@ export { default as Histogram } from './histogram/Histogram.svelte';
 // Network Map plugin
 export { manifest as networkMapManifest } from './networkmap/manifest';
 export { default as NetworkMap } from './networkmap/NetworkMap.svelte';
+
+// DNS plugin
+export { manifest as dnsManifest } from './dns/manifest';
+export { default as DnsTransactions } from './dns/DnsTransactions.svelte';
+export { default as DnsNetwork } from './dns/DnsNetwork.svelte';

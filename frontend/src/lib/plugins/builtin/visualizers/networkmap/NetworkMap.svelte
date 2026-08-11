@@ -8,7 +8,7 @@
 		createEmptyGraphState
 	} from '$lib/utils/networkMapConfig';
 	import type { VisualizerPluginProps } from '$lib/types/plugin-api';
-	import type { NetworkGraphState, NetworkNode, NetworkMapOptions } from '$lib/types/networkmap';
+	import type { NetworkGraphState, NetworkMapOptions } from '$lib/types/networkmap';
 	import { EDGE_ANIMATION_DURATION, DEFAULT_EPHEMERAL_PORT_THRESHOLD } from '$lib/types/networkmap';
 	import { t } from '$lib/i18n/index.svelte';
 
@@ -87,25 +87,6 @@
 
 	// Convert graph state to arrays for the chart
 	const { nodes, edges } = $derived(graphStateToArrays(graphState));
-
-	// Handle node position updates from the chart (after layout)
-	function handleNodesChange(updatedNodes: NetworkNode[]) {
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Intentional: cloning Map for immutable state update
-		const nodesMap = new Map(graphState.nodesMap);
-		for (const node of updatedNodes) {
-			const existing = nodesMap.get(node.id);
-			if (existing) {
-				nodesMap.set(node.id, {
-					...existing,
-					position: node.position
-				});
-			}
-		}
-		graphState = {
-			...graphState,
-			nodesMap
-		};
-	}
 </script>
 
 <div class="h-full w-full relative">
@@ -125,7 +106,7 @@
 		</div>
 
 		{#if nodes.length > 0}
-			<NetworkMapChart {nodes} {edges} onNodesChange={handleNodesChange} />
+			<NetworkMapChart {nodes} {edges} />
 		{:else}
 			<div class="flex h-full items-center justify-center text-gray-500 dark:text-gray-400">
 				<div class="text-center">
