@@ -89,6 +89,8 @@
 		class?: string;
 		/** Optional function to compute row class based on item, focus, and selection state */
 		rowClass?: (item: T, index: number, isFocused: boolean, isSelected: boolean) => string;
+		/** Optional function to compute a row background color */
+		rowBackgroundColor?: (item: T, index: number) => string;
 		/** Optional click handler for rows */
 		onrowclick?: (item: T, index: number, event: MouseEvent) => void;
 		/** Optional callback when visible range changes */
@@ -120,6 +122,7 @@
 		header,
 		class: className = '',
 		rowClass,
+		rowBackgroundColor,
 		onrowclick,
 		onVisibleRangeChange,
 		onfocus,
@@ -878,10 +881,13 @@
 							{@const actualIndex = scrollState.startIndex + i}
 							{@const isFocused = actualIndex === focusedIndex}
 							{@const isSelected = isIndexSelected(actualIndex)}
+							{@const backgroundColor = rowBackgroundColor?.(item, actualIndex)}
 							<tr
 								style="height: {rowHeight}px;"
+								style:--ig-table-row-background-color={backgroundColor}
 								aria-rowindex={actualIndex + 1}
 								aria-selected={isSelected}
+								class:virtual-table-row-colored={backgroundColor}
 								class="{rowClass
 									? rowClass(item, actualIndex, isFocused, isSelected)
 									: ''} {isFocused ? 'virtual-table-focused' : ''} {isSelected
@@ -983,6 +989,10 @@
 	.resize-handle:hover,
 	.resize-handle.active {
 		background: rgb(59 130 246 / 0.5);
+	}
+
+	:where(.virtual-table-row-colored) {
+		background-color: var(--ig-table-row-background-color);
 	}
 
 	/* Selected row styling - uses :global because row is rendered via snippet */

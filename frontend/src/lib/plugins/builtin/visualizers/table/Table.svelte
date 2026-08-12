@@ -739,6 +739,9 @@
 
 	// Field names for search matching (cached for performance)
 	const visibleFieldNames = $derived(visibleFields.map((f) => f.fullName));
+	const rowBackgroundColorField = $derived(
+		ds.annotations?.['view.table.row.background-color.from-field']
+	);
 
 	// Merge gadget columns with hook columns
 	const allColumns = $derived.by(() => {
@@ -904,6 +907,9 @@
 				initialColumnWidths={storedColumnWidths}
 				oncolumnresize={handleColumnResize}
 				oncolumnreset={handleColumnReset}
+				rowBackgroundColor={rowBackgroundColorField
+					? (entry) => String(entry[rowBackgroundColorField] ?? '')
+					: undefined}
 				rowClass={(entry, index) => {
 					const isCurrent = isCurrentMatch(index);
 					const isMatch = isRowMatch(entry);
