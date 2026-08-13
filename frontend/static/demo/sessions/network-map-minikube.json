@@ -1,0 +1,2500 @@
+{
+  "session": {
+    "id": "ed57ca3c-1be3-451d-b74e-32cca9558149",
+    "name": "Network map minikube replay",
+    "environmentId": "3847213b-5fe7-4b2f-998c-c27425067e39",
+    "createdAt": 1786621024246,
+    "updatedAt": 1786621026609,
+    "runCount": 1,
+    "runs": [
+      {
+        "id": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "sessionId": "ed57ca3c-1be3-451d-b74e-32cca9558149",
+        "gadgetImage": "ghcr.io/inspektor-gadget/gadget/trace_tcp:latest",
+        "params": {
+          "operator.KubeManager.namespace": "ig-demo-b"
+        },
+        "gadgetInfo": {
+          "imageName": "ghcr.io/inspektor-gadget/gadget/trace_tcp:latest",
+          "dataSources": [
+            {
+              "name": "tracetcp",
+              "type": 1,
+              "fields": [
+                {
+                  "name": "timestamp_raw",
+                  "fullName": "timestamp_raw",
+                  "size": 8,
+                  "flags": 20,
+                  "kind": "Uint64",
+                  "tags": [
+                    "type:gadget_timestamp",
+                    "type:__u64",
+                    "type:unsigned long long",
+                    "name:timestamp_raw",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.maxwidth": "35",
+                    "columns.width": "35",
+                    "description": "Microseconds since Unix epoch"
+                  }
+                },
+                {
+                  "name": "proc",
+                  "fullName": "proc",
+                  "index": 1,
+                  "offs": 8,
+                  "size": 64,
+                  "flags": 20,
+                  "kind": "Bytes",
+                  "tags": [
+                    "type:gadget_process",
+                    "name:proc",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.width": "16"
+                  }
+                },
+                {
+                  "name": "comm",
+                  "fullName": "proc.comm",
+                  "index": 2,
+                  "offs": 8,
+                  "size": 16,
+                  "flags": 24,
+                  "kind": "CString",
+                  "tags": [
+                    "type:gadget_comm",
+                    "type:char",
+                    "name:comm",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alias": "comm",
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.maxwidth": "16",
+                    "columns.width": "16",
+                    "description": "Process name"
+                  },
+                  "parent": 1
+                },
+                {
+                  "name": "pid",
+                  "fullName": "proc.pid",
+                  "index": 3,
+                  "offs": 24,
+                  "size": 4,
+                  "flags": 24,
+                  "kind": "Uint32",
+                  "tags": [
+                    "type:gadget_pid",
+                    "type:__u32",
+                    "type:unsigned int",
+                    "name:pid",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alias": "pid",
+                    "columns.alignment": "right",
+                    "columns.ellipsis": "end",
+                    "columns.minwidth": "7",
+                    "columns.width": "16",
+                    "description": "Process ID"
+                  },
+                  "parent": 1
+                },
+                {
+                  "name": "tid",
+                  "fullName": "proc.tid",
+                  "index": 4,
+                  "offs": 28,
+                  "size": 4,
+                  "flags": 24,
+                  "kind": "Uint32",
+                  "tags": [
+                    "type:gadget_tid",
+                    "type:__u32",
+                    "type:unsigned int",
+                    "name:tid",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alias": "tid",
+                    "columns.alignment": "right",
+                    "columns.ellipsis": "end",
+                    "columns.minwidth": "7",
+                    "columns.width": "16",
+                    "description": "Thread ID"
+                  },
+                  "parent": 1
+                },
+                {
+                  "name": "mntns_id",
+                  "fullName": "proc.mntns_id",
+                  "index": 5,
+                  "offs": 32,
+                  "size": 8,
+                  "flags": 28,
+                  "kind": "Uint64",
+                  "tags": [
+                    "type:gadget_mntns_id",
+                    "type:__u64",
+                    "type:unsigned long long",
+                    "name:mntns_id",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alias": "mntns_id",
+                    "columns.alignment": "right",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.width": "12",
+                    "description": "Mount namespace ID"
+                  },
+                  "parent": 1
+                },
+                {
+                  "name": "creds",
+                  "fullName": "proc.creds",
+                  "index": 6,
+                  "offs": 40,
+                  "size": 8,
+                  "flags": 28,
+                  "kind": "Bytes",
+                  "tags": [
+                    "type:gadget_creds",
+                    "name:creds",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alias": "creds",
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.width": "16"
+                  },
+                  "parent": 1
+                },
+                {
+                  "name": "uid",
+                  "fullName": "proc.creds.uid",
+                  "index": 7,
+                  "offs": 40,
+                  "size": 4,
+                  "flags": 28,
+                  "kind": "Uint32",
+                  "tags": [
+                    "type:gadget_uid",
+                    "type:__u32",
+                    "type:unsigned int",
+                    "name:uid",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alias": "uid",
+                    "columns.alignment": "right",
+                    "columns.ellipsis": "end",
+                    "columns.minwidth": "8",
+                    "columns.width": "16",
+                    "description": "User ID"
+                  },
+                  "parent": 6
+                },
+                {
+                  "name": "gid",
+                  "fullName": "proc.creds.gid",
+                  "index": 8,
+                  "offs": 44,
+                  "size": 4,
+                  "flags": 28,
+                  "kind": "Uint32",
+                  "tags": [
+                    "type:gadget_gid",
+                    "type:__u32",
+                    "type:unsigned int",
+                    "name:gid",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alias": "gid",
+                    "columns.alignment": "right",
+                    "columns.ellipsis": "end",
+                    "columns.minwidth": "8",
+                    "columns.width": "16",
+                    "description": "Group ID"
+                  },
+                  "parent": 6
+                },
+                {
+                  "name": "parent",
+                  "fullName": "proc.parent",
+                  "index": 9,
+                  "offs": 48,
+                  "size": 24,
+                  "flags": 28,
+                  "kind": "Bytes",
+                  "tags": [
+                    "type:gadget_parent",
+                    "name:parent",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alias": "parent",
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.width": "16"
+                  },
+                  "parent": 1
+                },
+                {
+                  "name": "comm",
+                  "fullName": "proc.parent.comm",
+                  "index": 10,
+                  "offs": 48,
+                  "size": 16,
+                  "flags": 28,
+                  "kind": "CString",
+                  "tags": [
+                    "type:gadget_pcomm",
+                    "type:char",
+                    "name:comm",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alias": "comm",
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.maxwidth": "16",
+                    "columns.width": "16",
+                    "description": "Parent process name"
+                  },
+                  "parent": 9
+                },
+                {
+                  "name": "pid",
+                  "fullName": "proc.parent.pid",
+                  "index": 11,
+                  "offs": 64,
+                  "size": 4,
+                  "flags": 28,
+                  "kind": "Uint32",
+                  "tags": [
+                    "type:gadget_ppid",
+                    "type:__u32",
+                    "type:unsigned int",
+                    "name:pid",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alias": "pid",
+                    "columns.alignment": "right",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.minwidth": "7",
+                    "columns.width": "16",
+                    "description": "Parent process ID"
+                  },
+                  "parent": 9
+                },
+                {
+                  "name": "tid",
+                  "fullName": "proc.parent.tid",
+                  "index": 12,
+                  "offs": 68,
+                  "size": 4,
+                  "flags": 24,
+                  "kind": "Uint32",
+                  "tags": [
+                    "type:gadget_ptid",
+                    "type:__u32",
+                    "type:unsigned int",
+                    "name:tid",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alias": "tid",
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 9
+                },
+                {
+                  "name": "netns_id",
+                  "fullName": "netns_id",
+                  "index": 13,
+                  "offs": 72,
+                  "size": 4,
+                  "flags": 20,
+                  "kind": "Uint32",
+                  "tags": [
+                    "type:gadget_netns_id",
+                    "type:__u32",
+                    "type:unsigned int",
+                    "name:netns_id",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "right",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.width": "12",
+                    "description": "Network namespace ID"
+                  }
+                },
+                {
+                  "name": "src",
+                  "fullName": "src",
+                  "index": 14,
+                  "offs": 80,
+                  "size": 32,
+                  "flags": 16,
+                  "kind": "Bytes",
+                  "tags": [
+                    "type:gadget_l4endpoint_t",
+                    "name:src",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "middle",
+                    "columns.maxwidth": "52",
+                    "columns.minwidth": "22",
+                    "columns.replace": "src.endpoint",
+                    "columns.width": "40",
+                    "template": "l4endpoint"
+                  }
+                },
+                {
+                  "name": "addr_raw",
+                  "fullName": "src.addr_raw",
+                  "index": 15,
+                  "offs": 80,
+                  "size": 16,
+                  "flags": 60,
+                  "kind": "Bytes",
+                  "tags": [
+                    "type:gadget_ip_addr_t",
+                    "name:addr_raw",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 14
+                },
+                {
+                  "name": "v6",
+                  "fullName": "src.addr_raw.v6",
+                  "index": 16,
+                  "offs": 80,
+                  "size": 16,
+                  "flags": 60,
+                  "kind": 268435462,
+                  "tags": [
+                    "type:__u8",
+                    "type:unsigned char",
+                    "name:v6",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 15
+                },
+                {
+                  "name": "v4",
+                  "fullName": "src.addr_raw.v4",
+                  "index": 17,
+                  "offs": 80,
+                  "size": 4,
+                  "flags": 60,
+                  "kind": "Uint32",
+                  "tags": [
+                    "type:__u32",
+                    "type:unsigned int",
+                    "name:v4",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 15
+                },
+                {
+                  "name": "port",
+                  "fullName": "src.port",
+                  "index": 18,
+                  "offs": 96,
+                  "size": 2,
+                  "flags": 28,
+                  "kind": "Uint16",
+                  "tags": [
+                    "type:__u16",
+                    "type:unsigned short",
+                    "name:port",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 14
+                },
+                {
+                  "name": "proto_raw",
+                  "fullName": "src.proto_raw",
+                  "index": 19,
+                  "offs": 98,
+                  "size": 2,
+                  "flags": 28,
+                  "kind": "Uint16",
+                  "tags": [
+                    "type:__u16",
+                    "type:unsigned short",
+                    "name:proto_raw",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 14
+                },
+                {
+                  "name": "version",
+                  "fullName": "src.version",
+                  "index": 20,
+                  "offs": 100,
+                  "size": 1,
+                  "flags": 28,
+                  "kind": "Uint8",
+                  "tags": [
+                    "type:__u8",
+                    "type:unsigned char",
+                    "name:version",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 14
+                },
+                {
+                  "name": "dst",
+                  "fullName": "dst",
+                  "index": 21,
+                  "offs": 112,
+                  "size": 32,
+                  "flags": 16,
+                  "kind": "Bytes",
+                  "tags": [
+                    "type:gadget_l4endpoint_t",
+                    "name:dst",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "middle",
+                    "columns.maxwidth": "52",
+                    "columns.minwidth": "22",
+                    "columns.replace": "dst.endpoint",
+                    "columns.width": "40",
+                    "template": "l4endpoint"
+                  }
+                },
+                {
+                  "name": "addr_raw",
+                  "fullName": "dst.addr_raw",
+                  "index": 22,
+                  "offs": 112,
+                  "size": 16,
+                  "flags": 60,
+                  "kind": "Bytes",
+                  "tags": [
+                    "type:gadget_ip_addr_t",
+                    "name:addr_raw",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 21
+                },
+                {
+                  "name": "v6",
+                  "fullName": "dst.addr_raw.v6",
+                  "index": 23,
+                  "offs": 112,
+                  "size": 16,
+                  "flags": 60,
+                  "kind": 268435462,
+                  "tags": [
+                    "type:__u8",
+                    "type:unsigned char",
+                    "name:v6",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 22
+                },
+                {
+                  "name": "v4",
+                  "fullName": "dst.addr_raw.v4",
+                  "index": 24,
+                  "offs": 112,
+                  "size": 4,
+                  "flags": 60,
+                  "kind": "Uint32",
+                  "tags": [
+                    "type:__u32",
+                    "type:unsigned int",
+                    "name:v4",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 22
+                },
+                {
+                  "name": "port",
+                  "fullName": "dst.port",
+                  "index": 25,
+                  "offs": 128,
+                  "size": 2,
+                  "flags": 28,
+                  "kind": "Uint16",
+                  "tags": [
+                    "type:__u16",
+                    "type:unsigned short",
+                    "name:port",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 21
+                },
+                {
+                  "name": "proto_raw",
+                  "fullName": "dst.proto_raw",
+                  "index": 26,
+                  "offs": 130,
+                  "size": 2,
+                  "flags": 28,
+                  "kind": "Uint16",
+                  "tags": [
+                    "type:__u16",
+                    "type:unsigned short",
+                    "name:proto_raw",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 21
+                },
+                {
+                  "name": "version",
+                  "fullName": "dst.version",
+                  "index": 27,
+                  "offs": 132,
+                  "size": 1,
+                  "flags": 28,
+                  "kind": "Uint8",
+                  "tags": [
+                    "type:__u8",
+                    "type:unsigned char",
+                    "name:version",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 21
+                },
+                {
+                  "name": "type_raw",
+                  "fullName": "type_raw",
+                  "index": 28,
+                  "offs": 144,
+                  "size": 1,
+                  "flags": 20,
+                  "kind": "Uint8",
+                  "tags": [
+                    "type:event_type",
+                    "name:type_raw",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.width": "16"
+                  }
+                },
+                {
+                  "name": "error_raw",
+                  "fullName": "error_raw",
+                  "index": 29,
+                  "offs": 148,
+                  "size": 4,
+                  "flags": 20,
+                  "kind": "Uint32",
+                  "tags": [
+                    "type:gadget_errno",
+                    "type:__u32",
+                    "type:unsigned int",
+                    "name:error_raw",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.width": "16"
+                  }
+                },
+                {
+                  "name": "fd",
+                  "fullName": "fd",
+                  "index": 30,
+                  "offs": 152,
+                  "size": 4,
+                  "flags": 20,
+                  "kind": "Int32",
+                  "tags": [
+                    "type:int",
+                    "name:fd",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.width": "16",
+                    "description": "The FD where the operation happened on (connect, accept)"
+                  }
+                },
+                {
+                  "name": "accept_fd",
+                  "fullName": "accept_fd",
+                  "index": 31,
+                  "offs": 156,
+                  "size": 4,
+                  "flags": 20,
+                  "kind": "Int32",
+                  "tags": [
+                    "type:int",
+                    "name:accept_fd",
+                    "src:ebpf"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.width": "16",
+                    "description": "The FD of the new connection returned by accept, or -1 for errors cases or other events"
+                  }
+                },
+                {
+                  "name": "type",
+                  "fullName": "type",
+                  "index": 32,
+                  "payloadIndex": 1,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16",
+                    "description": "Type of TCP connection event",
+                    "value.one-of": "connect, accept, close"
+                  },
+                  "order": 32
+                },
+                {
+                  "name": "k8s",
+                  "fullName": "k8s",
+                  "index": 33,
+                  "flags": 1,
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "order": 33
+                },
+                {
+                  "name": "node",
+                  "fullName": "k8s.node",
+                  "index": 34,
+                  "payloadIndex": 2,
+                  "flags": 8,
+                  "kind": "String",
+                  "tags": [
+                    "kubernetes"
+                  ],
+                  "annotations": {
+                    "columns.ellipsis": "middle",
+                    "columns.width": "30",
+                    "template": "node"
+                  },
+                  "parent": 33,
+                  "order": -31
+                },
+                {
+                  "name": "namespace",
+                  "fullName": "k8s.namespace",
+                  "index": 35,
+                  "payloadIndex": 3,
+                  "flags": 8,
+                  "kind": "String",
+                  "tags": [
+                    "kubernetes"
+                  ],
+                  "annotations": {
+                    "columns.width": "30",
+                    "template": "namespace"
+                  },
+                  "parent": 33,
+                  "order": -30
+                },
+                {
+                  "name": "podName",
+                  "fullName": "k8s.podName",
+                  "index": 36,
+                  "payloadIndex": 4,
+                  "flags": 8,
+                  "kind": "String",
+                  "tags": [
+                    "kubernetes"
+                  ],
+                  "annotations": {
+                    "columns.ellipsis": "middle",
+                    "columns.width": "30",
+                    "template": "pod"
+                  },
+                  "parent": 33,
+                  "order": -29
+                },
+                {
+                  "name": "containerName",
+                  "fullName": "k8s.containerName",
+                  "index": 37,
+                  "payloadIndex": 5,
+                  "flags": 8,
+                  "kind": "String",
+                  "tags": [
+                    "kubernetes"
+                  ],
+                  "annotations": {
+                    "columns.width": "30",
+                    "template": "container"
+                  },
+                  "parent": 33,
+                  "order": -28
+                },
+                {
+                  "name": "hostnetwork",
+                  "fullName": "k8s.hostnetwork",
+                  "index": 38,
+                  "payloadIndex": 6,
+                  "flags": 12,
+                  "kind": "Bool",
+                  "tags": [
+                    "kubernetes"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 33,
+                  "order": -27
+                },
+                {
+                  "name": "podLabels",
+                  "fullName": "k8s.podLabels",
+                  "index": 39,
+                  "payloadIndex": 7,
+                  "flags": 12,
+                  "kind": "String",
+                  "tags": [
+                    "kubernetes"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 33,
+                  "order": -26
+                },
+                {
+                  "name": "owner",
+                  "fullName": "k8s.owner",
+                  "index": 40,
+                  "flags": 9,
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 33
+                },
+                {
+                  "name": "kind",
+                  "fullName": "k8s.owner.kind",
+                  "index": 41,
+                  "payloadIndex": 8,
+                  "flags": 12,
+                  "kind": "String",
+                  "tags": [
+                    "kubernetes"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 40
+                },
+                {
+                  "name": "name",
+                  "fullName": "k8s.owner.name",
+                  "index": 42,
+                  "payloadIndex": 9,
+                  "flags": 12,
+                  "kind": "String",
+                  "tags": [
+                    "kubernetes"
+                  ],
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 40
+                },
+                {
+                  "name": "runtime",
+                  "fullName": "runtime",
+                  "index": 43,
+                  "flags": 5,
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "order": 43
+                },
+                {
+                  "name": "containerName",
+                  "fullName": "runtime.containerName",
+                  "index": 44,
+                  "payloadIndex": 10,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.width": "30",
+                    "template": "container"
+                  },
+                  "parent": 43,
+                  "order": -27
+                },
+                {
+                  "name": "runtimeName",
+                  "fullName": "runtime.runtimeName",
+                  "index": 45,
+                  "payloadIndex": 11,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.fixed": "true",
+                    "columns.width": "19"
+                  },
+                  "parent": 43,
+                  "order": -26
+                },
+                {
+                  "name": "containerId",
+                  "fullName": "runtime.containerId",
+                  "index": 46,
+                  "payloadIndex": 12,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.maxwidth": "64",
+                    "columns.width": "13"
+                  },
+                  "parent": 43,
+                  "order": -25
+                },
+                {
+                  "name": "containerPid",
+                  "fullName": "runtime.containerPid",
+                  "index": 47,
+                  "payloadIndex": 13,
+                  "flags": 12,
+                  "kind": "Uint32",
+                  "annotations": {
+                    "columns.alignment": "right",
+                    "columns.hidden": "true",
+                    "columns.width": "6",
+                    "template": "containerPid"
+                  },
+                  "parent": 43,
+                  "order": -24
+                },
+                {
+                  "name": "containerImageName",
+                  "fullName": "runtime.containerImageName",
+                  "index": 48,
+                  "payloadIndex": 14,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 43,
+                  "order": -23
+                },
+                {
+                  "name": "containerImageDigest",
+                  "fullName": "runtime.containerImageDigest",
+                  "index": 49,
+                  "payloadIndex": 15,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 43,
+                  "order": -22
+                },
+                {
+                  "name": "containerStartedAt",
+                  "fullName": "runtime.containerStartedAt",
+                  "index": 50,
+                  "payloadIndex": 16,
+                  "flags": 12,
+                  "kind": "Int64",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 43,
+                  "order": -21
+                },
+                {
+                  "name": "error",
+                  "fullName": "error",
+                  "index": 51,
+                  "payloadIndex": 17,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.width": "12",
+                    "template": "errorString",
+                    "value.one-of": "E2BIG, EACCES, EADDRINUSE, EADDRNOTAVAIL, EADV, EAFNOSUPPORT, EAGAIN, EALREADY, EBADE, EBADF, EBADFD, EBADMSG, EBADR, EBADRQC, EBADSLT, EBFONT, EBUSY, ECANCELED, ECHILD, ECHRNG, ECOMM, ECONNABORTED, ECONNREFUSED, ECONNRESET, EDEADLK, EDEADLOCK, EDESTADDRREQ, EDOM, EDOTDOT, EDQUOT, EEXIST, EFAULT, EFBIG, EHOSTDOWN, EHOSTUNREACH, EIDRM, EILSEQ, EINPROGRESS, EINTR, EINVAL, EIO, EISCONN, EISDIR, EISNAM, EKEYEXPIRED, EKEYREJECTED, EKEYREVOKED, EL2HLT, EL2NSYNC, EL3HLT, EL3RST, ELIBACC, ELIBBAD, ELIBEXEC, ELIBMAX, ELIBSCN, ELNRNG, ELOOP, EMEDIUMTYPE, EMFILE, EMLINK, EMSGSIZE, EMULTIHOP, ENAMETOOLONG, ENAVAIL, ENETDOWN, ENETRESET, ENETUNREACH, ENFILE, ENOANO, ENOBUFS, ENOCSI, ENODATA, ENODEV, ENOENT, ENOEXEC, ENOKEY, ENOLCK, ENOLINK, ENOMEDIUM, ENOMEM, ENOMSG, ENONET, ENOPKG, ENOPROTOOPT, ENOSPC, ENOSR, ENOSTR, ENOSYS, ENOTBLK, ENOTCONN, ENOTDIR, ENOTEMPTY, ENOTNAM, ENOTRECOVERABLE, ENOTSOCK, ENOTSUP, ENOTTY, ENOTUNIQ, ENXIO, EOPNOTSUPP, EOVERFLOW, EOWNERDEAD, EPERM, EPFNOSUPPORT, EPIPE, EPROTO, EPROTONOSUPPORT, EPROTOTYPE, ERANGE, EREMCHG, EREMOTE, EREMOTEIO, ERESTART, ERFKILL, EROFS, ESHUTDOWN, ESOCKTNOSUPPORT, ESPIPE, ESRCH, ESRMNT, ESTALE, ESTRPIPE, ETIME, ETIMEDOUT, ETOOMANYREFS, ETXTBSY, EUCLEAN, EUNATCH, EUSERS, EWOULDBLOCK, EXDEV, EXFULL"
+                  },
+                  "order": 51
+                },
+                {
+                  "name": "timestamp",
+                  "fullName": "timestamp",
+                  "index": 52,
+                  "payloadIndex": 18,
+                  "flags": 4,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.ellipsis": "end",
+                    "columns.hidden": "true",
+                    "columns.maxwidth": "35",
+                    "columns.width": "35",
+                    "description": "Microseconds since Unix epoch",
+                    "template": "timestamp"
+                  },
+                  "order": 52
+                },
+                {
+                  "name": "addr",
+                  "fullName": "src.addr",
+                  "index": 53,
+                  "payloadIndex": 19,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 14
+                },
+                {
+                  "name": "proto",
+                  "fullName": "src.proto",
+                  "index": 54,
+                  "payloadIndex": 20,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 14
+                },
+                {
+                  "name": "endpoint",
+                  "fullName": "src.endpoint",
+                  "index": 55,
+                  "payloadIndex": 21,
+                  "flags": 12,
+                  "kind": "String",
+                  "tags": [
+                    "endpoint"
+                  ],
+                  "annotations": {
+                    "json.skip": "true"
+                  },
+                  "parent": 14
+                },
+                {
+                  "name": "addr",
+                  "fullName": "dst.addr",
+                  "index": 56,
+                  "payloadIndex": 22,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 21
+                },
+                {
+                  "name": "proto",
+                  "fullName": "dst.proto",
+                  "index": 57,
+                  "payloadIndex": 23,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 21
+                },
+                {
+                  "name": "endpoint",
+                  "fullName": "dst.endpoint",
+                  "index": 58,
+                  "payloadIndex": 24,
+                  "flags": 12,
+                  "kind": "String",
+                  "tags": [
+                    "endpoint"
+                  ],
+                  "annotations": {
+                    "json.skip": "true"
+                  },
+                  "parent": 21
+                },
+                {
+                  "name": "user",
+                  "fullName": "proc.creds.user",
+                  "index": 59,
+                  "payloadIndex": 25,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 6,
+                  "order": 59
+                },
+                {
+                  "name": "group",
+                  "fullName": "proc.creds.group",
+                  "index": 60,
+                  "payloadIndex": 26,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 6,
+                  "order": 60
+                },
+                {
+                  "name": "k8s",
+                  "fullName": "src.k8s",
+                  "index": 61,
+                  "flags": 9,
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 14
+                },
+                {
+                  "name": "kind",
+                  "fullName": "src.k8s.kind",
+                  "index": 62,
+                  "payloadIndex": 27,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.maxwidth": "12"
+                  },
+                  "parent": 61
+                },
+                {
+                  "name": "name",
+                  "fullName": "src.k8s.name",
+                  "index": 63,
+                  "payloadIndex": 28,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.ellipsis": "middle",
+                    "columns.width": "30",
+                    "template": "pod"
+                  },
+                  "parent": 61
+                },
+                {
+                  "name": "namespace",
+                  "fullName": "src.k8s.namespace",
+                  "index": 64,
+                  "payloadIndex": 29,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.width": "30",
+                    "template": "namespace"
+                  },
+                  "parent": 61
+                },
+                {
+                  "name": "labels",
+                  "fullName": "src.k8s.labels",
+                  "index": 65,
+                  "payloadIndex": 30,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 61
+                },
+                {
+                  "name": "podSelector",
+                  "fullName": "src.k8s.podSelector",
+                  "index": 66,
+                  "payloadIndex": 31,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 61
+                },
+                {
+                  "name": "k8s",
+                  "fullName": "dst.k8s",
+                  "index": 67,
+                  "flags": 9,
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 21
+                },
+                {
+                  "name": "kind",
+                  "fullName": "dst.k8s.kind",
+                  "index": 68,
+                  "payloadIndex": 32,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.maxwidth": "12"
+                  },
+                  "parent": 67
+                },
+                {
+                  "name": "name",
+                  "fullName": "dst.k8s.name",
+                  "index": 69,
+                  "payloadIndex": 33,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.ellipsis": "middle",
+                    "columns.width": "30",
+                    "template": "pod"
+                  },
+                  "parent": 67
+                },
+                {
+                  "name": "namespace",
+                  "fullName": "dst.k8s.namespace",
+                  "index": 70,
+                  "payloadIndex": 34,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.width": "30",
+                    "template": "namespace"
+                  },
+                  "parent": 67
+                },
+                {
+                  "name": "labels",
+                  "fullName": "dst.k8s.labels",
+                  "index": 71,
+                  "payloadIndex": 35,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 67
+                },
+                {
+                  "name": "podSelector",
+                  "fullName": "dst.k8s.podSelector",
+                  "index": 72,
+                  "payloadIndex": 36,
+                  "flags": 12,
+                  "kind": "String",
+                  "annotations": {
+                    "columns.alignment": "left",
+                    "columns.ellipsis": "end",
+                    "columns.width": "16"
+                  },
+                  "parent": 67
+                }
+              ]
+            }
+          ],
+          "metadata": "bmFtZTogdHJhY2UgdGNwCmRlc2NyaXB0aW9uOiBtb25pdG9yIGNvbm5lY3QsIGFjY2VwdCBhbmQgY2xvc2UgZXZlbnRzIG9mIFRDUCBjb25uZWN0aW9ucwpob21lcGFnZVVSTDogaHR0cHM6Ly9pbnNwZWt0b3ItZ2FkZ2V0LmlvLwpkb2N1bWVudGF0aW9uVVJMOiBodHRwczovL3d3dy5pbnNwZWt0b3ItZ2FkZ2V0LmlvL2RvY3MvbGF0ZXN0L2dhZGdldHMvdHJhY2VfdGNwCnNvdXJjZVVSTDogaHR0cHM6Ly9naXRodWIuY29tL2luc3Bla3Rvci1nYWRnZXQvaW5zcGVrdG9yLWdhZGdldC90cmVlL21haW4vZ2FkZ2V0cy90cmFjZV90Y3AKZGF0YXNvdXJjZXM6CiAgdHJhY2V0Y3A6CiAgICBmaWVsZHM6CiAgICAgIHNyYzoKICAgICAgICBhbm5vdGF0aW9uczoKICAgICAgICAgIHRlbXBsYXRlOiBsNGVuZHBvaW50CiAgICAgIGRzdDoKICAgICAgICBhbm5vdGF0aW9uczoKICAgICAgICAgIHRlbXBsYXRlOiBsNGVuZHBvaW50CiAgICAgIHR5cGVfcmF3OgogICAgICAgIGFubm90YXRpb25zOgogICAgICAgICAgY29sdW1ucy5oaWRkZW46IHRydWUKICAgICAgdHlwZToKICAgICAgICBhbm5vdGF0aW9uczoKICAgICAgICAgIGRlc2NyaXB0aW9uOiBUeXBlIG9mIFRDUCBjb25uZWN0aW9uIGV2ZW50CiAgICAgICAgICB2YWx1ZS5vbmUtb2Y6ICJjb25uZWN0LCBhY2NlcHQsIGNsb3NlIgogICAgICBlcnJvcl9yYXc6CiAgICAgICAgYW5ub3RhdGlvbnM6CiAgICAgICAgICBjb2x1bW5zLmhpZGRlbjogdHJ1ZQogICAgICBmZDoKICAgICAgICBhbm5vdGF0aW9uczoKICAgICAgICAgIGRlc2NyaXB0aW9uOiBUaGUgRkQgd2hlcmUgdGhlIG9wZXJhdGlvbiBoYXBwZW5lZCBvbiAoY29ubmVjdCwgYWNjZXB0KQogICAgICAgICAgY29sdW1ucy5oaWRkZW46IHRydWUKICAgICAgYWNjZXB0X2ZkOgogICAgICAgIGFubm90YXRpb25zOgogICAgICAgICAgZGVzY3JpcHRpb246IFRoZSBGRCBvZiB0aGUgbmV3IGNvbm5lY3Rpb24gcmV0dXJuZWQgYnkgYWNjZXB0LCBvciAtMSBmb3IgZXJyb3JzIGNhc2VzIG9yIG90aGVyIGV2ZW50cwogICAgICAgICAgY29sdW1ucy5oaWRkZW46IHRydWUKcGFyYW1zOgogIGVicGY6CiAgICBhY2NlcHRfb25seToKICAgICAga2V5OiBhY2NlcHQtb25seQogICAgICBkZWZhdWx0VmFsdWU6ICJmYWxzZSIKICAgICAgZGVzY3JpcHRpb246IFNob3cgb25seSBhY2NlcHQgZXZlbnRzCiAgICBjb25uZWN0X29ubHk6CiAgICAgIGtleTogY29ubmVjdC1vbmx5CiAgICAgIGRlZmF1bHRWYWx1ZTogImZhbHNlIgogICAgICBkZXNjcmlwdGlvbjogU2hvdyBvbmx5IGNvbm5lY3QgZXZlbnRzCiAgICBmYWlsdXJlX29ubHk6CiAgICAgIGtleTogZmFpbHVyZS1vbmx5CiAgICAgIGRlZmF1bHRWYWx1ZTogImZhbHNlIgogICAgICBkZXNjcmlwdGlvbjogRG9uJ3Qgc2hvdyBzdWNjZXNzZnVsIGV2ZW50cwo="
+        },
+        "startedAt": 1786621024288,
+        "stoppedAt": 1786621026607,
+        "eventCount": 95
+      }
+    ]
+  },
+  "events": {
+    "535ba8be-6beb-41b7-b642-ddfb552a026f": [
+      {
+        "id": 1,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024292,
+        "type": 4,
+        "data": {
+          "msg": "starting op \"virtual\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 2,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024294,
+        "type": 4,
+        "data": {
+          "msg": "starting op \"exp\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 3,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024295,
+        "type": 4,
+        "data": {
+          "msg": "running...",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 4,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024296,
+        "type": 4,
+        "data": {
+          "msg": "loaded gadget info",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 5,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024298,
+        "type": 4,
+        "data": {
+          "msg": "registered ds tracetcp",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 6,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024299,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | preparing op \"oci\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 7,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024300,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | preparing op \"KubeManager\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 8,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024301,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | preparing op \"formatters\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 9,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024303,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | preparing op \"env\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 10,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024304,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | preparing op \"UidGidResolverInstance\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 11,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024306,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | preparing op \"KubeIPResolverInstance\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 12,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024307,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | preparing op \"filter\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 13,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024308,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | preparing op \"otel-metrics\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 14,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024308,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | preparing op \"svc\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 15,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024309,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | pre-starting op \"oci\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 16,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024310,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | pre-starting op \"KubeManager\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 17,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024311,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | set mountnsmap for gadget",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 18,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024312,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | add subscription to containerCollection",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 19,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024314,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | calling gadget.AttachContainer()",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 20,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024316,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | tracer attached: container \"nginx\" pid 284189 mntns 4026532990 netns 4026532856",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 21,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024318,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | pre-starting op \"formatters\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 22,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024320,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | pre-starting op \"env\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 23,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024322,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | pre-starting op \"UidGidResolverInstance\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 24,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024323,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | pre-starting op \"KubeIPResolverInstance\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 25,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024324,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | pre-starting op \"filter\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 26,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024326,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | pre-starting op \"otel-metrics\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 27,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024327,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | pre-starting op \"svc\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 28,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024328,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | starting op \"oci\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 29,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024329,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | starting ebpfInstance",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 30,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024330,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | setting param value \"accept_only\" = false",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 31,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024331,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | setting param value \"connect_only\" = false",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 32,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024332,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | setting param value \"targ_gid\" = 4294967295",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 33,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024335,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | handling string param: \"targ_comm\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 34,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024336,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | setting param value \"targ_comm\" = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 35,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024337,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | setting param value \"failure_only\" = false",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 36,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024339,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | setting param value \"targ_pid\" = 0",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 37,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024340,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | setting param value \"targ_tid\" = 0",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 38,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024341,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | setting param value \"targ_uid\" = 4294967295",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 39,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024342,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | got var \"gadget_mntns_filter_map\": Hash(mntnsset_1c283512-f583-4ce5-a73f-e75e5299ab21)#159",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 40,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024343,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | got var \"gadget_filter_by_mntns\": true",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 41,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024344,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | setting var \"gadget_filter_by_mntns\" to true",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 42,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024345,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | creating ebpf collection",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 43,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024346,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | starting tracer \"events\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 44,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024347,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | creating ringbuf reader for map \"events\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 45,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024348,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching kprobe \"ig_tcp_state\" to \"tcp_set_state\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 46,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024349,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching kprobe \"ig_tcp_close\" to \"tcp_close\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 47,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024351,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching tracepoint \"sys_accept_e\" to \"syscalls/sys_enter_accept\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 48,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024352,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching kretprobe \"ig_tcp_v4_co_x\" to \"tcp_v4_connect\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 49,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024353,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching kprobe \"ig_tcp_v6_co_e\" to \"tcp_v6_connect\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 50,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024354,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching tracepoint \"sys_accept_x\" to \"syscalls/sys_exit_accept\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 51,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024355,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching tracepoint \"sys_connect_e\" to \"syscalls/sys_enter_connect\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 52,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024356,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching kretprobe \"ig_tcp_accept\" to \"inet_csk_accept\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 53,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024357,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching kretprobe \"ig_tcp_v6_co_x\" to \"tcp_v6_connect\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 54,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024358,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching tracepoint \"sys_accept4_e\" to \"syscalls/sys_enter_accept4\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 55,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024359,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching tracepoint \"sys_accept4_x\" to \"syscalls/sys_exit_accept4\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 56,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024360,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching kprobe \"ig_tcp_v4_co_e\" to \"tcp_v4_connect\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 57,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024362,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | Attaching tracepoint \"sys_connect_x\" to \"syscalls/sys_exit_connect\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 58,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024363,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | starting op \"KubeManager\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 59,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024364,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | starting op \"formatters\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 60,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024365,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | starting op \"env\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 61,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024366,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | starting op \"UidGidResolverInstance\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 62,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024368,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | starting op \"KubeIPResolverInstance\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 63,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024369,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | starting op \"filter\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 64,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024370,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | starting op \"otel-metrics\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 65,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024371,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | starting op \"svc\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 66,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621024372,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | running...",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:04"
+        }
+      },
+      {
+        "id": 67,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621025199,
+        "type": 3,
+        "datasourceId": "tracetcp",
+        "data": {
+          "accept_fd": 8,
+          "dst.addr": "10.244.0.6",
+          "dst.k8s.kind": "pod",
+          "dst.k8s.labels": "run=traffic",
+          "dst.k8s.name": "traffic",
+          "dst.k8s.namespace": "ig-demo-a",
+          "dst.k8s.podSelector": "",
+          "dst.port": 40808,
+          "dst.proto": "TCP",
+          "dst.proto_raw": 6,
+          "dst.version": 4,
+          "error": "",
+          "error_raw": 0,
+          "fd": 6,
+          "k8s.containerName": "nginx",
+          "k8s.hostnetwork": false,
+          "k8s.namespace": "ig-demo-b",
+          "k8s.node": "minikube",
+          "k8s.owner.kind": "Deployment",
+          "k8s.owner.name": "echo",
+          "k8s.podLabels": "app=echo,pod-template-hash=84d5c45f8b",
+          "k8s.podName": "echo-84d5c45f8b-xcv2d",
+          "netns_id": 4026532856,
+          "proc.comm": "nginx",
+          "proc.creds.gid": 101,
+          "proc.creds.group": "input",
+          "proc.creds.uid": 101,
+          "proc.creds.user": "_rpc",
+          "proc.mntns_id": 4026532990,
+          "proc.parent.comm": "nginx",
+          "proc.parent.pid": 386467,
+          "proc.parent.tid": 386467,
+          "proc.pid": 386506,
+          "proc.tid": 386506,
+          "runtime.containerId": "7710ef2c575a441a14a46c73a59cbfc501f0b112181f7381afa42b9d451b15d7",
+          "runtime.containerImageDigest": "",
+          "runtime.containerImageName": "docker.io/library/nginx:alpine",
+          "runtime.containerName": "",
+          "runtime.containerPid": 284189,
+          "runtime.containerStartedAt": 1786620820417301102,
+          "runtime.runtimeName": "containerd",
+          "src.addr": "10.244.0.5",
+          "src.k8s.kind": "pod",
+          "src.k8s.labels": "app=echo,pod-template-hash=84d5c45f8b",
+          "src.k8s.name": "echo-84d5c45f8b-xcv2d",
+          "src.k8s.namespace": "ig-demo-b",
+          "src.k8s.podSelector": "",
+          "src.port": 80,
+          "src.proto": "TCP",
+          "src.proto_raw": 6,
+          "src.version": 4,
+          "timestamp": "2026-08-13T11:37:01.198527795Z",
+          "timestamp_raw": 1786621021198527795,
+          "type": "accept",
+          "type_raw": 1
+        }
+      },
+      {
+        "id": 68,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621025203,
+        "type": 3,
+        "datasourceId": "tracetcp",
+        "data": {
+          "accept_fd": -1,
+          "dst.addr": "10.244.0.6",
+          "dst.k8s.kind": "pod",
+          "dst.k8s.labels": "run=traffic",
+          "dst.k8s.name": "traffic",
+          "dst.k8s.namespace": "ig-demo-a",
+          "dst.k8s.podSelector": "",
+          "dst.port": 40808,
+          "dst.proto": "TCP",
+          "dst.proto_raw": 6,
+          "dst.version": 4,
+          "error": "",
+          "error_raw": 0,
+          "fd": -1,
+          "k8s.containerName": "nginx",
+          "k8s.hostnetwork": false,
+          "k8s.namespace": "ig-demo-b",
+          "k8s.node": "minikube",
+          "k8s.owner.kind": "Deployment",
+          "k8s.owner.name": "echo",
+          "k8s.podLabels": "app=echo,pod-template-hash=84d5c45f8b",
+          "k8s.podName": "echo-84d5c45f8b-xcv2d",
+          "netns_id": 4026532856,
+          "proc.comm": "nginx",
+          "proc.creds.gid": 101,
+          "proc.creds.group": "input",
+          "proc.creds.uid": 101,
+          "proc.creds.user": "_rpc",
+          "proc.mntns_id": 4026532990,
+          "proc.parent.comm": "nginx",
+          "proc.parent.pid": 386467,
+          "proc.parent.tid": 386467,
+          "proc.pid": 386506,
+          "proc.tid": 386506,
+          "runtime.containerId": "7710ef2c575a441a14a46c73a59cbfc501f0b112181f7381afa42b9d451b15d7",
+          "runtime.containerImageDigest": "",
+          "runtime.containerImageName": "docker.io/library/nginx:alpine",
+          "runtime.containerName": "",
+          "runtime.containerPid": 284189,
+          "runtime.containerStartedAt": 1786620820417301102,
+          "runtime.runtimeName": "containerd",
+          "src.addr": "10.244.0.5",
+          "src.k8s.kind": "pod",
+          "src.k8s.labels": "app=echo,pod-template-hash=84d5c45f8b",
+          "src.k8s.name": "echo-84d5c45f8b-xcv2d",
+          "src.k8s.namespace": "ig-demo-b",
+          "src.k8s.podSelector": "",
+          "src.port": 80,
+          "src.proto": "TCP",
+          "src.proto_raw": 6,
+          "src.version": 4,
+          "timestamp": "2026-08-13T11:37:01.199249546Z",
+          "timestamp_raw": 1786621021199249546,
+          "type": "close",
+          "type_raw": 2
+        }
+      },
+      {
+        "id": 69,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026054,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | sending stop request",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 70,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026058,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | received stop request",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 71,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026060,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | pre-stopping op \"oci\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 72,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026062,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | stopping op \"svc\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 73,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026064,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | stopping op \"otel-metrics\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 74,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026066,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | stopping op \"filter\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 75,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026069,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | stopping op \"KubeIPResolverInstance\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 76,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026070,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | stopping op \"UidGidResolverInstance\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 77,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026071,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | stopping op \"env\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 78,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026072,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | stopping op \"formatters\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 79,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026073,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | stopping op \"KubeManager\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 80,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026074,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | stopping op \"oci\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 81,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026579,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | post-stopping op \"svc\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 82,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026583,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | post-stopping op \"KubeIPResolverInstance\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 83,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026586,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | post-stopping op \"oci\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 84,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026589,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | closing op \"svc\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 85,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026591,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | closing op \"otel-metrics\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 86,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026592,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | shutting down metrics",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 87,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026594,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | closing op \"filter\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 88,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026595,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | closing op \"KubeIPResolverInstance\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 89,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026597,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | closing op \"UidGidResolverInstance\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 90,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026598,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | closing op \"env\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 91,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026599,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | closing op \"formatters\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 92,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026601,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | closing op \"KubeManager\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 93,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026603,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | closing op \"oci\"",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 94,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026604,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | runClient returned with EOF",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      },
+      {
+        "id": 95,
+        "runId": "535ba8be-6beb-41b7-b642-ddfb552a026f",
+        "timestamp": 1786621026606,
+        "type": 4,
+        "data": {
+          "msg": "minikube             | done after cancel request (\u003cnil\u003e)",
+          "severity": "debug",
+          "timestamp": "2026-08-13 13:37:06"
+        }
+      }
+    ]
+  }
+}
