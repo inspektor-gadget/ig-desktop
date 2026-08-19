@@ -17,7 +17,7 @@ require (
 	k8s.io/apimachinery v0.36.3
 	k8s.io/cli-runtime v0.36.3
 	k8s.io/client-go v0.36.3
-	modernc.org/sqlite v1.55.0
+	modernc.org/sqlite v1.56.0
 )
 
 require (
@@ -103,7 +103,7 @@ require (
 	github.com/lmittmann/tint v1.1.2 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
 	github.com/miekg/dns v1.1.61 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -183,7 +183,7 @@ require (
 	k8s.io/kubectl v0.36.2 // indirect
 	k8s.io/streaming v0.36.3 // indirect
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2 // indirect
-	modernc.org/libc v1.74.1 // indirect
+	modernc.org/libc v1.74.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	oras.land/oras-go/v2 v2.6.2 // indirect
