@@ -85,7 +85,7 @@
 	const namespaces = $derived(extractDnsMapNamespaces(correlation.transactions));
 
 	// "Issues only" is a post-aggregation *visibility* filter: it hides
-	// healthy edges (and then any node/group left with nothing to show),
+	// healthy and informational edges (and then any node/group left with nothing to show),
 	// but never recomputes or hides any of the counts themselves.
 	const displayModel = $derived(issuesOnly ? filterDnsMapModelIssuesOnly(fullModel) : fullModel);
 

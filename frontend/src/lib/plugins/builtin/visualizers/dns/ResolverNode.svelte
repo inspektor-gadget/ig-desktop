@@ -63,7 +63,6 @@
 	</button>
 
 	<Handle type="target" position={Position.Left} />
-	<Handle type="source" position={Position.Right} />
 </div>
 
 <style>

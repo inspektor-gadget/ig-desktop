@@ -48,7 +48,11 @@ async function openDnsMap(page: Page) {
 	await page.goto('/env/demo-env');
 	await expect(page.getByRole('heading', { name: 'Demo Environment' })).toBeVisible();
 
-	await page.getByTitle('Run again').first().click();
+	await page
+		.locator('.group\\/item')
+		.filter({ hasText: 'trace_dns:demo' })
+		.getByTitle('Run again')
+		.click();
 	await expect(page).toHaveURL(/\/env\/demo-env\/running\/.+/);
 
 	// All 33 fixture events have been replayed and the instance has stopped.
@@ -99,6 +103,11 @@ test('DNS Map: full multi-namespace topology', async ({ page }) => {
 	await expect(datasource.locator('path.dns-map-edge-path--warning').first()).toBeAttached();
 	await expect(datasource.locator('path.dns-map-edge-path--info').first()).toBeAttached();
 	await expect(datasource.locator('path.dns-map-edge-path--healthy').first()).toBeAttached();
+	await expect(datasource.locator('.dns-workload-node .svelte-flow__handle-left')).toHaveCount(0);
+	await expect(datasource.locator('.dns-resolver-node .svelte-flow__handle-right')).toHaveCount(0);
+	await expect(
+		datasource.locator('.dns-map-edge-node').first().locator('.dns-map-edge-dot')
+	).toHaveCount(2);
 
 	// Accessible summaries exist on workload/resolver cards (identity +
 	// query count + severity), not just title/color.
@@ -110,7 +119,7 @@ test('DNS Map: full multi-namespace topology', async ({ page }) => {
 	await expect(page).toHaveScreenshot('dns-map-full-topology.png');
 });
 
-test('DNS Map: issues-only view hides healthy edges', async ({ page }) => {
+test('DNS Map: issues-only view keeps warnings and errors', async ({ page }) => {
 	await openDnsMap(page);
 
 	const datasource = page.locator('.dns-map-container');
@@ -119,21 +128,21 @@ test('DNS Map: issues-only view hides healthy edges', async ({ page }) => {
 	await issuesToggle.click();
 	await expect(issuesToggle).toHaveAttribute('aria-pressed', 'true');
 
-	// Header counts shrink to only the workloads/resolvers with remaining
-	// issues (5 workloads, 2 resolvers) - the toggle is a visibility
+	// Header counts shrink to only the workloads/resolvers with warnings
+	// or errors (4 workloads, 2 resolvers) - the toggle is a visibility
 	// filter, never a recomputation of totals shown elsewhere.
 	await expect(
-		page.getByText('5 workloads, 2 resolvers, 0 pending', { exact: true })
+		page.getByText('4 workloads, 2 resolvers, 0 pending', { exact: true })
 	).toBeVisible();
 
 	// The remaining, still-failing representative examples are visible...
 	await expect(datasource).toContainText('cart-7d8f9-pqrst');
-	await expect(datasource).toContainText('checkout-6f9b8c-abcde');
 	await expect(datasource).toContainText('kube-proxy-4jz8n');
 	await expect(datasource).toContainText('kube-proxy-8xk2m');
 	await expect(datasource).toContainText('metrics-server-7f6b9-abc12');
 	// ...and the healthy-only workloads/resolvers are gone, including the
 	// entire "monitoring" namespace group (only healthy workloads there).
+	await expect(datasource).not.toContainText('checkout-6f9b8c-abcde');
 	await expect(datasource).not.toContainText('frontend-5c7d6-uvwxy');
 	await expect(datasource).not.toContainText('prometheus-server-0');
 	const remainingGroupLabels = await datasource

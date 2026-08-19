@@ -273,7 +273,7 @@ test('namespace filter scopes transactions before aggregation (counts reflect on
 	for (const w of model.workloads) assert.equal(w.namespaceKey, 'monitoring');
 });
 
-test('issues-only filtering hides healthy edges but never changes underlying counts', () => {
+test('issues-only filtering keeps warning/error edges without changing underlying counts', () => {
 	const result = correlate();
 	const model = buildDnsMapModel(result.transactions, TIMEOUT_MS);
 	const totalBefore = model.edges.reduce((sum, e) => sum + e.counts.total, 0);
@@ -283,7 +283,9 @@ test('issues-only filtering hides healthy edges but never changes underlying cou
 		issuesOnly.edges.length < model.edges.length,
 		'issues-only should hide some healthy edges'
 	);
-	assert.ok(issuesOnly.edges.every((e) => e.counts.severity !== 'healthy'));
+	assert.ok(
+		issuesOnly.edges.every((e) => e.counts.severity === 'error' || e.counts.severity === 'warning')
+	);
 
 	// Counts on the *retained* edges are untouched (same object references/values).
 	for (const e of issuesOnly.edges) {

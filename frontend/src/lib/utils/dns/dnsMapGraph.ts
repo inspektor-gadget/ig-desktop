@@ -340,14 +340,16 @@ function selectEdgePreview(
 }
 
 /**
- * Restrict a model to non-healthy edges only, then drop any workload/
+ * Restrict a model to warning/error edges only, then drop any workload/
  * resolver/namespace group left with no remaining edges. Counts on the
  * retained edges/workloads/resolvers are NOT recomputed - "Issues only" is
  * a visibility filter over the same totals computed across all in-scope
  * transactions, so e.g. "300 total / 3 failures" stays honest.
  */
 export function filterDnsMapModelIssuesOnly(model: DnsMapModel): DnsMapModel {
-	const edges = model.edges.filter((e) => e.counts.severity !== 'healthy');
+	const edges = model.edges.filter(
+		(e) => e.counts.severity === 'error' || e.counts.severity === 'warning'
+	);
 	const workloadKeys = new Set(edges.map((e) => e.workloadKey));
 	const resolverKeys = new Set(edges.map((e) => e.resolverKey));
 	const workloads = model.workloads.filter((w) => workloadKeys.has(w.key));

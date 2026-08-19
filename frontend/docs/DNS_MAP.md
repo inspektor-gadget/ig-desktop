@@ -139,13 +139,15 @@ Two independent filters compose in a fixed order:
    present) scopes the _transactions_ before aggregation - every count
    shown anywhere reflects only the selected namespace's in-scope data.
 2. **"Issues only"** (a button with `aria-pressed`) is a _post-aggregation
-   visibility_ filter: it hides healthy edges, then any workload/resolver/
-   namespace group left with no remaining edges. It never recomputes or
-   changes any count - a workload showing "300 total / 3 failures" still
-   shows exactly that after toggling "Issues only", just with the healthy
-   edges hidden. When nothing remains, the empty state reads "No DNS
-   issues in the retained window" rather than the generic "waiting for
-   traffic" message.
+   visibility_ filter: it keeps warning/error edges and hides healthy or
+   informational edges, then drops any workload/resolver/namespace group
+   left with no remaining edges. Informational NXDOMAIN responses are
+   excluded because Kubernetes search-suffix expansion commonly produces
+   them before a successful answer. The filter never recomputes or changes
+   any count - a workload showing "300 total / 3 failures" still shows
+   exactly that after toggling "Issues only". When nothing remains, the
+   empty state reads "No DNS issues in the retained window" rather than the
+   generic "waiting for traffic" message.
 
 Datasource annotations can set the initial view:
 

@@ -78,7 +78,9 @@
 <BaseEdge {path} class={edgePathClass} />
 
 <EdgeLabel x={labelX} y={labelY} transparent>
-	<!--
+	<div class="dns-map-edge-node relative {edgePathClass}">
+		<span class="dns-map-edge-dot dns-map-edge-dot-left" aria-hidden="true"></span>
+		<!--
 		Resting state is compact (~140px, icon + severity + total + one
 		concise reason) so a full row of edges doesn't occlude each other's
 		severity - the old fixed 240px card routinely covered a neighbor's
@@ -89,103 +91,142 @@
 		transition is a single trivial width tween, disabled entirely under
 		prefers-reduced-motion.
 	-->
-	<div
-		class="dns-map-edge-card group w-36 overflow-hidden rounded-ig-md border border-ig-border bg-ig-surface text-xs shadow-md transition-[width] duration-150 motion-reduce:transition-none hover:w-60 hover:shadow-lg focus:w-60 focus:shadow-lg {edgeCardClass}"
-		role="button"
-		tabindex="0"
-		aria-label={accessibleSummary}
-		onclick={open}
-		onkeydown={onKeydown}
-	>
 		<div
-			class="dns-map-edge-card-header flex items-center justify-between gap-1 border-b border-ig-border px-2 py-1 font-semibold"
+			class="dns-map-edge-card group w-36 overflow-hidden rounded-ig-md border border-ig-border bg-ig-surface text-xs shadow-md transition-[width] duration-150 motion-reduce:transition-none hover:w-60 hover:shadow-lg focus:w-60 focus:shadow-lg {edgeCardClass}"
+			role="button"
+			tabindex="0"
+			aria-label={accessibleSummary}
+			onclick={open}
+			onkeydown={onKeydown}
 		>
-			<span
-				class="flex min-w-0 items-center gap-1 truncate {counts
-					? severityColorClass(counts.severity)
-					: ''}"
+			<div
+				class="dns-map-edge-card-header flex items-center justify-between gap-1 border-b border-ig-border px-2 py-1 font-semibold"
 			>
-				{#if counts}
-					<span aria-hidden="true">{severityIcon(counts.severity)}</span>
-					<span class="truncate">{t(severityLabel(counts.severity))}</span>
-				{/if}
-			</span>
-			<span class="shrink-0 text-ig-text-muted"
-				>{t('{{count}} total', { count: counts?.total ?? 0 })}</span
-			>
-		</div>
+				<span
+					class="flex min-w-0 items-center gap-1 truncate {counts
+						? severityColorClass(counts.severity)
+						: ''}"
+				>
+					{#if counts}
+						<span aria-hidden="true">{severityIcon(counts.severity)}</span>
+						<span class="truncate">{t(severityLabel(counts.severity))}</span>
+					{/if}
+				</span>
+				<span class="shrink-0 text-ig-text-muted"
+					>{t('{{count}} total', { count: counts?.total ?? 0 })}</span
+				>
+			</div>
 
-		<!--
+			<!--
 			Always shown (regardless of severity/reason) so the click-through
 			affordance is obvious at rest, not just discoverable via hover -
 			one compact line, so healthy edges (which have no `reason`) only
 			gain a single extra row and non-healthy edges gain none (the hint
 			shares the reason's existing row).
 		-->
-		<div class="flex items-center justify-between gap-1 px-2 py-1 text-[10px]">
-			{#if reason}
-				<span class="truncate {counts ? severityColorClass(counts.severity) : ''}">
-					{t(reason.labelKey, { count: reason.count })}
-				</span>
-			{:else}
-				<span></span>
-			{/if}
-			<span
-				class="shrink-0 text-ig-text-muted group-hover:text-ig-primary group-focus:text-ig-primary"
-				>{t('View queries →')}</span
-			>
-		</div>
-
-		<!-- Expanded-only content: not rendered at rest, revealed on hover/focus. -->
-		<div class="dns-map-edge-expanded hidden group-hover:block group-focus:block">
-			{#if counts && reasonDimensionCount > 1}
-				<div
-					class="flex flex-wrap gap-x-2 gap-y-0.5 border-t border-b border-ig-border px-2 py-1 text-[10px] text-ig-text-muted"
+			<div class="flex items-center justify-between gap-1 px-2 py-1 text-[10px]">
+				{#if reason}
+					<span class="truncate {counts ? severityColorClass(counts.severity) : ''}">
+						{t(reason.labelKey, { count: reason.count })}
+					</span>
+				{:else}
+					<span></span>
+				{/if}
+				<span
+					class="shrink-0 text-ig-text-muted group-hover:text-ig-primary group-focus:text-ig-primary"
+					>{t('View queries →')}</span
 				>
-					{#if counts.timeoutCount > 0 && reason?.labelKey !== '{{count}} timeout'}<span
-							class="text-ig-error">{t('{{count}} timeout', { count: counts.timeoutCount })}</span
-						>{/if}
-					{#if counts.serverErrorCount > 0 && reason?.labelKey !== '{{count}} server error'}<span
-							class="text-ig-error"
-							>{t('{{count}} server error', { count: counts.serverErrorCount })}</span
-						>{/if}
-					{#if counts.nxdomainCount > 0 && reason?.labelKey !== '{{count}} NXDOMAIN'}<span
-							class="text-ig-text-muted"
-							>{t('{{count}} NXDOMAIN', { count: counts.nxdomainCount })}</span
-						>{/if}
-					{#if counts.retryingCount > 0 && reason?.labelKey !== '{{count}} retrying'}<span
-							class="text-ig-warning"
-							>{t('{{count}} retrying', { count: counts.retryingCount })}</span
-						>{/if}
-					{#if counts.lateCount > 0 && reason?.labelKey !== '{{count}} late'}<span
-							class="text-ig-warning">{t('{{count}} late', { count: counts.lateCount })}</span
-						>{/if}
-					{#if counts.slowCount > 0 && reason?.labelKey !== '{{count}} slow'}<span
-							class="text-ig-warning">{t('{{count}} slow', { count: counts.slowCount })}</span
-						>{/if}
-				</div>
-			{/if}
+			</div>
 
-			<ul class="max-h-40 divide-y divide-ig-border overflow-hidden">
-				{#each preview as txn (txn.id)}
-					<li class="flex items-center justify-between gap-2 px-2 py-1">
-						<span class="truncate font-mono text-ig-text" title="{txn.name} ({txn.qtype})">
-							{txn.name}
-						</span>
-						<span class="flex shrink-0 items-center gap-1 {stateColorClass(txn.state)}">
-							{#if txn.latencyNs !== undefined}
-								<span class="text-ig-text-muted">{formatLatencyNs(txn.latencyNs)}</span>
-							{/if}
-							<span title={t(stateLabel(txn.state))}>●</span>
-						</span>
-					</li>
-				{/each}
-			</ul>
+			<!-- Expanded-only content: not rendered at rest, revealed on hover/focus. -->
+			<div class="dns-map-edge-expanded hidden group-hover:block group-focus:block">
+				{#if counts && reasonDimensionCount > 1}
+					<div
+						class="flex flex-wrap gap-x-2 gap-y-0.5 border-t border-b border-ig-border px-2 py-1 text-[10px] text-ig-text-muted"
+					>
+						{#if counts.timeoutCount > 0 && reason?.labelKey !== '{{count}} timeout'}<span
+								class="text-ig-error">{t('{{count}} timeout', { count: counts.timeoutCount })}</span
+							>{/if}
+						{#if counts.serverErrorCount > 0 && reason?.labelKey !== '{{count}} server error'}<span
+								class="text-ig-error"
+								>{t('{{count}} server error', { count: counts.serverErrorCount })}</span
+							>{/if}
+						{#if counts.nxdomainCount > 0 && reason?.labelKey !== '{{count}} NXDOMAIN'}<span
+								class="text-ig-text-muted"
+								>{t('{{count}} NXDOMAIN', { count: counts.nxdomainCount })}</span
+							>{/if}
+						{#if counts.retryingCount > 0 && reason?.labelKey !== '{{count}} retrying'}<span
+								class="text-ig-warning"
+								>{t('{{count}} retrying', { count: counts.retryingCount })}</span
+							>{/if}
+						{#if counts.lateCount > 0 && reason?.labelKey !== '{{count}} late'}<span
+								class="text-ig-warning">{t('{{count}} late', { count: counts.lateCount })}</span
+							>{/if}
+						{#if counts.slowCount > 0 && reason?.labelKey !== '{{count}} slow'}<span
+								class="text-ig-warning">{t('{{count}} slow', { count: counts.slowCount })}</span
+							>{/if}
+					</div>
+				{/if}
+
+				<ul class="max-h-40 divide-y divide-ig-border overflow-hidden">
+					{#each preview as txn (txn.id)}
+						<li class="flex items-center justify-between gap-2 px-2 py-1">
+							<span class="truncate font-mono text-ig-text" title="{txn.name} ({txn.qtype})">
+								{txn.name}
+							</span>
+							<span class="flex shrink-0 items-center gap-1 {stateColorClass(txn.state)}">
+								{#if txn.latencyNs !== undefined}
+									<span class="text-ig-text-muted">{formatLatencyNs(txn.latencyNs)}</span>
+								{/if}
+								<span title={t(stateLabel(txn.state))}>●</span>
+							</span>
+						</li>
+					{/each}
+				</ul>
+			</div>
 		</div>
+		<span class="dns-map-edge-dot dns-map-edge-dot-right" aria-hidden="true"></span>
 	</div>
 </EdgeLabel>
 
 <style>
+	.dns-map-edge-dot {
+		position: absolute;
+		top: 50%;
+		z-index: 1;
+		width: 10px;
+		height: 10px;
+		transform: translateY(-50%);
+		border: 2px solid var(--ig-color-surface);
+		border-radius: 50%;
+		background: var(--ig-color-border-strong);
+		pointer-events: none;
+	}
+
+	.dns-map-edge-dot-left {
+		left: -5px;
+	}
+
+	.dns-map-edge-dot-right {
+		right: -5px;
+	}
+
+	.dns-map-edge-path--error .dns-map-edge-dot {
+		background: var(--ig-color-error);
+	}
+
+	.dns-map-edge-path--warning .dns-map-edge-dot {
+		background: var(--ig-color-warning);
+	}
+
+	.dns-map-edge-path--info .dns-map-edge-dot {
+		background: var(--ig-color-text-muted);
+	}
+
+	.dns-map-edge-path--healthy .dns-map-edge-dot {
+		background: var(--ig-color-success);
+	}
+
 	.dns-map-edge-card {
 		cursor: pointer;
 	}
