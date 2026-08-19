@@ -27,6 +27,7 @@ import { createRouteMatcher, type RouteMatcher } from '$lib/utils/route-matcher'
 import type { DataProcessorExports } from '$lib/types/plugin-api';
 import type { Datasource } from '$lib/types/charts';
 import type { GadgetParam } from '$lib/types/index';
+import { isVisualizerExcluded } from '$lib/utils/visualizerConfig';
 import { pluginService } from './plugin.service';
 import { pluginCache, type CachedPlugin } from './plugin-cache.service';
 
@@ -904,6 +905,8 @@ class PluginRegistry {
 	 */
 	getVisualizersForDatasource(ds: Datasource): RegisteredVisualizer[] {
 		return this.visualizers.filter((viz) => {
+			if (isVisualizerExcluded(ds.annotations, viz.visualizer.id)) return false;
+
 			const conditions = viz.visualizer.applicableWhen;
 			// If no conditions, always applicable
 			if (!conditions) return true;

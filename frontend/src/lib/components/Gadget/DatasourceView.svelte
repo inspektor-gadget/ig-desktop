@@ -87,12 +87,16 @@
 		return 'table';
 	}
 
-	// Initialize active tab from preferences, falling back to default based on available views
 	const storedTab = preferences.getDefault(`datasource.${ds.name}.view`, 'table') as ViewTab;
-	let activeTab = $state<ViewTab>(storedTab !== 'table' ? storedTab : getDefaultTab());
+	let selectedTab = $state<ViewTab | null>(storedTab === 'table' ? null : storedTab);
+	const activeTab = $derived(
+		selectedTab && applicableVisualizers.some((v) => v.visualizer.id === selectedTab)
+			? selectedTab
+			: getDefaultTab()
+	);
 
 	function setTab(tab: ViewTab) {
-		activeTab = tab;
+		selectedTab = tab;
 		preferences.set(prefKey, tab);
 	}
 
