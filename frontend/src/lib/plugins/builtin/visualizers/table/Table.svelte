@@ -22,6 +22,7 @@
 	import { datasourceTitle } from '$lib/utils/datasource';
 	import type { SearchableVisualizerProps } from '$lib/types/plugin-api';
 	import type { CellClickHandler, CellContextMenuHandler } from '$lib/types/cell-interaction';
+	import FilterWorker from '$lib/workers/filter.worker?worker&inline';
 
 	interface Props extends SearchableVisualizerProps {
 		/** Whether to show highlight matches even in filter mode */
@@ -308,9 +309,7 @@
 
 	// Initialize Web Worker
 	$effect(() => {
-		filterWorker = new Worker(new URL('$lib/workers/filter.worker.ts', import.meta.url), {
-			type: 'module'
-		});
+		filterWorker = new FilterWorker();
 
 		filterWorker.onmessage = (e) => {
 			const { type, id, filteredEvents: results, matchIndices: indices } = e.data;

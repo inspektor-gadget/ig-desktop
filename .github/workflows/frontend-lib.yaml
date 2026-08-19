@@ -49,6 +49,12 @@ jobs:
         run: npm run build:lib
         working-directory: frontend
 
+      - name: Verify filter worker packaging
+        run: |
+          ! find frontend/dist-lib/assets -name 'filter.worker-*' -print -quit | grep -q .
+          ! grep -q '/assets/filter.worker-' frontend/dist-lib/ig-frontend.js
+          grep -q 'filter-result' frontend/dist-lib/ig-frontend.js
+
       - name: Assemble tarball
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
