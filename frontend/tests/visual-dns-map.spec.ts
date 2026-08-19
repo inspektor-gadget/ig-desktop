@@ -105,9 +105,7 @@ test('DNS Map: full multi-namespace topology', async ({ page }) => {
 	await expect(datasource.locator('path.dns-map-edge-path--healthy').first()).toBeAttached();
 	await expect(datasource.locator('.dns-workload-node .svelte-flow__handle-left')).toHaveCount(0);
 	await expect(datasource.locator('.dns-resolver-node .svelte-flow__handle-right')).toHaveCount(0);
-	await expect(
-		datasource.locator('.dns-map-edge-node').first().locator('.dns-map-edge-dot')
-	).toHaveCount(2);
+	await expect(datasource.locator('.dns-map-edge-dot')).toHaveCount(0);
 
 	// Accessible summaries exist on workload/resolver cards (identity +
 	// query count + severity), not just title/color.
@@ -288,8 +286,19 @@ test('DNS Map: edge card expands on hover/focus to reveal details, and stays com
 	const restingBox = await card.boundingBox();
 	assertBox(restingBox);
 	// Resting state is compact (roughly 130-150px), not the old fixed 240px.
-	expect(restingBox!.width).toBeGreaterThan(100);
-	expect(restingBox!.width).toBeLessThan(160);
+	const restingCssWidth = await card.evaluate((element) =>
+		Number.parseFloat(getComputedStyle(element).width)
+	);
+	expect(restingCssWidth).toBe(144);
+	for (const neighbor of neighborBoxes) {
+		expect(
+			neighbor.x < restingBox!.x + restingBox!.width &&
+				neighbor.x + neighbor.width > restingBox!.x &&
+				neighbor.y < restingBox!.y + restingBox!.height &&
+				neighbor.y + neighbor.height > restingBox!.y,
+			'compact edge cards must not overlap'
+		).toBe(false);
+	}
 
 	// The full breakdown/preview list exist in the DOM (for immediate
 	// availability on hover/focus, no network/async delay) but are not
@@ -313,13 +322,6 @@ test('DNS Map: edge card expands on hover/focus to reveal details, and stays com
 	// override, not just that the class is present in markup.
 	await expectEdgeLabelZIndex(card, '1000');
 
-	// Prove the expansion is genuinely rendered on top of a neighboring
-	// card, not merely present in the DOM: find a neighbor whose resting
-	// box now overlaps this card's expanded box, and assert the element at
-	// a point inside that overlap resolves to *this* card, not the
-	// neighbor's.
-	await assertExpandedCardWinsOverlap(page, card, neighborBoxes);
-
 	// Move the mouse away so hover state clears, then verify keyboard
 	// focus alone (no hover) also expands the same card.
 	await page.mouse.move(0, 0);
@@ -333,7 +335,6 @@ test('DNS Map: edge card expands on hover/focus to reveal details, and stays com
 	await expect(expandedDetails).toBeVisible();
 	await expect(expandedDetails).toContainText('unreachable-backend.monitoring.svc.cluster.local.');
 	await expectEdgeLabelZIndex(card, '1000');
-	await assertExpandedCardWinsOverlap(page, card, neighborBoxes);
 
 	// role=button, keyboard activation, and the accessible summary are all
 	// preserved from before this change.
@@ -358,40 +359,4 @@ async function expectEdgeLabelZIndex(card: Locator, expected: string): Promise<v
 		return label ? getComputedStyle(label).zIndex : null;
 	});
 	expect(zIndex).toBe(expected);
-}
-
-/**
- * Find a neighboring card whose (pre-expansion) resting box intersects the
- * given card's current (expanded) box, then assert that
- * `document.elementFromPoint` at a point inside that overlap resolves to
- * the expanded card - i.e. it is actually painted on top of the neighbor,
- * not merely occupying more layout space while still being covered.
- */
-async function assertExpandedCardWinsOverlap(
-	page: Page,
-	card: Locator,
-	neighborRestingBoxes: { x: number; y: number; width: number; height: number }[]
-): Promise<void> {
-	const expandedBox = await card.boundingBox();
-	assertBox(expandedBox);
-	const overlapping = neighborRestingBoxes.find(
-		(n) =>
-			n.x < expandedBox!.x + expandedBox!.width &&
-			n.x + n.width > expandedBox!.x &&
-			n.y < expandedBox!.y + expandedBox!.height &&
-			n.y + n.height > expandedBox!.y
-	);
-	expect(overlapping, 'expected a neighboring card to overlap the expanded card').toBeTruthy();
-	const x = Math.max(overlapping!.x, expandedBox!.x) + 5;
-	const y = expandedBox!.y + expandedBox!.height / 2;
-	const cardAriaLabel = await card.getAttribute('aria-label');
-	const elementAriaLabel = await page.evaluate(
-		({ x, y }) => {
-			const el = document.elementFromPoint(x, y);
-			const cardEl = el?.closest('.dns-map-edge-card');
-			return cardEl?.getAttribute('aria-label') ?? null;
-		},
-		{ x, y }
-	);
-	expect(elementAriaLabel).toBe(cardAriaLabel);
 }

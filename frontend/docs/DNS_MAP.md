@@ -182,9 +182,12 @@ namespaces. The namespace label is drawn inside Dagre's own natural cluster
 margin rather than by inflating the computed bounding box after the fact
 (inflating independently of what Dagre used to guarantee non-overlapping
 cluster placement would silently reintroduce overlap between adjacent
-groups). Connections use XYFlow's Bézier path helper so edges to a shared
-resolver separate naturally instead of sharing pixel-exact orthogonal
-segments.
+groups). Edge cards remain XYFlow edge labels rather than interactive nodes,
+but their compact dimensions are supplied to Dagre so it reserves a
+non-overlapping position for each card. Each connection uses two Bézier
+segments routed through that computed label position; decorative connection
+handles are deliberately omitted because the read-only cards are not real
+connection endpoints.
 
 The map has no chart-local layout or drag-persistence state. Nodes and groups
 are not draggable; a click is a plain (no-op) selection like any other
@@ -195,7 +198,9 @@ batch - since live traffic can arrive tens of times per second while the
 topology itself changes far less often (`refreshDnsMapLayoutData`, matched
 by stable node id, not array position, since a node's sort order can
 change - e.g. authoritative resolver enrichment arriving later - without
-its identity changing).
+its identity changing). "Issues only" filters that full cached layout
+rather than laying out the warning/error subset again, so severity changes
+can show or hide cards without moving the retained topology.
 
 ## Testing
 

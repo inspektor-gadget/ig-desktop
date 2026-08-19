@@ -14,6 +14,7 @@
 	import {
 		buildDnsMapModel,
 		extractDnsMapNamespaces,
+		filterDnsMapLayout,
 		filterDnsMapModelIssuesOnly,
 		filterTransactionsByNamespace,
 		layoutDnsMapModel,
@@ -105,14 +106,14 @@
 	let cachedLayout: DnsMapLayout | undefined;
 
 	const graph = $derived.by(() => {
-		const topologyKey = dnsMapTopologyKey(displayModel);
+		const topologyKey = dnsMapTopologyKey(fullModel);
 		if (cachedLayout && cachedTopologyKey === topologyKey) {
-			cachedLayout = refreshDnsMapLayoutData(cachedLayout, displayModel, openTransactions);
+			cachedLayout = refreshDnsMapLayoutData(cachedLayout, fullModel, openTransactions);
 		} else {
-			cachedLayout = layoutDnsMapModel(displayModel, openTransactions);
+			cachedLayout = layoutDnsMapModel(fullModel, openTransactions);
 			cachedTopologyKey = topologyKey;
 		}
-		return cachedLayout;
+		return issuesOnly ? filterDnsMapLayout(cachedLayout, displayModel) : cachedLayout;
 	});
 
 	const namespaceOptions = $derived(namespaces.map((ns) => ({ value: ns, label: ns })));

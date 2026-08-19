@@ -406,6 +406,8 @@ export type DnsNamespaceGroupNode = Node<DnsNamespaceGroupData, 'dnsNamespaceGro
 export interface DnsMapEdgeData extends Record<string, unknown> {
 	edge: DnsMapEdgeModel;
 	onOpen: (transactionIds: string[], title?: string) => void;
+	labelX: number;
+	labelY: number;
 }
 export type DnsMapEdge = Edge<DnsMapEdgeData, 'dnsMap'>;
 
@@ -413,6 +415,8 @@ const WORKLOAD_WIDTH = 220;
 const WORKLOAD_HEIGHT = 104;
 const RESOLVER_WIDTH = 200;
 const RESOLVER_HEIGHT = 84;
+export const DNS_MAP_EDGE_LABEL_WIDTH = 144;
+export const DNS_MAP_EDGE_LABEL_HEIGHT = 48;
 /** Height reserved for the namespace label inside Dagre's cluster margin. */
 export const DNS_MAP_GROUP_LABEL_HEIGHT = 28;
 
@@ -460,7 +464,10 @@ export function layoutDnsMapModel(
 	}
 
 	for (const edge of model.edges) {
-		g.setEdge(workloadNodeId(edge.workloadKey), resolverNodeId(edge.resolverKey));
+		g.setEdge(workloadNodeId(edge.workloadKey), resolverNodeId(edge.resolverKey), {
+			width: DNS_MAP_EDGE_LABEL_WIDTH,
+			height: DNS_MAP_EDGE_LABEL_HEIGHT
+		});
 	}
 
 	dagre.layout(g);
@@ -523,13 +530,18 @@ export function layoutDnsMapModel(
 		});
 	}
 
-	const edges: DnsMapEdge[] = model.edges.map((edge) => ({
-		id: edge.id,
-		source: workloadNodeId(edge.workloadKey),
-		target: resolverNodeId(edge.resolverKey),
-		type: 'dnsMap',
-		data: { edge, onOpen }
-	}));
+	const edges: DnsMapEdge[] = model.edges.map((edge) => {
+		const source = workloadNodeId(edge.workloadKey);
+		const target = resolverNodeId(edge.resolverKey);
+		const label = g.edge(source, target);
+		return {
+			id: edge.id,
+			source,
+			target,
+			type: 'dnsMap',
+			data: { edge, onOpen, labelX: label?.x ?? 0, labelY: label?.y ?? 0 }
+		};
+	});
 
 	return { nodes, edges };
 }
@@ -537,6 +549,21 @@ export function layoutDnsMapModel(
 export interface DnsMapLayout {
 	nodes: (DnsWorkloadNode | DnsResolverNode | DnsNamespaceGroupNode)[];
 	edges: DnsMapEdge[];
+}
+
+/** Keep a visible model subset without changing any positions from the full layout. */
+export function filterDnsMapLayout(layout: DnsMapLayout, model: DnsMapModel): DnsMapLayout {
+	const nodeIds = new Set<string>();
+	for (const workload of model.workloads) {
+		nodeIds.add(workloadNodeId(workload.key));
+		nodeIds.add(namespaceGroupId(workload.namespaceKey));
+	}
+	for (const resolver of model.resolvers) nodeIds.add(resolverNodeId(resolver.key));
+	const edgeIds = new Set(model.edges.map((edge) => edge.id));
+	return {
+		nodes: layout.nodes.filter((node) => nodeIds.has(node.id)),
+		edges: layout.edges.filter((edge) => edgeIds.has(edge.id))
+	};
 }
 
 /**
@@ -589,6 +616,12 @@ export function refreshDnsMapLayoutData(
 ): DnsMapLayout {
 	const workloadsById = new Map(model.workloads.map((w) => [workloadNodeId(w.key), w]));
 	const resolversById = new Map(model.resolvers.map((r) => [resolverNodeId(r.key), r]));
+	const edgePositionsById = new Map(
+		previous.edges.map((edge) => [
+			edge.id,
+			{ labelX: edge.data?.labelX ?? 0, labelY: edge.data?.labelY ?? 0 }
+		])
+	);
 	const nodes = previous.nodes.map((node) => {
 		if (node.type === 'dnsWorkload') {
 			const workload = workloadsById.get(node.id);
@@ -603,13 +636,16 @@ export function refreshDnsMapLayoutData(
 		return node;
 	});
 
-	const edges: DnsMapEdge[] = model.edges.map((edge) => ({
-		id: edge.id,
-		source: workloadNodeId(edge.workloadKey),
-		target: resolverNodeId(edge.resolverKey),
-		type: 'dnsMap',
-		data: { edge, onOpen }
-	}));
+	const edges: DnsMapEdge[] = model.edges.map((edge) => {
+		const label = edgePositionsById.get(edge.id) ?? { labelX: 0, labelY: 0 };
+		return {
+			id: edge.id,
+			source: workloadNodeId(edge.workloadKey),
+			target: resolverNodeId(edge.resolverKey),
+			type: 'dnsMap',
+			data: { edge, onOpen, ...label }
+		};
+	});
 
 	return { nodes, edges };
 }

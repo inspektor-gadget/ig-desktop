@@ -11,11 +11,14 @@ import { computeDnsCorrelation } from './dnsCorrelator.ts';
 import {
 	buildDnsMapModel,
 	extractDnsMapNamespaces,
+	filterDnsMapLayout,
 	filterDnsMapModelIssuesOnly,
 	filterTransactionsByNamespace,
 	layoutDnsMapModel,
 	dnsMapTopologyKey,
 	refreshDnsMapLayoutData,
+	DNS_MAP_EDGE_LABEL_HEIGHT,
+	DNS_MAP_EDGE_LABEL_WIDTH,
 	DNS_MAP_UNGROUPED_NAMESPACE
 } from './dnsMapGraph.ts';
 import { buildRichDnsFixture, RICH_DNS_CONFIG, tsNs } from './dnsFixtures.ts';
@@ -304,6 +307,20 @@ test('issues-only filtering keeps warning/error edges without changing underlyin
 	for (const w of issuesOnly.workloads) assert.ok(survivingWorkloadKeys.has(w.key));
 });
 
+test('issues-only visibility reuses positions from the full layout', () => {
+	const result = correlate();
+	const model = buildDnsMapModel(result.transactions, TIMEOUT_MS);
+	const fullLayout = layoutDnsMapModel(model, () => {});
+	const issuesModel = filterDnsMapModelIssuesOnly(model);
+	const issuesLayout = filterDnsMapLayout(fullLayout, issuesModel);
+	const fullNodesById = new Map(fullLayout.nodes.map((node) => [node.id, node]));
+
+	assert.equal(issuesLayout.edges.length, issuesModel.edges.length);
+	for (const node of issuesLayout.nodes) {
+		assert.deepEqual(node.position, fullNodesById.get(node.id)?.position);
+	}
+});
+
 // ---------------------------------------------------------------------------
 // Compound layout: namespace groups and all leaf nodes never overlap, even
 // at the fixture's scale (20 pods / 3 namespaces).
@@ -320,6 +337,32 @@ interface AbsRect {
 function overlaps(a: AbsRect, b: AbsRect): boolean {
 	return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
 }
+
+test('Dagre reserves a non-overlapping position for every edge card', () => {
+	const result = correlate();
+	const model = buildDnsMapModel(result.transactions, TIMEOUT_MS);
+	const { edges } = layoutDnsMapModel(model, () => {});
+	const cards = edges.map((edge) => {
+		assert.ok(edge.data);
+		const { labelX, labelY } = edge.data;
+		return {
+			id: edge.id,
+			x1: labelX - DNS_MAP_EDGE_LABEL_WIDTH / 2,
+			y1: labelY - DNS_MAP_EDGE_LABEL_HEIGHT / 2,
+			x2: labelX + DNS_MAP_EDGE_LABEL_WIDTH / 2,
+			y2: labelY + DNS_MAP_EDGE_LABEL_HEIGHT / 2
+		};
+	});
+
+	for (let i = 0; i < cards.length; i++) {
+		for (let j = i + 1; j < cards.length; j++) {
+			assert.ok(
+				!overlaps(cards[i], cards[j]),
+				`edge cards ${cards[i].id} and ${cards[j].id} overlap`
+			);
+		}
+	}
+});
 
 test('compound namespace-group layout produces zero overlaps at scale (20 pods / 3 namespaces)', () => {
 	const result = correlate();
@@ -461,6 +504,11 @@ test('refreshDnsMapLayoutData reuses cached positions unchanged when topology is
 			`node ${layout.nodes[i].id} position must be reused verbatim, not recomputed`
 		);
 		assert.equal(refreshed.nodes[i].id, layout.nodes[i].id);
+	}
+	for (const edge of layout.edges) {
+		const refreshedEdge = refreshed.edges.find((candidate) => candidate.id === edge.id);
+		assert.equal(refreshedEdge?.data?.labelX, edge.data?.labelX);
+		assert.equal(refreshedEdge?.data?.labelY, edge.data?.labelY);
 	}
 
 	// Data is refreshed from the new model, not stale from the old layout -
