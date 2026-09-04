@@ -55,7 +55,7 @@
 	"dependencies": {
 		"@dagrejs/dagre": "^3.0.0",
 		"@tailwindcss/vite": "^4.1.18",
-		"@wailsio/runtime": "3.0.0-alpha.79",
+		"@wailsio/runtime": "3.0.0-beta.16",
 		"d3": "^7.9.0",
 		"dompurify": "^3.4.13",
 		"i18next": "^26.3.6",
