@@ -10,7 +10,7 @@ require (
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.79
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
 	google.golang.org/grpc v1.83.1
-	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
+	google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.21.4
 	k8s.io/api v0.37.0
