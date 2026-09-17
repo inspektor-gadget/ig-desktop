@@ -17,7 +17,16 @@ const state = $state<SettingsDialogState>({
 	hostManaged: false
 });
 
+let hostOpener: ((category?: string, setting?: string) => void) | undefined;
+
 export const settingsDialog = {
+	setOpener(opener: (category?: string, setting?: string) => void) {
+		const previous = hostOpener;
+		hostOpener = opener;
+		return () => {
+			hostOpener = previous;
+		};
+	},
 	get hostManaged() {
 		return state.hostManaged;
 	},
@@ -28,6 +37,10 @@ export const settingsDialog = {
 		return state.open;
 	},
 	set open(value: boolean) {
+		if (value && hostOpener) {
+			hostOpener(state.targetCategory ?? undefined, state.targetSetting ?? undefined);
+			return;
+		}
 		state.open = value;
 		if (!value) {
 			// Clear targets when closing
@@ -48,6 +61,10 @@ export const settingsDialog = {
 	 * @param setting - The setting key to highlight (e.g., 'maxEventsPerGadget')
 	 */
 	openTo(category?: string, setting?: string) {
+		if (hostOpener) {
+			hostOpener(category, setting);
+			return;
+		}
 		state.targetCategory = category ?? null;
 		state.targetSetting = setting ?? null;
 		state.open = true;

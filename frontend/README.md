@@ -125,6 +125,10 @@ or evicted toasts; host navigation/disposal checks remain the host's responsibil
 `settingsDialog.openTo()` opens the reused modal. Setting
 `settingsDialog.hostManaged = true` explains and disables host-controlled
 appearance/language options; the default keeps Desktop's controls enabled.
+Hosts with a native settings editor can install
+`settingsDialog.setOpener((category, setting) => ...)` before mounting to route
+settings links to that editor instead. It returns a cleanup function that restores
+the previous opener. Without an opener, the existing modal behavior is unchanged.
 
 `configuration.snapshot()`, `apply(snapshot)` and `onChange(callback)` support
 host-owned preference synchronization, including resets. Hydrate before mounting
