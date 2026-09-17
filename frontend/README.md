@@ -114,6 +114,11 @@ Its `instanceID` is the transport's local instance ID, not a host run ID or remo
 detached ID. `showToasts={false}` suppresses the embedded toast container in both
 `EmbeddedGadget` and `EmbeddableApp`.
 
+`EmbeddableApp` accepts `showNavigation={false}` to hide its application toolbar
+and `showTabs={false}` to hide environment/result tab headers when a host supplies
+native navigation. Both default to `true`; a host can retain internal result tabs
+without also showing the application toolbar.
+
 Hosts can subscribe to `toastStore`, retain actions in their originating document,
 and await `toastStore.triggerAction(id)`. Actions are one-shot and reject expired
 or evicted toasts; host navigation/disposal checks remain the host's responsibility.

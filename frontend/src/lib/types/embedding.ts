@@ -41,6 +41,10 @@ export interface EmbeddableAppProps {
 	sessions?: boolean;
 	/** Suppress the built-in renderer when the embedding host renders native toasts. */
 	showToasts?: boolean;
+	/** Show application navigation when the host does not provide its own. */
+	showNavigation?: boolean;
+	/** Show the internal environment/result tab strip. */
+	showTabs?: boolean;
 	/** Prefill the launcher shown by a matching launch route; it never auto-runs. */
 	launchPreset?: GadgetLaunchPreset;
 }

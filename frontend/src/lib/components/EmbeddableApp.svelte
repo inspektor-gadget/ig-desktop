@@ -32,6 +32,8 @@
 		onStateChange,
 		sessions = true,
 		showToasts = true,
+		showNavigation = true,
+		showTabs = true,
 		launchPreset
 	}: EmbeddableAppProps = $props();
 	let route = $state(untrack(() => embeddedRoute(path ?? '/')));
@@ -119,15 +121,17 @@
 </script>
 
 <div use:links class="flex min-h-0 min-w-0 flex-1 flex-col bg-ig-surface text-ig-text">
-	<nav aria-label={t('Navigation')} class="flex flex-wrap border-b border-ig-border">
-		<NavbarLink href={resolve('/')} title={t('Environments')}><Server /></NavbarLink>
-		<NavbarLink href={resolve('/browse/artifacthub')} title={t('Gadget Gallery')}
-			><ArtifactHub /></NavbarLink
-		>
-		<NavbarLink href={resolve('/environment/create')} title={t('Create Environment')}
-			><Plus /></NavbarLink
-		>
-	</nav>
+	{#if showNavigation}
+		<nav aria-label={t('Navigation')} class="flex flex-wrap border-b border-ig-border">
+			<NavbarLink href={resolve('/')} title={t('Environments')}><Server /></NavbarLink>
+			<NavbarLink href={resolve('/browse/artifacthub')} title={t('Gadget Gallery')}
+				><ArtifactHub /></NavbarLink
+			>
+			<NavbarLink href={resolve('/environment/create')} title={t('Create Environment')}
+				><Plus /></NavbarLink
+			>
+		</nav>
+	{/if}
 	{#key route.path}
 		{#if route.screen === 'environments'}
 			<EnvironmentList />
@@ -140,7 +144,7 @@
 		{:else if route.screen === 'launch'}
 			<GadgetLaunch data={{ url: route.params.path, preset: launchPreset }} />
 		{:else if route.screen === 'environment' || route.screen === 'result'}
-			<EnvironmentLayout>
+			<EnvironmentLayout {showTabs}>
 				{#if route.screen === 'result'}
 					<Gadget
 						instanceID={route.params.instanceID}

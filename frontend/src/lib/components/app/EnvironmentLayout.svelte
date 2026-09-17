@@ -13,7 +13,7 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 
-	let { children }: { children: Snippet } = $props();
+	let { children, showTabs = true }: { children: Snippet; showTabs?: boolean } = $props();
 
 	let instanceKeys = $derived(
 		Object.keys(instances).filter((key) => instances[key].environment === page.params.env)
@@ -72,34 +72,36 @@
 </script>
 
 <div class="flex min-w-0 flex-1 flex-col bg-gray-50/90 dark:bg-gray-900/90">
-	<div
-		class="nowrap flex w-full flex-row items-center overscroll-x-auto text-sm text-gray-600 dark:text-gray-500"
-	>
-		<Tab href={resolve(`/env/${page.params.env}`)} shrink={true} exact={true}><List /></Tab>
-		{#each instanceKeys as instanceKey (instanceKey)}
-			<Tab
-				href={resolve(`/env/${page.params.env}/running/${instanceKey}`)}
-				shrink={false}
-				exact={true}
-				><div class="flex flex-row items-center gap-2">
-					<button
-						class="small-icon rounded-4xl p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700"
-						title={t('Close tab')}
-						aria-label={t('Close tab')}
-						onclick={(ev) => {
-							ev.preventDefault();
-							ev.stopPropagation();
-							closeInstance(instanceKey);
-							return false;
-						}}><Delete /></button
-					>
-					<div>{instances[instanceKey].name || instances[instanceKey].gadgetInfo.imageName}</div>
-				</div></Tab
-			>
-		{/each}
+	{#if showTabs}
 		<div
-			class="h-full flex-grow border-b border-b-gray-300 dark:border-b-gray-700 bg-white dark:bg-gray-950"
-		></div>
-	</div>
+			class="nowrap flex w-full flex-row items-center overscroll-x-auto text-sm text-gray-600 dark:text-gray-500"
+		>
+			<Tab href={resolve(`/env/${page.params.env}`)} shrink={true} exact={true}><List /></Tab>
+			{#each instanceKeys as instanceKey (instanceKey)}
+				<Tab
+					href={resolve(`/env/${page.params.env}/running/${instanceKey}`)}
+					shrink={false}
+					exact={true}
+					><div class="flex flex-row items-center gap-2">
+						<button
+							class="small-icon rounded-4xl p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700"
+							title={t('Close tab')}
+							aria-label={t('Close tab')}
+							onclick={(ev) => {
+								ev.preventDefault();
+								ev.stopPropagation();
+								closeInstance(instanceKey);
+								return false;
+							}}><Delete /></button
+						>
+						<div>{instances[instanceKey].name || instances[instanceKey].gadgetInfo.imageName}</div>
+					</div></Tab
+				>
+			{/each}
+			<div
+				class="h-full flex-grow border-b border-b-gray-300 dark:border-b-gray-700 bg-white dark:bg-gray-950"
+			></div>
+		</div>
+	{/if}
 	{@render children()}
 </div>
