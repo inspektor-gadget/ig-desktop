@@ -25,6 +25,8 @@
 	import Link from '$lib/icons/link.svelte';
 	import CirclePlus from '$lib/icons/circle-plus.svelte';
 
+	let { title }: { title?: string } = $props();
+
 	const api = getContext<ApiContext>('api');
 
 	// Clear current environment when on home page
@@ -256,9 +258,11 @@
 			<!-- Hero Section -->
 			<div class="mt-12 flex flex-col gap-4">
 				<h1
-					class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-5xl font-bold text-transparent"
+					class="text-5xl font-bold {title === undefined
+						? 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent'
+						: 'text-ig-text'}"
 				>
-					{t('Ready to explore?')}
+					{title ?? t('Ready to explore?')}
 				</h1>
 				<p class="text-xl text-gray-600 dark:text-gray-400">
 					{t('Your environments are set up. Choose where to start your investigation.')}

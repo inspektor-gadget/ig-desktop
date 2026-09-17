@@ -2,9 +2,15 @@ import { mount } from 'svelte';
 import type { EmbeddableAppProps, EmbeddableAppState } from '../../src/lib/types/embedding';
 // Load the production artifact at runtime; do not typecheck generated/minified JS.
 const libraryPath = '../../build-embedding/ig-frontend.js';
-const { EmbeddableApp, initializeIG, createReactiveProps, apiService, toastStore } = await import(
-	/* @vite-ignore */ libraryPath
-);
+const {
+	EmbeddableApp,
+	initializeIG,
+	createReactiveProps,
+	apiService,
+	toastStore,
+	openExternalURL,
+	setExternalURLOpener
+} = await import(/* @vite-ignore */ libraryPath);
 import '../../build-embedding/ig-frontend.css';
 
 const environment = { id: 'test-env', name: 'Embedding environment', runtime: 'grpc', params: {} };
@@ -32,6 +38,9 @@ declare global {
 			showToast: (duration?: number, reject?: boolean) => string;
 			triggerToast: (id: string) => Promise<string>;
 			toastClicks: () => number;
+			externalLinks: () => Promise<
+				Array<{ kind: string; url: string; target?: string; features?: string }>
+			>;
 			initialResultVisible: boolean;
 		};
 	}
@@ -177,6 +186,28 @@ Object.assign(window, {
 				}
 			}),
 		triggerToast: (id: string) => toastStore.triggerAction(id),
-		toastClicks: () => toastClicks
+		toastClicks: () => toastClicks,
+		externalLinks: async () => {
+			const calls: Array<{ kind: string; url: string; target?: string; features?: string }> = [];
+			const restore = setExternalURLOpener((url: string) => {
+				calls.push({ kind: 'host', url });
+			});
+			try {
+				await openExternalURL('https://example.com/host');
+			} finally {
+				restore();
+			}
+			const original = window.open;
+			window.open = (url, target, features) => {
+				calls.push({ kind: 'browser', url: String(url), target, features });
+				return null;
+			};
+			try {
+				await openExternalURL('https://example.com/browser');
+			} finally {
+				window.open = original;
+			}
+			return calls;
+		}
 	}
 });

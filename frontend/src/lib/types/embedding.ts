@@ -33,6 +33,8 @@ export interface GadgetLaunchPreset {
 export interface EmbeddableAppProps {
 	/** Desktop route, including query parameters. Defaults to `/`. */
 	path?: string;
+	/** Optional plain host-specific heading; omitted keeps the Desktop greeting and gradient. */
+	homeTitle?: string;
 	onNavigate?: (path: string) => void;
 	viewState?: ResultViewState;
 	/** Effective state, including manual edits and unsupported-visualizer fallback. */

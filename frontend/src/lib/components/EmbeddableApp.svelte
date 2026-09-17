@@ -27,6 +27,7 @@
 
 	let {
 		path,
+		homeTitle,
 		onNavigate,
 		viewState,
 		onStateChange,
@@ -134,7 +135,7 @@
 	{/if}
 	{#key route.path}
 		{#if route.screen === 'environments'}
-			<EnvironmentList />
+			<EnvironmentList title={homeTitle} />
 		{:else if route.screen === 'create'}
 			<EnvironmentCreate />
 		{:else if route.screen === 'catalog'}

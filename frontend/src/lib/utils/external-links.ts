@@ -6,6 +6,17 @@
 
 import { environment } from '$lib/services/environment.service.svelte';
 
+let hostOpener: ((url: string) => void | Promise<void>) | undefined;
+
+/** Override external links for an embedding host; cleanup restores the previous behavior. */
+export function setExternalURLOpener(opener: (url: string) => void | Promise<void>): () => void {
+	const previous = hostOpener;
+	hostOpener = opener;
+	return () => {
+		hostOpener = previous;
+	};
+}
+
 /**
  * Opens an external URL in the appropriate manner based on the runtime environment.
  * In Wails desktop mode, uses the native browser opener.
@@ -14,6 +25,10 @@ import { environment } from '$lib/services/environment.service.svelte';
  * @param url - The URL to open
  */
 export async function openExternalURL(url: string): Promise<void> {
+	if (hostOpener) {
+		await hostOpener(url);
+		return;
+	}
 	if (environment.isApp) {
 		// Dynamic import to avoid loading Wails runtime in browser mode
 		const { Browser } = await import('@wailsio/runtime');

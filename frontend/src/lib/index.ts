@@ -107,6 +107,7 @@ export type {
 	ConfigurationChange
 } from './stores/configuration.svelte';
 export { settingsDialog } from './stores/settings-dialog.svelte';
+export { openExternalURL, setExternalURLOpener } from './utils/external-links';
 export { applyGadgetHistories, useHostGadgetHistory } from './utils/env-preferences';
 export type { GadgetHistoryByEnvironment } from './utils/env-preferences';
 

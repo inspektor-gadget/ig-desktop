@@ -175,10 +175,25 @@ test('React provider initializes transport before initial controlled create scre
 	).toBe(true);
 });
 
+test('external link overrides restore the normal browser fallback', async ({ page }) => {
+	expect(await page.evaluate(() => window.embedding.externalLinks())).toEqual([
+		{ kind: 'host', url: 'https://example.com/host' },
+		{
+			kind: 'browser',
+			url: 'https://example.com/browser',
+			target: '_blank',
+			features: 'noopener,noreferrer'
+		}
+	]);
+});
+
 test('reuses environment, discovery, launcher and replay screens without navigation side effects', async ({
 	page
 }) => {
 	await expect(page.getByText('Embedding environment', { exact: true })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Ready to explore?', exact: true })).toHaveClass(
+		/bg-gradient-to-r/
+	);
 	await page.getByTitle('Create Environment').click();
 	await expect(page.getByText('Create Environment', { exact: true }).first()).toBeVisible();
 	await page.getByTitle('Gadget Gallery').click();

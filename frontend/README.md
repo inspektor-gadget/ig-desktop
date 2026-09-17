@@ -118,6 +118,9 @@ detached ID. `showToasts={false}` suppresses the embedded toast container in bot
 and `showTabs={false}` to hide environment/result tab headers when a host supplies
 native navigation. Both default to `true`; a host can retain internal result tabs
 without also showing the application toolbar.
+The optional `homeTitle` replaces the home greeting with a plain theme-colored
+heading. Without it, Desktop and library consumers retain the existing greeting
+and gradient.
 
 Hosts can subscribe to `toastStore`, retain actions in their originating document,
 and await `toastStore.triggerAction(id)`. Actions are one-shot and reject expired
@@ -129,6 +132,10 @@ Hosts with a native settings editor can install
 `settingsDialog.setOpener((category, setting) => ...)` before mounting to route
 settings links to that editor instead. It returns a cleanup function that restores
 the previous opener. Without an opener, the existing modal behavior is unchanged.
+`setExternalURLOpener(opener)` similarly redirects calls to `openExternalURL`;
+its cleanup restores the previous opener. When no host override is installed,
+Wails still uses `Browser.OpenURL` and browser consumers still use
+`window.open(..., '_blank', 'noopener,noreferrer')`.
 
 `configuration.snapshot()`, `apply(snapshot)` and `onChange(callback)` support
 host-owned preference synchronization, including resets. Hydrate before mounting
@@ -177,6 +184,11 @@ IG_REACT_MODULES=/path/to/host/node_modules npx playwright test --config tests/e
 ```
 
 Without that variable, only the optional React-specific check is skipped.
+Set `IG_SVELTE_MODULES` to a host's `node_modules` directory as well to exercise
+its actual Svelte runtime rather than this checkout's runtime.
+Precompiled Svelte output requires the matching compiler/runtime version.
+For example, output from Svelte 5.57.0 must not be paired with a host's 5.56.8
+runtime; newly generated internal helpers may not exist there.
 
 The embedding browser tests load the **production library** with a deterministic
 transport fixture. They cover reused screens, metadata-backed parameters,
