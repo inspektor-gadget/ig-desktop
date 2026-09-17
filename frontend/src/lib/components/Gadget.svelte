@@ -12,7 +12,8 @@
 	import FilterIcon from '$lib/icons/filter-small.svelte';
 	import { instances } from '$lib/shared/instances.svelte';
 	import { environments } from '$lib/shared/environments.svelte';
-	import { getContext, setContext } from 'svelte';
+	import { getContext, setContext, untrack } from 'svelte';
+	import type { ResultViewState, ResultViewChange } from '$lib/types/embedding';
 	import { preferences } from '$lib/shared/preferences.svelte';
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
@@ -28,11 +29,15 @@
 	let {
 		instanceID,
 		viewConfig,
+		viewState,
+		onViewStateChange,
 		onCellClick,
 		onCellContextMenu
 	}: {
 		instanceID: string;
 		viewConfig?: ViewConfig;
+		viewState?: ResultViewState;
+		onViewStateChange?: (state: ResultViewChange) => void;
 		onCellClick?: CellClickHandler;
 		onCellContextMenu?: CellContextMenuHandler;
 	} = $props();
@@ -136,6 +141,31 @@
 	let searchInput = $state('');
 	let searchQuery = $state('');
 	let searchInputRef: { focus: (selectAll?: boolean) => void } | undefined = $state();
+	let datasourceViews = $state<Record<string, { active: string; available: string[] }>>({});
+
+	$effect(() => {
+		if (viewState?.search !== undefined) searchInput = viewState.search;
+	});
+
+	$effect(() => {
+		if (!gadgetInfo) return;
+		void viewState;
+		const visible = normalizedDataSources.filter(
+			(ds) => ds.annotations?.['view.hidden'] !== 'true'
+		);
+		if (visible.some((ds) => !datasourceViews[ds.name])) return;
+		const value: ResultViewChange = {
+			instanceID,
+			search: searchQuery,
+			visualizers: Object.fromEntries(
+				visible.map((ds) => [ds.name, datasourceViews[ds.name].active])
+			),
+			availableVisualizers: Object.fromEntries(
+				visible.map((ds) => [ds.name, datasourceViews[ds.name].available])
+			)
+		};
+		untrack(() => onViewStateChange?.(value));
+	});
 
 	$effect(() => {
 		// Track searchInput for reactivity
@@ -558,6 +588,10 @@
 								{events}
 								eventVersion={eventCount}
 								{searchQuery}
+								{viewState}
+								onVisualizerChange={(active, available) => {
+									datasourceViews[ds.name] = { active, available };
+								}}
 								{searchModeFilter}
 								{searchHighlightInFilterMode}
 								onMatchInfo={handleMatchInfo}

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { initializeIG, setLanguage, type ITransportAdapter } from '@inspektor-gadget/frontend';
 
 interface IGContextValue {
@@ -31,9 +31,12 @@ interface IGProviderProps {
  * ```
  */
 export function IGProvider({ adapter, basePath, onNavigate, language, children }: IGProviderProps) {
+	const [initializedAdapter, setInitializedAdapter] = useState<ITransportAdapter | null>(null);
+
 	useEffect(() => {
-		initializeIG({ adapter, basePath, onNavigate, language });
-		return () => adapter.disconnect();
+		const cleanup = initializeIG({ adapter, basePath, onNavigate, language });
+		setInitializedAdapter(adapter);
+		return cleanup;
 		// `language` is handled by the dedicated effect below, so it is
 		// intentionally omitted here to avoid re-initializing the adapter.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -44,7 +47,11 @@ export function IGProvider({ adapter, basePath, onNavigate, language, children }
 		if (language) setLanguage(language);
 	}, [language]);
 
-	return <IGContext.Provider value={{ adapter }}>{children}</IGContext.Provider>;
+	return (
+		<IGContext.Provider value={{ adapter }}>
+			{initializedAdapter === adapter ? children : null}
+		</IGContext.Provider>
+	);
 }
 
 /**

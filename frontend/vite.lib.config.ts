@@ -6,11 +6,15 @@ import { cpSync, mkdirSync } from 'fs';
 
 /** Copy theme CSS files to dist-lib/themes/ after build. */
 function copyThemes(): Plugin {
+	let outDir = 'dist-lib';
 	return {
 		name: 'copy-themes',
-		closeBundle() {
+		configResolved(config) {
+			outDir = resolve(config.root, config.build.outDir);
+		},
+		writeBundle() {
 			const src = resolve(__dirname, 'src/lib/themes');
-			const dest = resolve(__dirname, 'dist-lib/themes');
+			const dest = resolve(outDir, 'themes');
 			mkdirSync(dest, { recursive: true });
 			cpSync(src, dest, { recursive: true, filter: (s) => s.endsWith('.css') || !s.includes('.') });
 		}
@@ -18,6 +22,7 @@ function copyThemes(): Plugin {
 }
 
 export default defineConfig({
+	base: './',
 	define: {
 		'import.meta.env.VITE_APP_MODE': JSON.stringify(process.env.VITE_APP_MODE || 'full')
 	},

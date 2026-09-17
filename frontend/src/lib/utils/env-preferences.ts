@@ -9,6 +9,8 @@
 
 import type { GadgetRunRequest } from '$lib/types';
 
+export type GadgetHistoryByEnvironment = Record<string, GadgetRunRequest[]>;
+
 /**
  * Get all localStorage keys for a specific environment
  */
@@ -179,4 +181,56 @@ export function addGadgetToHistory(
 
 	// Limit to maxEntries
 	setEnvPref(environmentID, 'gadget-history', updated.slice(0, maxEntries));
+}
+
+function validHistory(value: unknown): GadgetRunRequest[] {
+	if (!Array.isArray(value)) throw new Error('Host gadget history must be an array');
+	return value.map((candidate) => {
+		if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate))
+			throw new Error('Invalid host gadget request');
+		const request = candidate as Record<string, unknown>;
+		if (typeof request.image !== 'string' || !request.image)
+			throw new Error('Host gadget request requires an image');
+		if (
+			request.params !== undefined &&
+			(!request.params || typeof request.params !== 'object' || Array.isArray(request.params))
+		) {
+			throw new Error('Invalid host gadget parameters');
+		}
+		const params = Object.fromEntries(
+			Object.entries(request.params ?? {}).map(([key, value]) => {
+				if (typeof value !== 'string') throw new Error('Host gadget parameters must be strings');
+				return [key, value];
+			})
+		);
+		for (const key of ['environmentID', 'instanceName', 'sessionId', 'sessionName']) {
+			if (request[key] !== undefined && typeof request[key] !== 'string')
+				throw new Error(`Invalid host gadget ${key}`);
+		}
+		for (const key of ['detached', 'record']) {
+			if (request[key] !== undefined && typeof request[key] !== 'boolean')
+				throw new Error(`Invalid host gadget ${key}`);
+		}
+		return {
+			image: request.image,
+			environmentID: typeof request.environmentID === 'string' ? request.environmentID : undefined,
+			params,
+			detached: request.detached === true,
+			instanceName: typeof request.instanceName === 'string' ? request.instanceName : undefined,
+			timestamp:
+				typeof request.timestamp === 'number' && Number.isFinite(request.timestamp)
+					? request.timestamp
+					: undefined,
+			record: request.record === true,
+			sessionId: typeof request.sessionId === 'string' ? request.sessionId : undefined,
+			sessionName: typeof request.sessionName === 'string' ? request.sessionName : undefined
+		};
+	});
+}
+
+/** Replace host-owned history without touching URL autocomplete or other preferences. */
+export function applyGadgetHistories(histories: Record<string, unknown>): void {
+	for (const [environmentID, history] of Object.entries(histories)) {
+		setEnvPref(environmentID, 'gadget-history', validHistory(history).slice(0, 50));
+	}
 }

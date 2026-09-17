@@ -73,6 +73,15 @@ export {
 
 // --- Key UI Components ---
 export { default as Gadget } from './components/Gadget.svelte';
+export { default as EmbeddableApp } from './components/EmbeddableApp.svelte';
+export { default as EmbeddedGadget } from './components/EmbeddedGadget.svelte';
+export type {
+	EmbeddableAppProps,
+	EmbeddableAppState,
+	GadgetLaunchPreset,
+	ResultViewState,
+	ResultViewChange
+} from './types/embedding';
 export { default as GadgetSettings } from './components/GadgetSettings.svelte';
 export { default as VirtualTable } from './components/VirtualTable/VirtualTable.svelte';
 export { default as Button } from './components/Button.svelte';
@@ -91,6 +100,15 @@ export { default as GadgetWrapper } from './components/wrappers/GadgetWrapper.sv
 // `ToastContainer` is only mounted by the full Wails app layout.
 export { toastStore } from './stores/toast.svelte';
 export type { Toast, ToastType, ToastAction, ToastSubscriber } from './stores/toast.svelte';
+export { configuration, configurationStorageKey } from './stores/configuration.svelte';
+export type {
+	ConfigurationSnapshot,
+	ConfigurationValue,
+	ConfigurationChange
+} from './stores/configuration.svelte';
+export { settingsDialog } from './stores/settings-dialog.svelte';
+export { applyGadgetHistories } from './utils/env-preferences';
+export type { GadgetHistoryByEnvironment } from './utils/env-preferences';
 
 // --- Internationalization (i18next core, no React/Svelte binding) ---
 export { igI18n, i18nReady } from './i18n/config';
@@ -107,6 +125,7 @@ export { headlampLight, headlampDark } from './themes/headlamp-tokens';
 export { setBasePath } from './compat/app-paths';
 export { setPage } from './compat/app-state';
 export { setNavigationHandler } from './compat/app-navigation';
+export { createReactiveProps } from './compat/reactive-props.svelte';
 export { registerBuiltinPlugins } from './plugins/builtin';
 
 // --- Convenience initializer ---
@@ -114,6 +133,7 @@ import type { ITransportAdapter } from './transport/adapter';
 import { setBasePath } from './compat/app-paths';
 import { setNavigationHandler } from './compat/app-navigation';
 import { websocketService } from './services/websocket.service.svelte';
+import { apiService } from './services/api.service.svelte';
 import { messageRouter } from './services/message-router.service.svelte';
 import { registerBuiltinPlugins } from './plugins/builtin';
 import { setLanguage } from './i18n/index.svelte';
@@ -130,10 +150,16 @@ export function initializeIG(options: {
 	basePath?: string;
 	onNavigate?: (url: string) => void;
 	language?: string;
-}): void {
+}): () => void {
 	registerBuiltinPlugins();
 	if (options.basePath) setBasePath(options.basePath);
 	if (options.onNavigate) setNavigationHandler(options.onNavigate);
 	if (options.language) setLanguage(options.language);
-	websocketService.initialize(options.adapter, (message) => messageRouter.route(message));
+	websocketService.initialize(
+		options.adapter,
+		(message) => messageRouter.route(message),
+		false,
+		(reason) => apiService.cancelPending(reason)
+	);
+	return () => websocketService.disconnect(options.adapter);
 }

@@ -95,8 +95,7 @@
 		bind:value
 		{oninput}
 		{onblur}
-		class={textareaClasses}
-	></textarea>
+		class={textareaClasses}></textarea>
 
 	{#if error}
 		<p class="text-xs text-ig-error">{error}</p>

@@ -7,15 +7,23 @@ interface SettingsDialogState {
 	open: boolean;
 	targetCategory: string | null;
 	targetSetting: string | null;
+	hostManaged: boolean;
 }
 
 const state = $state<SettingsDialogState>({
 	open: false,
 	targetCategory: null,
-	targetSetting: null
+	targetSetting: null,
+	hostManaged: false
 });
 
 export const settingsDialog = {
+	get hostManaged() {
+		return state.hostManaged;
+	},
+	set hostManaged(value: boolean) {
+		state.hostManaged = value;
+	},
 	get open() {
 		return state.open;
 	},

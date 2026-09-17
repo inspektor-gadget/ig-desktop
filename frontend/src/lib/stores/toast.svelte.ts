@@ -7,7 +7,7 @@ export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 export interface ToastAction {
 	label: string;
-	onClick: () => void;
+	onClick: () => void | Promise<void>;
 }
 
 export interface Toast {
@@ -15,6 +15,7 @@ export interface Toast {
 	type: ToastType;
 	message: string;
 	duration?: number; // milliseconds, undefined = no auto-dismiss
+	expiresAt?: number;
 	action?: ToastAction;
 }
 
@@ -58,7 +59,11 @@ class ToastStore {
 	 */
 	show(toast: Omit<Toast, 'id'>): string {
 		const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-		const newToast: Toast = { id, ...toast };
+		const newToast: Toast = {
+			id,
+			...toast,
+			...(toast.duration ? { expiresAt: Date.now() + toast.duration } : {})
+		};
 
 		// Add to state
 		this.state.toasts = [...this.state.toasts, newToast];
@@ -100,6 +105,28 @@ class ToastStore {
 	 */
 	dismissAll(): void {
 		this.state.toasts = [];
+	}
+
+	/**
+	 * Invoke a live toast action once. Hosts use this instead of receiving the
+	 * callback itself, which keeps action ownership and expiry in this store.
+	 */
+	async triggerAction(id: string): Promise<'ok' | 'missing' | 'no-action' | 'failed'> {
+		const toast = this.state.toasts.find((candidate) => candidate.id === id);
+		if (!toast) return 'missing';
+		if (toast.expiresAt !== undefined && toast.expiresAt <= Date.now()) {
+			this.dismiss(id);
+			return 'missing';
+		}
+		if (!toast.action) return 'no-action';
+		this.dismiss(id);
+		try {
+			await toast.action.onClick();
+			return 'ok';
+		} catch (error) {
+			console.error('Toast action threw:', error);
+			return 'failed';
+		}
 	}
 
 	/**

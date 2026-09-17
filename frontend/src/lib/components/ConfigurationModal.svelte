@@ -111,6 +111,11 @@
 		<div class="flex flex-1 flex-col">
 			<!-- Settings Body -->
 			<div class="flex-1 overflow-y-auto p-6">
+				{#if settingsDialog.hostManaged}
+					<p class="mb-4 text-sm text-ig-text-secondary">
+						{t('Appearance and language follow the host application settings.')}
+					</p>
+				{/if}
 				{#each visibleCategories as category (category.id)}
 					{#if activeCategory === category.id}
 						<div class="space-y-6">
@@ -123,7 +128,9 @@
 									{#each category.settings as setting (setting.key)}
 										{@const value = configuration.get(setting.key)}
 										{@const SettingComponent = settingComponents[setting.type]}
-										<div
+										<fieldset
+											disabled={settingsDialog.hostManaged &&
+												['theme', 'designTheme', 'gradientEnabled'].includes(setting.key)}
 											class="rounded-ig-md transition-all duration-300 {highlightedSetting ===
 											setting.key
 												? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900'
@@ -135,7 +142,7 @@
 												onChange={(newValue: string | number | boolean) =>
 													handleSettingChange(setting.key, newValue)}
 											/>
-										</div>
+										</fieldset>
 									{/each}
 								</div>
 							</div>
@@ -151,6 +158,7 @@
 			<label for="ig-language-select" class="text-sm text-ig-text-secondary">{t('Language')}</label>
 			<select
 				id="ig-language-select"
+				disabled={settingsDialog.hostManaged}
 				value={getLanguage()}
 				onchange={(e) => setLanguage(e.currentTarget.value)}
 				class="rounded-ig-sm border border-ig-border-strong bg-ig-surface-raised px-2 py-1 text-sm text-ig-text focus:border-ig-primary focus:ring-ig-primary-muted focus:outline-none"

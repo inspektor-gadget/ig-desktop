@@ -1,9 +1,10 @@
-import { useEffect, useRef, type ComponentType } from 'react';
-import { mount, unmount } from 'svelte';
+import { useEffect, useRef } from 'react';
+import { mount, unmount, type Component } from 'svelte';
+import { createReactiveProps } from '@inspektor-gadget/frontend';
 
 interface SvelteWrapperProps {
 	/** The Svelte component class to mount */
-	component: ComponentType<any>;
+	component: Component<any>;
 	/** Props to pass to the Svelte component (spread as individual props) */
 	[key: string]: any;
 }
@@ -21,25 +22,44 @@ interface SvelteWrapperProps {
 export function SvelteWrapper({ component: SvelteComp, ...props }: SvelteWrapperProps) {
 	const targetRef = useRef<HTMLDivElement>(null);
 	const instanceRef = useRef<any>(null);
+	const propsRef = useRef<Record<string, unknown> | null>(null);
+	const previousPropsRef = useRef<Record<string, unknown> | null>(null);
 
 	// Mount/unmount on component change
 	useEffect(() => {
 		if (!targetRef.current) return;
 
+		propsRef.current = createReactiveProps(props);
+		previousPropsRef.current = props;
 		instanceRef.current = mount(SvelteComp as any, {
 			target: targetRef.current,
-			props
+			props: propsRef.current
 		});
 
 		return () => {
 			if (instanceRef.current) {
 				unmount(instanceRef.current);
 				instanceRef.current = null;
+				propsRef.current = null;
+				previousPropsRef.current = null;
 			}
 		};
 		// Only re-mount when the Svelte component class itself changes
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [SvelteComp]);
+
+	useEffect(() => {
+		const current = propsRef.current;
+		if (!current) return;
+		for (const key of Object.keys(current)) {
+			if (!(key in props)) delete current[key];
+		}
+		// Compare host values, not Svelte's nested proxies, to avoid replaying unchanged commands.
+		for (const key of Object.keys(props)) {
+			if (!Object.is(previousPropsRef.current?.[key], props[key])) current[key] = props[key];
+		}
+		previousPropsRef.current = props;
+	});
 
 	return (
 		<div

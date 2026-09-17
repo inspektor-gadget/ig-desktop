@@ -1,0 +1,292 @@
+<script lang="ts">
+	import { getContext } from 'svelte';
+	import type { ApiContext } from '$lib/types/context';
+	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+	import { formatAbsoluteTime, formatRelativeTime } from '$lib/utils/time';
+	import type { SessionWithRuns, GadgetRun } from '$lib/types';
+	import { instances } from '$lib/shared/instances.svelte';
+	import { ReplayService } from '$lib/services/replay.service';
+	import { EventRingBuffer } from '$lib/utils/ring-buffer';
+	import { configuration } from '$lib/stores/configuration.svelte';
+	import Gadget from '$lib/components/Gadget.svelte';
+	import Play from '$lib/icons/play-small.svelte';
+	import Eye from '$lib/icons/fa/eye.svelte';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import { t } from '$lib/i18n/index.svelte';
+	import type { ResultViewState, ResultViewChange } from '$lib/types/embedding';
+
+	let {
+		viewState,
+		onViewStateChange
+	}: {
+		viewState?: ResultViewState;
+		onViewStateChange?: (state: ResultViewChange) => void;
+	} = $props();
+
+	const api = getContext<ApiContext>('api');
+	const replayService = new ReplayService();
+
+	let session = $state<SessionWithRuns | null>(null);
+	let loading = $state(true);
+	let error = $state<string | null>(null);
+	let activeRunId = $state<string | null>(null);
+	let loadedRuns = $state<Set<string>>(new Set());
+	let isPlaying = $state(false);
+	let playbackProgress = $state<Map<string, number>>(new Map());
+
+	const sessionId = $derived(page.params.id || '');
+
+	$effect(() => {
+		if (sessionId) {
+			loadSession(sessionId);
+		}
+	});
+
+	async function loadSession(id: string) {
+		loading = true;
+		error = null;
+		try {
+			session = await api.getSession(id);
+		} catch (e) {
+			error = e instanceof Error ? e.message : t('Failed to load session');
+		} finally {
+			loading = false;
+		}
+	}
+
+	function getGadgetName(image: string): string {
+		// Extract name from image URL
+		return image.split('/').pop() || image;
+	}
+
+	async function viewResults(runId: string) {
+		activeRunId = runId;
+		await loadRunData(runId, 'instant');
+		loadedRuns.add(runId);
+	}
+
+	async function playbackRealtime(runId: string) {
+		activeRunId = runId;
+		await loadRunData(runId, 'realtime');
+		loadedRuns.add(runId);
+	}
+
+	function getMaxEvents(): number {
+		return (configuration.get('maxEventsPerGadget') as number) || 10000;
+	}
+
+	function createReplayInstance(
+		instanceId: string,
+		run: GadgetRun,
+		environmentId: string,
+		mode: 'snapshot' | 'replay'
+	) {
+		instances[instanceId] = {
+			name: run.gadgetImage,
+			running: mode === 'replay',
+			gadgetInfo: run.gadgetInfo,
+			events: new EventRingBuffer(getMaxEvents()),
+			logs: [],
+			environment: environmentId,
+			startTime: run.startedAt,
+			eventCount: run.eventCount,
+			isReplay: true,
+			replayMode: mode,
+			runId: run.id
+		};
+	}
+
+	async function loadRunData(runId: string, mode: 'instant' | 'realtime') {
+		if (!session) {
+			error = t('Session not loaded');
+			return;
+		}
+
+		const run = session.runs.find((r) => r.id === runId);
+		if (!run) {
+			error = t('Run not found');
+			return;
+		}
+
+		const instanceId = `replay-${runId}`;
+		const replayMode = mode === 'instant' ? 'snapshot' : 'replay';
+
+		// Stop any current playback
+		replayService.stop();
+		isPlaying = false;
+
+		// Clear previous events if reloading, or create new instance
+		if (instances[instanceId]) {
+			instances[instanceId].events.clear();
+			instances[instanceId].logs = [];
+			instances[instanceId].eventCount = 0;
+			instances[instanceId].replayMode = replayMode;
+			instances[instanceId].running = replayMode === 'replay';
+		} else {
+			createReplayInstance(instanceId, run, session.environmentId, replayMode);
+		}
+
+		// Handle empty runs
+		if (run.eventCount === 0) {
+			instances[instanceId].running = false;
+			return;
+		}
+
+		// Fetch and replay events
+		const events = await api.getRunEvents(session.id, runId);
+
+		if (mode === 'realtime') {
+			isPlaying = true;
+		}
+
+		await replayService.play({
+			instanceId,
+			events,
+			mode,
+			onComplete: () => {
+				isPlaying = false;
+				if (instances[instanceId]) {
+					instances[instanceId].running = false;
+				}
+			},
+			onProgress: (current, total) => {
+				const progress = Math.round((current / total) * 100);
+				if (activeRunId) {
+					playbackProgress.set(activeRunId, progress);
+				}
+			}
+		});
+	}
+
+	function stopPlayback() {
+		replayService.stop();
+		isPlaying = false;
+		// Mark current replay instance as stopped
+		if (activeRunId && instances[`replay-${activeRunId}`]) {
+			instances[`replay-${activeRunId}`].running = false;
+		}
+	}
+
+	// Clean up replay instances when component unmounts
+	$effect(() => {
+		return () => {
+			replayService.stop();
+			for (const runId of loadedRuns) {
+				delete instances[`replay-${runId}`];
+			}
+		};
+	});
+</script>
+
+{#if loading}
+	<div class="flex flex-1 items-center justify-center p-8">
+		<span class="text-gray-600 dark:text-gray-400">{t('Loading session...')}</span>
+	</div>
+{:else if error}
+	<div class="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
+		<p class="text-red-600 dark:text-red-400">{t('Error:')} {error}</p>
+		<a
+			href={resolve('/')}
+			class="text-blue-600 dark:text-blue-400 underline hover:text-blue-500 dark:hover:text-blue-300"
+			>{t('Return home')}</a
+		>
+	</div>
+{:else if session}
+	<div class="flex flex-1 flex-col overflow-auto">
+		<header
+			class="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-950/50 p-4"
+		>
+			<div class="flex w-full items-center justify-between">
+				<div class="flex items-center gap-3">
+					<a
+						href={resolve(`/env/${session.environmentId}`)}
+						class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
+						title={t('Back to Environment')}
+					>
+						<ChevronLeft />
+					</a>
+					<div>
+						<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+							{session.name || 'Unnamed Session'}
+						</h1>
+						<p class="text-sm text-gray-500">
+							{t('{{count}} run', { count: session.runs.length })}
+							· {t('Created')}
+							<span class="cursor-help" title={formatAbsoluteTime(session.createdAt)}>
+								{formatRelativeTime(session.createdAt)}
+							</span>
+						</p>
+					</div>
+				</div>
+				{#if isPlaying}
+					<div class="flex items-center gap-4">
+						<span class="text-sm text-gray-600 dark:text-gray-400">{t('Playing...')}</span>
+						<button
+							onclick={stopPlayback}
+							class="rounded-ig-sm border border-red-300 dark:border-red-800 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-100/20 dark:hover:bg-red-900/20 hover:text-red-500 dark:hover:text-red-300"
+						>
+							{t('Stop Playback')}
+						</button>
+					</div>
+				{/if}
+			</div>
+		</header>
+
+		<!-- Run panels -->
+		{#if session.runs.length > 0}
+			<div
+				class="flex gap-2 overflow-x-auto border-b border-gray-200 dark:border-gray-800 bg-gray-100/60 dark:bg-gray-950/60 px-2 py-2"
+			>
+				{#each session.runs as run (run.id)}
+					<div
+						class="flex items-center gap-3 rounded-ig-md border px-4 py-2 whitespace-nowrap transition-colors
+							   {activeRunId === run.id
+							? 'border-blue-500/50 bg-blue-100/20 dark:bg-blue-900/20'
+							: 'border-gray-300 dark:border-gray-700 bg-gray-200/50 dark:bg-gray-800/50'}"
+					>
+						<div class="flex flex-col">
+							<div class="text-sm font-medium text-gray-800 dark:text-gray-200">
+								{getGadgetName(run.gadgetImage)}
+							</div>
+							<div class="text-xs text-gray-500">
+								{t('{{count}} events', { count: run.eventCount })}
+							</div>
+						</div>
+						<div class="flex items-center gap-1">
+							<Button variant="secondary" size="sm" onclick={() => viewResults(run.id)}
+								><Eye /><span class="sr-only">{t('View Results')}</span></Button
+							>
+							<Button variant="secondary" size="sm" onclick={() => playbackRealtime(run.id)}
+								><Play /><span class="sr-only">{t('Play Recording')}</span></Button
+							>
+						</div>
+					</div>
+				{/each}
+			</div>
+
+			<!-- Run content -->
+			<div class="flex flex-1 flex-col overflow-hidden bg-gray-50/80 dark:bg-gray-950/80">
+				{#if activeRunId}
+					{@const instanceId = `replay-${activeRunId}`}
+					{#if instances[instanceId]}
+						<Gadget instanceID={instanceId} {viewState} {onViewStateChange} />
+					{:else}
+						<div class="flex flex-1 items-center justify-center p-8">
+							<span class="text-gray-600 dark:text-gray-400">{t('Loading run...')}</span>
+						</div>
+					{/if}
+				{:else}
+					<div class="flex flex-1 items-center justify-center p-8">
+						<p class="text-gray-500">{t('Select a run to view')}</p>
+					</div>
+				{/if}
+			</div>
+		{:else}
+			<div class="flex flex-1 items-center justify-center p-8">
+				<p class="text-gray-500">{t('No runs in this session')}</p>
+			</div>
+		{/if}
+	</div>
+{/if}

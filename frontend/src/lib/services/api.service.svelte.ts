@@ -68,8 +68,20 @@ export class ApiService {
 			this.requests[cmd.reqID!] = { resolve, reject };
 		});
 
-		websocketService.send(JSON.stringify(cmd));
+		try {
+			websocketService.send(JSON.stringify(cmd));
+		} catch (error) {
+			this.requests[cmd.reqID!].reject(error);
+			delete this.requests[cmd.reqID!];
+		}
 		return prom;
+	}
+
+	/** Reject outstanding calls on transport loss; late responses are ignored. */
+	cancelPending(reason: unknown = new Error('IG transport disconnected')): void {
+		const pending = this.requests;
+		this.requests = {};
+		for (const request of Object.values(pending)) request.reject(reason);
 	}
 
 	/**

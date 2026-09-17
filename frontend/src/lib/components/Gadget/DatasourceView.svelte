@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+	import type { ResultViewState } from '$lib/types/embedding';
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { TableMenuController } from '$lib/types/table';
 	import SnapshotTimeline from './SnapshotTimeline.svelte';
@@ -26,6 +28,8 @@
 		events?: EventRingBuffer<Record<string, unknown>>;
 		eventVersion?: number;
 		searchQuery?: string;
+		viewState?: ResultViewState;
+		onVisualizerChange?: (active: string, available: string[]) => void;
 		searchModeFilter?: boolean;
 		searchHighlightInFilterMode?: boolean;
 		onMatchInfo?: (info: {
@@ -48,6 +52,8 @@
 		events,
 		eventVersion = 0,
 		searchQuery = '',
+		viewState,
+		onVisualizerChange,
 		searchModeFilter = true,
 		searchHighlightInFilterMode = false,
 		onMatchInfo,
@@ -99,6 +105,18 @@
 		selectedTab = tab;
 		preferences.set(prefKey, tab);
 	}
+
+	$effect(() => {
+		const visualizer = viewState?.visualizers?.[ds.name];
+		if (visualizer !== undefined) selectedTab = visualizer;
+	});
+
+	$effect(() => {
+		void viewState;
+		const active = activeTab;
+		const available = applicableVisualizers.map((v) => v.visualizer.id);
+		untrack(() => onVisualizerChange?.(active, available));
+	});
 
 	// Snapshot navigation state for array datasources - now supports multi-selection
 	// (reassignment-based reactivity: the whole Set is replaced, never mutated in place)
