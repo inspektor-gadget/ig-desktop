@@ -126,7 +126,10 @@ host-owned preference synchronization, including resets. Hydrate before mounting
 and suppress feedback while applying host snapshots. `launchPreset` supplies a
 typed launcher preset without encoding parameters in a URL.
 `applyGadgetHistories(...)` mirrors explicitly supplied host-owned history into
-the reused environment screens; it does not access another application's storage.
+the reused environment screens. Call `useHostGadgetHistory()` before mounting to
+keep those mirrors and manual launcher history in document memory rather than
+localStorage when the host provides protected persistence. Desktop's default
+localStorage history is unchanged.
 
 Run `npm run build:lib`; package entry remains `dist-lib/ig-frontend.js` (no new
 package export map). `npm run build:lib -- --outDir build-embedding` uses a separate

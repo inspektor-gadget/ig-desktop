@@ -10,6 +10,12 @@
 import type { GadgetRunRequest } from '$lib/types';
 
 export type GadgetHistoryByEnvironment = Record<string, GadgetRunRequest[]>;
+let hostGadgetHistory: Map<string, string> | undefined;
+
+/** Keep gadget presets document-local when an embedding host owns protected persistence. */
+export function useHostGadgetHistory(): void {
+	hostGadgetHistory ??= new Map();
+}
 
 /**
  * Get all localStorage keys for a specific environment
@@ -24,7 +30,10 @@ export function getEnvKeys(environmentID: string): string[] {
  */
 export function getEnvPref<T = unknown>(environmentID: string, key: string): T | undefined {
 	const fullKey = `env:${environmentID}:${key}`;
-	const value = localStorage.getItem(fullKey);
+	const value =
+		key === 'gadget-history' && hostGadgetHistory
+			? (hostGadgetHistory.get(fullKey) ?? null)
+			: localStorage.getItem(fullKey);
 	if (value === null) return undefined;
 	try {
 		return JSON.parse(value) as T;
@@ -38,7 +47,9 @@ export function getEnvPref<T = unknown>(environmentID: string, key: string): T |
  */
 export function setEnvPref(environmentID: string, key: string, value: unknown): void {
 	const fullKey = `env:${environmentID}:${key}`;
-	localStorage.setItem(fullKey, JSON.stringify(value));
+	if (key === 'gadget-history' && hostGadgetHistory)
+		hostGadgetHistory.set(fullKey, JSON.stringify(value));
+	else localStorage.setItem(fullKey, JSON.stringify(value));
 
 	// Dispatch custom event for same-window reactivity
 	if (typeof window !== 'undefined') {
@@ -51,6 +62,7 @@ export function setEnvPref(environmentID: string, key: string, value: unknown): 
  * Should be called when an environment is deleted
  */
 export function cleanupEnvironment(environmentID: string): void {
+	hostGadgetHistory?.delete(`env:${environmentID}:gadget-history`);
 	const keys = getEnvKeys(environmentID);
 	keys.forEach((key) => {
 		localStorage.removeItem(key);

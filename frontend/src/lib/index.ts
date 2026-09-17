@@ -107,7 +107,7 @@ export type {
 	ConfigurationChange
 } from './stores/configuration.svelte';
 export { settingsDialog } from './stores/settings-dialog.svelte';
-export { applyGadgetHistories } from './utils/env-preferences';
+export { applyGadgetHistories, useHostGadgetHistory } from './utils/env-preferences';
 export type { GadgetHistoryByEnvironment } from './utils/env-preferences';
 
 // --- Internationalization (i18next core, no React/Svelte binding) ---
