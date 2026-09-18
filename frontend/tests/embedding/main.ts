@@ -16,6 +16,7 @@ import '../../build-embedding/ig-frontend.css';
 
 const query = new URLSearchParams(location.search);
 let dashboardState = query.get('dashboard') || '';
+let conflictVersion = '17';
 const environment = {
 	id: 'test-env',
 	name: 'Embedding environment',
@@ -131,17 +132,51 @@ const adapter = {
 					}
 					data = { deploymentId: 'dashboard-deploy' };
 					setTimeout(() => {
+						const changedConflict =
+							query.has('changedConflict') && request.data?.redeploy && conflictVersion === '17';
+						if (changedConflict) conflictVersion = '18';
 						if (
-							(query.has('ownershipConflict') || query.has('unclassifiedConflict')) &&
-							!request.data?.redeploy
+							((query.has('ownershipConflict') || query.has('unclassifiedConflict')) &&
+								!request.data?.redeploy) ||
+							changedConflict
 						) {
 							emit({
 								type: 202,
 								data: {
 									deploymentId: 'dashboard-deploy',
 									ownershipConflict: query.has('ownershipConflict'),
-									error:
-										'ConfigMap "gadget" exists and cannot be imported into the current release: invalid ownership metadata'
+									error: changedConflict
+										? 'The approved ConfigMap changed. Review and confirm the current resources.'
+										: 'ConfigMap "gadget" exists and cannot be imported into the current release: invalid ownership metadata',
+									...(query.has('exactConflicts')
+										? {
+												resourceConflicts: [
+													{
+														apiVersion: 'v1',
+														kind: 'ConfigMap',
+														namespace: 'custom-gadget',
+														name: 'gadget',
+														uid: 'configmap-uid',
+														resourceVersion: conflictVersion
+													},
+													{
+														apiVersion: 'v1',
+														kind: 'ServiceAccount',
+														namespace: 'custom-gadget',
+														name: 'gadget',
+														uid: 'serviceaccount-uid',
+														resourceVersion: '23',
+														...(query.has('blockedConflict')
+															? { blockedReason: 'This resource has a Kubernetes owner reference.' }
+															: {})
+													}
+												]
+											}
+										: {}),
+									...(query.has('malformedConflicts')
+										? { resourceConflicts: [{ kind: 'ConfigMap', name: 'gadget' }] }
+										: {}),
+									...(query.has('emptyConflicts') ? { resourceConflicts: [] } : {})
 								}
 							});
 							return;

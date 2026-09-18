@@ -184,6 +184,174 @@ test('deployment error text alone does not enable destructive recovery', async (
 	).toHaveLength(1);
 });
 
+test('unlabeled chart conflicts require approval of each exact resource and forget cancelled approval', async ({
+	page
+}) => {
+	await page.goto(
+		'/tests/embedding/?dashboard=missing&ownershipConflict&exactConflicts&initialPath=/env/test-env'
+	);
+	await page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true }).click();
+	const modal = page.getByRole('dialog');
+	await modal.getByRole('button', { name: 'Deploy', exact: true }).click();
+	await modal.getByRole('button', { name: 'Clean up and redeploy...', exact: true }).click();
+	const confirm = modal.getByRole('button', { name: 'Confirm cleanup and redeploy', exact: true });
+	const configmap = modal.getByRole('checkbox', {
+		name: 'Approve deletion of ConfigMap custom-gadget/gadget',
+		exact: true
+	});
+	const serviceAccount = modal.getByRole('checkbox', {
+		name: 'Approve deletion of ServiceAccount custom-gadget/gadget',
+		exact: true
+	});
+	await expect(confirm).toBeDisabled();
+	await configmap.check();
+	await expect(confirm).toBeDisabled();
+	await serviceAccount.check();
+	await expect(confirm).toBeEnabled();
+	await modal.getByRole('button', { name: 'Cancel cleanup', exact: true }).click();
+	expect(
+		await page.evaluate(() => window.embedding.requests.filter((r) => r.cmd === 'deployIG'))
+	).toHaveLength(1);
+	await modal.getByRole('button', { name: 'Clean up and redeploy...', exact: true }).click();
+	await expect(configmap).not.toBeChecked();
+	await expect(serviceAccount).not.toBeChecked();
+	await configmap.check();
+	await serviceAccount.check();
+	await confirm.click();
+	await expect(page.getByText('Headless Gadget Instances', { exact: true })).toBeVisible();
+	const requests = await page.evaluate(() =>
+		window.embedding.requests.filter((r) => r.cmd === 'deployIG')
+	);
+	expect(requests).toHaveLength(2);
+	expect(requests[1].data).toEqual({
+		...requests[0].data,
+		redeploy: true,
+		cleanupResources: [
+			{
+				apiVersion: 'v1',
+				kind: 'ConfigMap',
+				namespace: 'custom-gadget',
+				name: 'gadget',
+				uid: 'configmap-uid',
+				resourceVersion: '17'
+			},
+			{
+				apiVersion: 'v1',
+				kind: 'ServiceAccount',
+				namespace: 'custom-gadget',
+				name: 'gadget',
+				uid: 'serviceaccount-uid',
+				resourceVersion: '23'
+			}
+		]
+	});
+});
+
+test('controller-owned chart conflicts block exact cleanup', async ({ page }) => {
+	await page.goto(
+		'/tests/embedding/?dashboard=missing&ownershipConflict&exactConflicts&blockedConflict&initialPath=/env/test-env'
+	);
+	await page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true }).click();
+	const modal = page.getByRole('dialog');
+	await modal.getByRole('button', { name: 'Deploy', exact: true }).click();
+	await modal.getByRole('button', { name: 'Clean up and redeploy...', exact: true }).click();
+	await modal
+		.getByRole('checkbox', {
+			name: 'Approve deletion of ConfigMap custom-gadget/gadget',
+			exact: true
+		})
+		.check();
+	await expect(
+		modal.getByRole('checkbox', {
+			name: 'Approve deletion of ServiceAccount custom-gadget/gadget',
+			exact: true
+		})
+	).toBeDisabled();
+	await expect(
+		modal.getByText('This resource has a Kubernetes owner reference.', { exact: true })
+	).toBeVisible();
+	await expect(
+		modal.getByRole('button', { name: 'Confirm cleanup and redeploy', exact: true })
+	).toBeDisabled();
+	expect(
+		await page.evaluate(() => window.embedding.requests.filter((r) => r.cmd === 'deployIG'))
+	).toHaveLength(1);
+});
+
+test('changed conflict identities require fresh approval instead of reusing the old confirmation', async ({
+	page
+}) => {
+	await page.goto(
+		'/tests/embedding/?dashboard=missing&ownershipConflict&exactConflicts&changedConflict&initialPath=/env/test-env'
+	);
+	await page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true }).click();
+	const modal = page.getByRole('dialog');
+	await modal.getByRole('button', { name: 'Deploy', exact: true }).click();
+	await modal.getByRole('button', { name: 'Clean up and redeploy...', exact: true }).click();
+	await modal
+		.getByRole('checkbox', {
+			name: 'Approve deletion of ConfigMap custom-gadget/gadget',
+			exact: true
+		})
+		.check();
+	await modal
+		.getByRole('checkbox', {
+			name: 'Approve deletion of ServiceAccount custom-gadget/gadget',
+			exact: true
+		})
+		.check();
+	await modal.getByRole('button', { name: 'Confirm cleanup and redeploy', exact: true }).click();
+	await expect(
+		modal.getByText('The approved ConfigMap changed. Review and confirm the current resources.', {
+			exact: true
+		})
+	).toBeVisible();
+	await modal.getByRole('button', { name: 'Clean up and redeploy...', exact: true }).click();
+	await expect(
+		modal.getByRole('checkbox', {
+			name: 'Approve deletion of ConfigMap custom-gadget/gadget',
+			exact: true
+		})
+	).not.toBeChecked();
+	await expect(
+		modal.getByRole('button', { name: 'Confirm cleanup and redeploy', exact: true })
+	).toBeDisabled();
+	expect(
+		await page.evaluate(() => window.embedding.requests.filter((r) => r.cmd === 'deployIG'))
+	).toHaveLength(2);
+	await modal.getByRole('button', { name: 'Try Again', exact: true }).click();
+	await modal.getByRole('button', { name: 'Deploy', exact: true }).click();
+	await expect(
+		modal.getByRole('heading', { name: 'Deployment Failed', exact: true })
+	).toBeVisible();
+	const retry = await page.evaluate(() =>
+		window.embedding.requests.filter((r) => r.cmd === 'deployIG').at(-1)
+	);
+	expect(retry?.data?.cleanupResources).toBeUndefined();
+	expect(retry?.data?.redeploy).toBe(false);
+});
+
+test('malformed conflict metadata cannot fall back to label-based cleanup', async ({ page }) => {
+	for (const [scenario, message] of [
+		['malformedConflicts', 'Invalid resource conflict metadata.'],
+		['emptyConflicts', 'No current conflicting resource details are available.']
+	]) {
+		await page.goto(
+			`/tests/embedding/?dashboard=missing&ownershipConflict&${scenario}&initialPath=/env/test-env`
+		);
+		await page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true }).click();
+		const modal = page.getByRole('dialog');
+		await modal.getByRole('button', { name: 'Deploy', exact: true }).click();
+		await expect(modal.getByText(message, { exact: false }).first()).toBeVisible();
+		await expect(
+			modal.getByRole('button', { name: 'Clean up and redeploy...', exact: true })
+		).toHaveCount(0);
+		expect(
+			await page.evaluate(() => window.embedding.requests.filter((r) => r.cmd === 'deployIG'))
+		).toHaveLength(1);
+	}
+});
+
 test('undeploy explains installation detection and presents operation-specific failures', async ({
 	page
 }) => {

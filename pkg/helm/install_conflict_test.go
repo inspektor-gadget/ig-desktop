@@ -41,29 +41,33 @@ func TestInstallWithExistingConfigMap(t *testing.T) {
 			Data: []byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: gadget\n  namespace: gadget\n"),
 		}},
 	}
-	_, err = client.RunWithContext(context.Background(), fixture, nil)
+	err = deployer.runInstall(context.Background(), config, client, fixture)
 	if err == nil || !strings.Contains(err.Error(), `ConfigMap "gadget"`) ||
 		!strings.Contains(err.Error(), "invalid ownership metadata") {
 		t.Fatalf("expected the reported ownership conflict, got %v", err)
 	}
-	if !IsOwnershipConflict(err) {
-		t.Fatalf("ownership conflict must offer explicit recovery: %v", err)
+	conflicts := ResourceConflicts(err)
+	if !IsOwnershipConflict(err) || len(conflicts) != 1 || conflicts[0].BlockedReason != "" {
+		t.Fatalf("ownership conflict must offer exact recovery: %v %+v", err, conflicts)
 	}
 	cluster.mu.Lock()
 	before := cluster.objects[path]
+	mutations := len(cluster.mutations)
 	cluster.mu.Unlock()
 	if before.GetLabels()["app.kubernetes.io/managed-by"] != "" {
 		t.Fatal("failed install silently adopted the existing ConfigMap")
 	}
-	// The explicit recovery repeats the existing removal path before installing.
-	if err := deployer.uninstall(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := client.RunWithContext(context.Background(), fixture, nil); err != nil {
+	// Recovery deletes only the exact approved object, never via a label sweep.
+	cluster.requireExactPreconditions = true
+	deployer.config.CleanupResources = []ResourceIdentity{conflicts[0].ResourceIdentity}
+	if err := deployer.runInstall(context.Background(), config, client, fixture); err != nil {
 		t.Fatalf("installation after confirmed cleanup failed: %v", err)
 	}
 	cluster.mu.Lock()
 	defer cluster.mu.Unlock()
+	if deletes := cluster.mutations[mutations:]; len(deletes) == 0 || deletes[0] != "DELETE "+path {
+		t.Fatalf("recovery did not delete exactly the approved object: %v", deletes)
+	}
 	installed := cluster.objects[path]
 	if installed.GetLabels()["app.kubernetes.io/managed-by"] != "Helm" {
 		t.Fatal("replacement was not installed by Helm")
@@ -82,9 +86,28 @@ func TestCleanupPreservesUnidentifiedConfigMap(t *testing.T) {
 	}
 
 	cluster.mu.Lock()
-	defer cluster.mu.Unlock()
-	if _, exists := cluster.objects[path]; !exists || len(cluster.deleted) != 0 {
+	_, exists := cluster.objects[path]
+	deleted := len(cluster.deleted)
+	cluster.mu.Unlock()
+	if !exists || deleted != 0 {
 		t.Fatal("cleanup removed an unidentified ConfigMap based only on its name")
+	}
+	config, err := deployer.newActionConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := action.NewInstall(config)
+	client.Namespace, client.ReleaseName = "gadget", "gadget"
+	client.DisableOpenAPIValidation = true
+	_, err = client.RunWithContext(context.Background(), &chart.Chart{
+		Metadata: &chart.Metadata{Name: "gadget", Version: "1.0.0", APIVersion: "v2"},
+		Templates: []*chart.File{{
+			Name: "templates/configmap.yaml",
+			Data: []byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: gadget\n"),
+		}},
+	}, nil)
+	if !IsOwnershipConflict(err) {
+		t.Fatalf("unidentified ConfigMap must still block real Helm install after cleanup: %v", err)
 	}
 }
 

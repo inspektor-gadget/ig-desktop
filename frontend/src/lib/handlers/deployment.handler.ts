@@ -1,4 +1,5 @@
 import { deployments } from '$lib/shared/deployments.svelte';
+import type { DeploymentResourceConflict } from '$lib/types';
 
 interface DeploymentEventData {
 	deploymentId?: string;
@@ -6,6 +7,27 @@ interface DeploymentEventData {
 	message?: string;
 	error?: string;
 	ownershipConflict?: boolean;
+	resourceConflicts?: unknown;
+}
+
+function isResourceConflict(value: unknown): value is DeploymentResourceConflict {
+	return (
+		value !== null &&
+		typeof value === 'object' &&
+		'apiVersion' in value &&
+		typeof value.apiVersion === 'string' &&
+		'kind' in value &&
+		typeof value.kind === 'string' &&
+		'namespace' in value &&
+		typeof value.namespace === 'string' &&
+		'name' in value &&
+		typeof value.name === 'string' &&
+		'uid' in value &&
+		typeof value.uid === 'string' &&
+		'resourceVersion' in value &&
+		typeof value.resourceVersion === 'string' &&
+		(!('blockedReason' in value) || typeof value.blockedReason === 'string')
+	);
 }
 
 /**
@@ -69,13 +91,27 @@ export function handleDeploymentComplete(msg: { data?: unknown }): void {
 export function handleDeploymentError(msg: { data?: unknown }): void {
 	const errorData = parseDeploymentData(msg.data);
 	console.log('[Layout] Deployment error event:', errorData);
+	const resourceConflicts =
+		Array.isArray(errorData.resourceConflicts) &&
+		errorData.resourceConflicts.every(isResourceConflict)
+			? errorData.resourceConflicts
+			: undefined;
+	const validConflicts =
+		errorData.resourceConflicts === undefined || resourceConflicts !== undefined;
+	const noCurrentConflicts = resourceConflicts?.length === 0;
 
 	if (errorData.deploymentId) {
 		deployments.addDebugLog(errorData.deploymentId, `[WS] Error: ${errorData.error}`);
 		deployments.update(errorData.deploymentId, {
 			status: 'error',
-			error: errorData.error,
-			ownershipConflict: errorData.ownershipConflict === true,
+			error: !validConflicts
+				? `${errorData.error ?? ''}\nInvalid resource conflict metadata. Retry deployment to inspect the current resources before cleanup.`
+				: noCurrentConflicts
+					? `${errorData.error ?? ''}\nNo current conflicting resource details are available. Retry deployment before cleanup.`
+					: errorData.error,
+			ownershipConflict:
+				errorData.ownershipConflict === true && validConflicts && !noCurrentConflicts,
+			resourceConflicts,
 			completedAt: Date.now()
 		});
 		if (errorData.error) {

@@ -171,14 +171,47 @@ only after explicit modal confirmation. Without the ID, Create Environment's
 existing explicit deployment configuration is unchanged. Transient identities
 and target-bearing management requests remain unsupported.
 
-Deployment error events (type 202) include `ownershipConflict:true` when Helm's
-install ownership validation rejects an existing resource. The shared modal
-uses this signal, not error-text matching, to offer separately confirmed cleanup
-via the existing `deployIG` request with `redeploy:true`. This preserves the
-failed attempt's configuration and saved environment identity. There is no
-automatic cleanup or ownership takeover. Helm v3 exposes this failure as an
-untyped error, so classification is confined to the backend Helm boundary and
-covered against the real Helm install path.
+Deployment error events (type 202), in both progress and terminal paths, include
+`ownershipConflict:true` and `resourceConflicts` when Helm's install ownership
+validation rejects existing objects. Each conflict contains only
+`{apiVersion,kind,namespace,name,uid,resourceVersion,blockedReason?}`. Identities
+come from the selected chart's rendered manifest and Kubernetes GETs, not parsed
+error text. No object data, credentials or kubeconfig is included. If inspection
+fails, the actual failure is reported and the list is empty.
+
+After explicit object-specific user confirmation, `deployIG` accepts
+`redeploy:true` with `cleanupResources:[{apiVersion,kind,namespace,name,uid,resourceVersion}]`
+and the failed attempt's configuration and saved environment identity. Nonempty
+approvals are rejected on ordinary deploy or undeploy. Exact mode **bypasses**
+label-based uninstall: it re-renders the selected chart using Helm's read-only
+server dry-run, proves the entire current conflict set matches the approvals,
+preflights deletion authorization/admission, re-reads all objects, and deletes
+only the approved objects using both UID and resourceVersion preconditions.
+Only an **omitted** `cleanupResources` field retains the existing explicit
+label-based redeploy path. Explicit `[]`, `null`, malformed/incomplete identities
+and duplicate approvals are rejected before deployment starts, never interpreted
+as authorization for label cleanup. An ordinary retry never authorizes cleanup.
+
+Changed identities, deletion-precondition conflicts and recreated objects return
+fresh `resourceConflicts` when inspection succeeds. The frontend must discard
+previous selections and obtain new object-specific approvals, never reuse them.
+
+Blocked conflicts require manual resolution and prevent the whole exact cleanup;
+approving only an eligible subset is insufficient. Blocking includes any owner
+reference, foreign Helm release/installer ownership, Helm storage/keep policy,
+cluster-scoped objects (including Namespaces and CRDs), cross-namespace objects,
+and shared/unsupported kinds. Eligible kinds are namespace-local ConfigMaps,
+Secrets, ServiceAccounts, Services, apps/v1 DaemonSets and Deployments. Client
+eligibility claims are ignored. Missing, extra, duplicate or changed approvals
+stop before deletion and require fresh inspection/confirmation.
+
+There is no automatic adoption, delete retry, or label sweep in exact mode.
+Inspection/preflight failures delete nothing. Kubernetes offers no multi-object
+delete transaction: a race or server failure during the real deletion phase can
+leave partial cleanup; the error reports how many deletion requests preceded
+the failure and installation stops. Deletion completion is checked before
+installation; recreated objects require fresh confirmation. Helm's ownership
+override is used only for read-only rendering, never for the real install.
 
 ## Captures and identity
 

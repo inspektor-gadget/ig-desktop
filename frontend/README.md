@@ -52,11 +52,19 @@ modal). Connection credentials never need to be supplied by the webview.
 Missing workloads do not imply that all supporting resources have been removed.
 When Helm reports conflicting resource ownership, the deployment error offers
 **Clean up and redeploy...** with a separate destructive-action confirmation.
-It reuses installation-aware removal and the failed attempt's configuration;
-ordinary retry never enables cleanup. Existing IG configuration may be replaced
-and running gadgets interrupted. Unknown resources, the namespace and shared
-cluster resources remain protected; GitOps reconciliation must be suspended at
-its source. No resource is automatically adopted into Helm.
+The backend supplies safe metadata for chart resource conflicts. The modal lists
+each object and requires an explicit deletion checkbox, including for unlabeled
+objects. Approval sends the exact API version, kind, namespace, name, UID and
+resource version in `cleanupResources`, with the failed attempt's configuration.
+This mode deletes only approved chart conflicts rather than sweeping IG labels.
+Changed identities require fresh review; other Helm owners, Kubernetes owner
+references and protected/shared resources block recovery. Cancellation and
+ordinary retry never carry approvals. Backends reporting only the older
+ownership flag retain the separately confirmed label-based removal flow.
+
+Existing configuration may be replaced and running gadgets interrupted. Resources
+outside the approved conflicts remain protected; GitOps reconciliation must be
+suspended at its source. No resource is automatically adopted into Helm.
 
 ```tsx
 import { EmbeddableApp } from '@inspektor-gadget/frontend';

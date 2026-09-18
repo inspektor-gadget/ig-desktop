@@ -16,6 +16,7 @@ package helm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -43,9 +44,13 @@ const (
 )
 
 // Helm v3 returns ownership validation failures as untyped errors. This signal
-// offers an explicit recovery action; it never authorizes automatic cleanup.
+// only offers an explicit recovery action: detecting a conflict never deletes
+// anything, and only exact approvals (CleanupResources) remove conflicting
+// objects. A plain Redeploy still runs the ordinary uninstall first, whose
+// label-based removal applies the same removalBlock policy as exact approval.
 func IsOwnershipConflict(err error) bool {
-	return err != nil && strings.Contains(err.Error(),
+	var conflict *OwnershipConflictError
+	return errors.As(err, &conflict) || err != nil && strings.Contains(err.Error(),
 		"exists and cannot be imported into the current release: invalid ownership metadata")
 }
 
@@ -59,13 +64,14 @@ func newIsolatedSettings(helmDir string) (*cli.EnvSettings, error) {
 }
 
 type DeployConfig struct {
-	Namespace    string
-	ReleaseName  string
-	ChartVersion string
-	CustomValues map[string]interface{}
-	KubeConfig   string
-	KubeContext  string
-	HelmDir      string
+	Namespace        string
+	ReleaseName      string
+	ChartVersion     string
+	CustomValues     map[string]interface{}
+	KubeConfig       string
+	KubeContext      string
+	HelmDir          string
+	CleanupResources []ResourceIdentity
 }
 
 type DeployProgress struct {
@@ -82,6 +88,11 @@ type Deployer struct {
 }
 
 func NewDeployer(config *DeployConfig) (*Deployer, error) {
+	if config.CleanupResources != nil {
+		if err := ValidateCleanupResources(config.CleanupResources); err != nil {
+			return nil, err
+		}
+	}
 	settings, err := newIsolatedSettings(config.HelmDir)
 	if err != nil {
 		return nil, err
@@ -119,6 +130,9 @@ func (d *Deployer) sendProgress(step string, progress int, message string, err e
 
 func (d *Deployer) Deploy(ctx context.Context) error {
 	defer close(d.progressChan)
+	if d.config.CleanupResources != nil {
+		return fmt.Errorf("exact resource cleanup requires redeploy")
+	}
 
 	// Step 1: Add Helm repository
 	d.sendProgress("add_repo", 10, "Adding Inspektor Gadget Helm repository", nil)
@@ -167,6 +181,9 @@ func (d *Deployer) Deploy(ctx context.Context) error {
 
 func (d *Deployer) Undeploy(ctx context.Context) error {
 	defer close(d.progressChan)
+	if d.config.CleanupResources != nil {
+		return fmt.Errorf("exact resource cleanup cannot be used with undeploy")
+	}
 
 	// Uninstall deployment
 	d.sendProgress("uninstall", 20, fmt.Sprintf("Removing Inspektor Gadget from namespace %s", d.config.Namespace), nil)
@@ -191,17 +208,20 @@ func (d *Deployer) Undeploy(ctx context.Context) error {
 func (d *Deployer) Redeploy(ctx context.Context) error {
 	defer close(d.progressChan)
 
-	// Step 1: Uninstall existing deployment
-	d.sendProgress("uninstall", 10, fmt.Sprintf("Removing existing Inspektor Gadget from namespace %s", d.config.Namespace), nil)
-	if err := d.uninstall(ctx); err != nil {
-		d.sendProgress("uninstall", 10, "Failed to uninstall", err)
-		return fmt.Errorf("failed to uninstall existing deployment: %w", err)
+	// Exact approvals must never run the broader label-based uninstall.
+	if d.config.CleanupResources == nil {
+		// Step 1: Uninstall existing deployment
+		d.sendProgress("uninstall", 10, fmt.Sprintf("Removing existing Inspektor Gadget from namespace %s", d.config.Namespace), nil)
+		if err := d.uninstall(ctx); err != nil {
+			d.sendProgress("uninstall", 10, "Failed to uninstall", err)
+			return fmt.Errorf("failed to uninstall existing deployment: %w", err)
+		}
+		if err := d.waitForWorkloadRemoval(ctx, 2*time.Minute); err != nil {
+			d.sendProgress("verify_removal", 15, "Could not confirm removal", err)
+			return fmt.Errorf("verifying removal before redeployment: %w", err)
+		}
+		d.sendProgress("uninstall", 20, "Existing deployment removed", nil)
 	}
-	if err := d.waitForWorkloadRemoval(ctx, 2*time.Minute); err != nil {
-		d.sendProgress("verify_removal", 15, "Could not confirm removal", err)
-		return fmt.Errorf("verifying removal before redeployment: %w", err)
-	}
-	d.sendProgress("uninstall", 20, "Existing deployment removed", nil)
 
 	// Step 2: Add Helm repository
 	d.sendProgress("add_repo", 30, "Adding Inspektor Gadget Helm repository", nil)
@@ -414,8 +434,7 @@ func (d *Deployer) installChart(ctx context.Context) error {
 	}
 
 	// Install
-	_, err = client.RunWithContext(ctx, chart, d.config.CustomValues)
-	return err
+	return d.runInstall(ctx, actionConfig, client, chart)
 }
 
 func (d *Deployer) verifyDeployment(ctx context.Context) error {

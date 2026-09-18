@@ -175,6 +175,16 @@ export interface DeploymentConfig {
 	kubeContext?: string; // Kubernetes context for multi-context support
 }
 
+export interface DeploymentResourceConflict {
+	apiVersion: string;
+	kind: string;
+	namespace: string;
+	name: string;
+	uid: string;
+	resourceVersion: string;
+	blockedReason?: string;
+}
+
 export interface DeploymentProgress {
 	id: string;
 	status: DeploymentStatus;
@@ -185,6 +195,7 @@ export interface DeploymentProgress {
 	debugLogs: string[]; // Raw debug/system logs
 	error?: string;
 	ownershipConflict?: boolean;
+	resourceConflicts?: DeploymentResourceConflict[];
 	timestamp: number;
 	completedAt?: number;
 }

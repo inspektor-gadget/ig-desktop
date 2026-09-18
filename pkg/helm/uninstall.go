@@ -18,6 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
@@ -94,7 +95,7 @@ func (d *Deployer) uninstall(ctx context.Context) error {
 	}
 
 	d.sendProgress("uninstall", 25, "No Helm release found; removing identified IG Kubernetes resources. GitOps controllers may recreate them unless reconciliation is suspended.", nil)
-	return d.removeKubernetesResources(ctx, config, client)
+	return d.removeKubernetesResources(ctx, config, client, name)
 }
 
 func listGadgetResources(ctx context.Context, client dynamic.ResourceInterface) ([]unstructured.Unstructured, error) {
@@ -120,13 +121,26 @@ type removalResource struct {
 	object unstructured.Unstructured
 }
 
-func (d *Deployer) removeKubernetesResources(ctx context.Context, config *rest.Config, client dynamic.Interface) error {
+func (d *Deployer) removeKubernetesResources(ctx context.Context, config *rest.Config, client dynamic.Interface, releaseName string) error {
 	discover, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
 		return err
 	}
 	resourceLists, err := discover.ServerPreferredResources()
 	if err != nil {
+		// Fail closed even for partial results: an unavailable (typically
+		// aggregated) API can serve namespaced objects carrying IG labels, and
+		// skipping it would report removal while IG resources remain.
+		var failed *discovery.ErrGroupDiscoveryFailed
+		if errors.As(err, &failed) {
+			groups := make([]string, 0, len(failed.Groups))
+			for gv, groupErr := range failed.Groups {
+				groups = append(groups, fmt.Sprintf("%s (%v)", gv, groupErr))
+			}
+			slices.Sort(groups)
+			return fmt.Errorf("discovering Kubernetes resources before removal failed for API groups %s; nothing was removed because they may contain IG resources. Restore or remove the unavailable APIService and retry",
+				strings.Join(groups, ", "))
+		}
 		return fmt.Errorf("discovering Kubernetes resources before removal: %w", err)
 	}
 	var resources []removalResource
@@ -156,10 +170,6 @@ func (d *Deployer) removeKubernetesResources(ctx context.Context, config *rest.C
 				if imagePolicy && item.GetName() != d.config.Namespace+"-image-policy" {
 					continue
 				}
-				// Helm storage must only be modified by Helm itself.
-				if resource.Name == "secrets" && gv.Group == "" && item.GetLabels()["owner"] == "helm" {
-					continue
-				}
 				resources = append(resources, removalResource{target, item})
 			}
 		}
@@ -169,6 +179,10 @@ func (d *Deployer) removeKubernetesResources(ctx context.Context, config *rest.C
 		return err
 	}
 	resources = append(resources, rbac...)
+	resources, err = d.eligibleForRemoval(resources, releaseName)
+	if err != nil {
+		return err
+	}
 	// Keep bindings until their roles have been removed so a retry can still
 	// establish namespace ownership after a partial failure.
 	slices.SortStableFunc(resources, func(a, b removalResource) int {
@@ -187,15 +201,13 @@ func (d *Deployer) removeKubernetesResources(ctx context.Context, config *rest.C
 		d.sendProgress("uninstall", 40, "No identified IG resources remain in the selected namespace", nil)
 	}
 
-	// Complete discovery before the first delete; a permission error is not
-	// evidence that resources are absent. UID preconditions protect replacements.
+	// Discovery and eligibility are complete before the first delete; a
+	// permission error is not evidence that resources are absent. UID
+	// preconditions protect replacements.
 	for _, resource := range resources {
-		uid := resource.object.GetUID()
-		if uid == "" {
-			return fmt.Errorf("missing UID on %s %s; refusing unsafe deletion", resource.object.GetKind(), resource.object.GetName())
+		if resource.object.GetDeletionTimestamp() != nil {
+			continue // already terminating; only wait for it
 		}
-	}
-	for _, resource := range resources {
 		uid := resource.object.GetUID()
 		propagation := metav1.DeletePropagationForeground
 		d.sendProgress("uninstall", 40, fmt.Sprintf("Removing %s %s", resource.object.GetKind(), resource.object.GetName()), nil)
@@ -219,6 +231,48 @@ func (d *Deployer) removeKubernetesResources(ctx context.Context, config *rest.C
 		}
 		return true, nil
 	})
+}
+
+// eligibleForRemoval applies the same removalBlock policy as exact approval to
+// the label sweep. Objects owned by another object of the sweep are left to
+// the garbage collector, Helm storage and keep-policy objects are preserved,
+// and any other blocked object aborts the removal before the first delete.
+func (d *Deployer) eligibleForRemoval(resources []removalResource, releaseName string) ([]removalResource, error) {
+	swept := make(map[types.UID]bool, len(resources))
+	for _, resource := range resources {
+		swept[resource.object.GetUID()] = true
+	}
+	var eligible []removalResource
+	var blocked []string
+	for _, resource := range resources {
+		object := &resource.object
+		reason := removalBlock(object, object, releaseName, d.config.Namespace)
+		switch reason {
+		case "", blockedDeleting:
+			eligible = append(eligible, resource)
+			continue
+		case blockedHelmStorage:
+			// Helm storage must only be modified by Helm itself.
+			continue
+		case blockedKeepPolicy:
+			d.sendProgress("uninstall", 30, fmt.Sprintf("Preserving %s %s: it has Helm's keep policy", object.GetKind(), object.GetName()), nil)
+			continue
+		case blockedOwnerReferences:
+			owned := true
+			for _, owner := range object.GetOwnerReferences() {
+				owned = owned && owner.UID != "" && swept[owner.UID]
+			}
+			if owned {
+				continue // removed with its owner (foreground propagation)
+			}
+		}
+		blocked = append(blocked, fmt.Sprintf("%s %s (%s)", object.GetKind(), object.GetName(), reason))
+	}
+	if len(blocked) != 0 {
+		return nil, fmt.Errorf("refusing to remove IG resources in namespace %s that IG does not own; no resources deleted. Resolve manually: %s",
+			d.config.Namespace, strings.Join(blocked, "; "))
+	}
+	return eligible, nil
 }
 
 func (d *Deployer) clusterRBACForRemoval(ctx context.Context, client dynamic.Interface) ([]removalResource, error) {

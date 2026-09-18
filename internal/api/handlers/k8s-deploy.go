@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -36,15 +37,35 @@ type CheckIGDeploymentRequest struct {
 }
 
 type DeployIGRequest struct {
-	EnvironmentID string `json:"environmentID,omitempty"`
-	Namespace     string `json:"namespace"`
-	ReleaseName   string `json:"releaseName"`
-	ChartVersion  string `json:"chartVersion,omitempty"`
-	CustomValues  string `json:"customValues,omitempty"`
-	KubeConfig    string `json:"kubeConfig,omitempty"`
-	KubeContext   string `json:"kubeContext,omitempty"`
-	Redeploy      bool   `json:"redeploy,omitempty"`
-	Undeploy      bool   `json:"undeploy,omitempty"`
+	EnvironmentID    string                  `json:"environmentID,omitempty"`
+	Namespace        string                  `json:"namespace"`
+	ReleaseName      string                  `json:"releaseName"`
+	ChartVersion     string                  `json:"chartVersion,omitempty"`
+	CustomValues     string                  `json:"customValues,omitempty"`
+	KubeConfig       string                  `json:"kubeConfig,omitempty"`
+	KubeContext      string                  `json:"kubeContext,omitempty"`
+	Redeploy         bool                    `json:"redeploy,omitempty"`
+	Undeploy         bool                    `json:"undeploy,omitempty"`
+	CleanupResources []helm.ResourceIdentity `json:"cleanupResources,omitempty"`
+}
+
+func (r *DeployIGRequest) UnmarshalJSON(data []byte) error {
+	type requestFields DeployIGRequest
+	var decoded struct {
+		requestFields
+		CleanupResources json.RawMessage `json:"cleanupResources"`
+	}
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	*r = DeployIGRequest(decoded.requestFields)
+	if len(decoded.CleanupResources) == 0 {
+		return nil
+	}
+	if err := json.Unmarshal(decoded.CleanupResources, &r.CleanupResources); err != nil {
+		return fmt.Errorf("invalid cleanupResources: %w", err)
+	}
+	return helm.ValidateCleanupResources(r.CleanupResources)
 }
 
 type DeployIGResponse struct {
@@ -104,6 +125,11 @@ func (h *Handler) HandleDeployIG(ev *api.Event) {
 		return
 	}
 
+	if len(req.CleanupResources) != 0 && (!req.Redeploy || req.Undeploy) {
+		h.send(ev.SetError(fmt.Errorf("cleanupResources requires redeploy:true and cannot be used with undeploy")))
+		return
+	}
+
 	if err := h.resolveDeploymentEnvironment(req); err != nil {
 		h.send(ev.SetError(err))
 		return
@@ -128,18 +154,25 @@ func (h *Handler) HandleDeployIG(ev *api.Event) {
 		}
 	}
 
+	release, err := acquireDeploymentTarget(req.KubeConfig, req.KubeContext, req.Namespace)
+	if err != nil {
+		h.send(ev.SetError(err))
+		return
+	}
+
 	// Generate deployment ID
 	deploymentID := uuid.New().String()
 
 	// Create deployment config
 	deployConfig := &helm.DeployConfig{
-		Namespace:    req.Namespace,
-		ReleaseName:  req.ReleaseName,
-		ChartVersion: req.ChartVersion,
-		CustomValues: customValues,
-		KubeConfig:   req.KubeConfig,
-		KubeContext:  req.KubeContext,
-		HelmDir:      h.helmDir,
+		Namespace:        req.Namespace,
+		ReleaseName:      req.ReleaseName,
+		ChartVersion:     req.ChartVersion,
+		CustomValues:     customValues,
+		KubeConfig:       req.KubeConfig,
+		KubeContext:      req.KubeContext,
+		HelmDir:          h.helmDir,
+		CleanupResources: req.CleanupResources,
 	}
 
 	// Return deployment ID immediately
@@ -149,7 +182,36 @@ func (h *Handler) HandleDeployIG(ev *api.Event) {
 	h.send(ev.SetData(response))
 
 	// Start deployment in background
-	go h.performDeployment(deploymentID, deployConfig, req.Redeploy, req.Undeploy)
+	go h.performDeployment(deploymentID, deployConfig, req.Redeploy, req.Undeploy, release)
+}
+
+// activeDeploymentTargets tracks management operations per cluster target
+// across all handlers of this process; Helm and the removal sweep are not
+// safe to run concurrently against the same namespace.
+var activeDeploymentTargets = struct {
+	sync.Mutex
+	keys map[string]bool
+}{keys: make(map[string]bool)}
+
+// acquireDeploymentTarget reserves (kubeconfig, context, namespace) for one
+// deploy/redeploy/undeploy operation. The returned release must be called
+// exactly once, after the operation has finished.
+func acquireDeploymentTarget(kubeconfig, kubeContext, namespace string) (func(), error) {
+	key := kubeconfig + "\x00" + kubeContext + "\x00" + namespace
+	activeDeploymentTargets.Lock()
+	defer activeDeploymentTargets.Unlock()
+	if activeDeploymentTargets.keys[key] {
+		return nil, fmt.Errorf("another deploy, redeploy or undeploy operation is already running for namespace %s in this cluster; wait for it to finish", namespace)
+	}
+	activeDeploymentTargets.keys[key] = true
+	var once sync.Once
+	return func() {
+		once.Do(func() {
+			activeDeploymentTargets.Lock()
+			defer activeDeploymentTargets.Unlock()
+			delete(activeDeploymentTargets.keys, key)
+		})
+	}, nil
 }
 
 func (h *Handler) resolveDeploymentEnvironment(req *DeployIGRequest) error {
@@ -187,10 +249,13 @@ func (h *Handler) resolveDeploymentEnvironment(req *DeployIGRequest) error {
 }
 
 // performDeployment runs the actual Helm deployment and streams progress
-func (h *Handler) performDeployment(deploymentID string, config *helm.DeployConfig, redeploy bool, undeploy bool) {
-	log.Infof("[Deploy %s] Starting deployment with config: %+v, redeploy: %v, undeploy: %v", deploymentID, config, redeploy, undeploy)
+// release frees the deployment target once the deployer operation returns,
+// even if progress streaming stopped earlier on the global timeout.
+func (h *Handler) performDeployment(deploymentID string, config *helm.DeployConfig, redeploy bool, undeploy bool, release func()) {
+	log.Infof("[Deploy %s] Starting deployment, redeploy: %v, undeploy: %v", deploymentID, redeploy, undeploy)
 	deployer, err := helm.NewDeployer(config)
 	if err != nil {
+		release()
 		log.Errorf("[Deploy %s] Failed to create deployer: %v", deploymentID, err)
 		errorData := map[string]interface{}{
 			"deploymentId": deploymentID,
@@ -213,6 +278,7 @@ func (h *Handler) performDeployment(deploymentID string, config *helm.DeployConf
 	// Start deployment
 	deployErr := make(chan error, 1)
 	go func() {
+		defer release()
 		var err error
 		if undeploy {
 			log.Infof("[Deploy %s] Calling deployer.Undeploy()", deploymentID)
@@ -269,8 +335,7 @@ func (h *Handler) performDeployment(deploymentID string, config *helm.DeployConf
 			}
 
 			if progress.Error != nil {
-				progressData["error"] = progress.Error.Error()
-				progressData["ownershipConflict"] = helm.IsOwnershipConflict(progress.Error)
+				setDeploymentError(progressData, progress.Error)
 				// Send error event
 				data, _ := json.Marshal(progressData)
 				log.Infof("[Deploy %s] Sending error event: %s", deploymentID, string(data))
@@ -302,11 +367,10 @@ func (h *Handler) performDeployment(deploymentID string, config *helm.DeployConf
 				log.Errorf("Deployment %s failed: %v", deploymentID, err)
 				// Send final error if not already sent
 				errorData := map[string]interface{}{
-					"deploymentId":      deploymentID,
-					"error":             err.Error(),
-					"progress":          0,
-					"ownershipConflict": helm.IsOwnershipConflict(err),
+					"deploymentId": deploymentID,
+					"progress":     0,
 				}
+				setDeploymentError(errorData, err)
 				data, _ := json.Marshal(errorData)
 				log.Infof("[Deploy %s] Sending final error event: %s", deploymentID, string(data))
 				h.send(&api.GadgetEvent{
@@ -320,6 +384,20 @@ func (h *Handler) performDeployment(deploymentID string, config *helm.DeployConf
 			// to ensure we get the final 100% completion event
 			log.Infof("[Deploy %s] Deployment succeeded, waiting for final progress events", deploymentID)
 		}
+	}
+}
+
+func setDeploymentError(data map[string]interface{}, err error) {
+	data["error"] = err.Error()
+	// Exact recovery needs concrete objects to approve; a conflict recognized
+	// only from Helm's error text (inspection failed) has none to offer.
+	conflicts := helm.ResourceConflicts(err)
+	conflict := helm.IsOwnershipConflict(err) && len(conflicts) != 0
+	data["ownershipConflict"] = conflict
+	if conflict {
+		data["resourceConflicts"] = conflicts
+	} else if helm.IsOwnershipConflict(err) {
+		data["error"] = err.Error() + "; the conflicting resources could not be identified, so cleanup cannot be offered. Inspect the namespace manually before retrying"
 	}
 }
 

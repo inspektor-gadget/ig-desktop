@@ -17,6 +17,8 @@ import (
 	"testing"
 	"time"
 
+	openapiv2 "github.com/google/gnostic-models/openapiv2"
+	"google.golang.org/protobuf/proto"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
@@ -30,16 +32,23 @@ import (
 
 // Exercise the real Helm/Kubernetes HTTP path, using only a synthetic kubeconfig.
 type uninstallCluster struct {
-	mu      sync.Mutex
-	objects map[string]unstructured.Unstructured
-	deleted []string
-	deny    string
-	stuck   bool
+	mu                        sync.Mutex
+	objects                   map[string]unstructured.Unstructured
+	deleted                   []string
+	deny                      string
+	denyStatus                int
+	stuck                     bool
+	beforeRequest             func(*http.Request)
+	requireExactPreconditions bool
+	mutations                 []string
+	deleteOptions             map[string]metav1.DeleteOptions
+	// unavailableGroup is advertised in discovery but its resources fail.
+	unavailableGroup string
 }
 
 func newUninstallCluster(t *testing.T) (*uninstallCluster, *Deployer) {
 	t.Helper()
-	cluster := &uninstallCluster{objects: make(map[string]unstructured.Unstructured)}
+	cluster := &uninstallCluster{objects: make(map[string]unstructured.Unstructured), deleteOptions: make(map[string]metav1.DeleteOptions)}
 	resources := map[string]metav1.APIResourceList{
 		"/api/v1": {GroupVersion: "v1", APIResources: []metav1.APIResource{
 			{Name: "namespaces", Kind: "Namespace", Verbs: []string{"get", "list", "delete"}},
@@ -51,6 +60,7 @@ func newUninstallCluster(t *testing.T) (*uninstallCluster, *Deployer) {
 		"/apis/apps/v1": {GroupVersion: "apps/v1", APIResources: []metav1.APIResource{
 			{Name: "daemonsets", Kind: "DaemonSet", Namespaced: true, Verbs: []string{"get", "list", "delete"}},
 			{Name: "deployments", Kind: "Deployment", Namespaced: true, Verbs: []string{"get", "list", "delete"}},
+			{Name: "replicasets", Kind: "ReplicaSet", Namespaced: true, Verbs: []string{"get", "list", "delete"}},
 		}},
 		"/apis/rbac.authorization.k8s.io/v1": {GroupVersion: "rbac.authorization.k8s.io/v1", APIResources: []metav1.APIResource{
 			{Name: "clusterroles", Kind: "ClusterRole", Verbs: []string{"get", "list", "delete"}},
@@ -58,10 +68,16 @@ func newUninstallCluster(t *testing.T) (*uninstallCluster, *Deployer) {
 			{Name: "roles", Kind: "Role", Namespaced: true, Verbs: []string{"get", "list", "delete"}},
 			{Name: "rolebindings", Kind: "RoleBinding", Namespaced: true, Verbs: []string{"get", "list", "delete"}},
 		}},
+		"/apis/apiextensions.k8s.io/v1": {GroupVersion: "apiextensions.k8s.io/v1", APIResources: []metav1.APIResource{
+			{Name: "customresourcedefinitions", Kind: "CustomResourceDefinition", Verbs: []string{"get", "list", "delete"}},
+		}},
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cluster.mu.Lock()
 		defer cluster.mu.Unlock()
+		if cluster.beforeRequest != nil {
+			cluster.beforeRequest(r)
+		}
 		w.Header().Set("Content-Type", "application/json")
 		write := func(v any) {
 			if status, ok := v.(metav1.Status); ok {
@@ -73,22 +89,57 @@ func newUninstallCluster(t *testing.T) (*uninstallCluster, *Deployer) {
 			}
 		}
 		if r.URL.Path == cluster.deny {
+			if cluster.denyStatus == http.StatusTooManyRequests {
+				w.Header().Set("Retry-After", "1")
+				w.WriteHeader(http.StatusTooManyRequests)
+				write(metav1.Status{Status: metav1.StatusFailure, Reason: metav1.StatusReasonTooManyRequests, Code: 429, Message: "fixture throttled"})
+				return
+			}
 			w.WriteHeader(http.StatusForbidden)
 			write(metav1.Status{Status: metav1.StatusFailure, Reason: metav1.StatusReasonForbidden, Code: 403, Message: "fixture access denied"})
 			return
 		}
 		switch r.URL.Path {
+		case "/openapi/v2":
+			doc, err := openapiv2.ParseDocument([]byte(`{
+				"swagger":"2.0","info":{"title":"fixture","version":"v1"},"paths":{},
+				"definitions":{
+					"io.k8s.api.core.v1.ConfigMap":{"type":"object","x-kubernetes-group-version-kind":[{"group":"","version":"v1","kind":"ConfigMap"}],"properties":{"apiVersion":{"type":"string"},"kind":{"type":"string"},"metadata":{"type":"object"},"data":{"type":"object","additionalProperties":{"type":"string"}}}},
+					"io.k8s.api.core.v1.Namespace":{"type":"object","x-kubernetes-group-version-kind":[{"group":"","version":"v1","kind":"Namespace"}],"properties":{"apiVersion":{"type":"string"},"kind":{"type":"string"},"metadata":{"type":"object"},"spec":{"type":"object"},"status":{"type":"object"}}}
+				}}`))
+			if err != nil {
+				t.Errorf("fixture OpenAPI: %v", err)
+				return
+			}
+			data, err := proto.Marshal(doc)
+			if err != nil {
+				t.Errorf("fixture OpenAPI protobuf: %v", err)
+				return
+			}
+			w.Header().Set("Content-Type", "application/octet-stream")
+			_, _ = w.Write(data)
+			return
 		case "/version":
 			write(map[string]string{"gitVersion": "v1.32.0", "major": "1", "minor": "32"})
 			return
 		case "/api":
 			write(metav1.APIVersions{Versions: []string{"v1"}})
 			return
+		case "/apis/" + cluster.unavailableGroup + "/v1":
+			w.WriteHeader(http.StatusServiceUnavailable)
+			write(metav1.Status{Status: metav1.StatusFailure, Reason: metav1.StatusReasonServiceUnavailable, Code: 503})
+			return
 		case "/apis":
-			write(metav1.APIGroupList{Groups: []metav1.APIGroup{
+			groups := metav1.APIGroupList{Groups: []metav1.APIGroup{
 				{Name: "apps", Versions: []metav1.GroupVersionForDiscovery{{GroupVersion: "apps/v1", Version: "v1"}}, PreferredVersion: metav1.GroupVersionForDiscovery{GroupVersion: "apps/v1", Version: "v1"}},
 				{Name: "rbac.authorization.k8s.io", Versions: []metav1.GroupVersionForDiscovery{{GroupVersion: "rbac.authorization.k8s.io/v1", Version: "v1"}}, PreferredVersion: metav1.GroupVersionForDiscovery{GroupVersion: "rbac.authorization.k8s.io/v1", Version: "v1"}},
-			}})
+				{Name: "apiextensions.k8s.io", Versions: []metav1.GroupVersionForDiscovery{{GroupVersion: "apiextensions.k8s.io/v1", Version: "v1"}}, PreferredVersion: metav1.GroupVersionForDiscovery{GroupVersion: "apiextensions.k8s.io/v1", Version: "v1"}},
+			}}
+			if group := cluster.unavailableGroup; group != "" {
+				version := metav1.GroupVersionForDiscovery{GroupVersion: group + "/v1", Version: "v1"}
+				groups.Groups = append(groups.Groups, metav1.APIGroup{Name: group, Versions: []metav1.GroupVersionForDiscovery{version}, PreferredVersion: version})
+			}
+			write(groups)
 			return
 		}
 		if resourceList, ok := resources[r.URL.Path]; ok {
@@ -97,21 +148,50 @@ func newUninstallCluster(t *testing.T) (*uninstallCluster, *Deployer) {
 		}
 		if r.Method == http.MethodDelete {
 			if object, ok := cluster.objects[r.URL.Path]; ok {
+				var options metav1.DeleteOptions
+				data, err := io.ReadAll(r.Body)
+				if err != nil {
+					t.Errorf("reading delete options: %v", err)
+				}
+				if len(data) != 0 {
+					if strings.Contains(r.Header.Get("Content-Type"), "protobuf") {
+						_, _, err = scheme.Codecs.UniversalDeserializer().Decode(data, nil, &options)
+					} else {
+						err = json.Unmarshal(data, &options)
+					}
+					if err != nil {
+						t.Errorf("invalid delete options: %v", err)
+					}
+				}
 				if strings.Contains(r.URL.Path, "/daemonsets/") || strings.Contains(r.URL.Path, "/clusterrole") {
-					var options metav1.DeleteOptions
-					if err := json.NewDecoder(r.Body).Decode(&options); err != nil || options.Preconditions == nil || options.Preconditions.UID == nil || *options.Preconditions.UID != object.GetUID() {
+					if options.Preconditions == nil || options.Preconditions.UID == nil || *options.Preconditions.UID != object.GetUID() {
 						t.Errorf("missing UID precondition deleting %s", r.URL.Path)
 					}
+				}
+				if cluster.requireExactPreconditions && (options.Preconditions == nil || options.Preconditions.UID == nil || options.Preconditions.ResourceVersion == nil) {
+					t.Errorf("missing exact delete preconditions for %s", r.URL.Path)
+				}
+				if p := options.Preconditions; p != nil && (p.UID != nil && *p.UID != object.GetUID() || p.ResourceVersion != nil && *p.ResourceVersion != object.GetResourceVersion()) {
+					w.WriteHeader(http.StatusConflict)
+					write(metav1.Status{Status: metav1.StatusFailure, Reason: metav1.StatusReasonConflict, Code: 409})
+					return
+				}
+				if len(options.DryRun) != 0 || r.URL.Query().Get("dryRun") != "" {
+					write(metav1.Status{Status: metav1.StatusSuccess})
+					return
 				}
 				if !cluster.stuck {
 					delete(cluster.objects, r.URL.Path)
 				}
 				cluster.deleted = append(cluster.deleted, r.URL.Path)
+				cluster.deleteOptions[r.URL.Path] = options
+				cluster.mutations = append(cluster.mutations, r.Method+" "+r.URL.Path)
 				write(metav1.Status{Status: metav1.StatusSuccess})
 				return
 			}
 		}
 		if r.Method == http.MethodPut || r.Method == http.MethodPost {
+			cluster.mutations = append(cluster.mutations, r.Method+" "+r.URL.Path)
 			data, err := io.ReadAll(r.Body)
 			if err != nil {
 				t.Errorf("reading update: %v", err)
@@ -206,16 +286,25 @@ users: []
 	return cluster, deployer
 }
 
+// fixtureUID is unique per kind, namespace and name, like real UIDs, so
+// same-named objects of different kinds cannot satisfy each other's
+// preconditions.
+func fixtureUID(kind, namespace, name string) string {
+	return strings.ToLower(kind) + "-" + namespace + "-" + name + "-uid"
+}
+
 func (c *uninstallCluster) add(path, kind, namespace, name string) {
 	version := "v1"
 	if strings.HasPrefix(path, "/apis/apps/") {
 		version = "apps/v1"
 	} else if strings.HasPrefix(path, "/apis/rbac.") {
 		version = "rbac.authorization.k8s.io/v1"
+	} else if strings.HasPrefix(path, "/apis/apiextensions.") {
+		version = "apiextensions.k8s.io/v1"
 	}
 	c.objects[path] = unstructured.Unstructured{Object: map[string]any{
 		"apiVersion": version, "kind": kind,
-		"metadata": map[string]any{"name": name, "namespace": namespace, "uid": name + "-uid", "resourceVersion": "1", "labels": map[string]any{"k8s-app": "gadget"}},
+		"metadata": map[string]any{"name": name, "namespace": namespace, "uid": fixtureUID(kind, namespace, name), "resourceVersion": "1", "labels": map[string]any{"k8s-app": "gadget"}},
 	}}
 }
 
@@ -428,5 +517,95 @@ func TestUndeployWithoutHelmRelease(t *testing.T) {
 	defer cluster.mu.Unlock()
 	if _, remains := cluster.objects[path]; remains {
 		t.Fatal("Undeploy reported success but left the IG DaemonSet")
+	}
+}
+
+func TestLabelRemovalAppliesExactApprovalPolicy(t *testing.T) {
+	const daemonSet = "/apis/apps/v1/namespaces/gadget/daemonsets/gadget"
+	const configMap = "/api/v1/namespaces/gadget/configmaps/gadget"
+	for _, test := range []struct {
+		name    string
+		change  func(*unstructured.Unstructured)
+		blocked string
+	}{
+		{"foreign installer", func(o *unstructured.Unstructured) {
+			o.SetLabels(map[string]string{"k8s-app": "gadget", "app.kubernetes.io/managed-by": "operator"})
+		}, blockedForeignManager},
+		{"other release", func(o *unstructured.Unstructured) {
+			o.SetAnnotations(map[string]string{"meta.helm.sh/release-name": "other", "meta.helm.sh/release-namespace": "gadget"})
+		}, blockedOtherRelease},
+		{"foreign owner", func(o *unstructured.Unstructured) {
+			o.SetOwnerReferences([]metav1.OwnerReference{{APIVersion: "v1", Kind: "ConfigMap", Name: "owner", UID: "foreign-uid"}})
+		}, blockedOwnerReferences},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			cluster, deployer := newUninstallCluster(t)
+			cluster.add(daemonSet, "DaemonSet", "gadget", "gadget")
+			cluster.add(configMap, "ConfigMap", "gadget", "gadget")
+			object := cluster.objects[configMap]
+			test.change(&object)
+			cluster.objects[configMap] = object
+			err := deployer.uninstall(context.Background())
+			if err == nil || !strings.Contains(err.Error(), "ConfigMap gadget ("+test.blocked+")") {
+				t.Fatalf("blocked object not reported: %v", err)
+			}
+			cluster.mu.Lock()
+			defer cluster.mu.Unlock()
+			if len(cluster.deleted) != 0 {
+				t.Fatalf("label removal deleted resources despite a blocked object: %v", cluster.deleted)
+			}
+		})
+	}
+}
+
+func TestLabelRemovalNamesUnavailableAPIGroups(t *testing.T) {
+	cluster, deployer := newUninstallCluster(t)
+	cluster.add("/apis/apps/v1/namespaces/gadget/daemonsets/gadget", "DaemonSet", "gadget", "gadget")
+	cluster.unavailableGroup = "metrics.example.test"
+	err := deployer.uninstall(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "failed for API groups metrics.example.test/v1") {
+		t.Fatalf("discovery failure did not name the unavailable group: %v", err)
+	}
+	cluster.mu.Lock()
+	defer cluster.mu.Unlock()
+	if len(cluster.deleted) != 0 {
+		t.Fatalf("removal proceeded with incomplete discovery: %v", cluster.deleted)
+	}
+}
+
+func TestLabelRemovalPreservesKeepPolicyAndDefersOwnedObjects(t *testing.T) {
+	cluster, deployer := newUninstallCluster(t)
+	daemonSet := "/apis/apps/v1/namespaces/gadget/daemonsets/gadget"
+	kept := "/api/v1/namespaces/gadget/configmaps/kept"
+	pod := "/api/v1/namespaces/gadget/pods/gadget-abc"
+	cluster.add(daemonSet, "DaemonSet", "gadget", "gadget")
+	cluster.add(kept, "ConfigMap", "gadget", "kept")
+	object := cluster.objects[kept]
+	object.SetAnnotations(map[string]string{"helm.sh/resource-policy": "keep"})
+	cluster.objects[kept] = object
+	owner := cluster.objects[daemonSet]
+	cluster.add(pod, "Pod", "gadget", "gadget-abc")
+	object = cluster.objects[pod]
+	object.SetOwnerReferences([]metav1.OwnerReference{{APIVersion: "apps/v1", Kind: "DaemonSet", Name: "gadget", UID: owner.GetUID()}})
+	cluster.objects[pod] = object
+	if err := deployer.uninstall(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	cluster.mu.Lock()
+	defer cluster.mu.Unlock()
+	if len(cluster.deleted) != 1 || cluster.deleted[0] != daemonSet {
+		t.Fatalf("expected only the owning DaemonSet to be deleted: %v", cluster.deleted)
+	}
+	preserved := false
+	for drained := false; !drained; {
+		select {
+		case progress := <-deployer.GetProgressChan():
+			preserved = preserved || strings.Contains(progress.Message, "Preserving ConfigMap kept")
+		default:
+			drained = true
+		}
+	}
+	if !preserved {
+		t.Fatal("preserved keep-policy object was not reported")
 	}
 }

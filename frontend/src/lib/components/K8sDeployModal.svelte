@@ -3,7 +3,7 @@
 	import type { ApiContext } from '$lib/types/context';
 	import yaml from 'js-yaml';
 	import { deployments } from '$lib/shared/deployments.svelte';
-	import type { DeploymentConfig } from '$lib/types';
+	import type { DeploymentConfig, DeploymentResourceConflict } from '$lib/types';
 	import { t } from '$lib/i18n/index.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import Server from '$lib/icons/server.svelte';
@@ -104,6 +104,18 @@
 	let startError = $state('');
 	let starting = $state(false);
 	let cleanupConfirmation = $state(false);
+	let approvedResources = $state<string[]>([]);
+	const resourceConflicts = $derived(currentDeployment?.resourceConflicts ?? []);
+	const exactCleanupApproved = $derived(
+		resourceConflicts.length > 0 &&
+			resourceConflicts.every(
+				(resource) =>
+					!resource.blockedReason &&
+					resource.uid &&
+					resource.resourceVersion &&
+					approvedResources.includes(resourceKey(resource))
+			)
+	);
 	let recovering = $state(false);
 	const isRedeploy = $derived(redeploy || recovering);
 	const isDeploying = $derived(currentDeployment?.status === 'deploying');
@@ -115,6 +127,17 @@
 	let isValid = $derived(
 		namespace.trim().length > 0 && releaseName.trim().length > 0 && !isDeploying && !starting
 	);
+
+	function resourceKey(resource: DeploymentResourceConflict): string {
+		return JSON.stringify([
+			resource.apiVersion,
+			resource.kind,
+			resource.namespace,
+			resource.name,
+			resource.uid,
+			resource.resourceVersion
+		]);
+	}
 
 	// Helper to get nested value from object
 	function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
@@ -312,6 +335,9 @@
 		starting = true;
 
 		try {
+			if (cleanup && resourceConflicts.length > 0 && !exactCleanupApproved) {
+				throw new Error(t('Review and approve every conflicting resource before cleanup.'));
+			}
 			const config: DeploymentConfig =
 				cleanup && currentDeployment
 					? { ...currentDeployment.config }
@@ -336,7 +362,25 @@
 			// Start deployment via API - backend will generate the ID
 			const res = await api.request<{ deploymentId?: string }>({
 				cmd: 'deployIG',
-				data: { ...config, redeploy: redeploy || cleanup, undeploy }
+				data: {
+					...config,
+					redeploy: redeploy || cleanup,
+					undeploy,
+					...(cleanup && resourceConflicts.length > 0
+						? {
+								cleanupResources: resourceConflicts.map(
+									({ apiVersion, kind, namespace, name, uid, resourceVersion }) => ({
+										apiVersion,
+										kind,
+										namespace,
+										name,
+										uid,
+										resourceVersion
+									})
+								)
+							}
+						: {})
+				}
 			});
 
 			console.log('[Deploy] Backend response:', res);
@@ -349,6 +393,7 @@
 			const backendId = res.deploymentId;
 			recovering = cleanup;
 			cleanupConfirmation = false;
+			approvedResources = [];
 			if (deploymentId) deployments.remove(deploymentId);
 			deploymentId = backendId;
 
@@ -413,6 +458,7 @@
 
 		open = false;
 		cleanupConfirmation = false;
+		approvedResources = [];
 		onClose?.();
 	}
 
@@ -789,27 +835,80 @@
 									)}
 								</p>
 								{#if cleanupConfirmation}
-									<p class="mt-3">
-										{t(
-											'Remove identified Inspektor Gadget resources in namespace {{namespace}} and reinstall using the selected chart values? Existing IG configuration will be replaced and running gadgets may be interrupted. The namespace and shared cluster resources are preserved.',
-											{ namespace: currentDeployment.config.namespace }
-										)}
-									</p>
-									<p class="mt-3">
-										{t(
-											'Unidentified resources will not be deleted and may still require manual inspection. If GitOps or an operator manages this installation, suspend its reconciliation first.'
-										)}
-									</p>
+									{#if resourceConflicts.length > 0}
+										<p class="mt-3">
+											{t(
+												'The selected chart conflicts with these existing objects, which may be unlabeled. Approve each object only if it is safe to delete its current configuration and replace it. Only these exact objects will be deleted; other resources will not be swept.'
+											)}
+										</p>
+										<fieldset class="mt-3 flex flex-col gap-3">
+											<legend class="mb-2 font-semibold">{t('Resources requiring approval')}</legend
+											>
+											{#each resourceConflicts as resource (resourceKey(resource))}
+												<div class="rounded-ig-md border border-ig-border p-3">
+													<label class="flex items-start gap-2">
+														<input
+															type="checkbox"
+															bind:group={approvedResources}
+															value={resourceKey(resource)}
+															disabled={starting ||
+																!!resource.blockedReason ||
+																!resource.uid ||
+																!resource.resourceVersion}
+															aria-label={t('Approve deletion of {{kind}} {{name}}', {
+																kind: resource.kind,
+																name: resource.namespace
+																	? `${resource.namespace}/${resource.name}`
+																	: resource.name
+															})}
+														/>
+														<span class="font-semibold"
+															>{resource.kind}
+															{resource.namespace
+																? `${resource.namespace}/`
+																: ''}{resource.name}</span
+														>
+													</label>
+													<p class="mt-1 break-all text-xs text-ig-text-muted">
+														{resource.apiVersion} / UID: {resource.uid} / {t('Resource version')}: {resource.resourceVersion}
+													</p>
+													{#if resource.blockedReason}
+														<p class="mt-2 text-ig-error">{resource.blockedReason}</p>
+													{/if}
+												</div>
+											{/each}
+										</fieldset>
+										<p class="mt-3">
+											{t(
+												'Objects owned by another Helm release or a Kubernetes controller cannot be removed here. Changed objects require a fresh review. If GitOps or an operator manages this installation, suspend its reconciliation first.'
+											)}
+										</p>
+									{:else}
+										<p class="mt-3">
+											{t(
+												'Remove identified Inspektor Gadget resources in namespace {{namespace}} and reinstall using the selected chart values? Existing IG configuration will be replaced and running gadgets may be interrupted. The namespace and shared cluster resources are preserved.',
+												{ namespace: currentDeployment.config.namespace }
+											)}
+										</p>
+										<p class="mt-3">
+											{t(
+												'Unidentified resources will not be deleted and may still require manual inspection. If GitOps or an operator manages this installation, suspend its reconciliation first.'
+											)}
+										</p>
+									{/if}
 									<div class="mt-4 flex flex-wrap gap-3">
 										<button
-											disabled={starting}
+											disabled={starting || (resourceConflicts.length > 0 && !exactCleanupApproved)}
 											onclick={() => startDeployment(true)}
 											class="rounded-ig-md bg-ig-error px-4 py-2 text-ig-text-on-primary disabled:opacity-50"
 											>{t('Confirm cleanup and redeploy')}</button
 										>
 										<button
 											disabled={starting}
-											onclick={() => (cleanupConfirmation = false)}
+											onclick={() => {
+												cleanupConfirmation = false;
+												approvedResources = [];
+											}}
 											class="rounded-ig-md border border-ig-border px-4 py-2 disabled:opacity-50"
 											>{t('Cancel cleanup')}</button
 										>
@@ -817,7 +916,10 @@
 								{:else}
 									<button
 										disabled={starting}
-										onclick={() => (cleanupConfirmation = true)}
+										onclick={() => {
+											cleanupConfirmation = true;
+											approvedResources = [];
+										}}
 										class="mt-3 rounded-ig-md border border-ig-border px-4 py-2 disabled:opacity-50"
 										>{t('Clean up and redeploy...')}</button
 									>
@@ -844,6 +946,7 @@
 								if (deploymentId) deployments.remove(deploymentId);
 								deploymentId = undefined;
 								cleanupConfirmation = false;
+								approvedResources = [];
 								recovering = false;
 							}}
 							class="mt-4 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-6 py-2 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
