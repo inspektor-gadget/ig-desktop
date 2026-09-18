@@ -23,6 +23,9 @@ import (
 
 // HandleCreateEnvironment handles creating a new environment
 func (h *Handler) HandleCreateEnvironment(ev *api.Event) {
+	if h.rejectTransientManagement(ev) {
+		return
+	}
 	env := &environment.Environment{}
 	err := json.Unmarshal(ev.Data, env)
 	if err != nil {
@@ -50,6 +53,9 @@ func (h *Handler) HandleCreateEnvironment(ev *api.Event) {
 
 // HandleDeleteEnvironment handles deleting an environment
 func (h *Handler) HandleDeleteEnvironment(ev *api.Event) {
+	if h.rejectTransientManagement(ev) {
+		return
+	}
 	env := &environment.Environment{}
 	err := json.Unmarshal(ev.Data, env)
 	if err != nil {

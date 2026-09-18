@@ -26,6 +26,7 @@ func (h *Handler) HandleHelo(ev *api.Event) {
 	environments, err := h.envStorage.List()
 	if err != nil {
 		log.Printf("failed to get environments: %v", err)
+		h.send(ev.SetError(err))
 		return
 	}
 
@@ -37,10 +38,14 @@ func (h *Handler) HandleHelo(ev *api.Event) {
 		}
 		h.send(cmd)
 	}
+	h.send(ev.SetData(nil))
 }
 
 // HandleRemoveInstance handles removal of a gadget instance
 func (h *Handler) HandleRemoveInstance(ev *api.Event) {
+	if h.rejectTransientManagement(ev) {
+		return
+	}
 	var req struct {
 		ID            string `json:"id"`
 		EnvironmentID string `json:"environmentID"`
@@ -80,9 +85,8 @@ func (h *Handler) HandleStopInstance(ev *api.Event) {
 
 	err = h.instanceManager.Stop(req.ID)
 	if err != nil {
-		log.Printf("instance %s not found or already stopped", req.ID)
-	} else {
-		log.Printf("stopping instance %s", req.ID)
+		h.send(ev.SetError(err))
+		return
 	}
 
 	h.send(ev.SetData(nil))

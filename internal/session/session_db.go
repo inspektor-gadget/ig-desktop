@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	_ "modernc.org/sqlite"
 )
 
@@ -31,9 +32,22 @@ type SessionDB struct {
 	sessionID string
 }
 
+// sessionDBPath returns the database path for a session ID. IDs are
+// canonical UUIDs; anything else (such as "../x") is rejected before it can
+// become a path, since sqlite creates missing files on open.
+func sessionDBPath(baseDir, sessionID string) (string, error) {
+	if parsed, err := uuid.Parse(sessionID); err != nil || parsed.String() != sessionID {
+		return "", fmt.Errorf("invalid session ID %q", sessionID)
+	}
+	return filepath.Join(baseDir, sessionID+".db"), nil
+}
+
 // OpenSessionDB opens an existing session database file
 func OpenSessionDB(baseDir, sessionID string) (*SessionDB, error) {
-	dbPath := filepath.Join(baseDir, fmt.Sprintf("%s.db", sessionID))
+	dbPath, err := sessionDBPath(baseDir, sessionID)
+	if err != nil {
+		return nil, err
+	}
 
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
@@ -51,7 +65,10 @@ func OpenSessionDB(baseDir, sessionID string) (*SessionDB, error) {
 
 // CreateSessionDB creates a new session database file and initializes it
 func CreateSessionDB(baseDir string, sess *Session) (*SessionDB, error) {
-	dbPath := filepath.Join(baseDir, fmt.Sprintf("%s.db", sess.ID))
+	dbPath, err := sessionDBPath(baseDir, sess.ID)
+	if err != nil {
+		return nil, err
+	}
 
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
@@ -446,13 +463,23 @@ func (sdb *SessionDB) GetRunEvents(runID string) ([]RecordedEvent, error) {
 		ORDER BY timestamp ASC
 	`
 
-	rows, err := sdb.db.Query(query, runID)
+	return sdb.queryEvents(query, runID)
+}
+
+// GetRunEventsPage reads a bounded page in stable insertion order.
+func (sdb *SessionDB) GetRunEventsPage(runID string, afterID int64, limit int) ([]RecordedEvent, error) {
+	return sdb.queryEvents(`SELECT id, run_id, timestamp, type, datasource_id, data
+		FROM events WHERE run_id = ? AND id > ? ORDER BY id ASC LIMIT ?`, runID, afterID, limit)
+}
+
+func (sdb *SessionDB) queryEvents(query string, args ...any) ([]RecordedEvent, error) {
+	rows, err := sdb.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("querying events: %w", err)
 	}
 	defer rows.Close()
 
-	var events []RecordedEvent
+	events := []RecordedEvent{}
 	for rows.Next() {
 		var evt RecordedEvent
 		var datasourceID sql.NullString

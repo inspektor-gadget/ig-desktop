@@ -98,6 +98,7 @@ func (r *Runtime) runInstanceManagerClientForTargets(ctx context.Context, runtim
 				merrMutex.Unlock()
 				return
 			}
+			defer conn.Close()
 			client := api.NewGadgetInstanceManagerClient(conn)
 			err = fn(target, client)
 			if err != nil {

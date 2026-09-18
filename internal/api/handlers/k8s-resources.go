@@ -25,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/inspektor-gadget/ig-desktop/internal/environment"
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 	"github.com/inspektor-gadget/ig-desktop/pkg/k8s"
 )
@@ -53,6 +54,16 @@ type K8sResourceResponse struct {
 
 // getK8sClientFromEnvironment creates a Kubernetes client from environment config
 func (h *Handler) getK8sClientFromEnvironment(environmentID string) (*kubernetes.Clientset, error) {
+	if environment.IsTransientID(environmentID) {
+		if h.transientKubernetes == nil {
+			return nil, fmt.Errorf("transient Kubernetes targets are disabled")
+		}
+		config, _, err := h.transientKubernetes.Lookup(environmentID)
+		if err != nil {
+			return nil, err
+		}
+		return kubernetes.NewForConfig(config)
+	}
 	env, err := h.envStorage.Get(environmentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get environment: %w", err)
@@ -211,7 +222,7 @@ func (h *Handler) HandleGetK8sContainers(ev *api.Event) {
 		return
 	}
 
-	if req.Pod == "" {
+	if req.Pod == "" && !environment.IsTransientID(req.EnvironmentID) {
 		h.send(ev.SetData(K8sResourceResponse{Items: []K8sResourceItem{}}))
 		return
 	}
@@ -223,6 +234,10 @@ func (h *Handler) HandleGetK8sContainers(ev *api.Event) {
 	}
 
 	// If namespace is not provided, try to find the pod across all namespaces
+	if req.Pod == "" {
+		h.send(ev.SetData(K8sResourceResponse{Items: []K8sResourceItem{}}))
+		return
+	}
 	namespace := req.Namespace
 	var pod *v1.Pod
 

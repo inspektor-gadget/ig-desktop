@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/inspektor-gadget/ig-desktop/internal/session"
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
 
@@ -193,6 +194,8 @@ func (h *Handler) HandleGetRunEvents(ev *api.Event) {
 	var req struct {
 		SessionID string `json:"sessionId"`
 		RunID     string `json:"runId"`
+		AfterID   int64  `json:"afterID"`
+		Limit     int    `json:"limit"`
 	}
 	err := json.Unmarshal(ev.Data, &req)
 	if err != nil {
@@ -208,7 +211,24 @@ func (h *Handler) HandleGetRunEvents(ev *api.Event) {
 	}
 
 	// Get events for run
-	events, err := sessionService.GetRunEvents(req.SessionID, req.RunID)
+	var events []session.RecordedEvent
+	hasMore := false
+	if ev.Command == "getRunEventsPage" {
+		if req.Limit == 0 {
+			req.Limit = 1000
+		}
+		if req.Limit < 1 || req.Limit > 1000 || req.AfterID < 0 {
+			h.send(ev.SetError(fmt.Errorf("limit must be 1..1000 and afterID must be non-negative")))
+			return
+		}
+		events, err = sessionService.GetRunEventsPage(req.SessionID, req.RunID, req.AfterID, req.Limit+1)
+		if len(events) > req.Limit {
+			hasMore = true
+			events = events[:req.Limit]
+		}
+	} else {
+		events, err = sessionService.GetRunEvents(req.SessionID, req.RunID)
+	}
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
@@ -237,7 +257,15 @@ func (h *Handler) HandleGetRunEvents(ev *api.Event) {
 		})
 	}
 
-	h.send(ev.SetData(responses))
+	if ev.Command == "getRunEventsPage" {
+		next := req.AfterID
+		if len(events) > 0 {
+			next = events[len(events)-1].ID
+		}
+		h.send(ev.SetData(map[string]any{"events": responses, "hasMore": hasMore, "nextAfterID": next}))
+	} else {
+		h.send(ev.SetData(responses))
+	}
 }
 
 // HandleDeleteSession deletes a session and its file

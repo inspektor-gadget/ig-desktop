@@ -19,7 +19,10 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/inspektor-gadget/ig-desktop/internal/api/handlers"
 	"github.com/inspektor-gadget/ig-desktop/internal/artifacthub"
@@ -41,6 +44,7 @@ type Services struct {
 	GadgetService   *gadget.Service
 	ArtifactHub     *artifacthub.Client
 	SessionService  *session.Service
+	SessionError    string
 	PluginService   *plugins.Service
 	Handler         *handlers.Handler
 }
@@ -49,16 +53,39 @@ type Services struct {
 // This factory function is used by the Wails desktop app where
 // there is only a single client connection.
 func NewServices() *Services {
-	ctx := context.Background()
+	services, err := newServices(context.Background(), "")
+	if err != nil {
+		log.Fatalf("failed to initialize services: %v", err)
+	}
+	return services
+}
+
+// NewServicesWithDataDir isolates all application storage from Desktop's defaults.
+// The caller owns ctx and must cancel it before waiting for active gadgets.
+func NewServicesWithDataDir(ctx context.Context, root string) (*Services, error) {
+	if !filepath.IsAbs(root) {
+		return nil, fmt.Errorf("data directory must be absolute")
+	}
+	return newServices(ctx, filepath.Clean(root))
+}
+
+func newServices(ctx context.Context, root string) (*Services, error) {
+	getDir := func(name string) (string, error) {
+		if root == "" {
+			return config.GetDir(name)
+		}
+		dir := filepath.Join(root, name)
+		return dir, os.MkdirAll(dir, 0o700)
+	}
 
 	// Resolve directories
-	envDir, err := config.GetDir("env")
+	envDir, err := getDir("env")
 	if err != nil {
-		log.Fatalf("failed to get env directory: %v", err)
+		return nil, fmt.Errorf("getting env directory: %w", err)
 	}
-	helmDir, err := config.GetDir("helm")
+	helmDir, err := getDir("helm")
 	if err != nil {
-		log.Fatalf("failed to get helm directory: %v", err)
+		return nil, fmt.Errorf("getting helm directory: %w", err)
 	}
 
 	// Initialize storage and services
@@ -70,12 +97,15 @@ func NewServices() *Services {
 
 	// Initialize session service
 	var sessionService *session.Service
-	sessionsDir, err := config.GetDir("sessions")
+	var sessionError string
+	sessionsDir, err := getDir("sessions")
 	if err != nil {
+		sessionError = err.Error()
 		log.Printf("failed to get sessions directory: %v (session recording will be disabled)", err)
 	} else {
 		sessionService, err = session.NewService(sessionsDir)
 		if err != nil {
+			sessionError = err.Error()
 			log.Printf("failed to initialize session service: %v (session recording will be disabled)", err)
 			sessionService = nil
 		} else {
@@ -85,7 +115,10 @@ func NewServices() *Services {
 
 	// Initialize plugin service
 	var pluginService *plugins.Service
-	pluginService, err = plugins.NewService()
+	pluginsDir, err := getDir("plugins")
+	if err == nil {
+		pluginService, err = plugins.NewServiceAt(pluginsDir)
+	}
 	if err != nil {
 		log.Printf("failed to initialize plugin service: %v (local plugins will be disabled)", err)
 		pluginService = nil
@@ -112,9 +145,10 @@ func NewServices() *Services {
 		GadgetService:   gadgetService,
 		ArtifactHub:     artifactHubClient,
 		SessionService:  sessionService,
+		SessionError:    sessionError,
 		PluginService:   pluginService,
 		Handler:         handler,
-	}
+	}, nil
 }
 
 // SharedServices holds services that can be safely shared across multiple

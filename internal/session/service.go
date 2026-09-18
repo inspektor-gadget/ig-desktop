@@ -383,8 +383,23 @@ func (s *Service) GetRunEvents(sessionID, runID string) ([]RecordedEvent, error)
 	})
 }
 
+// GetRunEventsPage returns at most limit events after the given insertion ID.
+func (s *Service) GetRunEventsPage(sessionID, runID string, afterID int64, limit int) ([]RecordedEvent, error) {
+	if afterID < 0 || limit < 1 || limit > 1001 {
+		return nil, fmt.Errorf("invalid event page: afterID must be non-negative and limit must be 1..1001")
+	}
+	return withSessionDB(s, sessionID, func(db *SessionDB) ([]RecordedEvent, error) {
+		return db.GetRunEventsPage(runID, afterID, limit)
+	})
+}
+
 // DeleteSession removes a session file and index entry
 func (s *Service) DeleteSession(sessionID string) error {
+	dbPath, err := sessionDBPath(s.baseDir, sessionID)
+	if err != nil {
+		return err
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -398,7 +413,6 @@ func (s *Service) DeleteSession(sessionID string) error {
 	}
 
 	// Delete the session .db file from filesystem
-	dbPath := filepath.Join(s.baseDir, fmt.Sprintf("%s.db", sessionID))
 	if err := os.Remove(dbPath); err != nil {
 		// If file doesn't exist, that's okay (index might be out of sync)
 		if !os.IsNotExist(err) {

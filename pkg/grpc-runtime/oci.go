@@ -139,7 +139,7 @@ func (r *Runtime) runGadget(gadgetCtx runtime.GadgetContext, target target, allP
 	client := api.NewGadgetManagerClient(conn)
 
 	runClient, err := client.RunGadget(connCtx)
-	if err != nil && !errors.Is(err, context.Canceled) {
+	if err != nil {
 		return nil, err
 	}
 
@@ -177,7 +177,8 @@ func (r *Runtime) runGadget(gadgetCtx runtime.GadgetContext, target target, allP
 		return nil, err
 	}
 
-	doneChan := make(chan error)
+	// The receiver can finish after cancellation has already returned.
+	doneChan := make(chan error, 1)
 
 	var result []byte
 	expectedSeq := uint32(1)
@@ -243,8 +244,8 @@ func (r *Runtime) runGadget(gadgetCtx runtime.GadgetContext, target target, allP
 				// doesn't match, this will terminate this particular client session
 				err = gadgetCtx.LoadGadgetInfo(gi, allParams, true, nil)
 				if err != nil {
-					gadgetCtx.Logger().Warnf("deserizalize gadget info: %v", err)
-					continue
+					doneChan <- fmt.Errorf("initializing gadget metadata: %w", err)
+					return
 				}
 				gadgetCtx.Logger().Debugf("loaded gadget info")
 				for _, ds := range gadgetCtx.GetAllDataSources() {
@@ -276,7 +277,9 @@ func (r *Runtime) runGadget(gadgetCtx runtime.GadgetContext, target target, allP
 			// Send stop request
 			gadgetCtx.Logger().Debugf("%-20s | sending stop request", target.node)
 			controlRequest := &api.GadgetControlRequest{Event: &api.GadgetControlRequest_StopRequest{StopRequest: &api.GadgetStopRequest{}}}
-			runClient.Send(controlRequest)
+			if err := runClient.Send(controlRequest); err != nil {
+				return nil, fmt.Errorf("sending stop request: %w", err)
+			}
 
 			// Wait for done or timeout
 			select {
@@ -286,6 +289,8 @@ func (r *Runtime) runGadget(gadgetCtx runtime.GadgetContext, target target, allP
 			case <-time.After(ResultTimeout * time.Second):
 				return nil, fmt.Errorf("timed out while getting result")
 			}
+		} else {
+			return nil, nil
 		}
 	}
 	return result, runErr

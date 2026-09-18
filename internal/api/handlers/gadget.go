@@ -16,10 +16,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/inspektor-gadget/ig-desktop/internal/environment"
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 	"github.com/inspektor-gadget/ig-desktop/pkg/gadget"
 	igApi "github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-service/api"
@@ -28,38 +30,65 @@ import (
 // HandleRunGadget handles running a new gadget instance
 func (h *Handler) HandleRunGadget(ev *api.Event) {
 	var req struct {
-		ID            string            `json:"id"`
-		Image         string            `json:"image"`
-		EnvironmentID string            `json:"environmentID"`
-		Params        map[string]string `json:"params"`
-		Detached      bool              `json:"detached"`
-		InstanceName  string            `json:"instanceName"`
-		Record        bool              `json:"record"`
-		SessionID     string            `json:"sessionId"`
-		SessionName   string            `json:"sessionName"`
+		ID               string            `json:"id"`
+		Image            string            `json:"image"`
+		EnvironmentID    string            `json:"environmentID"`
+		Params           map[string]string `json:"params"`
+		Detached         bool              `json:"detached"`
+		InstanceName     string            `json:"instanceName"`
+		Record           bool              `json:"record"`
+		SessionID        string            `json:"sessionId"`
+		SessionName      string            `json:"sessionName"`
+		DurationSeconds  int64             `json:"durationSeconds"`
+		RemoteInstanceID string            `json:"remoteInstanceID,omitempty"`
 	}
 	err := json.Unmarshal(ev.Data, &req)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
 	}
+	if environment.IsTransientID(req.EnvironmentID) {
+		if err := validateTransientRun(ev.Data); err != nil {
+			h.send(ev.SetError(err))
+			return
+		}
+	}
+	if req.Record && h.sessionService == nil {
+		h.send(ev.SetError(fmt.Errorf("session recording is unavailable")))
+		return
+	}
+	if err := gadget.ValidateDuration(req.DurationSeconds, req.Detached); err != nil {
+		h.send(ev.SetError(err))
+		return
+	}
+	// The connection-local stream ID and the persistent remote ID are distinct.
+	req.RemoteInstanceID = ""
+	if req.Detached {
+		req.RemoteInstanceID, err = igApi.NewInstanceID()
+		if err != nil {
+			h.send(ev.SetError(err))
+			return
+		}
+	}
 
-	runtime, err := h.runtimeFactory.GetRuntime(req.EnvironmentID)
+	runtime, err := h.getRuntime(req.EnvironmentID)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
 	}
 
 	runReq := gadget.RunRequest{
-		ID:            req.ID,
-		Image:         req.Image,
-		EnvironmentID: req.EnvironmentID,
-		Params:        req.Params,
-		Detached:      req.Detached,
-		InstanceName:  req.InstanceName,
-		Record:        req.Record,
-		SessionID:     req.SessionID,
-		SessionName:   req.SessionName,
+		ID:               req.ID,
+		Image:            req.Image,
+		EnvironmentID:    req.EnvironmentID,
+		Params:           req.Params,
+		Detached:         req.Detached,
+		InstanceName:     req.InstanceName,
+		Record:           req.Record,
+		SessionID:        req.SessionID,
+		SessionName:      req.SessionName,
+		DurationSeconds:  req.DurationSeconds,
+		RemoteInstanceID: req.RemoteInstanceID,
 	}
 
 	instanceID, err := h.gadgetService.Run(h.ctx, runtime, runReq)
@@ -72,14 +101,13 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 	req.ID = instanceID
 	h.send(ev.SetData(req))
 
-	// If detached, send additional acknowledgment
-	if req.Detached {
-		h.send(ev.SetData(nil))
-	}
 }
 
 // HandleAttachInstance handles attaching to an existing gadget instance
 func (h *Handler) HandleAttachInstance(ev *api.Event) {
+	if h.rejectTransientManagement(ev) {
+		return
+	}
 	var req struct {
 		ID            string            `json:"id"`
 		Image         string            `json:"image"`
@@ -93,7 +121,7 @@ func (h *Handler) HandleAttachInstance(ev *api.Event) {
 		return
 	}
 
-	runtime, err := h.runtimeFactory.GetRuntime(req.EnvironmentID)
+	runtime, err := h.getRuntime(req.EnvironmentID)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
@@ -130,7 +158,7 @@ func (h *Handler) HandleGetGadgetInfo(ev *api.Event) {
 		return
 	}
 
-	runtime, err := h.runtimeFactory.GetRuntime(req.EnvironmentID)
+	runtime, err := h.getRuntime(req.EnvironmentID)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
@@ -148,6 +176,9 @@ func (h *Handler) HandleGetGadgetInfo(ev *api.Event) {
 
 // HandleListInstances handles listing all gadget instances in an environment
 func (h *Handler) HandleListInstances(ev *api.Event) {
+	if h.rejectTransientManagement(ev) {
+		return
+	}
 	var req struct {
 		EnvironmentID string `json:"environmentID"`
 	}

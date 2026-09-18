@@ -25,6 +25,7 @@ import (
 type InstanceManager struct {
 	mu         sync.Mutex
 	cancellers map[string]context.CancelFunc
+	wg         sync.WaitGroup
 }
 
 // NewInstanceManager creates a new InstanceManager
@@ -38,6 +39,9 @@ func NewInstanceManager() *InstanceManager {
 func (m *InstanceManager) Register(instanceID string, cancel context.CancelFunc) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if _, exists := m.cancellers[instanceID]; !exists {
+		m.wg.Add(1)
+	}
 	m.cancellers[instanceID] = cancel
 }
 
@@ -59,5 +63,23 @@ func (m *InstanceManager) Stop(instanceID string) error {
 func (m *InstanceManager) Unregister(instanceID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	delete(m.cancellers, instanceID)
+	if _, ok := m.cancellers[instanceID]; ok {
+		delete(m.cancellers, instanceID)
+		m.wg.Done()
+	}
+}
+
+// Wait waits for owned streams to finish after command dispatch has stopped.
+func (m *InstanceManager) Wait(ctx context.Context) error {
+	done := make(chan struct{})
+	go func() {
+		m.wg.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }

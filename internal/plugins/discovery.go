@@ -112,7 +112,14 @@ func NewService() (*Service, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get plugins directory: %w", err)
 	}
+	return NewServiceAt(pluginsDir)
+}
 
+// NewServiceAt uses a host-provided directory instead of Desktop's defaults.
+func NewServiceAt(pluginsDir string) (*Service, error) {
+	if err := os.MkdirAll(pluginsDir, 0o700); err != nil {
+		return nil, err
+	}
 	return &Service{
 		pluginsDir: pluginsDir,
 	}, nil

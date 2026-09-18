@@ -17,6 +17,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 
@@ -31,15 +32,16 @@ import (
 
 // Handler coordinates all command handlers
 type Handler struct {
-	ctx             context.Context
-	envStorage      *environment.Storage
-	runtimeFactory  *environment.RuntimeFactory
-	gadgetService   *gadget.Service
-	instanceManager *gadget.InstanceManager
-	artifactHub     *artifacthub.Client
-	sessionService  *session.Service
-	pluginService   *plugins.Service
-	helmDir         string
+	ctx                 context.Context
+	envStorage          *environment.Storage
+	runtimeFactory      *environment.RuntimeFactory
+	gadgetService       *gadget.Service
+	instanceManager     *gadget.InstanceManager
+	artifactHub         *artifacthub.Client
+	sessionService      *session.Service
+	pluginService       *plugins.Service
+	helmDir             string
+	transientKubernetes *environment.TransientKubernetes
 
 	mu   sync.Mutex
 	send func(any)
@@ -86,7 +88,7 @@ func New(
 
 // Handlers returns all registered command handlers
 func (h *Handler) Handlers() []api.CommandHandler {
-	return []api.CommandHandler{
+	handlers := []api.CommandHandler{
 		commandHandler{"helo", h.HandleHelo},
 		commandHandler{"removeInstance", h.HandleRemoveInstance},
 		commandHandler{"stopInstance", h.HandleStopInstance},
@@ -112,17 +114,28 @@ func (h *Handler) Handlers() []api.CommandHandler {
 		commandHandler{"listSessions", h.HandleListSessions},
 		commandHandler{"getSession", h.HandleGetSession},
 		commandHandler{"getGadgetRun", h.HandleGetGadgetRun},
+		commandHandler{"getRun", h.HandleGetGadgetRun},
 		commandHandler{"getRunEvents", h.HandleGetRunEvents},
+		commandHandler{"getRunEventsPage", h.HandleGetRunEvents},
 		commandHandler{"deleteSession", h.HandleDeleteSession},
 		// Plugin handlers
 		commandHandler{"listPlugins", h.HandleListPlugins},
 		commandHandler{"getPlugin", h.HandleGetPlugin},
 	}
+	if h.transientKubernetes != nil {
+		handlers = append(handlers,
+			commandHandler{"getKubernetesContexts", h.HandleGetKubernetesContexts},
+			commandHandler{"createKubernetesTarget", h.HandleCreateKubernetesTarget},
+			commandHandler{"touchKubernetesTarget", h.HandleTouchKubernetesTarget},
+			commandHandler{"releaseKubernetesTarget", h.HandleReleaseKubernetesTarget},
+		)
+	}
+	return handlers
 }
 
 // Register registers all event handlers with the given transport.
 // The transport abstracts the communication layer (Wails events, WebSocket, etc.)
-func (h *Handler) Register(t transport.Transport) {
+func (h *Handler) Register(t transport.Transport) error {
 	h.send = func(ev any) {
 		h.mu.Lock()
 		defer h.mu.Unlock()
@@ -144,31 +157,32 @@ func (h *Handler) Register(t transport.Transport) {
 
 	// Set up message handler for incoming commands
 	t.OnMessage(func(message string) {
-		ev := &api.Event{}
+		ev := &api.Event{Type: api.TypeCommandResponse}
 
-		log.Printf("handler: received message: %s", message)
-
-		err := json.Unmarshal([]byte(message), &ev)
+		err := json.Unmarshal([]byte(message), ev)
 		if err != nil {
-			log.Printf("handler: failed to unmarshal message: %v", err)
+			h.send(ev.SetError(fmt.Errorf("invalid command JSON: %w", err)))
 			return
 		}
-		log.Printf("handler: parsed event: %+v", ev)
 
 		ev.Type = api.TypeCommandResponse
+		ev.Success = false
+		ev.Error = ""
 
 		// Route to appropriate handler
 		if handler, ok := handlerMap[ev.Command]; ok {
 			handler.Handle(ev)
 		} else {
-			log.Printf("handler: unknown command: %s", ev.Command)
+			h.send(ev.SetError(fmt.Errorf("unknown command: %s", ev.Command)))
 		}
 	})
 
 	// Start listening for messages
 	if err := t.Start(); err != nil {
 		log.Printf("handler: failed to start transport: %v", err)
+		return err
 	}
+	return nil
 }
 
 // HandleListPlugins returns all discovered local plugins

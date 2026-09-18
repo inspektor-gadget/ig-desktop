@@ -36,8 +36,13 @@ func (ev *Event) SetError(err error) *Event {
 
 // SetData sets the successful response data on the event
 func (ev *Event) SetData(data any) *Event {
-	ev.Data, _ = json.Marshal(data)
+	var err error
+	ev.Data, err = json.Marshal(data)
+	if err != nil {
+		return ev.SetError(err)
+	}
 	ev.Success = true
+	ev.Error = ""
 	return ev
 }
 

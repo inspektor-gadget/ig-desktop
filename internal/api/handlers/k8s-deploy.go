@@ -63,6 +63,9 @@ type GetChartValuesResponse struct {
 
 // HandleCheckIGDeployment checks if Inspektor Gadget is deployed in the cluster
 func (h *Handler) HandleCheckIGDeployment(ev *api.Event) {
+	if h.rejectTransientManagement(ev) {
+		return
+	}
 	req := &CheckIGDeploymentRequest{}
 	err := json.Unmarshal(ev.Data, req)
 	if err != nil {
@@ -89,6 +92,9 @@ func (h *Handler) HandleCheckIGDeployment(ev *api.Event) {
 
 // HandleDeployIG initiates the deployment of Inspektor Gadget to Kubernetes
 func (h *Handler) HandleDeployIG(ev *api.Event) {
+	if h.rejectTransientManagement(ev) {
+		return
+	}
 	req := &DeployIGRequest{}
 	err := json.Unmarshal(ev.Data, req)
 	if err != nil {
@@ -276,6 +282,9 @@ func (h *Handler) performDeployment(deploymentID string, config *helm.DeployConf
 
 // HandleGetChartValues fetches the default values.yaml from the Helm chart
 func (h *Handler) HandleGetChartValues(ev *api.Event) {
+	if h.rejectTransientManagement(ev) {
+		return
+	}
 	req := &GetChartValuesRequest{}
 	if len(ev.Data) > 0 {
 		if err := json.Unmarshal(ev.Data, req); err != nil {

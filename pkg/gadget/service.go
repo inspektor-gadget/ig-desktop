@@ -16,7 +16,11 @@ package gadget
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
+	"math"
+	"time"
 
 	"github.com/google/uuid"
 	gadgetcontext "github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-context"
@@ -67,8 +71,7 @@ func (s *Service) SetSessionRecorder(sr SessionRecorder) {
 }
 
 // setupSessionRecording creates or uses an existing session for recording.
-// Returns nil if recording setup fails (gadget will continue without recording).
-func (s *Service) setupSessionRecording(instanceID string, req RunRequest, gi *api.GadgetInfo) *apiTypes.SessionInfo {
+func (s *Service) setupSessionRecording(instanceID string, req RunRequest, gi *api.GadgetInfo) (*apiTypes.SessionInfo, error) {
 	sessionID := req.SessionID
 	isNew := false
 
@@ -76,29 +79,26 @@ func (s *Service) setupSessionRecording(instanceID string, req RunRequest, gi *a
 		var err error
 		sessionID, err = s.sessionRecorder.CreateSession(req.SessionName, req.EnvironmentID)
 		if err != nil {
-			log.Printf("failed to create session: %v (continuing without recording)", err)
-			return nil
+			return nil, fmt.Errorf("creating recording session: %w", err)
 		}
 		isNew = true
 	}
 
 	gadgetInfoBytes, err := protojson.Marshal(gi)
 	if err != nil {
-		log.Printf("failed to marshal gadget info: %v (continuing without recording)", err)
-		return nil
+		return nil, fmt.Errorf("marshaling recording metadata: %w", err)
 	}
 
 	runID, err := s.sessionRecorder.StartGadgetRun(instanceID, sessionID, req.Image, req.Params, gadgetInfoBytes)
 	if err != nil {
-		log.Printf("failed to start gadget run: %v (continuing without recording)", err)
-		return nil
+		return nil, fmt.Errorf("starting recording: %w", err)
 	}
 
 	return &apiTypes.SessionInfo{
 		SessionID: sessionID,
 		RunID:     runID,
 		IsNew:     isNew,
-	}
+	}, nil
 }
 
 // subscribeToDataSources subscribes to all data sources and sends events to the frontend.
@@ -151,15 +151,36 @@ func (s *Service) subscribeToDataSources(gadgetCtx operators.GadgetContext, inst
 
 // RunRequest contains parameters for running a gadget
 type RunRequest struct {
-	ID            string
-	Image         string
-	EnvironmentID string
-	Params        map[string]string
-	Detached      bool
-	InstanceName  string
-	Record        bool   `json:"record"`      // enable recording
-	SessionID     string `json:"sessionId"`   // existing session (empty = new)
-	SessionName   string `json:"sessionName"` // name for new session
+	ID               string
+	Image            string
+	EnvironmentID    string
+	Params           map[string]string
+	Detached         bool
+	InstanceName     string
+	Record           bool   `json:"record"`      // enable recording
+	SessionID        string `json:"sessionId"`   // existing session (empty = new)
+	SessionName      string `json:"sessionName"` // name for new session
+	DurationSeconds  int64
+	RemoteInstanceID string
+}
+
+// ValidateDuration rejects overflow and detached deadlines, which this client
+// cannot enforce once the detached creation request has completed.
+func ValidateDuration(seconds int64, detached bool) error {
+	if seconds < 0 || seconds > math.MaxInt64/int64(time.Second) {
+		return fmt.Errorf("durationSeconds must be a non-negative integer no greater than %d", math.MaxInt64/int64(time.Second))
+	}
+	if detached && seconds > 0 {
+		return fmt.Errorf("durationSeconds is not supported for detached instances; remove them explicitly")
+	}
+	return nil
+}
+
+func runContext(ctx context.Context, seconds int64) (context.Context, context.CancelFunc) {
+	if seconds > 0 {
+		return context.WithTimeout(ctx, time.Duration(seconds)*time.Second)
+	}
+	return context.WithCancel(ctx)
 }
 
 // AttachRequest contains parameters for attaching to an instance
@@ -173,6 +194,18 @@ type AttachRequest struct {
 
 // Run starts a new gadget instance
 func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req RunRequest) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	if err := ValidateDuration(req.DurationSeconds, req.Detached); err != nil {
+		return "", err
+	}
+	if req.Record && s.sessionRecorder == nil {
+		return "", fmt.Errorf("session recording is unavailable")
+	}
+	if req.Record && req.Detached {
+		return "", fmt.Errorf("recording requires a foreground capture; detached creation has no event stream")
+	}
 	instanceID := uuid.New().String()
 
 	xop := simple.New("exp", simple.WithPriority(1000), simple.OnPreStart(func(gadgetCtx operators.GadgetContext) error {
@@ -189,7 +222,10 @@ func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req Run
 
 		var sessionInfo *apiTypes.SessionInfo
 		if req.Record && s.sessionRecorder != nil {
-			sessionInfo = s.setupSessionRecording(instanceID, req, gi)
+			sessionInfo, err = s.setupSessionRecording(instanceID, req, gi)
+			if err != nil {
+				return err
+			}
 		}
 
 		s.send(&apiTypes.GadgetEvent{
@@ -213,17 +249,21 @@ func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req Run
 		gadgetcontext.WithDataOperators(virtual.New(), xop),
 		gadgetcontext.WithLogger(logger.NewFromGenericLogger(gadgetLogger)),
 		gadgetcontext.WithUseInstance(false),
+		gadgetcontext.WithTimeout(time.Duration(req.DurationSeconds) * time.Second),
 	}
 
 	rtParams := runtime.ParamDescs().ToParams()
 	if req.Detached {
 		rtParams.Set("detach", "true")
+		if req.RemoteInstanceID != "" {
+			rtParams.Set(grpcruntime.ParamID, req.RemoteInstanceID)
+		}
 		if req.InstanceName != "" {
 			rtParams.Set("name", req.InstanceName)
 		}
 	}
 
-	nctx, cancel := context.WithCancel(ctx)
+	nctx, cancel := runContext(ctx, req.DurationSeconds)
 	s.instanceManager.Register(instanceID, cancel)
 
 	gadgetCtx := gadgetcontext.New(nctx, req.Image, options...)
@@ -241,13 +281,16 @@ func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req Run
 			}
 		}
 
-		s.instanceManager.Unregister(instanceID)
+		defer s.instanceManager.Unregister(instanceID)
+		reason := stopReason(nctx)
 		cancel()
 
+		data, _ := json.Marshal(map[string]any{"error": errorString(err), "reason": reason})
 		s.send(&apiTypes.GadgetEvent{
 			Type:          apiTypes.TypeGadgetStop,
 			EnvironmentID: req.EnvironmentID,
 			InstanceID:    instanceID,
+			Data:          data,
 		})
 	}()
 
@@ -256,6 +299,9 @@ func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req Run
 
 // Attach attaches to an existing gadget instance
 func (s *Service) Attach(ctx context.Context, runtime *grpcruntime.Runtime, req AttachRequest) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
 	instanceID := uuid.New().String()
 
 	xop := simple.New("exp", simple.WithPriority(1000), simple.OnPreStart(func(gadgetCtx operators.GadgetContext) error {
@@ -293,7 +339,11 @@ func (s *Service) Attach(ctx context.Context, runtime *grpcruntime.Runtime, req 
 	nctx, cancel := context.WithCancel(ctx)
 	s.instanceManager.Register(instanceID, cancel)
 
-	gadgetCtx := gadgetcontext.New(nctx, req.Image, options...)
+	remoteID := req.ID
+	if remoteID == "" {
+		remoteID = req.Image // Older Desktop callers pass the remote ID as image.
+	}
+	gadgetCtx := gadgetcontext.New(nctx, remoteID, options...)
 
 	go func() {
 		err := runtime.RunGadget(gadgetCtx, rtParams, req.Params)
@@ -301,17 +351,38 @@ func (s *Service) Attach(ctx context.Context, runtime *grpcruntime.Runtime, req 
 			log.Printf("gadget error: %v", err)
 		}
 
-		s.instanceManager.Unregister(instanceID)
+		defer s.instanceManager.Unregister(instanceID)
+		reason := stopReason(nctx)
 		cancel()
 
+		data, _ := json.Marshal(map[string]any{"error": errorString(err), "reason": reason})
 		s.send(&apiTypes.GadgetEvent{
 			Type:          apiTypes.TypeGadgetStop,
 			EnvironmentID: req.EnvironmentID,
 			InstanceID:    instanceID,
+			Data:          data,
 		})
 	}()
 
 	return instanceID, nil
+}
+
+func errorString(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
+}
+
+func stopReason(ctx context.Context) string {
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return "duration"
+	case context.Canceled:
+		return "cancelled"
+	default:
+		return "completed"
+	}
 }
 
 // GetInfo retrieves information about a gadget
