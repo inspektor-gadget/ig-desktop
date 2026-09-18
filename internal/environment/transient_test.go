@@ -71,15 +71,15 @@ func TestTransientContextSelectionAndFreeze(t *testing.T) {
 	source := syntheticSource(t)
 	t.Setenv("KUBECONFIG", filepath.Join(t.TempDir(), "not-the-selected-config"))
 	r := newTestRegistry(t)
-	first, err := r.Create(source, "first")
+	first, err := r.Create(source, "first", false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	second, err := r.Create(source, "second")
+	second, err := r.Create(source, "second", false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fallback, err := r.Create(source, "empty-namespace")
+	fallback, err := r.Create(source, "empty-namespace", false)
 	if err != nil || fallback.Namespace != "default" {
 		t.Fatalf("empty namespace: %+v %v", fallback, err)
 	}
@@ -144,7 +144,7 @@ func TestTransientContextDiscoveryAndStrictSources(t *testing.T) {
 		}
 	}
 	r := newTestRegistry(t)
-	if _, err := r.Create(KubeconfigSource{Kind: "default"}, "second"); err != nil {
+	if _, err := r.Create(KubeconfigSource{Kind: "default"}, "second", false); err != nil {
 		t.Fatal(err)
 	}
 	for _, invalid := range []KubeconfigSource{
@@ -153,12 +153,12 @@ func TestTransientContextDiscoveryAndStrictSources(t *testing.T) {
 		{Kind: "default", Path: source.Path},
 		{Kind: "unexpected", Path: source.Path},
 	} {
-		if _, err := r.Create(invalid, "second"); err == nil {
+		if _, err := r.Create(invalid, "second", false); err == nil {
 			t.Fatalf("invalid source fell back to defaults: %+v", invalid)
 		}
 	}
 	for _, invalid := range []string{"", "missing"} {
-		if _, err := r.Create(source, invalid); err == nil {
+		if _, err := r.Create(source, invalid, false); err == nil {
 			t.Fatalf("invalid context fell back to current context: %q", invalid)
 		}
 	}
@@ -168,6 +168,46 @@ func TestTransientContextDiscoveryAndStrictSources(t *testing.T) {
 	}
 	if os.Getenv("KUBECONFIG") != source.Path {
 		t.Fatal("KUBECONFIG was mutated")
+	}
+}
+
+func TestTransientRequiresCurrentContextAndKeepsSnapshot(t *testing.T) {
+	source := syntheticSource(t)
+	r := newTestRegistry(t)
+	contexts, err := ListKubernetesContexts(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	target, err := r.Create(source, contexts.CurrentContext, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	changed := strings.Replace(syntheticKubeconfig, "current-context: first", "current-context: second", 1)
+	if err := os.WriteFile(source.Path, []byte(changed), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.Create(source, contexts.CurrentContext, true); err == nil || !strings.Contains(err.Error(), "context changed") {
+		t.Fatalf("stale current context accepted: %v", err)
+	}
+	if len(r.targets) != 1 {
+		t.Fatal("rejected selection created a registration")
+	}
+	config, namespace, err := r.Lookup(target.ID)
+	if err != nil || config.Host != "https://first.invalid" || namespace != "first-ns" {
+		t.Fatalf("current-context switch retargeted registration: %v", err)
+	}
+	second, err := r.Create(source, "second", true)
+	if err != nil || second.Name != "second" {
+		t.Fatalf("new active context rejected: %+v %v", second, err)
+	}
+	for _, invalid := range []string{"", "missing"} {
+		changed := strings.Replace(syntheticKubeconfig, "current-context: first", "current-context: "+invalid, 1)
+		if err := os.WriteFile(source.Path, []byte(changed), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := r.Create(source, invalid, true); err == nil {
+			t.Fatalf("invalid active context accepted: %q", invalid)
+		}
 	}
 }
 
@@ -205,7 +245,7 @@ users:
 		t.Fatal(err)
 	}
 	r := newTestRegistry(t)
-	target, err := r.Create(source, "selected")
+	target, err := r.Create(source, "selected", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -241,7 +281,7 @@ func TestTransientDiscoverySanitizesMalformedInput(t *testing.T) {
 	if err != nil || len(contexts.Contexts) != 2 {
 		t.Fatalf("unsafe context included: %+v %v", contexts, err)
 	}
-	if _, err := r.Create(source, "second"); err == nil {
+	if _, err := r.Create(source, "second", false); err == nil {
 		t.Fatal("unsafe metadata accepted")
 	}
 	if err := os.WriteFile(source.Path, []byte("users: [secret-token"), 0o600); err != nil {
@@ -284,7 +324,7 @@ func TestTransientAuthProviderRefreshDoesNotPersist(t *testing.T) {
 	}
 	r := newTestRegistry(t)
 	for _, selectedSource := range []KubeconfigSource{source, {Kind: "default"}} {
-		target, err := r.Create(selectedSource, "first")
+		target, err := r.Create(selectedSource, "first", false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -330,7 +370,7 @@ func TestTransientLeaseAndCleanup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	r := NewTransientKubernetes(ctx)
-	target, err := r.Create(source, "second")
+	target, err := r.Create(source, "second", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -362,7 +402,7 @@ func TestTransientLeaseAndCleanup(t *testing.T) {
 	if _, _, err := r.Lookup(target.ID); err == nil {
 		t.Fatal("released target accepted")
 	}
-	target, err = r.Create(source, "first")
+	target, err = r.Create(source, "first", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -381,11 +421,11 @@ func TestTransientLeaseAndCleanup(t *testing.T) {
 		t.Fatalf("expired release: %t %v", released, err)
 	}
 	for range transientLimit {
-		if _, err := r.Create(source, "first"); err != nil {
+		if _, err := r.Create(source, "first", false); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if _, err := r.Create(source, "first"); err == nil || !strings.Contains(err.Error(), "limit") {
+	if _, err := r.Create(source, "first", false); err == nil || !strings.Contains(err.Error(), "limit") {
 		t.Fatalf("limit not enforced: %v", err)
 	}
 	r.mu.Lock()
@@ -394,7 +434,7 @@ func TestTransientLeaseAndCleanup(t *testing.T) {
 		t.Fatal("expiry sweep retained registrations")
 	}
 	r.mu.Unlock()
-	target, err = r.Create(source, "first")
+	target, err = r.Create(source, "first", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -415,7 +455,7 @@ func TestTransientLeaseAndCleanup(t *testing.T) {
 	if _, _, err := r.Lookup(target.ID); err == nil {
 		t.Fatal("lookup after cancellation accepted")
 	}
-	if _, err := r.Create(source, "first"); err == nil {
+	if _, err := r.Create(source, "first", false); err == nil {
 		t.Fatal("registration after cancellation accepted")
 	}
 }

@@ -204,6 +204,28 @@ func TestTransientRejectsUnsupportedOperationsBeforeExecution(t *testing.T) {
 	}
 }
 
+func TestTransientProtocolRequiresCurrentContext(t *testing.T) {
+	h := transientHandler(t)
+	source := handlerSource(t, "http://unused.invalid")
+	var reply *api.Event
+	h.send = func(value any) { reply = value.(*api.Event) }
+	for _, name := range []string{"second", "first"} {
+		h.HandleCreateKubernetesTarget(&api.Event{Data: requestData(t, map[string]any{
+			"kubeconfig": source, "context": name, "requireCurrentContext": true,
+		})})
+		if name == "second" {
+			if reply.Success || !strings.Contains(reply.Error, "context changed") {
+				t.Fatalf("inactive target accepted: %+v", reply)
+			}
+		} else {
+			var target environment.KubernetesTarget
+			if !reply.Success || json.Unmarshal(reply.Data, &target) != nil || target.Name != "first" {
+				t.Fatalf("active target rejected: %+v", reply)
+			}
+		}
+	}
+}
+
 func TestTransientUnknownHandlesNeverFallBack(t *testing.T) {
 	h := transientHandler(t)
 	var reply *api.Event
@@ -247,11 +269,11 @@ func TestTransientResourceDiscoveryUsesFrozenConfig(t *testing.T) {
 	defer server.Close()
 	h := transientHandler(t)
 	source := handlerSource(t, server.URL)
-	first, err := h.transientKubernetes.Create(source, "first")
+	first, err := h.transientKubernetes.Create(source, "first", true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	second, err := h.transientKubernetes.Create(source, "second")
+	second, err := h.transientKubernetes.Create(source, "second", false)
 	if err != nil {
 		t.Fatal(err)
 	}

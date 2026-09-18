@@ -63,7 +63,7 @@ error never falls back to default/in-cluster configuration.
 | Command | Data | Successful result |
 | --- | --- | --- |
 | `getKubernetesContexts` | `{kubeconfig}` | `{contexts:[{name,namespace}],currentContext}` |
-| `createKubernetesTarget` | `{kubeconfig,context}` | `{id,name,runtime:"grpc-k8s",namespace,expiresAt}` |
+| `createKubernetesTarget` | `{kubeconfig,context,requireCurrentContext?}` | `{id,name,runtime:"grpc-k8s",namespace,expiresAt}` |
 | `touchKubernetesTarget` | `{id}` | `{expiresAt}` |
 | `releaseKubernetesTarget` | `{id}` | `{released}` |
 
@@ -75,6 +75,14 @@ and credential helpers still follow client-go's normal authentication behavior
 when a client connects; registration/discovery do not execute helpers.
 Legacy auth-provider refresh is allowed in memory, but its client-go persister
 is disabled for transient targets, so refresh cannot rewrite the kubeconfig.
+
+Explorer actions set `requireCurrentContext:true`: the requested context must
+still equal `current-context` in the same kubeconfig snapshot used to create the
+registration. A switch since context discovery produces an explicit retry error,
+not a target in either the old or new context. Omitting/clearing this flag keeps
+explicit-context selection available. The extension separately guards changes
+to its configuration source while awaiting preparation; later context/source
+changes do not redirect the frozen target.
 
 IDs are `adhoc-` followed by a UUID. `expiresAt` is Unix milliseconds. Registrations
 have renewable five-minute leases, are capped at 64, swept once per minute (and

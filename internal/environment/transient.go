@@ -147,13 +147,16 @@ func safeContextText(value string) bool {
 	return strings.IndexFunc(value, func(r rune) bool { return !unicode.IsPrint(r) }) == -1
 }
 
-func (r *TransientKubernetes) Create(source KubeconfigSource, name string) (*KubernetesTarget, error) {
+func (r *TransientKubernetes) Create(source KubeconfigSource, name string, requireCurrentContext bool) (*KubernetesTarget, error) {
 	if err := r.ctx.Err(); err != nil {
 		return nil, err
 	}
 	config, err := loadKubeconfig(source)
 	if err != nil {
 		return nil, err
+	}
+	if requireCurrentContext && (name == "" || config.CurrentContext != name) {
+		return nil, fmt.Errorf("active Kubernetes context changed while preparing the target; retry from the Kubernetes explorer")
 	}
 	selected, ok := config.Contexts[name]
 	if name == "" || !ok || selected == nil {

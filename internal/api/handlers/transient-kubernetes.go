@@ -52,14 +52,15 @@ func (h *Handler) HandleCreateKubernetesTarget(ev *api.Event) {
 		return
 	}
 	var req struct {
-		Kubeconfig environment.KubeconfigSource `json:"kubeconfig"`
-		Context    string                       `json:"context"`
+		Kubeconfig            environment.KubeconfigSource `json:"kubeconfig"`
+		Context               string                       `json:"context"`
+		RequireCurrentContext bool                         `json:"requireCurrentContext"`
 	}
 	if err := json.Unmarshal(ev.Data, &req); err != nil {
 		h.send(ev.SetError(err))
 		return
 	}
-	target, err := h.transientKubernetes.Create(req.Kubeconfig, req.Context)
+	target, err := h.transientKubernetes.Create(req.Kubeconfig, req.Context, req.RequireCurrentContext)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
