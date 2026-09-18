@@ -28,6 +28,7 @@ import (
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/repo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -160,23 +161,19 @@ func (d *Deployer) Undeploy(ctx context.Context) error {
 	defer close(d.progressChan)
 
 	// Uninstall deployment
-	d.sendProgress("uninstall", 20, fmt.Sprintf("Uninstalling Inspektor Gadget (release: %s)", d.config.ReleaseName), nil)
+	d.sendProgress("uninstall", 20, fmt.Sprintf("Removing Inspektor Gadget from namespace %s", d.config.Namespace), nil)
 	if err := d.uninstall(ctx); err != nil {
 		d.sendProgress("uninstall", 20, "Failed to uninstall", err)
 		return fmt.Errorf("failed to uninstall deployment: %w", err)
 	}
-	d.sendProgress("uninstall", 50, "Helm release removed", nil)
+	d.sendProgress("uninstall", 50, "Installation removed", nil)
 
-	// Wait for DaemonSet to be removed (up to 2 minutes)
-	d.sendProgress("verify_removal", 60, "Verifying DaemonSet removal", nil)
-	log.Infof("Waiting for DaemonSet to be removed (timeout: 2 minutes)")
-	if err := d.waitForDaemonSetRemoval(ctx, 2*time.Minute); err != nil {
-		log.Warnf("DaemonSet removal verification failed: %v", err)
-		d.sendProgress("verify_removal", 90, "Verification timed out, but Helm uninstall completed", nil)
-		// Don't fail the whole operation if verification times out
-		// The Helm uninstall already succeeded
+	d.sendProgress("verify_removal", 60, "Verifying IG workload and pod removal", nil)
+	if err := d.waitForWorkloadRemoval(ctx, 2*time.Minute); err != nil {
+		d.sendProgress("verify_removal", 90, "Could not confirm removal", err)
+		return fmt.Errorf("verifying removal: %w", err)
 	} else {
-		d.sendProgress("verify_removal", 90, "DaemonSet removed", nil)
+		d.sendProgress("verify_removal", 90, "IG workloads and pods removed", nil)
 	}
 
 	d.sendProgress("complete", 100, "Undeployment completed successfully", nil)
@@ -187,10 +184,14 @@ func (d *Deployer) Redeploy(ctx context.Context) error {
 	defer close(d.progressChan)
 
 	// Step 1: Uninstall existing deployment
-	d.sendProgress("uninstall", 10, fmt.Sprintf("Uninstalling existing Inspektor Gadget (release: %s)", d.config.ReleaseName), nil)
+	d.sendProgress("uninstall", 10, fmt.Sprintf("Removing existing Inspektor Gadget from namespace %s", d.config.Namespace), nil)
 	if err := d.uninstall(ctx); err != nil {
 		d.sendProgress("uninstall", 10, "Failed to uninstall", err)
 		return fmt.Errorf("failed to uninstall existing deployment: %w", err)
+	}
+	if err := d.waitForWorkloadRemoval(ctx, 2*time.Minute); err != nil {
+		d.sendProgress("verify_removal", 15, "Could not confirm removal", err)
+		return fmt.Errorf("verifying removal before redeployment: %w", err)
 	}
 	d.sendProgress("uninstall", 20, "Existing deployment removed", nil)
 
@@ -260,20 +261,6 @@ func (d *Deployer) newActionConfig() (*action.Configuration, error) {
 		return nil, err
 	}
 	return actionConfig, nil
-}
-
-func (d *Deployer) uninstall(ctx context.Context) error {
-	actionConfig, err := d.newActionConfig()
-	if err != nil {
-		return err
-	}
-
-	client := action.NewUninstall(actionConfig)
-	client.Wait = true
-	client.Timeout = 5 * time.Minute
-
-	_, err = client.Run(d.config.ReleaseName)
-	return err
 }
 
 // ensureRepoExists ensures the Inspektor Gadget Helm repository is configured
@@ -508,7 +495,7 @@ func (d *Deployer) waitForDaemonSet(ctx context.Context, timeout time.Duration) 
 	}
 }
 
-func (d *Deployer) waitForDaemonSetRemoval(ctx context.Context, timeout time.Duration) error {
+func (d *Deployer) waitForWorkloadRemoval(ctx context.Context, timeout time.Duration) error {
 	// Get Kubernetes config with context
 	config, err := getKubeConfig(d.config.KubeConfig, d.config.KubeContext)
 	if err != nil {
@@ -520,64 +507,40 @@ func (d *Deployer) waitForDaemonSetRemoval(ctx context.Context, timeout time.Dur
 		return fmt.Errorf("failed to create Kubernetes client: %w", err)
 	}
 
-	startTime := time.Now()
-	ticker := time.NewTicker(2 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-ticker.C:
-			// Check if timeout exceeded
-			if time.Since(startTime) > timeout {
-				return fmt.Errorf("timeout waiting for DaemonSet to be removed after %v. This could be due to slow network, slow cluster, or other issues. Please check your cluster manually", timeout)
+	return wait.PollUntilContextTimeout(ctx, time.Second, timeout, true, func(ctx context.Context) (bool, error) {
+		for _, selector := range gadgetSelectors {
+			options := metav1.ListOptions{LabelSelector: selector}
+			daemonSets, err := clientset.AppsV1().DaemonSets(d.config.Namespace).List(ctx, options)
+			if err != nil {
+				return false, fmt.Errorf("verifying DaemonSet removal: %w", err)
 			}
-
-			// Try both label selectors
-			labelSelectors := []string{
-				"app.kubernetes.io/name=gadget",
-				"k8s-app=gadget",
+			deployments, err := clientset.AppsV1().Deployments(d.config.Namespace).List(ctx, options)
+			if err != nil {
+				return false, fmt.Errorf("verifying Deployment removal: %w", err)
 			}
-
-			found := false
-			for _, selector := range labelSelectors {
-				daemonSets, err := clientset.AppsV1().DaemonSets(d.config.Namespace).List(ctx, metav1.ListOptions{
-					LabelSelector: selector,
-				})
-				if err != nil {
-					log.Warnf("Failed to list DaemonSets: %v", err)
-					continue
-				}
-
-				if len(daemonSets.Items) > 0 {
-					found = true
-					log.Debugf("DaemonSet still exists, waiting for removal... (elapsed: %v)", time.Since(startTime))
-					break
-				}
+			pods, err := clientset.CoreV1().Pods(d.config.Namespace).List(ctx, options)
+			if err != nil {
+				return false, fmt.Errorf("verifying Pod removal: %w", err)
 			}
-
-			// If no DaemonSet found with either selector, it's been removed
-			if !found {
-				log.Infof("DaemonSet successfully removed!")
-				return nil
+			if len(daemonSets.Items)+len(deployments.Items)+len(pods.Items) > 0 {
+				return false, nil
 			}
 		}
-	}
+		return true, nil
+	})
 }
 
 func getKubeConfig(kubeconfig string, kubeContext string) (*rest.Config, error) {
-	if kubeconfig != "" {
-		return clientcmd.BuildConfigFromFlags("", kubeconfig)
-	}
-
 	// Try in-cluster config first
-	if config, err := rest.InClusterConfig(); err == nil {
-		return config, nil
+	if kubeconfig == "" && kubeContext == "" {
+		if config, err := rest.InClusterConfig(); err == nil {
+			return config, nil
+		}
 	}
 
 	// Fall back to default kubeconfig with optional context override
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	loadingRules.ExplicitPath = kubeconfig
 	configOverrides := &clientcmd.ConfigOverrides{
 		CurrentContext: kubeContext,
 	}

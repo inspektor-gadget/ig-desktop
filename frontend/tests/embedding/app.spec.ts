@@ -27,6 +27,30 @@ test.beforeEach(async ({ page }, testInfo) => {
 
 test.afterEach(() => expect(browserErrors).toEqual([]));
 
+test('undeploy explains installation detection and presents operation-specific failures', async ({
+	page
+}) => {
+	await page.goto('/tests/embedding/?undeploy');
+	await expect(
+		page.getByText('The existing Helm release is detected automatically', { exact: false })
+	).toBeVisible();
+	await expect(page.getByText('suspend its reconciliation first', { exact: false })).toBeVisible();
+	await page.getByRole('button', { name: 'Undeploy', exact: true }).click();
+	await expect(
+		page.getByRole('heading', { name: 'Undeployment Failed', exact: true })
+	).toBeVisible();
+	await expect(page.getByText('fixture permission denied', { exact: true }).first()).toBeVisible();
+	const requests = await page.evaluate(() => window.embedding.requests);
+	expect(requests.filter((request) => request.cmd === 'deployIG')).toHaveLength(1);
+	expect(requests.find((request) => request.cmd === 'deployIG')?.data).toMatchObject({
+		namespace: 'gadget',
+		releaseName: 'gadget',
+		kubeContext: 'fixture-context',
+		undeploy: true
+	});
+	expect(requests.some((request) => request.cmd === 'getChartValues')).toBe(false);
+});
+
 test('restored controlled table survives metadata scheduling races', async ({ page }) => {
 	test.skip(!process.env.IG_REACT_MODULES, 'Supply host React peers');
 	await page.addInitScript(() =>

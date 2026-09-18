@@ -443,7 +443,7 @@
 						<p class="text-sm text-gray-600 dark:text-gray-400">
 							{#if undeploy}
 								{t(
-									'Configure the undeployment for Inspektor Gadget. The existing deployment will be completely removed from your cluster.'
+									'Remove Inspektor Gadget from the selected namespace. The existing Helm release is detected automatically; installations without Helm are removed using IG resource labels. The namespace and shared cluster resources are preserved.'
 								)}
 							{:else if redeploy}
 								{t(
@@ -455,13 +455,22 @@
 								)}
 							{/if}
 						</p>
+						{#if undeploy || redeploy}
+							<p class="text-sm text-ig-warning">
+								{t(
+									'If GitOps or an operator manages this installation, suspend its reconciliation first or it may recreate the removed resources.'
+								)}
+							</p>
+						{/if}
 
 						<!-- Namespace -->
 						<Input
 							bind:value={namespace}
 							label={t('Namespace')}
 							placeholder="gadget"
-							description={t('The Kubernetes namespace where Inspektor Gadget will be deployed')}
+							description={undeploy
+								? t('The Kubernetes namespace from which Inspektor Gadget will be removed')
+								: t('The Kubernetes namespace where Inspektor Gadget will be deployed')}
 						/>
 
 						<!-- Release Name -->
@@ -469,7 +478,11 @@
 							bind:value={releaseName}
 							label={t('Release Name')}
 							placeholder="gadget"
-							description={t('The Helm release name for this installation')}
+							description={undeploy
+								? t(
+										'Fallback release name if no Helm owner is found on the IG workloads. Non-Helm installations are removed using IG resource labels.'
+									)
+								: t('The Helm release name for this installation')}
 						/>
 
 						{#if !undeploy}
@@ -721,7 +734,7 @@
 						<div class="text-red-500 dark:text-red-400"><ExclamationCircle /></div>
 						<div>
 							<h3 class="text-lg font-semibold text-red-500 dark:text-red-400">
-								{t('Deployment Failed')}
+								{undeploy ? t('Undeployment Failed') : t('Deployment Failed')}
 							</h3>
 							<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 								{currentDeployment?.error || t('An unknown error occurred')}

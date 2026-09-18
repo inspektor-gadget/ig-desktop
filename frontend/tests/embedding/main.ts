@@ -4,6 +4,7 @@ import type { EmbeddableAppProps, EmbeddableAppState } from '../../src/lib/types
 const libraryPath = '../../build-embedding/ig-frontend.js';
 const {
 	EmbeddableApp,
+	DeployModalWrapper,
 	initializeIG,
 	createReactiveProps,
 	apiService,
@@ -90,6 +91,21 @@ const adapter = {
 		if (request.cmd === 'pending') return;
 		let data: unknown = {};
 		switch (request.cmd) {
+			case 'deployIG':
+				data = { deploymentId: 'undeploy-fixture' };
+				setTimeout(
+					() =>
+						emit({
+							type: 202,
+							data: {
+								deploymentId: 'undeploy-fixture',
+								error: 'fixture permission denied',
+								progress: 20
+							}
+						}),
+					50
+				);
+				break;
 			case 'getGadgetInfo':
 				data = gadgetInfo;
 				break;
@@ -185,7 +201,14 @@ const props: EmbeddableAppProps = createReactiveProps({
 		props.path = state.path;
 	}
 });
-mount(EmbeddableApp, { target: document.getElementById('app')!, props });
+if (new URLSearchParams(location.search).has('undeploy')) {
+	mount(DeployModalWrapper, {
+		target: document.getElementById('app')!,
+		props: { open: true, undeploy: true, clusterName: 'fixture-context', onClose: () => {} }
+	});
+} else {
+	mount(EmbeddableApp, { target: document.getElementById('app')!, props });
+}
 Object.assign(window, {
 	embedding: {
 		requests,
