@@ -49,6 +49,15 @@ Saved-environment deployments send `environmentID`, resolved by the backend to
 the saved Kubernetes context and IG namespace (the namespace is fixed in this
 modal). Connection credentials never need to be supplied by the webview.
 
+Missing workloads do not imply that all supporting resources have been removed.
+When Helm reports conflicting resource ownership, the deployment error offers
+**Clean up and redeploy...** with a separate destructive-action confirmation.
+It reuses installation-aware removal and the failed attempt's configuration;
+ordinary retry never enables cleanup. Existing IG configuration may be replaced
+and running gadgets interrupted. Unknown resources, the namespace and shared
+cluster resources remain protected; GitOps reconciliation must be suspended at
+its source. No resource is automatically adopted into Helm.
+
 ```tsx
 import { EmbeddableApp } from '@inspektor-gadget/frontend';
 import { IGProvider, SvelteWrapper } from '@inspektor-gadget/react';

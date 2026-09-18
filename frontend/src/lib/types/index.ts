@@ -184,6 +184,7 @@ export interface DeploymentProgress {
 	logs: string[];
 	debugLogs: string[]; // Raw debug/system logs
 	error?: string;
+	ownershipConflict?: boolean;
 	timestamp: number;
 	completedAt?: number;
 }

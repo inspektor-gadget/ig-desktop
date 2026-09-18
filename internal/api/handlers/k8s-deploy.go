@@ -270,6 +270,7 @@ func (h *Handler) performDeployment(deploymentID string, config *helm.DeployConf
 
 			if progress.Error != nil {
 				progressData["error"] = progress.Error.Error()
+				progressData["ownershipConflict"] = helm.IsOwnershipConflict(progress.Error)
 				// Send error event
 				data, _ := json.Marshal(progressData)
 				log.Infof("[Deploy %s] Sending error event: %s", deploymentID, string(data))
@@ -301,9 +302,10 @@ func (h *Handler) performDeployment(deploymentID string, config *helm.DeployConf
 				log.Errorf("Deployment %s failed: %v", deploymentID, err)
 				// Send final error if not already sent
 				errorData := map[string]interface{}{
-					"deploymentId": deploymentID,
-					"error":        err.Error(),
-					"progress":     0,
+					"deploymentId":      deploymentID,
+					"error":             err.Error(),
+					"progress":          0,
+					"ownershipConflict": helm.IsOwnershipConflict(err),
 				}
 				data, _ := json.Marshal(errorData)
 				log.Infof("[Deploy %s] Sending final error event: %s", deploymentID, string(data))

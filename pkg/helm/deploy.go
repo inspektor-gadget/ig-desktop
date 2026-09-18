@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -40,6 +41,13 @@ const (
 	inspektorGadgetRepoURL  = "https://inspektor-gadget.github.io/charts"
 	inspektorGadgetChart    = "gadget/gadget"
 )
+
+// Helm v3 returns ownership validation failures as untyped errors. This signal
+// offers an explicit recovery action; it never authorizes automatic cleanup.
+func IsOwnershipConflict(err error) bool {
+	return err != nil && strings.Contains(err.Error(),
+		"exists and cannot be imported into the current release: invalid ownership metadata")
+}
 
 // newIsolatedSettings creates Helm CLI settings using an isolated directory,
 // avoiding interference with any existing Helm installation.

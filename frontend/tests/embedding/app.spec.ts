@@ -133,6 +133,57 @@ test('Kubernetes deployment rejection stays visible without disconnecting the da
 	await expect(page.getByRole('dialog')).toBeVisible();
 });
 
+test('Helm ownership conflict requires explicit cleanup confirmation before redeployment', async ({
+	page
+}) => {
+	await page.goto(
+		'/tests/embedding/?dashboard=missing&ownershipConflict&initialPath=/env/test-env'
+	);
+	await page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true }).click();
+	const modal = page.getByRole('dialog');
+	await modal.getByRole('button', { name: 'Deploy', exact: true }).click();
+	await expect(
+		modal.getByRole('heading', { name: 'Deployment Failed', exact: true })
+	).toBeVisible();
+	await modal.getByRole('button', { name: 'Clean up and redeploy...', exact: true }).click();
+	await expect(
+		modal.getByText('Unidentified resources will not be deleted', { exact: false })
+	).toBeVisible();
+	await expect(modal.getByText('suspend its reconciliation first', { exact: false })).toBeVisible();
+	await modal.getByRole('button', { name: 'Cancel cleanup', exact: true }).click();
+	expect(
+		await page.evaluate(() => window.embedding.requests.filter((r) => r.cmd === 'deployIG'))
+	).toHaveLength(1);
+	await modal.getByRole('button', { name: 'Clean up and redeploy...', exact: true }).click();
+	await modal.getByRole('button', { name: 'Confirm cleanup and redeploy', exact: true }).click();
+	await expect(page.getByText('Headless Gadget Instances', { exact: true })).toBeVisible();
+	await expect(page.getByText('Recorded Sessions', { exact: true })).toBeVisible();
+	const requests = await page.evaluate(() =>
+		window.embedding.requests.filter((r) => r.cmd === 'deployIG')
+	);
+	expect(requests).toHaveLength(2);
+	expect(requests[0].data).toMatchObject({ redeploy: false, undeploy: false });
+	expect(requests[1].data).toEqual({ ...requests[0].data, redeploy: true });
+});
+
+test('deployment error text alone does not enable destructive recovery', async ({ page }) => {
+	await page.goto(
+		'/tests/embedding/?dashboard=missing&unclassifiedConflict&initialPath=/env/test-env'
+	);
+	await page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true }).click();
+	const modal = page.getByRole('dialog');
+	await modal.getByRole('button', { name: 'Deploy', exact: true }).click();
+	await expect(
+		modal.getByRole('heading', { name: 'Deployment Failed', exact: true })
+	).toBeVisible();
+	await expect(
+		modal.getByRole('button', { name: 'Clean up and redeploy...', exact: true })
+	).toHaveCount(0);
+	expect(
+		await page.evaluate(() => window.embedding.requests.filter((r) => r.cmd === 'deployIG'))
+	).toHaveLength(1);
+});
+
 test('undeploy explains installation detection and presents operation-specific failures', async ({
 	page
 }) => {
@@ -146,6 +197,9 @@ test('undeploy explains installation detection and presents operation-specific f
 		page.getByRole('heading', { name: 'Undeployment Failed', exact: true })
 	).toBeVisible();
 	await expect(page.getByText('fixture permission denied', { exact: true }).first()).toBeVisible();
+	await expect(
+		page.getByRole('button', { name: 'Clean up and redeploy...', exact: true })
+	).toHaveCount(0);
 	const requests = await page.evaluate(() => window.embedding.requests);
 	expect(requests.filter((request) => request.cmd === 'deployIG')).toHaveLength(1);
 	expect(requests.find((request) => request.cmd === 'deployIG')?.data).toMatchObject({

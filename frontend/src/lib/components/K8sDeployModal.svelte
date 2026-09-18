@@ -103,6 +103,9 @@
 	});
 	let startError = $state('');
 	let starting = $state(false);
+	let cleanupConfirmation = $state(false);
+	let recovering = $state(false);
+	const isRedeploy = $derived(redeploy || recovering);
 	const isDeploying = $derived(currentDeployment?.status === 'deploying');
 	const isConfiguring = $derived(!currentDeployment || currentDeployment.status === 'configuring');
 	const hasError = $derived(currentDeployment?.status === 'error');
@@ -303,26 +306,29 @@
 		}
 	});
 
-	async function startDeployment() {
+	async function startDeployment(cleanup = false) {
 		if (!isValid) return;
 		startError = '';
 		starting = true;
 
 		try {
-			const config: DeploymentConfig = {
-				...(environmentID ? { environmentID } : {}),
-				namespace: namespace.trim(),
-				releaseName: releaseName.trim(),
-				chartVersion: chartVersion.trim() || undefined,
-				customValues: customValues.trim() || undefined,
-				kubeContext: kubeContext || undefined
-			};
+			const config: DeploymentConfig =
+				cleanup && currentDeployment
+					? { ...currentDeployment.config }
+					: {
+							...(environmentID ? { environmentID } : {}),
+							namespace: namespace.trim(),
+							releaseName: releaseName.trim(),
+							chartVersion: chartVersion.trim() || undefined,
+							customValues: customValues.trim() || undefined,
+							kubeContext: kubeContext || undefined
+						};
 
 			console.log(
 				'[Deploy] Starting deployment with config:',
 				config,
 				'redeploy:',
-				redeploy,
+				redeploy || cleanup,
 				'undeploy:',
 				undeploy
 			);
@@ -330,7 +336,7 @@
 			// Start deployment via API - backend will generate the ID
 			const res = await api.request<{ deploymentId?: string }>({
 				cmd: 'deployIG',
-				data: { ...config, redeploy, undeploy }
+				data: { ...config, redeploy: redeploy || cleanup, undeploy }
 			});
 
 			console.log('[Deploy] Backend response:', res);
@@ -341,6 +347,9 @@
 			}
 
 			const backendId = res.deploymentId;
+			recovering = cleanup;
+			cleanupConfirmation = false;
+			if (deploymentId) deployments.remove(deploymentId);
 			deploymentId = backendId;
 
 			// Create deployment in store with backend's ID
@@ -373,7 +382,8 @@
 			if (deploymentId) {
 				deployments.update(deploymentId, {
 					status: 'error',
-					error: errorMsg
+					error: errorMsg,
+					ownershipConflict: false
 				});
 				deployments.addDebugLog(deploymentId, `[Frontend] ERROR: ${errorMsg}`);
 			}
@@ -402,6 +412,7 @@
 		}
 
 		open = false;
+		cleanupConfirmation = false;
 		onClose?.();
 	}
 
@@ -434,7 +445,7 @@
 					<h2 id="deploy-modal-title" class="text-lg font-semibold">
 						{undeploy
 							? t('Undeploy Inspektor Gadget from Kubernetes')
-							: redeploy
+							: isRedeploy
 								? t('Redeploy Inspektor Gadget to Kubernetes')
 								: t('Deploy Inspektor Gadget to Kubernetes')}
 					</h2>
@@ -663,7 +674,7 @@
 						<!-- Deploy Button -->
 						<button
 							disabled={!isValid}
-							onclick={startDeployment}
+							onclick={() => startDeployment()}
 							class="flex cursor-pointer items-center justify-center gap-2 rounded-ig-md px-6 py-3 text-white transition-all disabled:cursor-not-allowed disabled:text-gray-400 dark:disabled:text-gray-500"
 							class:bg-green-800={!undeploy}
 							class:hover:bg-green-700={!undeploy}
@@ -685,7 +696,7 @@
 								<div class="text-lg font-semibold">
 									{undeploy
 										? t('Undeploying Inspektor Gadget')
-										: redeploy
+										: isRedeploy
 											? t('Redeploying Inspektor Gadget')
 											: t('Deploying Inspektor Gadget')}
 								</div>
@@ -768,6 +779,52 @@
 							</p>
 						</div>
 
+						{#if !undeploy && currentDeployment?.ownershipConflict}
+							<div
+								class="w-full rounded-ig-md border border-ig-border bg-ig-surface-raised p-4 text-left text-sm text-ig-text-secondary"
+							>
+								<p>
+									{t(
+										'Existing Kubernetes resources are not owned by this Helm release. Retrying without cleanup will leave the ownership conflict unchanged.'
+									)}
+								</p>
+								{#if cleanupConfirmation}
+									<p class="mt-3">
+										{t(
+											'Remove identified Inspektor Gadget resources in namespace {{namespace}} and reinstall using the selected chart values? Existing IG configuration will be replaced and running gadgets may be interrupted. The namespace and shared cluster resources are preserved.',
+											{ namespace: currentDeployment.config.namespace }
+										)}
+									</p>
+									<p class="mt-3">
+										{t(
+											'Unidentified resources will not be deleted and may still require manual inspection. If GitOps or an operator manages this installation, suspend its reconciliation first.'
+										)}
+									</p>
+									<div class="mt-4 flex flex-wrap gap-3">
+										<button
+											disabled={starting}
+											onclick={() => startDeployment(true)}
+											class="rounded-ig-md bg-ig-error px-4 py-2 text-ig-text-on-primary disabled:opacity-50"
+											>{t('Confirm cleanup and redeploy')}</button
+										>
+										<button
+											disabled={starting}
+											onclick={() => (cleanupConfirmation = false)}
+											class="rounded-ig-md border border-ig-border px-4 py-2 disabled:opacity-50"
+											>{t('Cancel cleanup')}</button
+										>
+									</div>
+								{:else}
+									<button
+										disabled={starting}
+										onclick={() => (cleanupConfirmation = true)}
+										class="mt-3 rounded-ig-md border border-ig-border px-4 py-2 disabled:opacity-50"
+										>{t('Clean up and redeploy...')}</button
+									>
+								{/if}
+							</div>
+						{/if}
+
 						<!-- Error Logs -->
 						{#if currentDeployment?.logs && currentDeployment.logs.length > 0}
 							<div class="w-full">
@@ -782,9 +839,12 @@
 						{/if}
 
 						<button
+							disabled={starting}
 							onclick={() => {
 								if (deploymentId) deployments.remove(deploymentId);
 								deploymentId = undefined;
+								cleanupConfirmation = false;
+								recovering = false;
 							}}
 							class="mt-4 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 px-6 py-2 transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 						>
@@ -812,7 +872,7 @@
 							>
 								{undeploy
 									? t('Undeployment Successful!')
-									: redeploy
+									: isRedeploy
 										? t('Redeployment Successful!')
 										: t('Deployment Successful!')}
 							</h3>
@@ -822,7 +882,7 @@
 											'Inspektor Gadget has been successfully undeployed from namespace {{namespace}}',
 											{ namespace: currentDeployment?.config.namespace }
 										)
-									: redeploy
+									: isRedeploy
 										? t(
 												'Inspektor Gadget has been successfully redeployed to namespace {{namespace}}',
 												{ namespace: currentDeployment?.config.namespace }

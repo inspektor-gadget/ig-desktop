@@ -131,6 +131,21 @@ const adapter = {
 					}
 					data = { deploymentId: 'dashboard-deploy' };
 					setTimeout(() => {
+						if (
+							(query.has('ownershipConflict') || query.has('unclassifiedConflict')) &&
+							!request.data?.redeploy
+						) {
+							emit({
+								type: 202,
+								data: {
+									deploymentId: 'dashboard-deploy',
+									ownershipConflict: query.has('ownershipConflict'),
+									error:
+										'ConfigMap "gadget" exists and cannot be imported into the current release: invalid ownership metadata'
+								}
+							});
+							return;
+						}
 						dashboardState = 'connected';
 						emit({ type: 201, data: { deploymentId: 'dashboard-deploy', progress: 100 } });
 					}, 50);

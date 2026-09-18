@@ -171,6 +171,15 @@ only after explicit modal confirmation. Without the ID, Create Environment's
 existing explicit deployment configuration is unchanged. Transient identities
 and target-bearing management requests remain unsupported.
 
+Deployment error events (type 202) include `ownershipConflict:true` when Helm's
+install ownership validation rejects an existing resource. The shared modal
+uses this signal, not error-text matching, to offer separately confirmed cleanup
+via the existing `deployIG` request with `redeploy:true`. This preserves the
+failed attempt's configuration and saved environment identity. There is no
+automatic cleanup or ownership takeover. Helm v3 exposes this failure as an
+untyped error, so classification is confined to the backend Helm boundary and
+covered against the real Helm install path.
+
 ## Captures and identity
 
 ```json

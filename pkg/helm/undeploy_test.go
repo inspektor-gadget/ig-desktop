@@ -111,7 +111,7 @@ func newUninstallCluster(t *testing.T) (*uninstallCluster, *Deployer) {
 				return
 			}
 		}
-		if r.Method == http.MethodPut {
+		if r.Method == http.MethodPut || r.Method == http.MethodPost {
 			data, err := io.ReadAll(r.Body)
 			if err != nil {
 				t.Errorf("reading update: %v", err)
@@ -131,7 +131,16 @@ func newUninstallCluster(t *testing.T) (*uninstallCluster, *Deployer) {
 				return
 			}
 			object := unstructured.Unstructured{Object: fields}
-			cluster.objects[r.URL.Path] = object
+			path := r.URL.Path
+			if r.Method == http.MethodPost {
+				path += "/" + object.GetName()
+				if _, exists := cluster.objects[path]; exists {
+					w.WriteHeader(http.StatusConflict)
+					write(metav1.Status{Status: metav1.StatusFailure, Reason: metav1.StatusReasonAlreadyExists, Code: 409})
+					return
+				}
+			}
+			cluster.objects[path] = object
 			write(&object)
 			return
 		}

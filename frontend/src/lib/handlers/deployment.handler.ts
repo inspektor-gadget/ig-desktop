@@ -5,6 +5,7 @@ interface DeploymentEventData {
 	progress?: number;
 	message?: string;
 	error?: string;
+	ownershipConflict?: boolean;
 }
 
 /**
@@ -74,6 +75,7 @@ export function handleDeploymentError(msg: { data?: unknown }): void {
 		deployments.update(errorData.deploymentId, {
 			status: 'error',
 			error: errorData.error,
+			ownershipConflict: errorData.ownershipConflict === true,
 			completedAt: Date.now()
 		});
 		if (errorData.error) {
