@@ -374,6 +374,56 @@ test('reuses environment, discovery, launcher and replay screens without navigat
 	await expect(page.getByPlaceholder('Search...')).toBeVisible();
 });
 
+test('frozen saved launcher locks only its target and keeps recording and detached features', async ({
+	page
+}) => {
+	await page.evaluate(() =>
+		window.embedding.update({
+			path: '/gadgets/run/test/image:latest',
+			launchPreset: {
+				image: 'test/image:latest',
+				environmentID: 'test-env',
+				kubernetesTargetID: 'frozen-target',
+				kubernetesTargetName: 'Frozen context: fixture',
+				params: { pid: '42' }
+			}
+		})
+	);
+	const environment = page
+		.locator('select')
+		.filter({ has: page.locator('option[value="test-env"]') });
+	await expect(environment).toBeDisabled();
+	await expect(page.getByRole('status')).toHaveText('Frozen context: fixture');
+	await expect(page.getByText('Detached', { exact: true })).toBeVisible();
+	await page.getByText('Record to Session', { exact: true }).click();
+	expect(
+		await page.evaluate(() =>
+			window.embedding.requests.some((request) => request.cmd === 'runGadget')
+		)
+	).toBe(false);
+	await page.getByRole('button', { name: 'Run Gadget', exact: true }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() => window.embedding.requests.find((request) => request.cmd === 'runGadget')?.data
+			)
+		)
+		.toMatchObject({
+			environmentID: 'test-env',
+			record: true,
+			detached: false,
+			params: { pid: '42' }
+		});
+	await page.evaluate(() =>
+		window.embedding.update({
+			path: '/gadgets/run/test/image:latest?env=test-env',
+			launchPreset: undefined
+		})
+	);
+	await expect(environment).toBeEnabled();
+	await expect(page.getByText('Frozen context: fixture')).toHaveCount(0);
+});
+
 test('acknowledges actual result controls, manual changes and public disconnect cancellation', async ({
 	page
 }) => {

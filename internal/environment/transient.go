@@ -40,16 +40,18 @@ type KubernetesContexts struct {
 }
 
 type KubernetesTarget struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Runtime   string `json:"runtime"`
-	Namespace string `json:"namespace"`
-	ExpiresAt int64  `json:"expiresAt"`
+	ID                string                       `json:"id"`
+	Name              string                       `json:"name"`
+	Runtime           string                       `json:"runtime"`
+	Namespace         string                       `json:"namespace"`
+	ExpiresAt         int64                        `json:"expiresAt"`
+	SavedEnvironments []SavedKubernetesEnvironment `json:"savedEnvironments,omitempty"`
 }
 
 type transientTarget struct {
 	KubernetesTarget
 	config *rest.Config
+	saved  map[string]*Environment
 }
 
 // TransientKubernetes holds process-local registrations, not running runtimes.
@@ -148,6 +150,18 @@ func safeContextText(value string) bool {
 }
 
 func (r *TransientKubernetes) Create(source KubeconfigSource, name string, requireCurrentContext bool) (*KubernetesTarget, error) {
+	return r.create(source, name, requireCurrentContext, nil)
+}
+
+// CreateMatching binds eligible saved identities to the same snapshot as Create.
+func (r *TransientKubernetes) CreateMatching(source KubeconfigSource, name string, requireCurrentContext bool, storage *Storage) (*KubernetesTarget, error) {
+	if storage == nil {
+		return nil, fmt.Errorf("saved environment storage is unavailable")
+	}
+	return r.create(source, name, requireCurrentContext, storage)
+}
+
+func (r *TransientKubernetes) create(source KubeconfigSource, name string, requireCurrentContext bool, storage *Storage) (*KubernetesTarget, error) {
 	if err := r.ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -179,6 +193,13 @@ func (r *TransientKubernetes) Create(source KubeconfigSource, name string, requi
 	if err != nil {
 		return nil, fmt.Errorf("could not resolve selected Kubernetes namespace")
 	}
+	var saved map[string]*Environment
+	if storage != nil {
+		saved, err = matchSavedKubernetes(storage, source, config, name, namespace)
+		if err != nil {
+			return nil, err
+		}
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if err := r.ctx.Err(); err != nil {
@@ -194,7 +215,17 @@ func (r *TransientKubernetes) Create(source KubeconfigSource, name string, requi
 		ID: "adhoc-" + uuid.NewString(), Name: name, Runtime: "grpc-k8s",
 		Namespace: namespace, ExpiresAt: now.Add(transientLease).UnixMilli(),
 	}
-	r.targets[target.ID] = transientTarget{KubernetesTarget: target, config: resolved}
+	for _, env := range saved {
+		target.SavedEnvironments = append(target.SavedEnvironments, SavedKubernetesEnvironment{ID: env.ID, Name: env.Name})
+	}
+	sort.Slice(target.SavedEnvironments, func(i, j int) bool {
+		if target.SavedEnvironments[i].Name == target.SavedEnvironments[j].Name {
+			return target.SavedEnvironments[i].ID < target.SavedEnvironments[j].ID
+		}
+		return target.SavedEnvironments[i].Name < target.SavedEnvironments[j].Name
+	})
+	r.targets[target.ID] = transientTarget{KubernetesTarget: target, config: resolved, saved: saved}
+	target.SavedEnvironments = append([]SavedKubernetesEnvironment(nil), target.SavedEnvironments...)
 	return &target, nil
 }
 
@@ -216,6 +247,7 @@ func (r *TransientKubernetes) Describe(id string) (*KubernetesTarget, error) {
 		return nil, err
 	}
 	description := target.KubernetesTarget
+	description.SavedEnvironments = append([]SavedKubernetesEnvironment(nil), description.SavedEnvironments...)
 	return &description, nil
 }
 

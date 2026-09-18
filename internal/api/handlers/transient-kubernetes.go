@@ -12,6 +12,7 @@ import (
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 	grpcruntime "github.com/inspektor-gadget/ig-desktop/pkg/grpc-runtime"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadgets"
+	"k8s.io/client-go/rest"
 )
 
 // EnableTransientKubernetes must be called before Register, only by the private
@@ -52,15 +53,22 @@ func (h *Handler) HandleCreateKubernetesTarget(ev *api.Event) {
 		return
 	}
 	var req struct {
-		Kubeconfig            environment.KubeconfigSource `json:"kubeconfig"`
-		Context               string                       `json:"context"`
-		RequireCurrentContext bool                         `json:"requireCurrentContext"`
+		Kubeconfig             environment.KubeconfigSource `json:"kubeconfig"`
+		Context                string                       `json:"context"`
+		RequireCurrentContext  bool                         `json:"requireCurrentContext"`
+		MatchSavedEnvironments bool                         `json:"matchSavedEnvironments"`
 	}
 	if err := json.Unmarshal(ev.Data, &req); err != nil {
 		h.send(ev.SetError(err))
 		return
 	}
-	target, err := h.transientKubernetes.Create(req.Kubeconfig, req.Context, req.RequireCurrentContext)
+	var target *environment.KubernetesTarget
+	var err error
+	if req.MatchSavedEnvironments {
+		target, err = h.transientKubernetes.CreateMatching(req.Kubeconfig, req.Context, req.RequireCurrentContext, h.envStorage)
+	} else {
+		target, err = h.transientKubernetes.Create(req.Kubeconfig, req.Context, req.RequireCurrentContext)
+	}
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
@@ -108,14 +116,11 @@ func (h *Handler) HandleReleaseKubernetesTarget(ev *api.Event) {
 	h.send(ev.SetData(map[string]bool{"released": released}))
 }
 
-func (h *Handler) getRuntime(id string) (*grpcruntime.Runtime, error) {
-	if !environment.IsTransientID(id) {
+func (h *Handler) getRuntime(id, targetID string) (*grpcruntime.Runtime, error) {
+	if targetID == "" && !environment.IsTransientID(id) {
 		return h.runtimeFactory.GetRuntime(id)
 	}
-	if h.transientKubernetes == nil {
-		return nil, fmt.Errorf("transient Kubernetes targets are disabled")
-	}
-	config, namespace, err := h.transientKubernetes.Lookup(id)
+	config, namespace, err := h.frozenKubernetesConfig(id, targetID)
 	if err != nil {
 		return nil, err
 	}
@@ -128,41 +133,28 @@ func (h *Handler) getRuntime(id string) (*grpcruntime.Runtime, error) {
 	return runtime, nil
 }
 
-func validateTransientRun(data json.RawMessage) error {
-	var fields map[string]json.RawMessage
-	if err := json.Unmarshal(data, &fields); err != nil {
-		return err
+func (h *Handler) frozenKubernetesConfig(id, targetID string) (*rest.Config, string, error) {
+	if h.transientKubernetes == nil {
+		return nil, "", fmt.Errorf("transient Kubernetes targets are disabled")
 	}
-	for key, value := range fields {
-		key = strings.ToLower(key)
-		switch {
-		case key == "sessionid" || key == "sessionname":
-			var session string
-			if err := json.Unmarshal(value, &session); err != nil {
-				return err
-			}
-			if session != "" {
-				return fmt.Errorf("recording and session fields are unsupported for transient Kubernetes targets")
-			}
-		case key == "record":
-			var record bool
-			if err := json.Unmarshal(value, &record); err != nil {
-				return err
-			}
-			if record {
-				return fmt.Errorf("recording and session fields are unsupported for transient Kubernetes targets")
-			}
-		case strings.HasPrefix(key, "record"), strings.HasPrefix(key, "session"):
-			return fmt.Errorf("recording and session fields are unsupported for transient Kubernetes targets")
-		case key == "detached":
-			var detached bool
-			if err := json.Unmarshal(value, &detached); err != nil {
-				return err
-			}
-			if detached {
-				return fmt.Errorf("detached runs are unsupported for transient Kubernetes targets")
-			}
+	if environment.IsTransientID(id) {
+		if targetID != "" && targetID != id {
+			return nil, "", fmt.Errorf("environment does not match this Kubernetes target")
 		}
+		return h.transientKubernetes.Lookup(id)
+	}
+	return h.transientKubernetes.LookupSaved(targetID, id, h.envStorage)
+}
+
+// validateTransientRun checks the decoded run request. encoding/json matches
+// field names case-insensitively, so these are exactly the values the run
+// would act on, whatever casing the client used.
+func validateTransientRun(record, detached bool, sessionID, sessionName string) error {
+	if record || sessionID != "" || sessionName != "" {
+		return fmt.Errorf("recording and session fields are unsupported for transient Kubernetes targets")
+	}
+	if detached {
+		return fmt.Errorf("detached runs are unsupported for transient Kubernetes targets")
 	}
 	return nil
 }
@@ -170,6 +162,27 @@ func validateTransientRun(data json.RawMessage) error {
 // Management requests must not discard an unrecognized target and fall back to
 // the current kubeconfig (deployment requests historically have no environmentID).
 func (h *Handler) rejectTransientManagement(ev *api.Event) bool {
+	if h.rejectTransientIdentity(ev) {
+		return true
+	}
+	var fields map[string]json.RawMessage
+	if json.Unmarshal(ev.Data, &fields) != nil {
+		return false
+	}
+	for key, value := range fields {
+		if !strings.EqualFold(key, "kubernetesTargetID") {
+			continue
+		}
+		var id string
+		if json.Unmarshal(value, &id) != nil || id != "" {
+			h.send(ev.SetError(fmt.Errorf("operation is unsupported for frozen Kubernetes targets")))
+			return true
+		}
+	}
+	return false
+}
+
+func (h *Handler) rejectTransientIdentity(ev *api.Event) bool {
 	var fields map[string]json.RawMessage
 	if json.Unmarshal(ev.Data, &fields) != nil {
 		return false

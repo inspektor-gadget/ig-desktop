@@ -32,11 +32,12 @@ import (
 
 // K8sResourceRequest represents a request for Kubernetes resources
 type K8sResourceRequest struct {
-	EnvironmentID string `json:"environmentID"`
-	ResourceType  string `json:"resourceType"`
-	Namespace     string `json:"namespace,omitempty"`
-	Pod           string `json:"pod,omitempty"`
-	Search        string `json:"search,omitempty"`
+	EnvironmentID      string `json:"environmentID"`
+	KubernetesTargetID string `json:"kubernetesTargetID,omitempty"`
+	ResourceType       string `json:"resourceType"`
+	Namespace          string `json:"namespace,omitempty"`
+	Pod                string `json:"pod,omitempty"`
+	Search             string `json:"search,omitempty"`
 }
 
 // K8sResourceItem represents a single resource item in the response
@@ -53,12 +54,9 @@ type K8sResourceResponse struct {
 }
 
 // getK8sClientFromEnvironment creates a Kubernetes client from environment config
-func (h *Handler) getK8sClientFromEnvironment(environmentID string) (*kubernetes.Clientset, error) {
-	if environment.IsTransientID(environmentID) {
-		if h.transientKubernetes == nil {
-			return nil, fmt.Errorf("transient Kubernetes targets are disabled")
-		}
-		config, _, err := h.transientKubernetes.Lookup(environmentID)
+func (h *Handler) getK8sClientFromEnvironment(environmentID, targetID string) (*kubernetes.Clientset, error) {
+	if targetID != "" || environment.IsTransientID(environmentID) {
+		config, _, err := h.frozenKubernetesConfig(environmentID, targetID)
 		if err != nil {
 			return nil, err
 		}
@@ -96,7 +94,7 @@ func (h *Handler) HandleGetK8sNodes(ev *api.Event) {
 		return
 	}
 
-	clientset, err := h.getK8sClientFromEnvironment(req.EnvironmentID)
+	clientset, err := h.getK8sClientFromEnvironment(req.EnvironmentID, req.KubernetesTargetID)
 	if err != nil {
 		h.send(ev.SetData(K8sResourceResponse{Error: err.Error()}))
 		return
@@ -134,7 +132,7 @@ func (h *Handler) HandleGetK8sPods(ev *api.Event) {
 		return
 	}
 
-	clientset, err := h.getK8sClientFromEnvironment(req.EnvironmentID)
+	clientset, err := h.getK8sClientFromEnvironment(req.EnvironmentID, req.KubernetesTargetID)
 	if err != nil {
 		h.send(ev.SetData(K8sResourceResponse{Error: err.Error()}))
 		return
@@ -184,7 +182,7 @@ func (h *Handler) HandleGetK8sNamespaces(ev *api.Event) {
 		return
 	}
 
-	clientset, err := h.getK8sClientFromEnvironment(req.EnvironmentID)
+	clientset, err := h.getK8sClientFromEnvironment(req.EnvironmentID, req.KubernetesTargetID)
 	if err != nil {
 		h.send(ev.SetData(K8sResourceResponse{Error: err.Error()}))
 		return
@@ -222,12 +220,12 @@ func (h *Handler) HandleGetK8sContainers(ev *api.Event) {
 		return
 	}
 
-	if req.Pod == "" && !environment.IsTransientID(req.EnvironmentID) {
+	if req.Pod == "" && req.KubernetesTargetID == "" && !environment.IsTransientID(req.EnvironmentID) {
 		h.send(ev.SetData(K8sResourceResponse{Items: []K8sResourceItem{}}))
 		return
 	}
 
-	clientset, err := h.getK8sClientFromEnvironment(req.EnvironmentID)
+	clientset, err := h.getK8sClientFromEnvironment(req.EnvironmentID, req.KubernetesTargetID)
 	if err != nil {
 		h.send(ev.SetData(K8sResourceResponse{Error: err.Error()}))
 		return
@@ -309,7 +307,7 @@ func (h *Handler) HandleGetK8sLabels(ev *api.Event) {
 		return
 	}
 
-	clientset, err := h.getK8sClientFromEnvironment(req.EnvironmentID)
+	clientset, err := h.getK8sClientFromEnvironment(req.EnvironmentID, req.KubernetesTargetID)
 	if err != nil {
 		h.send(ev.SetData(K8sResourceResponse{Error: err.Error()}))
 		return

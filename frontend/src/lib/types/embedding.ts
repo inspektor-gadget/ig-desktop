@@ -23,6 +23,9 @@ export interface GadgetLaunchPreset {
 	image: string;
 	/** An ephemeral host target: fixed environment, foreground only, no history/recording. */
 	transient?: boolean;
+	/** Locks the selection; the host must route this launcher's requests through its frozen handle. */
+	kubernetesTargetID?: string;
+	kubernetesTargetName?: string;
 	environmentID?: string;
 	params?: Record<string, string>;
 	detached?: boolean;

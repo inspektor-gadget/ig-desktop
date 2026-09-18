@@ -70,7 +70,7 @@ error never falls back to default/in-cluster configuration.
 | Command | Data | Successful result |
 | --- | --- | --- |
 | `getKubernetesContexts` | `{kubeconfig}` | `{contexts:[{name,namespace}],currentContext}` |
-| `createKubernetesTarget` | `{kubeconfig,context,requireCurrentContext?}` | `{id,name,runtime:"grpc-k8s",namespace,expiresAt}` |
+| `createKubernetesTarget` | `{kubeconfig,context,requireCurrentContext?,matchSavedEnvironments?}` | `{id,name,runtime:"grpc-k8s",namespace,expiresAt,savedEnvironments?:[{id,name}]}` |
 | `touchKubernetesTarget` | `{id}` | `{expiresAt}` |
 | `releaseKubernetesTarget` | `{id}` | `{released}` |
 
@@ -91,6 +91,42 @@ explicit-context selection available. The extension separately guards changes
 to its configuration source while awaiting preparation; later context/source
 changes do not redirect the frozen target.
 
+`matchSavedEnvironments:true` optionally returns saved identities whose
+`grpc-k8s` connection is proven equal to this registration. Matching compares
+the effective context, namespace, and locally resolved cluster/authentication
+configuration, including TLS, proxy, impersonation, auth-provider and exec
+declarations. Context/source names alone are not evidence of equality.
+Only default runtime connection parameters match (omitted or explicitly equal
+`gadget-namespace`, `tcp-port`, and `connection-timeout`). Unknown parameters and
+nonempty `kubeconfig` overrides are conservatively excluded: the ordinary saved
+runtime currently does not consistently honor that override. Unusable individual
+candidates are skipped; failure to enumerate saved storage is an error, not a
+no-match result. Matching neither connects nor executes credential plugins.
+The ordinary saved runtime currently derives its default gadget filter namespace
+from the active context even with an explicit saved context. That default must
+also equal the frozen selected namespace; otherwise the candidate is excluded.
+
+The host can select the sole match or offer a picker for multiple matches.
+Selection uses **both** `environmentID: savedID` and
+`kubernetesTargetID: originalAdhocID` on `getGadgetInfo`, `runGadget`, Kubernetes
+resource completion, and target-bearing attach/list/remove requests. Each such
+request verifies the live handle, its candidate pairing, and that the saved
+environment still exists with unchanged runtime/connection parameters. A stale
+or edited pairing fails; it never silently switches to an ordinary saved
+connection. The runtime uses an owned copy of the original frozen configuration,
+while recording, session history and stream events retain the **saved** identity.
+File-output provenance retains the saved name and frozen context/namespace.
+Target-bearing deploy/check/undeploy and environment-management requests are
+rejected rather than ignoring the handle. Unrelated saved operations without
+`kubernetesTargetID` continue using the saved environment's ordinary connection.
+
+Omitting `matchSavedEnvironments`, or finding no match, retains the transient
+behavior below. Saved bindings are process-local, not persisted or restored
+after restart. Kubeconfig declarations and inline credentials are frozen;
+external certificate/key/token file contents, credential-plugin results, and
+process/network environment (for example proxy environment variables) are not.
+Those still follow client-go's normal connection-time behavior.
+
 IDs are `adhoc-` followed by a UUID. `expiresAt` is Unix milliseconds. Registrations
 have renewable five-minute leases, are capped at 64, swept once per minute (and
 on registry access), and cleared on backend cancellation. Unknown/expired
@@ -105,7 +141,8 @@ resolved config. Detached runs, `record:true`, and nonempty `sessionId` or
 `sessionName` are rejected. `record:false` and empty optional session fields are
 treated as absent (JSON null also has the ordinary Go zero-value semantics).
 Attach, remote list/remove, environment management, and deployment requests
-against transient IDs are unsupported. Stored-environment behavior is unchanged.
+against transient identities are unsupported. A matched saved identity supports
+its normal recording and runtime operations through the frozen handle.
 
 The host must renew while window-owned views/streams need the registration.
 Release/expiry only forgets the registration; runtimes already created own their

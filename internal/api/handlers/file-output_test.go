@@ -23,7 +23,7 @@ func TestFileOutputTargetUsesFrozenSafeDisplayMetadata(t *testing.T) {
 	if err := os.WriteFile(source.Path, []byte("changed kubeconfig with synthetic-secret"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	description, err := h.fileOutputTarget(target.ID)
+	description, err := h.fileOutputTarget(target.ID, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +47,7 @@ func TestFileOutputTargetUsesFrozenSafeDisplayMetadata(t *testing.T) {
 	if description.Context != "second" {
 		t.Fatal("release changed owned provenance")
 	}
-	if _, err := h.fileOutputTarget(target.ID); err == nil {
+	if _, err := h.fileOutputTarget(target.ID, ""); err == nil {
 		t.Fatal("released target fell back to another environment")
 	}
 }
@@ -59,7 +59,7 @@ func TestFileOutputSavedTargetDoesNotIncludeConnectionOptions(t *testing.T) {
 		t.Fatal(err)
 	}
 	h := &Handler{envStorage: storage}
-	target, err := h.fileOutputTarget(env.ID)
+	target, err := h.fileOutputTarget(env.ID, "")
 	if err != nil {
 		t.Fatal(err)
 	}

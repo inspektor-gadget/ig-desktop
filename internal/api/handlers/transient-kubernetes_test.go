@@ -115,7 +115,7 @@ func TestTransientHandlersOptInAndProtocol(t *testing.T) {
 		target.Namespace != "second-ns" || target.Runtime != "grpc-k8s" || !environment.IsTransientID(target.ID) {
 		t.Fatalf("target protocol: %s %v", create.Data, err)
 	}
-	runtime, err := h.getRuntime(target.ID)
+	runtime, err := h.getRuntime(target.ID, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func TestTransientHandlersOptInAndProtocol(t *testing.T) {
 			t.Fatalf("release protocol: %s %v", release.Data, err)
 		}
 	}
-	if _, err := h.getRuntime(target.ID); err == nil {
+	if _, err := h.getRuntime(target.ID, ""); err == nil {
 		t.Fatal("released runtime accepted")
 	}
 	if value, _ := runtime.GetDefaultValue(gadgets.K8SNamespace); value != "second-ns" {
@@ -158,7 +158,7 @@ func TestTransientRejectsUnsupportedOperationsBeforeExecution(t *testing.T) {
 	for _, field := range []map[string]any{
 		{"detached": true}, {"record": true},
 		{"sessionId": "session"}, {"sessionName": "name"},
-		{"SessionID": "case-insensitive"}, {"recording": false},
+		{"SessionID": "case-insensitive"}, {"DETACHED": true}, {"Record": true},
 	} {
 		field["environmentID"] = id
 		h.HandleRunGadget(&api.Event{Data: requestData(t, field)})
@@ -166,18 +166,11 @@ func TestTransientRejectsUnsupportedOperationsBeforeExecution(t *testing.T) {
 			t.Fatalf("unsupported run was not rejected before lookup/execution: %+v", reply)
 		}
 	}
-	for _, data := range []string{
-		`{"detached":false,"params":{},"durationSeconds":10}`,
-		`{"record":false,"sessionId":"","sessionName":""}`,
-		`{"record":null,"sessionId":null,"sessionName":null}`,
-		`{"Record":false,"SessionID":"","SessionName":""}`,
-	} {
-		if err := validateTransientRun(json.RawMessage(data)); err != nil {
-			t.Fatalf("foreground run with absent optional fields rejected: %v", err)
-		}
-	}
 	for _, field := range []map[string]any{
 		{"record": false}, {"record": nil}, {"sessionId": ""}, {"sessionName": ""},
+		{"detached": false, "params": map[string]string{}, "durationSeconds": 10},
+		{"sessionId": nil, "sessionName": nil},
+		{"Record": false, "SessionID": "", "SessionName": ""},
 	} {
 		field["environmentID"] = id
 		h.HandleRunGadget(&api.Event{Data: requestData(t, field)})

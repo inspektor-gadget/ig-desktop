@@ -31,18 +31,19 @@ import (
 // HandleRunGadget handles running a new gadget instance
 func (h *Handler) HandleRunGadget(ev *api.Event) {
 	var req struct {
-		ID               string              `json:"id"`
-		Image            string              `json:"image"`
-		EnvironmentID    string              `json:"environmentID"`
-		Params           map[string]string   `json:"params"`
-		Detached         bool                `json:"detached"`
-		InstanceName     string              `json:"instanceName"`
-		Record           bool                `json:"record"`
-		SessionID        string              `json:"sessionId"`
-		SessionName      string              `json:"sessionName"`
-		DurationSeconds  int64               `json:"durationSeconds"`
-		RemoteInstanceID string              `json:"remoteInstanceID,omitempty"`
-		Output           *fileoutput.Request `json:"output,omitempty"`
+		ID                 string              `json:"id"`
+		Image              string              `json:"image"`
+		EnvironmentID      string              `json:"environmentID"`
+		KubernetesTargetID string              `json:"kubernetesTargetID,omitempty"`
+		Params             map[string]string   `json:"params"`
+		Detached           bool                `json:"detached"`
+		InstanceName       string              `json:"instanceName"`
+		Record             bool                `json:"record"`
+		SessionID          string              `json:"sessionId"`
+		SessionName        string              `json:"sessionName"`
+		DurationSeconds    int64               `json:"durationSeconds"`
+		RemoteInstanceID   string              `json:"remoteInstanceID,omitempty"`
+		Output             *fileoutput.Request `json:"output,omitempty"`
 	}
 	err := json.Unmarshal(ev.Data, &req)
 	if err != nil {
@@ -60,7 +61,7 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 		}
 	}
 	if environment.IsTransientID(req.EnvironmentID) {
-		if err := validateTransientRun(ev.Data); err != nil {
+		if err := validateTransientRun(req.Record, req.Detached, req.SessionID, req.SessionName); err != nil {
 			h.send(ev.SetError(err))
 			return
 		}
@@ -83,7 +84,7 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 		}
 	}
 
-	runtime, err := h.getRuntime(req.EnvironmentID)
+	runtime, err := h.getRuntime(req.EnvironmentID, req.KubernetesTargetID)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
@@ -91,7 +92,7 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 
 	var outputTarget *fileoutput.Target
 	if req.Output != nil {
-		outputTarget, err = h.fileOutputTarget(req.EnvironmentID)
+		outputTarget, err = h.fileOutputTarget(req.EnvironmentID, req.KubernetesTargetID)
 		if err != nil {
 			h.send(ev.SetError(err))
 			return
@@ -137,15 +138,16 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 
 // HandleAttachInstance handles attaching to an existing gadget instance
 func (h *Handler) HandleAttachInstance(ev *api.Event) {
-	if h.rejectTransientManagement(ev) {
+	if h.rejectTransientIdentity(ev) {
 		return
 	}
 	var req struct {
-		ID            string            `json:"id"`
-		Image         string            `json:"image"`
-		EnvironmentID string            `json:"environmentID"`
-		Params        map[string]string `json:"params"`
-		InstanceName  string            `json:"instanceName"`
+		ID                 string            `json:"id"`
+		Image              string            `json:"image"`
+		EnvironmentID      string            `json:"environmentID"`
+		KubernetesTargetID string            `json:"kubernetesTargetID,omitempty"`
+		Params             map[string]string `json:"params"`
+		InstanceName       string            `json:"instanceName"`
 	}
 	err := json.Unmarshal(ev.Data, &req)
 	if err != nil {
@@ -153,7 +155,7 @@ func (h *Handler) HandleAttachInstance(ev *api.Event) {
 		return
 	}
 
-	runtime, err := h.getRuntime(req.EnvironmentID)
+	runtime, err := h.getRuntime(req.EnvironmentID, req.KubernetesTargetID)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
@@ -181,8 +183,9 @@ func (h *Handler) HandleAttachInstance(ev *api.Event) {
 // HandleGetGadgetInfo handles retrieving information about a gadget
 func (h *Handler) HandleGetGadgetInfo(ev *api.Event) {
 	var req struct {
-		URL           string `json:"url"`
-		EnvironmentID string `json:"environmentID"`
+		URL                string `json:"url"`
+		EnvironmentID      string `json:"environmentID"`
+		KubernetesTargetID string `json:"kubernetesTargetID,omitempty"`
 	}
 	err := json.Unmarshal(ev.Data, &req)
 	if err != nil {
@@ -190,7 +193,7 @@ func (h *Handler) HandleGetGadgetInfo(ev *api.Event) {
 		return
 	}
 
-	runtime, err := h.getRuntime(req.EnvironmentID)
+	runtime, err := h.getRuntime(req.EnvironmentID, req.KubernetesTargetID)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
@@ -208,11 +211,12 @@ func (h *Handler) HandleGetGadgetInfo(ev *api.Event) {
 
 // HandleListInstances handles listing all gadget instances in an environment
 func (h *Handler) HandleListInstances(ev *api.Event) {
-	if h.rejectTransientManagement(ev) {
+	if h.rejectTransientIdentity(ev) {
 		return
 	}
 	var req struct {
-		EnvironmentID string `json:"environmentID"`
+		EnvironmentID      string `json:"environmentID"`
+		KubernetesTargetID string `json:"kubernetesTargetID,omitempty"`
 	}
 	err := json.Unmarshal(ev.Data, &req)
 	if err != nil {
@@ -220,7 +224,7 @@ func (h *Handler) HandleListInstances(ev *api.Event) {
 		return
 	}
 
-	runtime, err := h.runtimeFactory.GetRuntime(req.EnvironmentID)
+	runtime, err := h.getRuntime(req.EnvironmentID, req.KubernetesTargetID)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return

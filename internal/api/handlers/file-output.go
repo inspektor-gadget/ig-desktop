@@ -12,16 +12,29 @@ import (
 	"github.com/inspektor-gadget/ig-desktop/pkg/fileoutput"
 )
 
-func (h *Handler) fileOutputTarget(id string) (*fileoutput.Target, error) {
-	if environment.IsTransientID(id) {
+func (h *Handler) fileOutputTarget(id, targetID string) (*fileoutput.Target, error) {
+	if targetID != "" || environment.IsTransientID(id) {
 		if h.transientKubernetes == nil {
 			return nil, errors.New("transient Kubernetes targets are disabled")
 		}
-		target, err := h.transientKubernetes.Describe(id)
+		if _, _, err := h.frozenKubernetesConfig(id, targetID); err != nil {
+			return nil, err
+		}
+		if targetID == "" {
+			targetID = id
+		}
+		target, err := h.transientKubernetes.Describe(targetID)
 		if err != nil {
 			return nil, err
 		}
-		return &fileoutput.Target{Name: target.Name, Context: target.Name, Runtime: target.Runtime, DefaultNamespace: target.Namespace, Transient: true}, nil
+		name := target.Name
+		for _, saved := range target.SavedEnvironments {
+			if saved.ID == id {
+				name = saved.Name
+				break
+			}
+		}
+		return &fileoutput.Target{Name: name, Context: target.Name, Runtime: target.Runtime, DefaultNamespace: target.Namespace, Transient: environment.IsTransientID(id)}, nil
 	}
 	if h.envStorage == nil {
 		return nil, errors.New("environment display metadata is unavailable")

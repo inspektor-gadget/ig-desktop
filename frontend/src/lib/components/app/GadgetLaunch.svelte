@@ -476,7 +476,7 @@
 			</svg>
 			<select
 				bind:value={environmentID}
-				disabled={data.preset?.transient}
+				disabled={data.preset?.transient || !!data.preset?.kubernetesTargetID}
 				class="col-start-1 row-start-1 appearance-none rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 pr-8 pl-3"
 			>
 				<option value="">{t('Select environment')}</option>
@@ -492,6 +492,10 @@
 	{#if data.preset?.transient}
 		<p role="status" class="mb-4 text-sm text-ig-text-secondary">
 			{t('Ad-hoc Kubernetes target: not saved. Only foreground, unrecorded runs are available.')}
+		</p>
+	{:else if data.preset?.kubernetesTargetID}
+		<p role="status" class="mb-4 text-sm text-ig-text-secondary">
+			{data.preset.kubernetesTargetName}
 		</p>
 	{/if}
 	<div class="mx-auto flex w-full max-w-7xl flex-row gap-6">

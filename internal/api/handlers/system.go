@@ -43,12 +43,13 @@ func (h *Handler) HandleHelo(ev *api.Event) {
 
 // HandleRemoveInstance handles removal of a gadget instance
 func (h *Handler) HandleRemoveInstance(ev *api.Event) {
-	if h.rejectTransientManagement(ev) {
+	if h.rejectTransientIdentity(ev) {
 		return
 	}
 	var req struct {
-		ID            string `json:"id"`
-		EnvironmentID string `json:"environmentID"`
+		ID                 string `json:"id"`
+		EnvironmentID      string `json:"environmentID"`
+		KubernetesTargetID string `json:"kubernetesTargetID,omitempty"`
 	}
 	err := json.Unmarshal(ev.Data, &req)
 	if err != nil {
@@ -56,7 +57,7 @@ func (h *Handler) HandleRemoveInstance(ev *api.Event) {
 		return
 	}
 
-	runtime, err := h.runtimeFactory.GetRuntime(req.EnvironmentID)
+	runtime, err := h.getRuntime(req.EnvironmentID, req.KubernetesTargetID)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
