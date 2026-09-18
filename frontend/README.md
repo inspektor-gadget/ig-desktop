@@ -141,6 +141,10 @@ Wails still uses `Browser.OpenURL` and browser consumers still use
 host-owned preference synchronization, including resets. Hydrate before mounting
 and suppress feedback while applying host snapshots. `launchPreset` supplies a
 typed launcher preset without encoding parameters in a URL.
+An optional `launchPreset.transient` locks the selected environment and suppresses
+detached execution, recording, and launch-history writes for temporary host
+targets. The default is unchanged; the host must enforce the same restrictions
+in its controller/backend rather than treating hidden controls as authorization.
 `applyGadgetHistories(...)` mirrors explicitly supplied host-owned history into
 the reused environment screens. Call `useHostGadgetHistory()` before mounting to
 keep those mirrors and manual launcher history in document memory rather than

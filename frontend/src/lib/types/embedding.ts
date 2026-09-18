@@ -21,6 +21,8 @@ export interface EmbeddableAppState {
 /** A reviewed launcher prefill. Hosts must not use this to execute a gadget. */
 export interface GadgetLaunchPreset {
 	image: string;
+	/** An ephemeral host target: fixed environment, foreground only, no history/recording. */
+	transient?: boolean;
 	environmentID?: string;
 	params?: Record<string, string>;
 	detached?: boolean;

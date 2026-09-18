@@ -56,7 +56,8 @@
 
 	// Experimental feature flag for session recording
 	const sessionRecordingEnabled = $derived(
-		hostSessionRecording?.() ?? configuration.get('experimentalSessionRecording') === true
+		!data.preset?.transient &&
+			(hostSessionRecording?.() ?? configuration.get('experimentalSessionRecording') === true)
 	);
 
 	// Session recording state - initialize from configuration
@@ -79,7 +80,7 @@
 	// Initialize recordGadgetRun from alwaysRecord setting on mount
 	// Also reset when detached mode is enabled (session recording doesn't make sense for detached)
 	$effect(() => {
-		if (detached) {
+		if (detached || data.preset?.transient) {
 			recordGadgetRun = false;
 		} else if (data.preset?.record !== undefined) {
 			recordGadgetRun = data.preset.record;
@@ -124,7 +125,9 @@
 	// Load initial values from URL parameters
 	$effect(() => {
 		environmentID = data.preset?.environmentID ?? page.url.searchParams.get('env');
-		detached = data.preset?.detached ?? page.url.searchParams.get('detached') === 'true';
+		detached = data.preset?.transient
+			? false
+			: (data.preset?.detached ?? page.url.searchParams.get('detached') === 'true');
 		instanceName = data.preset?.instanceName ?? (page.url.searchParams.get('instanceName') || '');
 		if (data.preset?.sessionId) {
 			sessionMode = 'existing';
@@ -261,16 +264,19 @@
 			image: data.url,
 			params: $state.snapshot(values),
 			environmentID: environmentID || undefined,
-			detached,
+			detached: data.preset?.transient ? false : detached,
 			instanceName,
 			timestamp: Date.now(),
 			record: shouldRecord,
 			sessionId: sessionIdToUse,
-			sessionName: sessionMode === 'new' && !sessionIdToUse ? sessionName : undefined
+			sessionName:
+				!data.preset?.transient && sessionMode === 'new' && !sessionIdToUse
+					? sessionName
+					: undefined
 		};
 
 		// Save K8s parameter values to recent lists
-		if (environmentID && gadgetInfo?.params) {
+		if (!data.preset?.transient && environmentID && gadgetInfo?.params) {
 			for (const param of gadgetInfo.params) {
 				// Only save K8s parameters that have values
 				if (param.valueHint?.startsWith('k8s:') && values[(param.prefix || '') + param.key]) {
@@ -298,12 +304,12 @@
 			analyticsService.trackRunGadget(data.url);
 
 			// Save gadget URL to recents
-			if (environmentID && data.url) {
+			if (!data.preset?.transient && environmentID && data.url) {
 				saveGadgetURLRecent(environmentID!, data.url);
 			}
 
 			// Add to per-environment history with deduplication (max 50 entries)
-			if (environmentID) {
+			if (!data.preset?.transient && environmentID) {
 				addGadgetToHistory(environmentID!, gadgetRunRequest, 50);
 			}
 
@@ -370,6 +376,7 @@
 			</svg>
 			<select
 				bind:value={environmentID}
+				disabled={data.preset?.transient}
 				class="col-start-1 row-start-1 appearance-none rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 pr-8 pl-3"
 			>
 				<option value="">{t('Select environment')}</option>
@@ -382,6 +389,11 @@
 </div>
 
 <div class="flex grow flex-col overflow-auto bg-gray-50/80 dark:bg-gray-950/80 p-8">
+	{#if data.preset?.transient}
+		<p role="status" class="mb-4 text-sm text-ig-text-secondary">
+			{t('Ad-hoc Kubernetes target: not saved. Only foreground, unrecorded runs are available.')}
+		</p>
+	{/if}
 	<div class="mx-auto flex w-full max-w-7xl flex-row gap-6">
 		<div class="flex grow flex-col gap-6">
 			{#if !gadgetInfo}
@@ -503,67 +515,71 @@
 					</div>
 				{/if}
 			{:else}
-				<!-- Panel-like container without header for detached settings -->
-				<div
-					class="main-gradient flex flex-col gap-4 rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
-				>
-					<!-- Detached checkbox -->
-					<div class="flex flex-row gap-4">
-						<div class="grid items-center justify-center">
-							<input
-								type="checkbox"
-								class="peer col-start-1 row-start-1 h-4 w-4 appearance-none rounded-ig-sm border border-gray-300 ring-transparent checked:border-violet-600 checked:bg-violet-600 dark:border-gray-600 dark:checked:border-violet-600 forced-colors:appearance-auto"
-								bind:checked={detached}
+				{#if !data.preset?.transient}
+					<!-- Panel-like container without header for detached settings -->
+					<div
+						class="main-gradient flex flex-col gap-4 rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
+					>
+						<!-- Detached checkbox -->
+						<div class="flex flex-row gap-4">
+							<div class="grid items-center justify-center">
+								<input
+									type="checkbox"
+									class="peer col-start-1 row-start-1 h-4 w-4 appearance-none rounded-ig-sm border border-gray-300 ring-transparent checked:border-violet-600 checked:bg-violet-600 dark:border-gray-600 dark:checked:border-violet-600 forced-colors:appearance-auto"
+									bind:checked={detached}
+								/>
+								<svg
+									viewBox="0 0 14 14"
+									fill="none"
+									class="pointer-events-none invisible col-start-1 row-start-1 stroke-white peer-checked:visible dark:text-violet-300 forced-colors:hidden"
+									><path
+										d="M3 8L6 11L11 3.5"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									></path></svg
+								>
+							</div>
+							<Title
+								param={{
+									title: t('Detached'),
+									key: 'detached',
+									description: t(
+										'The server will keep running the gadget even after closing the app'
+									)
+								}}
+								onclick={() => {
+									detached = !detached;
+								}}
 							/>
-							<svg
-								viewBox="0 0 14 14"
-								fill="none"
-								class="pointer-events-none invisible col-start-1 row-start-1 stroke-white peer-checked:visible dark:text-violet-300 forced-colors:hidden"
-								><path
-									d="M3 8L6 11L11 3.5"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								></path></svg
-							>
 						</div>
-						<Title
-							param={{
-								title: t('Detached'),
-								key: 'detached',
-								description: t('The server will keep running the gadget even after closing the app')
-							}}
-							onclick={() => {
-								detached = !detached;
-							}}
-						/>
+
+						<!-- Instance name input when detached -->
+						{#if detached}
+							<div class="flex flex-row gap-4">
+								<div class="w-1/3">
+									<Title
+										param={{
+											title: t('Instance Name'),
+											key: 'instanceName',
+											description: t('Descriptive name for the detached instance')
+										}}
+									/>
+								</div>
+								<div class="grow">
+									<input
+										class="w-full rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 text-sm"
+										type="text"
+										placeholder={t('My Gadget')}
+										bind:value={instanceName}
+									/>
+								</div>
+							</div>
+						{/if}
 					</div>
 
-					<!-- Instance name input when detached -->
-					{#if detached}
-						<div class="flex flex-row gap-4">
-							<div class="w-1/3">
-								<Title
-									param={{
-										title: t('Instance Name'),
-										key: 'instanceName',
-										description: t('Descriptive name for the detached instance')
-									}}
-								/>
-							</div>
-							<div class="grow">
-								<input
-									class="w-full rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 text-sm"
-									type="text"
-									placeholder={t('My Gadget')}
-									bind:value={instanceName}
-								/>
-							</div>
-						</div>
-					{/if}
-				</div>
-
-				<!-- Session recording settings (experimental) - not available for detached instances -->
+					<!-- Session recording settings (experimental) - not available for detached instances -->
+				{/if}
 				{#if sessionRecordingEnabled && !detached}
 					<div
 						class="main-gradient flex flex-col gap-4 rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"

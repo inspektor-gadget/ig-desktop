@@ -175,6 +175,55 @@ test('React provider initializes transport before initial controlled create scre
 	).toBe(true);
 });
 
+test('transient launchers keep target fixed and do not record or persist launch history', async ({
+	page
+}) => {
+	await page.evaluate(() =>
+		window.embedding.update({
+			path: '/gadgets/run/test/image:latest',
+			launchPreset: {
+				image: 'test/image:latest',
+				environmentID: 'test-env',
+				params: { pid: '42' },
+				transient: true,
+				record: true,
+				detached: true,
+				sessionName: 'must-not-record'
+			}
+		})
+	);
+	await expect(page.getByText('test/image:latest', { exact: true }).first()).toBeVisible();
+	await expect(page.locator('select').first()).toBeDisabled();
+	await expect(
+		page.getByText(
+			'Ad-hoc Kubernetes target: not saved. Only foreground, unrecorded runs are available.'
+		)
+	).toBeVisible();
+	await expect(page.getByText('Detached', { exact: true })).toHaveCount(0);
+	await expect(page.getByText('PID', { exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Run Gadget', exact: true }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() => window.embedding.requests.filter((request) => request.cmd === 'runGadget').length
+			)
+		)
+		.toBe(1);
+	const request = await page.evaluate(
+		() => window.embedding.requests.find((request) => request.cmd === 'runGadget')!.data
+	);
+	expect(request?.environmentID).toBe('test-env');
+	expect(request?.detached).toBe(false);
+	expect(request?.record).toBe(false);
+	expect(request?.sessionId).toBeUndefined();
+	expect(request?.sessionName).toBeUndefined();
+	expect(request?.params).toEqual({ pid: '42' });
+	expect(await page.evaluate(() => localStorage.getItem('env:test-env:gadget-history'))).toBeNull();
+	expect(
+		await page.evaluate(() => localStorage.getItem('env:test-env:gadget-url-recent'))
+	).toBeNull();
+});
+
 test('external link overrides restore the normal browser fallback', async ({ page }) => {
 	expect(await page.evaluate(() => window.embedding.externalLinks())).toEqual([
 		{ kind: 'host', url: 'https://example.com/host' },
