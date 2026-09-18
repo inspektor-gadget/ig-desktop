@@ -16,7 +16,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"log"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -25,6 +25,7 @@ import (
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 	"github.com/inspektor-gadget/ig-desktop/pkg/fileoutput"
 	"github.com/inspektor-gadget/ig-desktop/pkg/gadget"
+	grpcruntime "github.com/inspektor-gadget/ig-desktop/pkg/grpc-runtime"
 	igApi "github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-service/api"
 )
 
@@ -50,27 +51,18 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 		h.send(ev.SetError(err))
 		return
 	}
-	if req.Output != nil {
-		if h.fileOutputs == nil {
-			h.send(ev.SetError(fmt.Errorf("file output is unavailable on this host")))
-			return
-		}
-		if req.Record || req.Detached || req.SessionID != "" || req.SessionName != "" {
-			h.send(ev.SetError(fmt.Errorf("file output requires foreground execution without session recording")))
-			return
-		}
-	}
 	if environment.IsTransientID(req.EnvironmentID) {
 		if err := validateTransientRun(req.Record, req.Detached, req.SessionID, req.SessionName); err != nil {
 			h.send(ev.SetError(err))
 			return
 		}
 	}
-	if req.Record && h.sessionService == nil {
-		h.send(ev.SetError(fmt.Errorf("session recording is unavailable")))
-		return
-	}
-	if err := gadget.ValidateDuration(req.DurationSeconds, req.Detached); err != nil {
+	// Reject invalid option combinations before resolving a runtime; the
+	// service owns these rules and re-applies them in Run.
+	if err := h.gadgetService.ValidateRun(gadget.RunRequest{
+		Output: req.Output, Detached: req.Detached, Record: req.Record,
+		SessionID: req.SessionID, SessionName: req.SessionName, DurationSeconds: req.DurationSeconds,
+	}); err != nil {
 		h.send(ev.SetError(err))
 		return
 	}
@@ -234,7 +226,20 @@ func (h *Handler) HandleListInstances(ev *api.Event) {
 		instances, err := h.gadgetService.ListInstances(h.ctx, runtime)
 		if err != nil {
 			log.Println(err)
-			h.send(ev.SetError(err))
+			ev.SetError(err)
+			if errors.Is(err, grpcruntime.ErrDeploymentMissing) {
+				env, loadErr := h.envStorage.Get(req.EnvironmentID)
+				if loadErr != nil {
+					h.send(ev.SetError(loadErr))
+					return
+				}
+				namespace := env.Params[grpcruntime.ParamGadgetNamespace]
+				if namespace == "" {
+					namespace = grpcruntime.DefaultGadgetNamespace
+				}
+				ev.Data, _ = json.Marshal(map[string]any{"deploymentMissing": true, "gadgetNamespace": namespace})
+			}
+			h.send(ev)
 			return
 		}
 

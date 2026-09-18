@@ -140,6 +140,17 @@ func TestSavedKubernetesProtocolFreezesAllRuntimeOperations(t *testing.T) {
 		"environmentID": env.ID, "kubernetesTargetID": target.ID, "image": "synthetic/gadget", "url": "synthetic/gadget",
 		"id": "0123456789abcdef0123456789abcdef", "pod": "pod", "namespace": "first-ns",
 	}
+	assertPaths := func(prefix string) {
+		t.Helper()
+		if len(paths) == 0 {
+			t.Fatal("operation did not use Kubernetes")
+		}
+		for len(paths) > 0 {
+			if path := <-paths; !strings.HasPrefix(path, prefix) {
+				t.Fatalf("operation retargeted: %s (expected %s)", path, prefix)
+			}
+		}
+	}
 	for _, command := range []string{
 		"getGadgetInfo", "listInstances", "removeInstance",
 		"getK8sNodes", "getK8sNamespaces", "getK8sPods", "getK8sContainers", "getK8sLabels",
@@ -148,14 +159,7 @@ func TestSavedKubernetesProtocolFreezesAllRuntimeOperations(t *testing.T) {
 		if strings.HasPrefix(command, "getK8s") && !reply.Success {
 			t.Fatalf("%s: %+v", command, reply)
 		}
-		select {
-		case path := <-paths:
-			if !strings.HasPrefix(path, "/first/") {
-				t.Fatalf("%s retargeted: %s", command, path)
-			}
-		case <-time.After(5 * time.Second):
-			t.Fatalf("%s did not use the frozen runtime", command)
-		}
+		assertPaths("/first/")
 	}
 	for _, command := range []string{"runGadget", "attachInstance"} {
 		// Read both ACK and terminal even if the runtime fails before the ACK.
@@ -194,18 +198,14 @@ func TestSavedKubernetesProtocolFreezesAllRuntimeOperations(t *testing.T) {
 				t.Fatalf("missing ACK/terminal for %s", command)
 			}
 		}
-		if path := <-paths; !strings.HasPrefix(path, "/first/") {
-			t.Fatalf("%s retargeted: %s", command, path)
-		}
+		assertPaths("/first/")
 	}
 	// An unrelated saved operation without the handle retains normal behavior.
 	reply := tr.call(t, "getGadgetInfo", map[string]string{"environmentID": env.ID, "url": "synthetic/gadget"})
 	if reply.Success {
 		t.Fatal("unexpected success from empty gadget discovery")
 	}
-	if path := <-paths; !strings.HasPrefix(path, "/mutated/") {
-		t.Fatalf("normal saved connection was globally pinned: %s", path)
-	}
+	assertPaths("/mutated/")
 }
 
 func TestSavedKubernetesProtocolRejectsInvalidPairsAndManagement(t *testing.T) {

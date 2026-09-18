@@ -293,7 +293,11 @@
 								{t('Inspektor Gadget Detected')}
 							</h3>
 							<div class="mt-1 flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-400">
-								<p>{t('Inspektor Gadget is deployed and ready to use.')}</p>
+								<p>
+									{t(
+										'An Inspektor Gadget installation was found. Workload readiness and connectivity have not been checked.'
+									)}
+								</p>
 								<div class="mt-1 flex gap-4 text-xs">
 									<span>
 										<span class="text-gray-500">{t('Namespace:')}</span>
@@ -330,7 +334,7 @@
 						</button>
 					</div>
 				</div>
-			{:else}
+			{:else if deploymentStatus?.missing && !deploymentStatus.error}
 				<!-- IG Not Detected -->
 				<div
 					class="flex flex-col gap-4 rounded-ig-md border border-blue-300/50 dark:border-blue-800/50 bg-blue-100/10 dark:bg-blue-900/10 p-4"
@@ -346,12 +350,6 @@
 									'Inspektor Gadget does not appear to be deployed in your Kubernetes cluster. You can deploy it now using the official Helm chart.'
 								)}
 							</p>
-							{#if deploymentStatus?.error}
-								<p class="mt-2 text-xs text-red-600 dark:text-red-400">
-									{t('Note:')}
-									{deploymentStatus.error}
-								</p>
-							{/if}
 						</div>
 					</div>
 					<button
@@ -362,6 +360,8 @@
 						<span>{t('Deploy Inspektor Gadget')}</span>
 					</button>
 				</div>
+			{:else if deploymentStatus?.error}
+				<p role="alert" class="text-sm text-ig-error">{deploymentStatus.error}</p>
 			{/if}
 		{/if}
 

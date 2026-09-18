@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/tls"
 	_ "embed"
+	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -32,12 +33,16 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"github.com/inspektor-gadget/ig-desktop/pkg/k8s"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-service/api"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/params"
 	gadgettls "github.com/inspektor-gadget/inspektor-gadget/pkg/utils/tls"
 )
 
 type ConnectionMode int
+
+// ErrDeploymentMissing is only returned after complete, successful IG workload discovery.
+var ErrDeploymentMissing = errors.New("no Inspektor Gadget deployment found in the Kubernetes cluster")
 
 const (
 	// ConnectionModeDirect will connect directly to the remote using the gRPC protocol; the remote side can either
@@ -271,7 +276,14 @@ func getGadgetPods(ctx context.Context, config *rest.Config, nodes []string, gad
 	}
 
 	if len(pods.Items) == 0 {
-		return nil, fmt.Errorf("no gadget pods found in namespace %q. Is Inspektor Gadget deployed?", gadgetNamespace)
+		status, err := k8s.CheckIGDeployment(ctx, config, gadgetNamespace)
+		if err != nil {
+			return nil, fmt.Errorf("checking Inspektor Gadget deployment: %w", err)
+		}
+		if status.Missing {
+			return nil, ErrDeploymentMissing
+		}
+		return nil, fmt.Errorf("Inspektor Gadget is installed, but no gadget pods with label k8s-app=gadget were found in namespace %q; check workload readiness and the configured namespace", gadgetNamespace)
 	}
 
 	if len(nodes) == 0 {

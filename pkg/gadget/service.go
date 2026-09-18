@@ -201,27 +201,37 @@ type AttachRequest struct {
 	InstanceName  string
 }
 
+// ValidateRun checks the option combination of a run request against this
+// service's capabilities. Run calls it; callers may call it earlier to reject
+// a request before resolving a runtime.
+func (s *Service) ValidateRun(req RunRequest) error {
+	if err := ValidateDuration(req.DurationSeconds, req.Detached); err != nil {
+		return err
+	}
+	if req.Output != nil {
+		if s.fileOutputs == nil {
+			return fmt.Errorf("file output is unavailable on this host")
+		}
+		if req.Detached || req.Record || req.SessionID != "" || req.SessionName != "" {
+			return fmt.Errorf("file output requires foreground execution without session recording")
+		}
+	}
+	if req.Record && s.sessionRecorder == nil {
+		return fmt.Errorf("session recording is unavailable")
+	}
+	if req.Record && req.Detached {
+		return fmt.Errorf("recording requires a foreground capture; detached creation has no event stream")
+	}
+	return nil
+}
+
 // Run starts a new gadget instance
 func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req RunRequest) (string, error) {
 	if err := ctx.Err(); err != nil {
 		return "", err
 	}
-	if err := ValidateDuration(req.DurationSeconds, req.Detached); err != nil {
+	if err := s.ValidateRun(req); err != nil {
 		return "", err
-	}
-	if req.Output != nil {
-		if s.fileOutputs == nil {
-			return "", fmt.Errorf("file output is unavailable on this host")
-		}
-		if req.Detached || req.Record || req.SessionID != "" || req.SessionName != "" {
-			return "", fmt.Errorf("file output requires foreground execution without session recording")
-		}
-	}
-	if req.Record && s.sessionRecorder == nil {
-		return "", fmt.Errorf("session recording is unavailable")
-	}
-	if req.Record && req.Detached {
-		return "", fmt.Errorf("recording requires a foreground capture; detached creation has no event stream")
 	}
 	instanceID := uuid.New().String()
 	nctx, cancel := runContext(ctx, req.DurationSeconds)

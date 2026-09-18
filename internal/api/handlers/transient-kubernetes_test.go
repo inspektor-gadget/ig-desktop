@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/inspektor-gadget/ig-desktop/internal/environment"
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/gadget"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/gadgets"
 )
 
@@ -24,7 +25,8 @@ func transientHandler(t *testing.T) *Handler {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	h := New(ctx, nil, nil, nil, nil, nil, nil, nil, "")
+	manager := gadget.NewInstanceManager()
+	h := New(ctx, nil, nil, gadget.NewService(manager), manager, nil, nil, nil, "")
 	h.EnableTransientKubernetes()
 	return h
 }

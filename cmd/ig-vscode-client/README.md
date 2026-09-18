@@ -150,6 +150,27 @@ config and are not stopped. Cancel a running capture explicitly using its local
 instance ID via `stopInstance`. Preset namespace/pod values are editable defaults,
 not a collection-isolation boundary.
 
+## Missing Kubernetes deployments
+
+`listInstances` remains a failed command when IG is absent. Only a successful,
+empty pod lookup followed by complete IG workload discovery may add
+`data: {"deploymentMissing":true,"gadgetNamespace":"gadget"}` to that rejection.
+Discovery checks both supported IG labels on DaemonSets, Deployments and Pods,
+including other namespaces. Installed-but-unready workloads, RBAC/authentication
+failures and connection failures never carry this signal. Preserve error data
+through host bridges; do not infer absence from error messages.
+
+`checkIGDeployment` similarly returns `missing:true` only for confirmed absence;
+`deployed:true` identifies an installation, not readiness or working connectivity.
+Incomplete discovery returns an error field instead of claiming absence.
+
+`deployIG` accepts an optional saved `environmentID`. When supplied, the backend
+resolves its current saved Kubernetes context and IG namespace and ignores
+client-supplied connection/namespace overrides. The shared dashboard uses this
+only after explicit modal confirmation. Without the ID, Create Environment's
+existing explicit deployment configuration is unchanged. Transient identities
+and target-bearing management requests remain unsupported.
+
 ## Captures and identity
 
 ```json

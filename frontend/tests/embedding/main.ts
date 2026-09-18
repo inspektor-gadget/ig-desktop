@@ -14,7 +14,14 @@ const {
 } = await import(/* @vite-ignore */ libraryPath);
 import '../../build-embedding/ig-frontend.css';
 
-const environment = { id: 'test-env', name: 'Embedding environment', runtime: 'grpc', params: {} };
+const query = new URLSearchParams(location.search);
+let dashboardState = query.get('dashboard') || '';
+const environment = {
+	id: 'test-env',
+	name: 'Embedding environment',
+	runtime: dashboardState && !query.has('nonK8s') ? 'grpc-k8s' : 'grpc',
+	params: { 'gadget-namespace': 'custom-gadget' }
+};
 const gadgetInfo = {
 	imageName: 'test/image:latest',
 	params: [{ key: 'pid', title: 'PID', type: 'uint32', defaultValue: '0' }],
@@ -43,6 +50,7 @@ declare global {
 				Array<{ kind: string; url: string; target?: string; features?: string }>
 			>;
 			initialResultVisible: boolean;
+			dashboard: (state: string) => void;
 		};
 	}
 }
@@ -89,9 +97,45 @@ const adapter = {
 			return;
 		}
 		if (request.cmd === 'pending') return;
+		if (request.cmd === 'listInstances' && dashboardState) {
+			if (dashboardState === 'loading') return;
+			if (dashboardState !== 'connected') {
+				emit({
+					type: 1,
+					reqID: request.reqID,
+					success: false,
+					error:
+						dashboardState === 'missing'
+							? 'No IG deployment found'
+							: 'fixture connection/RBAC error',
+					...(dashboardState === 'uncertain' ? { uncertain: true } : {}),
+					data: ['missing', 'uncertain'].includes(dashboardState)
+						? { deploymentMissing: true }
+						: null
+				});
+				return;
+			}
+		}
 		let data: unknown = {};
 		switch (request.cmd) {
 			case 'deployIG':
+				if (dashboardState) {
+					if (query.has('deployError')) {
+						emit({
+							type: 1,
+							reqID: request.reqID,
+							success: false,
+							error: 'fixture deployment forbidden'
+						});
+						return;
+					}
+					data = { deploymentId: 'dashboard-deploy' };
+					setTimeout(() => {
+						dashboardState = 'connected';
+						emit({ type: 201, data: { deploymentId: 'dashboard-deploy', progress: 100 } });
+					}, 50);
+					break;
+				}
 				data = { deploymentId: 'undeploy-fixture' };
 				setTimeout(
 					() =>
@@ -108,6 +152,9 @@ const adapter = {
 				break;
 			case 'getGadgetInfo':
 				data = gadgetInfo;
+				break;
+			case 'getChartValues':
+				data = { values: 'config: {}' };
 				break;
 			case 'getRuntimes':
 				data = [{ key: 'grpc', title: 'Host', description: 'Remote daemon' }];
@@ -212,6 +259,18 @@ if (new URLSearchParams(location.search).has('undeploy')) {
 Object.assign(window, {
 	embedding: {
 		requests,
+		dashboard: (state: string) => {
+			dashboardState = state;
+			const pending = requests.findLast((request) => request.cmd === 'listInstances');
+			if (pending)
+				emit({
+					type: 1,
+					reqID: pending.reqID,
+					success: state === 'connected',
+					error: state === 'missing' ? 'No IG deployment found' : 'fixture connection/RBAC error',
+					data: state === 'missing' ? { deploymentMissing: true } : { gadgetInstances: [] }
+				});
+		},
 		states,
 		initialResultVisible: !!document.querySelector('a[href="/env/test-env/running/run-one"]'),
 		update: (next: object) => Object.assign(props, next),

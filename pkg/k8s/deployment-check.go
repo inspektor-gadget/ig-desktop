@@ -17,9 +17,6 @@ package k8s
 import (
 	"context"
 	"fmt"
-	"slices"
-
-	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +27,7 @@ import (
 
 type DeploymentStatus struct {
 	Deployed  bool   `json:"deployed"`
+	Missing   bool   `json:"missing,omitempty"`
 	Namespace string `json:"namespace,omitempty"`
 	Version   string `json:"version,omitempty"`
 	Error     string `json:"error,omitempty"`
@@ -45,82 +43,20 @@ func CheckIGDeployment(ctx context.Context, config *rest.Config, namespace strin
 		}, err
 	}
 
-	// Try both label selectors for DaemonSets
-	labelSelectors := []string{
-		"app.kubernetes.io/name=gadget",
-		"k8s-app=gadget",
+	status, err := checkNamespace(ctx, clientset, namespace)
+	if err == nil && !status.Deployed && namespace != "" {
+		// A differently configured namespace is not proof that IG is absent.
+		status, err = checkNamespace(ctx, clientset, metav1.NamespaceAll)
 	}
-
-	for _, selector := range labelSelectors {
-		daemonSets, err := clientset.AppsV1().DaemonSets(namespace).List(ctx, metav1.ListOptions{
-			LabelSelector: selector,
-		})
-		if err != nil {
-			log.Warnf("Failed to list DaemonSets in namespace %s with selector %s: %v", namespace, selector, err)
-			continue
-		}
-
-		if len(daemonSets.Items) > 0 {
-			log.Infof("Found Inspektor Gadget DaemonSet in namespace %s with label selector %s", namespace, selector)
-			return buildDeploymentStatus(daemonSets.Items[0], namespace), nil
-		}
-	}
-
-	// Try both label selectors for Deployments (alternative deployment method)
-	for _, selector := range labelSelectors {
-		deployments, err := clientset.AppsV1().Deployments(namespace).List(ctx, metav1.ListOptions{
-			LabelSelector: selector,
-		})
-		if err != nil {
-			log.Warnf("Failed to list Deployments in namespace %s with selector %s: %v", namespace, selector, err)
-			continue
-		}
-
-		if len(deployments.Items) > 0 {
-			log.Infof("Found Inspektor Gadget Deployment in namespace %s with label selector %s", namespace, selector)
-			return buildDeploymentStatusFromDeployment(deployments.Items[0], namespace), nil
-		}
-	}
-
-	// Not found in specified namespace, try all namespaces
-	log.Infof("Inspektor Gadget not found in namespace %s, checking all namespaces", namespace)
-	return checkAllNamespaces(ctx, clientset)
-}
-
-// checkAllNamespaces checks all namespaces for Inspektor Gadget deployment
-func checkAllNamespaces(ctx context.Context, clientset *kubernetes.Clientset) (*DeploymentStatus, error) {
-	// Get all namespaces
-	namespaces, err := clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return &DeploymentStatus{
-			Deployed: false,
-			Error:    fmt.Sprintf("Failed to list namespaces: %v", err),
-		}, err
+		return &DeploymentStatus{Error: err.Error()}, err
 	}
-
-	// Check common namespaces first (optimization)
-	commonNamespaces := []string{"gadget", "kube-system", "ig-system", "inspektor-gadget"}
-	for _, ns := range commonNamespaces {
-		if status := checkNamespace(ctx, clientset, ns); status.Deployed {
-			return status, nil
-		}
-	}
-
-	// Check remaining namespaces
-	for _, ns := range namespaces.Items {
-		if slices.Contains(commonNamespaces, ns.Name) {
-			continue // Already checked
-		}
-		if status := checkNamespace(ctx, clientset, ns.Name); status.Deployed {
-			return status, nil
-		}
-	}
-
-	return &DeploymentStatus{Deployed: false}, nil
+	status.Missing = !status.Deployed
+	return status, nil
 }
 
 // checkNamespace checks a specific namespace for IG deployment
-func checkNamespace(ctx context.Context, clientset *kubernetes.Clientset, namespace string) *DeploymentStatus {
+func checkNamespace(ctx context.Context, clientset kubernetes.Interface, namespace string) (*DeploymentStatus, error) {
 	// Try both label selectors
 	labelSelectors := []string{
 		"app.kubernetes.io/name=gadget",
@@ -131,19 +67,34 @@ func checkNamespace(ctx context.Context, clientset *kubernetes.Clientset, namesp
 		daemonSets, err := clientset.AppsV1().DaemonSets(namespace).List(ctx, metav1.ListOptions{
 			LabelSelector: selector,
 		})
-		if err == nil && len(daemonSets.Items) > 0 {
-			return buildDeploymentStatus(daemonSets.Items[0], namespace)
+		if err != nil {
+			return nil, fmt.Errorf("checking IG DaemonSets: %w", err)
+		}
+		if len(daemonSets.Items) > 0 {
+			return buildDeploymentStatus(daemonSets.Items[0], daemonSets.Items[0].Namespace), nil
 		}
 
 		deployments, err := clientset.AppsV1().Deployments(namespace).List(ctx, metav1.ListOptions{
 			LabelSelector: selector,
 		})
-		if err == nil && len(deployments.Items) > 0 {
-			return buildDeploymentStatusFromDeployment(deployments.Items[0], namespace)
+		if err != nil {
+			return nil, fmt.Errorf("checking IG Deployments: %w", err)
+		}
+		if len(deployments.Items) > 0 {
+			return buildDeploymentStatusFromDeployment(deployments.Items[0], deployments.Items[0].Namespace), nil
+		}
+
+		pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{LabelSelector: selector})
+		if err != nil {
+			return nil, fmt.Errorf("checking IG Pods: %w", err)
+		}
+		if len(pods.Items) > 0 {
+			// Pending/unready workloads are installed, not an invitation to deploy again.
+			return &DeploymentStatus{Deployed: true, Namespace: pods.Items[0].Namespace}, nil
 		}
 	}
 
-	return &DeploymentStatus{Deployed: false}
+	return &DeploymentStatus{}, nil
 }
 
 // buildDeploymentStatus creates a DeploymentStatus from a DaemonSet

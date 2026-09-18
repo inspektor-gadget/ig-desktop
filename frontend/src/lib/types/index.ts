@@ -167,6 +167,7 @@ export interface Instances {
 export type DeploymentStatus = 'configuring' | 'deploying' | 'success' | 'error';
 
 export interface DeploymentConfig {
+	environmentID?: string;
 	namespace: string;
 	releaseName: string;
 	chartVersion?: string;
@@ -193,6 +194,7 @@ export interface Deployments {
 
 export interface IGDeploymentStatus {
 	deployed: boolean;
+	missing?: boolean;
 	namespace?: string;
 	version?: string;
 	error?: string;

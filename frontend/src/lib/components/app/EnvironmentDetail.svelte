@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
+	import { BackendCommandError } from '$lib/services/api.service.svelte';
 	import { getErrorMessage } from '$lib/utils/errors';
 	import type { ApiContext } from '$lib/types/context';
 	import { page } from '$app/state';
@@ -14,6 +15,7 @@
 	import { configuration } from '$lib/stores/configuration.svelte';
 	import { currentSessionStore } from '$lib/stores/current-session.svelte';
 	import BaseModal from '$lib/components/BaseModal.svelte';
+	import K8sDeployModal from '$lib/components/K8sDeployModal.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import SessionItemComponent from '$lib/components/SessionItem.svelte';
 	import { features } from '$lib/config/app-mode';
@@ -52,6 +54,13 @@
 	let loadingSessions = $state(true);
 
 	let env = $derived(environments[page.params.env || '']);
+	let missingEnvironmentID = $state<string>();
+	let missingNamespace = $state('gadget');
+	let deployModalOpen = $state(false);
+	const deploymentMissing = $derived(
+		features.canCreateEnvironment && env?.runtime === 'grpc-k8s' && missingEnvironmentID === env.id
+	);
+	let listRevision = 0;
 
 	// Experimental feature flag for session recording
 	const sessionRecordingEnabled = $derived(
@@ -104,13 +113,17 @@
 
 	$effect(() => {
 		if (!env) {
+			currentEnvId = null;
+			listRevision++;
 			currentEnvironment.clear();
 			return;
 		}
 		currentEnvId = env.id;
+		missingEnvironmentID = undefined;
+		deployModalOpen = false;
 		detachedInstances = [];
 		currentEnvironment.setEnvironment(env);
-		getList(env.id);
+		untrack(() => getList(env.id));
 		loadSessions();
 
 		// Poll for headless instances every 7 seconds
@@ -122,6 +135,7 @@
 
 		// Cleanup interval on effect re-run or component unmount
 		return () => {
+			listRevision++;
 			clearInterval(pollInterval);
 		};
 	});
@@ -167,6 +181,7 @@
 	});
 
 	async function getList(requestedEnvId: string) {
+		const revision = ++listRevision;
 		currentEnvironment.setConnectionStatus('connecting');
 		try {
 			const tmp = await api.request<{ gadgetInstances?: GadgetInstance[] }>({
@@ -174,13 +189,34 @@
 				data: { environmentID: requestedEnvId }
 			});
 			// Only update state if this is still the current environment
-			if (requestedEnvId === currentEnvId) {
+			if (requestedEnvId === currentEnvId && revision === listRevision) {
+				missingEnvironmentID = undefined;
 				detachedInstances = tmp.gadgetInstances || []; // TODO: check why this can return empty
 				currentEnvironment.setConnectionStatus('connected');
 			}
 		} catch (err) {
 			// Only update state if this is still the current environment
-			if (requestedEnvId === currentEnvId) {
+			if (requestedEnvId === currentEnvId && revision === listRevision) {
+				missingEnvironmentID =
+					err instanceof BackendCommandError &&
+					err.data !== null &&
+					typeof err.data === 'object' &&
+					'deploymentMissing' in err.data &&
+					err.data.deploymentMissing === true
+						? requestedEnvId
+						: undefined;
+				if (
+					missingEnvironmentID &&
+					err instanceof BackendCommandError &&
+					err.data &&
+					typeof err.data === 'object' &&
+					'gadgetNamespace' in err.data &&
+					typeof err.data.gadgetNamespace === 'string'
+				) {
+					missingNamespace = err.data.gadgetNamespace;
+				} else {
+					missingNamespace = env?.params?.['gadget-namespace'] || 'gadget';
+				}
 				currentEnvironment.setConnectionStatus('error', (err as Error).message);
 			}
 		}
@@ -384,275 +420,295 @@
 
 			<!-- Content Grid -->
 			<div class="grid grid-cols-1 gap-6">
-				<!-- Gadget Wizard Panel -->
-				{#if wizardVisible && features.canRunGadgets && gadgetWizardEnabled}
-					<GadgetWizard
-						treeConfig={wizardTreeConfig as WizardTreeConfig}
-						{env}
-						onRun={runGadget}
-						onHide={hideWizard}
-					/>
-				{/if}
-
-				<!-- Run Gadget Card -->
-				<Panel title={t('Run Gadget')} icon={PlaySmall} color="blue" bodyPadding="large">
-					{#if features.canRunGadgets}
-						<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
-							{t('Enter a gadget image URL or discover gadgets from ArtifactHub')}
-						</p>
-						<div class="flex flex-col gap-2 md:flex-row">
-							{#if features.canBrowseArtifactHub}
-								<!-- eslint-disable svelte/no-navigation-without-resolve -- route path is resolved via resolve(); the env query string is appended separately -->
-								<a
-									href={`${resolve('/browse/artifacthub')}?env=${env.id}`}
-									title={t('Discover Gadgets')}
-									class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 md:w-auto md:justify-start"
-								>
-									<span class="text-blue-400"><Grid /></span>
-									<span class="text-gray-800 dark:text-gray-200">{t('Discover')}</span>
-								</a>
-								<!-- eslint-enable svelte/no-navigation-without-resolve -->
-							{/if}
-							<div class="grow">
-								<AutocompleteInput
-									bind:value={gadgetURL}
-									options={gadgetURLOptions()}
-									placeholder="ghcr.io/inspektor-gadget/gadget/trace_open:latest"
-									allowCustom={true}
-									onSelect={(val) => {
-										if (typeof val === 'string') {
-											gadgetURL = val;
-										}
-									}}
-									onEnter={runInstance}
-								/>
-							</div>
-							<button
-								disabled={!validURL}
-								onclick={runInstance}
-								title={t('Run Gadget')}
-								class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-ig-md border border-blue-300 dark:border-blue-800 bg-blue-100/20 dark:bg-blue-900/20 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 transition-all hover:border-blue-500/50 hover:bg-blue-100/40 dark:hover:bg-blue-900/40 disabled:cursor-not-allowed disabled:border-gray-300 dark:disabled:border-gray-800 disabled:bg-gray-100/20 dark:disabled:bg-gray-900/20 disabled:text-gray-400 dark:disabled:text-gray-600 md:w-auto"
-							>
-								<span><PlaySmall /></span>
-								<span>{t('Run')}</span>
-							</button>
-						</div>
-					{:else}
-						<div class="flex flex-col items-center justify-center gap-3 py-4 text-center">
-							<p class="text-sm text-gray-500">{t('Unavailable in Demo Environment')}</p>
-						</div>
-					{/if}
-				</Panel>
-
-				<!-- Recently Run Gadgets Card -->
-				{#if history.length > 0}
+				{#if deploymentMissing}
 					<Panel
-						title={t('Recently run Gadgets')}
-						icon={History}
-						color="purple"
-						badge={history.length}
+						title={t('Inspektor Gadget Not Detected')}
+						icon={Server}
+						color="blue"
+						bodyPadding="large"
+					>
+						<p class="mb-4 text-sm text-ig-text-secondary">
+							{t(
+								'No valid Inspektor Gadget deployment was found in this Kubernetes cluster. Deploy it to run gadgets and manage headless instances.'
+							)}
+						</p>
+						<Button onclick={() => (deployModalOpen = true)}>
+							{t('Deploy Inspektor Gadget')}
+						</Button>
+					</Panel>
+				{:else}
+					<!-- Gadget Wizard Panel -->
+					{#if wizardVisible && features.canRunGadgets && gadgetWizardEnabled}
+						<GadgetWizard
+							treeConfig={wizardTreeConfig as WizardTreeConfig}
+							{env}
+							onRun={runGadget}
+							onHide={hideWizard}
+						/>
+					{/if}
+
+					<!-- Run Gadget Card -->
+					<Panel title={t('Run Gadget')} icon={PlaySmall} color="blue" bodyPadding="large">
+						{#if features.canRunGadgets}
+							<p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+								{t('Enter a gadget image URL or discover gadgets from ArtifactHub')}
+							</p>
+							<div class="flex flex-col gap-2 md:flex-row">
+								{#if features.canBrowseArtifactHub}
+									<!-- eslint-disable svelte/no-navigation-without-resolve -- route path is resolved via resolve(); the env query string is appended separately -->
+									<a
+										href={`${resolve('/browse/artifacthub')}?env=${env.id}`}
+										title={t('Discover Gadgets')}
+										class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-2 text-sm transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900 md:w-auto md:justify-start"
+									>
+										<span class="text-blue-400"><Grid /></span>
+										<span class="text-gray-800 dark:text-gray-200">{t('Discover')}</span>
+									</a>
+									<!-- eslint-enable svelte/no-navigation-without-resolve -->
+								{/if}
+								<div class="grow">
+									<AutocompleteInput
+										bind:value={gadgetURL}
+										options={gadgetURLOptions()}
+										placeholder="ghcr.io/inspektor-gadget/gadget/trace_open:latest"
+										allowCustom={true}
+										onSelect={(val) => {
+											if (typeof val === 'string') {
+												gadgetURL = val;
+											}
+										}}
+										onEnter={runInstance}
+									/>
+								</div>
+								<button
+									disabled={!validURL}
+									onclick={runInstance}
+									title={t('Run Gadget')}
+									class="flex min-h-[42px] cursor-pointer flex-row items-center justify-center gap-2 rounded-ig-md border border-blue-300 dark:border-blue-800 bg-blue-100/20 dark:bg-blue-900/20 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 transition-all hover:border-blue-500/50 hover:bg-blue-100/40 dark:hover:bg-blue-900/40 disabled:cursor-not-allowed disabled:border-gray-300 dark:disabled:border-gray-800 disabled:bg-gray-100/20 dark:disabled:bg-gray-900/20 disabled:text-gray-400 dark:disabled:text-gray-600 md:w-auto"
+								>
+									<span><PlaySmall /></span>
+									<span>{t('Run')}</span>
+								</button>
+							</div>
+						{:else}
+							<div class="flex flex-col items-center justify-center gap-3 py-4 text-center">
+								<p class="text-sm text-gray-500">{t('Unavailable in Demo Environment')}</p>
+							</div>
+						{/if}
+					</Panel>
+
+					<!-- Recently Run Gadgets Card -->
+					{#if history.length > 0}
+						<Panel
+							title={t('Recently run Gadgets')}
+							icon={History}
+							color="purple"
+							badge={history.length}
+							bodyPadding="large"
+						>
+							{#snippet headerActions()}
+								<button
+									onclick={() => currentPage--}
+									disabled={currentPage === 0}
+									class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-300 dark:disabled:text-gray-700"
+									title={t('Previous page')}
+								>
+									<ChevronLeft />
+								</button>
+								<span class="text-xs text-gray-500">{currentPage + 1} / {totalPages}</span>
+								<button
+									onclick={() => currentPage++}
+									disabled={currentPage >= totalPages - 1}
+									class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-300 dark:disabled:text-gray-700"
+									title={t('Next page')}
+								>
+									<ChevronRight />
+								</button>
+							{/snippet}
+
+							{#each paginatedHistory as entry, idx (entry.timestamp ?? idx)}
+								<div
+									class="group/item flex flex-col gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4 transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
+								>
+									<div class="flex flex-row items-start justify-between gap-4">
+										<div class="flex flex-1 flex-col gap-2">
+											<div class="flex flex-row items-center gap-2 font-mono text-sm">
+												<span class="font-medium text-gray-800 dark:text-gray-200"
+													>{entry.image}</span
+												>
+												{#if entry.detached}
+													<span
+														class="rounded-ig-sm bg-blue-500/20 px-2 py-0.5 text-xs text-blue-400"
+														>detached</span
+													>
+												{/if}
+												{#if entry.instanceName}
+													<span
+														class="rounded-ig-sm bg-purple-500/20 px-2 py-0.5 text-xs text-purple-400"
+														>{entry.instanceName}</span
+													>
+												{/if}
+												{#if entry.timestamp}
+													<span
+														class="cursor-help text-xs text-gray-500"
+														title={formatAbsoluteTime(entry.timestamp)}
+														>{formatRelativeTime(entry.timestamp)}</span
+													>
+												{/if}
+											</div>
+											{#if entry.params && Object.keys(entry.params).length > 0}
+												<div class="flex flex-row flex-wrap gap-2 text-xs">
+													{#each Object.entries(entry.params) as [key, value] (key)}
+														<span
+															class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-950/50 px-2 py-1 font-mono"
+															><span class="text-gray-500">{key}:</span>
+															<span class="text-gray-700 dark:text-gray-300">{value}</span></span
+														>
+													{/each}
+												</div>
+											{/if}
+										</div>
+										<div class="flex flex-row items-start gap-1">
+											<button
+												class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
+												title={t('Remove from list')}
+												onclick={() => {
+													const actualIdx = currentPage * ITEMS_PER_PAGE + idx;
+													history.splice(actualIdx, 1);
+													setEnvPref(env.id, 'gadget-history', history);
+												}}><Trash /></button
+											>
+											{#if !features.isDemoMode}
+												<button
+													class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
+													title={t('Configure and run')}
+													onclick={() => {
+														const params = new URLSearchParams();
+														params.set('env', env.id);
+														if (entry.params) {
+															params.set('params', JSON.stringify(entry.params));
+														}
+														if (entry.detached !== undefined) {
+															params.set('detached', String(entry.detached));
+														}
+														if (entry.instanceName) {
+															params.set('instanceName', entry.instanceName);
+														}
+														if (entry.output) {
+															params.set('output', entry.output.format);
+														}
+														goto(resolve(`/gadgets/run/${entry.image}?${params.toString()}`));
+													}}><Cog /></button
+												>
+											{/if}
+											<button
+												class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-purple-400"
+												title={t('Run again')}
+												onclick={() => {
+													runGadget(entry);
+												}}><PlaySmall /></button
+											>
+										</div>
+									</div>
+								</div>
+							{/each}
+						</Panel>
+					{/if}
+
+					<!-- Headless Gadget Instances Card -->
+					<Panel
+						title={t('Headless Gadget Instances')}
+						icon={Server}
+						color="blue"
+						badge={detachedInstances.length > 0 ? detachedInstances.length : undefined}
 						bodyPadding="large"
 					>
 						{#snippet headerActions()}
 							<button
-								onclick={() => currentPage--}
-								disabled={currentPage === 0}
-								class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-300 dark:disabled:text-gray-700"
-								title={t('Previous page')}
+								onclick={() => currentEnvId && getList(currentEnvId)}
+								title={t('Refresh')}
+								class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400"
+								><Refresh /></button
 							>
-								<ChevronLeft />
-							</button>
-							<span class="text-xs text-gray-500">{currentPage + 1} / {totalPages}</span>
-							<button
-								onclick={() => currentPage++}
-								disabled={currentPage >= totalPages - 1}
-								class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-purple-400 disabled:cursor-not-allowed disabled:text-gray-300 dark:disabled:text-gray-700"
-								title={t('Next page')}
+							<a
+								href="https://inspektor-gadget.io/docs/latest/reference/headless"
+								title={t('Documentation')}
+								target="_blank"
+								class="text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400"
+								><Info /></a
 							>
-								<ChevronRight />
-							</button>
 						{/snippet}
 
-						{#each paginatedHistory as entry, idx (entry.timestamp ?? idx)}
-							<div
-								class="group/item flex flex-col gap-2 rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 p-4 transition-all hover:border-purple-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
-							>
-								<div class="flex flex-row items-start justify-between gap-4">
-									<div class="flex flex-1 flex-col gap-2">
-										<div class="flex flex-row items-center gap-2 font-mono text-sm">
-											<span class="font-medium text-gray-800 dark:text-gray-200">{entry.image}</span
+						{#if detachedInstances.length}
+							<div class="overflow-x-auto">
+								<table class="w-full min-w-full">
+									<thead>
+										<tr class="border-b border-gray-200 dark:border-gray-800">
+											<th
+												class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
+												>{t('ID')}</th
 											>
-											{#if entry.detached}
-												<span class="rounded-ig-sm bg-blue-500/20 px-2 py-0.5 text-xs text-blue-400"
-													>detached</span
-												>
-											{/if}
-											{#if entry.instanceName}
-												<span
-													class="rounded-ig-sm bg-purple-500/20 px-2 py-0.5 text-xs text-purple-400"
-													>{entry.instanceName}</span
-												>
-											{/if}
-											{#if entry.timestamp}
-												<span
-													class="cursor-help text-xs text-gray-500"
-													title={formatAbsoluteTime(entry.timestamp)}
-													>{formatRelativeTime(entry.timestamp)}</span
-												>
-											{/if}
-										</div>
-										{#if entry.params && Object.keys(entry.params).length > 0}
-											<div class="flex flex-row flex-wrap gap-2 text-xs">
-												{#each Object.entries(entry.params) as [key, value] (key)}
-													<span
-														class="rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-950/50 px-2 py-1 font-mono"
-														><span class="text-gray-500">{key}:</span>
-														<span class="text-gray-700 dark:text-gray-300">{value}</span></span
-													>
-												{/each}
-											</div>
-										{/if}
-									</div>
-									<div class="flex flex-row items-start gap-1">
-										<button
-											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
-											title={t('Remove from list')}
-											onclick={() => {
-												const actualIdx = currentPage * ITEMS_PER_PAGE + idx;
-												history.splice(actualIdx, 1);
-												setEnvPref(env.id, 'gadget-history', history);
-											}}><Trash /></button
-										>
-										{#if !features.isDemoMode}
-											<button
-												class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
-												title={t('Configure and run')}
-												onclick={() => {
-													const params = new URLSearchParams();
-													params.set('env', env.id);
-													if (entry.params) {
-														params.set('params', JSON.stringify(entry.params));
-													}
-													if (entry.detached !== undefined) {
-														params.set('detached', String(entry.detached));
-													}
-													if (entry.instanceName) {
-														params.set('instanceName', entry.instanceName);
-													}
-													if (entry.output) {
-														params.set('output', entry.output.format);
-													}
-													goto(resolve(`/gadgets/run/${entry.image}?${params.toString()}`));
-												}}><Cog /></button
+											<th
+												class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
+												>{t('Name')}</th
 											>
-										{/if}
-										<button
-											class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-purple-400"
-											title={t('Run again')}
-											onclick={() => {
-												runGadget(entry);
-											}}><PlaySmall /></button
-										>
-									</div>
-								</div>
+											<th
+												class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
+												>{t('Tags')}</th
+											>
+											<th
+												class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
+												>{t('Image')}</th
+											>
+											<th class="px-4 py-3"></th>
+										</tr>
+									</thead>
+									<tbody>
+										{#each detachedInstances as instance (instance.id)}
+											<tr
+												class="group/item border-b border-gray-200 dark:border-gray-800 transition-all last:border-b-0 hover:bg-gray-100/50 dark:hover:bg-gray-900/50"
+											>
+												<td class="px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-400"
+													>{instance.id?.substring(0, 12)}</td
+												>
+												<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300"
+													>{instance.name}</td
+												>
+												<td class="px-4 py-3 font-mono text-xs text-gray-500">{instance.tags}</td>
+												<td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400"
+													>{instance.gadgetConfig?.imageName}</td
+												>
+												<td class="px-4 py-3">
+													<div class="flex flex-row justify-end gap-1">
+														<button
+															class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-blue-400"
+															title={t('Attach')}
+															onclick={() => {
+																attachInstance(instance);
+															}}><Browser /></button
+														>
+														<button
+															class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
+															title={t('Delete')}
+															onclick={() => {
+																removeInstance(instance);
+															}}><Trash /></button
+														>
+													</div>
+												</td>
+											</tr>
+										{/each}
+									</tbody>
+								</table>
 							</div>
-						{/each}
+						{:else}
+							<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
+								<div class="text-gray-400 dark:text-gray-600"><Server /></div>
+								<div class="text-sm text-gray-500">{t('No running instances found')}</div>
+							</div>
+						{/if}
 					</Panel>
 				{/if}
-
-				<!-- Headless Gadget Instances Card -->
-				<Panel
-					title={t('Headless Gadget Instances')}
-					icon={Server}
-					color="blue"
-					badge={detachedInstances.length > 0 ? detachedInstances.length : undefined}
-					bodyPadding="large"
-				>
-					{#snippet headerActions()}
-						<button
-							onclick={() => currentEnvId && getList(currentEnvId)}
-							title={t('Refresh')}
-							class="cursor-pointer text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400"
-							><Refresh /></button
-						>
-						<a
-							href="https://inspektor-gadget.io/docs/latest/reference/headless"
-							title={t('Documentation')}
-							target="_blank"
-							class="text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400"
-							><Info /></a
-						>
-					{/snippet}
-
-					{#if detachedInstances.length}
-						<div class="overflow-x-auto">
-							<table class="w-full min-w-full">
-								<thead>
-									<tr class="border-b border-gray-200 dark:border-gray-800">
-										<th
-											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
-											>{t('ID')}</th
-										>
-										<th
-											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
-											>{t('Name')}</th
-										>
-										<th
-											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
-											>{t('Tags')}</th
-										>
-										<th
-											class="px-4 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase"
-											>{t('Image')}</th
-										>
-										<th class="px-4 py-3"></th>
-									</tr>
-								</thead>
-								<tbody>
-									{#each detachedInstances as instance (instance.id)}
-										<tr
-											class="group/item border-b border-gray-200 dark:border-gray-800 transition-all last:border-b-0 hover:bg-gray-100/50 dark:hover:bg-gray-900/50"
-										>
-											<td class="px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-400"
-												>{instance.id?.substring(0, 12)}</td
-											>
-											<td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300"
-												>{instance.name}</td
-											>
-											<td class="px-4 py-3 font-mono text-xs text-gray-500">{instance.tags}</td>
-											<td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400"
-												>{instance.gadgetConfig?.imageName}</td
-											>
-											<td class="px-4 py-3">
-												<div class="flex flex-row justify-end gap-1">
-													<button
-														class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-blue-400"
-														title={t('Attach')}
-														onclick={() => {
-															attachInstance(instance);
-														}}><Browser /></button
-													>
-													<button
-														class="cursor-pointer rounded-ig-sm p-1.5 text-gray-500 transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-red-400"
-														title={t('Delete')}
-														onclick={() => {
-															removeInstance(instance);
-														}}><Trash /></button
-													>
-												</div>
-											</td>
-										</tr>
-									{/each}
-								</tbody>
-							</table>
-						</div>
-					{:else}
-						<div class="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-							<div class="text-gray-400 dark:text-gray-600"><Server /></div>
-							<div class="text-sm text-gray-500">{t('No running instances found')}</div>
-						</div>
-					{/if}
-				</Panel>
 
 				<!-- Sessions Card (experimental) -->
 				{#if sessionRecordingEnabled}
@@ -693,6 +749,15 @@
 		</div>
 
 		<!-- Settings Modal -->
+		{#key env.id}
+			<K8sDeployModal
+				open={deployModalOpen}
+				environmentID={env.id}
+				gadgetNamespace={missingNamespace}
+				onClose={() => (deployModalOpen = false)}
+				onSuccess={() => getList(env.id)}
+			/>
+		{/key}
 		<BaseModal
 			bind:open={settingsModalOpen}
 			title={t('Environment Settings')}

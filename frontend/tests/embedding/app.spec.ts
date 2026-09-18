@@ -27,6 +27,112 @@ test.beforeEach(async ({ page }, testInfo) => {
 
 test.afterEach(() => expect(browserErrors).toEqual([]));
 
+test('Kubernetes dashboard requires confirmed absence and explicit deployment, then recovers', async ({
+	page
+}) => {
+	await page.goto('/tests/embedding/?dashboard=loading&initialPath=/env/test-env');
+	await expect(page.getByText('Headless Gadget Instances', { exact: true })).toBeVisible();
+	await expect(
+		page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true })
+	).toHaveCount(0);
+	await expect(page.getByText('Recorded Sessions', { exact: true })).toBeVisible();
+	await page.evaluate(() => window.embedding.dashboard('missing'));
+	await expect(
+		page.getByText('No valid Inspektor Gadget deployment was found', { exact: false })
+	).toBeVisible();
+	await expect(page.getByText('Headless Gadget Instances', { exact: true })).toHaveCount(0);
+	await expect(page.getByText('Run Gadget', { exact: true })).toHaveCount(0);
+	await expect(page.getByText('Recorded Sessions', { exact: true })).toBeVisible();
+	expect(
+		await page.evaluate(() =>
+			window.embedding.requests.filter((r) => r.cmd === 'deployIG' || r.cmd === 'getChartValues')
+		)
+	).toEqual([]);
+	await page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true }).click();
+	const modal = page.getByRole('dialog');
+	await expect(
+		modal.getByRole('heading', { name: 'Deploy Inspektor Gadget to Kubernetes' })
+	).toBeVisible();
+	await expect(modal.getByLabel('Namespace', { exact: true })).toHaveValue('custom-gadget');
+	await expect(modal.getByLabel('Namespace', { exact: true })).toBeDisabled();
+	expect(
+		await page.evaluate(() => window.embedding.requests.filter((r) => r.cmd === 'deployIG'))
+	).toEqual([]);
+	await modal.getByRole('button', { name: 'Deploy', exact: true }).click();
+	await expect(page.getByText('Headless Gadget Instances', { exact: true })).toBeVisible();
+	await expect(
+		page.getByText('No valid Inspektor Gadget deployment was found', { exact: false })
+	).toHaveCount(0);
+	await expect(page.getByText('Recorded Sessions', { exact: true })).toBeVisible();
+	const requests = await page.evaluate(() =>
+		window.embedding.requests.filter((r) => r.cmd === 'deployIG')
+	);
+	expect(requests).toHaveLength(1);
+	expect(requests[0].data).toMatchObject({
+		environmentID: 'test-env',
+		namespace: 'custom-gadget',
+		redeploy: false,
+		undeploy: false
+	});
+});
+
+test('Kubernetes errors, connected state and non-Kubernetes dashboards never offer deployment', async ({
+	page
+}) => {
+	for (const scenario of ['error', 'uncertain', 'connected', 'missing&nonK8s']) {
+		await page.goto(`/tests/embedding/?dashboard=${scenario}&initialPath=/env/test-env`);
+		await expect(page.getByText('Headless Gadget Instances', { exact: true })).toBeVisible();
+		await expect(
+			page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true })
+		).toHaveCount(0);
+		await expect(page.getByText('Recorded Sessions', { exact: true })).toBeVisible();
+		expect(
+			await page.evaluate(() => window.embedding.requests.filter((r) => r.cmd === 'deployIG'))
+		).toEqual([]);
+	}
+});
+
+test('a failed Kubernetes recheck clears the old deployment offer', async ({ page }) => {
+	await page.clock.install();
+	await page.goto('/tests/embedding/?dashboard=missing&initialPath=/env/test-env');
+	await expect(
+		page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true })
+	).toBeVisible();
+	await page.evaluate(() => window.embedding.dashboard('error'));
+	await page.clock.fastForward(7_000);
+	await expect(page.getByText('Headless Gadget Instances', { exact: true })).toBeVisible();
+	await expect(
+		page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true })
+	).toHaveCount(0);
+	await expect(page.getByText('Recorded Sessions', { exact: true })).toBeVisible();
+});
+
+test('restricted app mode never offers Kubernetes deployment', async ({ page }) => {
+	test.skip(process.env.VITE_APP_MODE !== 'single-env', 'Requires the restricted app-mode build');
+	await page.goto('/tests/embedding/?dashboard=missing&initialPath=/env/test-env');
+	await expect(page.getByText('Headless Gadget Instances', { exact: true })).toBeVisible();
+	await expect(
+		page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true })
+	).toHaveCount(0);
+	await expect(page.getByText('Recorded Sessions', { exact: true })).toBeVisible();
+	expect(
+		await page.evaluate(() => window.embedding.requests.filter((r) => r.cmd === 'deployIG'))
+	).toEqual([]);
+});
+
+test('Kubernetes deployment rejection stays visible without disconnecting the dashboard', async ({
+	page
+}) => {
+	await page.goto('/tests/embedding/?dashboard=missing&deployError&initialPath=/env/test-env');
+	await page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true }).click();
+	await page.getByRole('dialog').getByRole('button', { name: 'Deploy', exact: true }).click();
+	await expect(page.getByRole('alert')).toHaveText('fixture deployment forbidden');
+	await page.getByTitle('Close (Force)').click();
+	await expect(page.getByText('Recorded Sessions', { exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Deploy Inspektor Gadget', exact: true }).click();
+	await expect(page.getByRole('dialog')).toBeVisible();
+});
+
 test('undeploy explains installation detection and presents operation-specific failures', async ({
 	page
 }) => {

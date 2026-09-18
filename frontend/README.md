@@ -33,6 +33,22 @@ management, ArtifactHub discovery, arbitrary-image launcher, recording controls,
 and session replay components. Desktop routes are thin adapters around those
 same components; the library does not load the SvelteKit router.
 
+For Kubernetes environments, a confirmed missing installation replaces the live
+gadget cards with a deployment offer; Recorded Sessions remains available.
+Neither initial loading nor ordinary connection/authentication/RBAC failures
+show this offer. The backend marks a rejected `listInstances` response with
+`data: { deploymentMissing: true, gadgetNamespace }` only after successful empty
+discovery of IG-labeled DaemonSets, Deployments and Pods, including other namespaces.
+Unready installations are not missing. Hosts must preserve rejected-response
+data, not classify error text. Backends without this signal and builds without
+`canCreateEnvironment` retain their existing dashboard behavior.
+
+The offer opens the same deployment modal as Create Environment. Only its
+explicit Deploy action submits `deployIG`; success refreshes the instance list.
+Saved-environment deployments send `environmentID`, resolved by the backend to
+the saved Kubernetes context and IG namespace (the namespace is fixed in this
+modal). Connection credentials never need to be supplied by the webview.
+
 ```tsx
 import { EmbeddableApp } from '@inspektor-gadget/frontend';
 import { IGProvider, SvelteWrapper } from '@inspektor-gadget/react';

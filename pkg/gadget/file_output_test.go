@@ -298,3 +298,30 @@ func TestFileAuthorizationErrorsAreSynchronous(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateRunRejectsInvalidCombinations(t *testing.T) {
+	service := NewService(NewInstanceManager())
+	output := &fileoutput.Request{Token: "t", Format: "jsonl"}
+	for name, req := range map[string]RunRequest{
+		"output-without-host":     {Output: output},
+		"record-without-recorder": {Record: true},
+		"negative-duration":       {DurationSeconds: -1},
+		"detached-duration":       {DurationSeconds: 1, Detached: true},
+	} {
+		if err := service.ValidateRun(req); err == nil {
+			t.Errorf("%s accepted", name)
+		}
+	}
+	service.SetFileOutputs(fileoutput.NewManager("host"))
+	for name, req := range map[string]RunRequest{
+		"output-detached": {Output: output, Detached: true},
+		"output-session":  {Output: output, SessionName: "s"},
+	} {
+		if err := service.ValidateRun(req); err == nil {
+			t.Errorf("%s accepted", name)
+		}
+	}
+	if err := service.ValidateRun(RunRequest{Output: output, DurationSeconds: 5}); err != nil {
+		t.Fatal(err)
+	}
+}

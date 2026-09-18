@@ -27,6 +27,8 @@
 		undeploy?: boolean;
 		kubeContext?: string;
 		gadgetNamespace?: string;
+		environmentID?: string;
+		onSuccess?: () => void;
 	}
 
 	let {
@@ -36,7 +38,9 @@
 		redeploy = false,
 		undeploy = false,
 		kubeContext = '',
-		gadgetNamespace = 'gadget'
+		gadgetNamespace = 'gadget',
+		environmentID,
+		onSuccess
 	}: Props = $props();
 
 	const api = getContext<ApiContext>('api');
@@ -84,8 +88,21 @@
 
 	// Deployment state - use a snapshot to avoid deep reactivity issues
 	const currentDeployment = $derived(
-		deploymentId ? deployments.get(deploymentId) : deployments.getActive()
+		deploymentId
+			? deployments.get(deploymentId)
+			: environmentID
+				? undefined
+				: deployments.getActive()
 	);
+	let notifiedDeployment = $state<string>();
+	$effect(() => {
+		if (currentDeployment?.status === 'success' && currentDeployment.id !== notifiedDeployment) {
+			notifiedDeployment = currentDeployment.id;
+			onSuccess?.();
+		}
+	});
+	let startError = $state('');
+	let starting = $state(false);
 	const isDeploying = $derived(currentDeployment?.status === 'deploying');
 	const isConfiguring = $derived(!currentDeployment || currentDeployment.status === 'configuring');
 	const hasError = $derived(currentDeployment?.status === 'error');
@@ -93,7 +110,7 @@
 
 	// Validation
 	let isValid = $derived(
-		namespace.trim().length > 0 && releaseName.trim().length > 0 && !isDeploying
+		namespace.trim().length > 0 && releaseName.trim().length > 0 && !isDeploying && !starting
 	);
 
 	// Helper to get nested value from object
@@ -288,9 +305,12 @@
 
 	async function startDeployment() {
 		if (!isValid) return;
+		startError = '';
+		starting = true;
 
 		try {
 			const config: DeploymentConfig = {
+				...(environmentID ? { environmentID } : {}),
 				namespace: namespace.trim(),
 				releaseName: releaseName.trim(),
 				chartVersion: chartVersion.trim() || undefined,
@@ -347,6 +367,7 @@
 		} catch (err) {
 			console.error('Failed to start deployment:', err);
 			const errorMsg = err instanceof Error ? err.message : String(err);
+			startError = errorMsg;
 
 			// If we have a deploymentId, update it with error
 			if (deploymentId) {
@@ -356,6 +377,8 @@
 				});
 				deployments.addDebugLog(deploymentId, `[Frontend] ERROR: ${errorMsg}`);
 			}
+		} finally {
+			starting = false;
 		}
 	}
 
@@ -466,12 +489,16 @@
 						<!-- Namespace -->
 						<Input
 							bind:value={namespace}
+							disabled={!!environmentID}
 							label={t('Namespace')}
 							placeholder="gadget"
 							description={undeploy
 								? t('The Kubernetes namespace from which Inspektor Gadget will be removed')
 								: t('The Kubernetes namespace where Inspektor Gadget will be deployed')}
 						/>
+						{#if startError}
+							<p role="alert" class="text-sm text-ig-error">{startError}</p>
+						{/if}
 
 						<!-- Release Name -->
 						<Input

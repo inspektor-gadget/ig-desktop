@@ -27,6 +27,7 @@ import (
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 	"github.com/inspektor-gadget/ig-desktop/pkg/helm"
 	"github.com/inspektor-gadget/ig-desktop/pkg/k8s"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type CheckIGDeploymentRequest struct {
@@ -35,14 +36,15 @@ type CheckIGDeploymentRequest struct {
 }
 
 type DeployIGRequest struct {
-	Namespace    string `json:"namespace"`
-	ReleaseName  string `json:"releaseName"`
-	ChartVersion string `json:"chartVersion,omitempty"`
-	CustomValues string `json:"customValues,omitempty"`
-	KubeConfig   string `json:"kubeConfig,omitempty"`
-	KubeContext  string `json:"kubeContext,omitempty"`
-	Redeploy     bool   `json:"redeploy,omitempty"`
-	Undeploy     bool   `json:"undeploy,omitempty"`
+	EnvironmentID string `json:"environmentID,omitempty"`
+	Namespace     string `json:"namespace"`
+	ReleaseName   string `json:"releaseName"`
+	ChartVersion  string `json:"chartVersion,omitempty"`
+	CustomValues  string `json:"customValues,omitempty"`
+	KubeConfig    string `json:"kubeConfig,omitempty"`
+	KubeContext   string `json:"kubeContext,omitempty"`
+	Redeploy      bool   `json:"redeploy,omitempty"`
+	Undeploy      bool   `json:"undeploy,omitempty"`
 }
 
 type DeployIGResponse struct {
@@ -102,6 +104,11 @@ func (h *Handler) HandleDeployIG(ev *api.Event) {
 		return
 	}
 
+	if err := h.resolveDeploymentEnvironment(req); err != nil {
+		h.send(ev.SetError(err))
+		return
+	}
+
 	// Validate required fields
 	if req.Namespace == "" {
 		h.send(ev.SetError(fmt.Errorf("namespace is required")))
@@ -143,6 +150,40 @@ func (h *Handler) HandleDeployIG(ev *api.Event) {
 
 	// Start deployment in background
 	go h.performDeployment(deploymentID, deployConfig, req.Redeploy, req.Undeploy)
+}
+
+func (h *Handler) resolveDeploymentEnvironment(req *DeployIGRequest) error {
+	if req.EnvironmentID == "" {
+		return nil
+	}
+	env, err := h.envStorage.Get(req.EnvironmentID)
+	if err != nil {
+		return err
+	}
+	if env.Runtime != "grpc-k8s" {
+		return fmt.Errorf("deployment requires a Kubernetes environment")
+	}
+	// Resolve the same saved connection as RuntimeFactory, without exposing
+	// connection parameters to the frontend or accepting target overrides.
+	raw, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{},
+	).RawConfig()
+	if err != nil {
+		return fmt.Errorf("could not load kubernetes config")
+	}
+	req.KubeContext = env.Params["context"]
+	if req.KubeContext == "" {
+		req.KubeContext = raw.CurrentContext
+	}
+	if req.KubeContext == "" || raw.Contexts[req.KubeContext] == nil {
+		return fmt.Errorf("saved Kubernetes context does not exist")
+	}
+	req.KubeConfig = ""
+	req.Namespace = env.Params["gadget-namespace"]
+	if req.Namespace == "" {
+		req.Namespace = "gadget"
+	}
+	return nil
 }
 
 // performDeployment runs the actual Helm deployment and streams progress
