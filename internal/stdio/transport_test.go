@@ -38,6 +38,7 @@ func TestHandshakeMalformedAndShutdown(t *testing.T) {
 	if err := tr.Start(); err != nil {
 		t.Fatal(err)
 	}
+
 	if calls != 1 {
 		t.Fatalf("dispatch count %d", calls)
 	}
@@ -54,6 +55,25 @@ func TestHandshakeMalformedAndShutdown(t *testing.T) {
 		if ev.Type != 1 || ev.Success != wantSuccess {
 			t.Fatalf("unexpected reply %d: %+v", i, ev)
 		}
+	}
+}
+
+func TestShutdownFinalizesBeforeAcknowledgement(t *testing.T) {
+	var output bytes.Buffer
+	tr := New(context.Background(), io.NopCloser(strings.NewReader(`{"cmd":"shutdown","reqID":"bye","data":{}}`+"\n")), &output, nil)
+	tr.OnMessage(func(string) {})
+	tr.SetShutdown(func() error {
+		if tr.Context().Err() != context.Canceled {
+			t.Fatal("shutdown did not cancel runs")
+		}
+		return tr.Send(map[string]any{"type": 5, "data": map[string]string{"state": "completed"}})
+	})
+	if err := tr.Start(); err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(strings.TrimSpace(output.String()), "\n")
+	if len(lines) != 2 || !strings.Contains(lines[0], `"type":5`) || !strings.Contains(lines[1], `"reqID":"bye"`) {
+		t.Fatalf("wrong shutdown ordering: %s", output.String())
 	}
 }
 
@@ -75,8 +95,78 @@ func TestFrameBounds(t *testing.T) {
 		})
 	}
 	tr := New(context.Background(), io.NopCloser(strings.NewReader("")), io.Discard, nil)
-	if err := tr.Send(strings.Repeat("x", MaxFrameBytes)); err == nil {
+	if err := tr.Send(strings.Repeat("x", MaxFrameBytes)); !errors.Is(err, ErrFrameTooLarge) {
 		t.Fatal("oversized output accepted")
+	}
+}
+
+func TestHandlerPanicRepliesWithError(t *testing.T) {
+	input := `{"cmd":"boom","reqID":"1","data":{}}` + "\n" + `{"cmd":"after","reqID":"2","data":{}}` + "\n"
+	var output bytes.Buffer
+	tr := New(context.Background(), io.NopCloser(strings.NewReader(input)), &output, nil)
+	tr.OnMessage(func(message string) {
+		var ev api.Event
+		json.Unmarshal([]byte(message), &ev)
+		if ev.Command == "boom" {
+			panic("handler bug")
+		}
+		ev.Type = api.TypeCommandResponse
+		tr.Send(ev.SetData(nil))
+	})
+	if err := tr.Start(); err != nil {
+		t.Fatal(err)
+	}
+	replies := map[string]api.Event{}
+	for _, line := range strings.Split(strings.TrimSpace(output.String()), "\n") {
+		var ev api.Event
+		if err := json.Unmarshal([]byte(line), &ev); err != nil {
+			t.Fatal(err)
+		}
+		replies[ev.RequestID] = ev
+	}
+	if r := replies["1"]; r.Success || r.Error != "internal error handling boom" {
+		t.Fatalf("panicking command reply: %+v", r)
+	}
+	if r := replies["2"]; !r.Success {
+		t.Fatalf("later command reply: %+v", r)
+	}
+}
+
+func TestOversizedOutputKeepsConnection(t *testing.T) {
+	var output bytes.Buffer
+	tr := New(context.Background(), io.NopCloser(strings.NewReader("")), &output, nil)
+	huge := strings.Repeat("x", MaxFrameBytes)
+
+	// An unsolicited stream event is dropped.
+	if err := tr.Send(map[string]any{"type": 2, "data": huge}); !errors.Is(err, ErrFrameTooLarge) {
+		t.Fatalf("stream event: got %v", err)
+	}
+	if output.Len() != 0 {
+		t.Fatal("oversized stream event was written")
+	}
+
+	// A response is replaced by an error reply to the same request.
+	tr.pending["big"] = "getRunEvents"
+	response := (&api.Event{Type: api.TypeCommandResponse, Command: "getRunEvents", RequestID: "big"}).SetData(huge)
+	if err := tr.Send(response); !errors.Is(err, ErrFrameTooLarge) {
+		t.Fatalf("response: got %v", err)
+	}
+	var reply api.Event
+	if err := json.Unmarshal(output.Bytes(), &reply); err != nil {
+		t.Fatal(err)
+	}
+	if reply.RequestID != "big" || reply.Success || reply.Error != "response exceeds frame limit" {
+		t.Fatalf("unexpected reply %+v", reply)
+	}
+	if _, ok := tr.pending["big"]; ok {
+		t.Fatal("replaced response left the request pending")
+	}
+
+	if tr.Context().Err() != nil {
+		t.Fatal("oversized output ended the connection")
+	}
+	if err := tr.Send(map[string]int{"ok": 1}); err != nil {
+		t.Fatalf("connection unusable after oversized output: %v", err)
 	}
 }
 

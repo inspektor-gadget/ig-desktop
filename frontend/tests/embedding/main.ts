@@ -135,7 +135,33 @@ const adapter = {
 				break;
 			case 'runGadget':
 				metadata('manual-run');
-				data = { id: 'manual-run' };
+				if (request.data?.output) {
+					emit({
+						type: 7,
+						instanceID: 'manual-run',
+						environmentID: environment.id,
+						data: {
+							format: request.data.output.format,
+							path: '/captures/capture.jsonl',
+							host: 'test host',
+							state: 'running',
+							records: 0,
+							bytes: 0
+						}
+					});
+					data = { id: 'manual-run', output: { format: request.data.output.format } };
+				} else {
+					data = { id: 'manual-run' };
+				}
+				break;
+			case 'selectFileOutput':
+				data = {
+					token: 'selected-once',
+					format: request.data?.format,
+					path: '/captures/capture.jsonl',
+					host: 'test host',
+					overwrite: false
+				};
 				break;
 			case 'attachInstance':
 				metadata('attached-run', true);
@@ -148,6 +174,9 @@ const adapter = {
 const cleanup = initializeIG({ adapter, language: 'en' });
 const props: EmbeddableAppProps = createReactiveProps({
 	path: new URLSearchParams(location.search).get('initialPath') || '/',
+	...(new URLSearchParams(location.search).has('fileOutput')
+		? { fileOutput: { formats: ['jsonl'], host: 'test host' } }
+		: {}),
 	onNavigate: (path: string) => {
 		props.path = path;
 	},

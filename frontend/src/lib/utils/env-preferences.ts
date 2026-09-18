@@ -169,12 +169,20 @@ export function addGadgetToHistory(
 	request: GadgetRunRequest,
 	maxEntries: number = 50
 ): void {
+	// Destination tokens authorize one start only and paths/overwrite consent are never history data.
+	const { output, ...withoutOutput } = request;
+	const historyRequest: GadgetRunRequest = output
+		? {
+				...withoutOutput,
+				output: { format: output.format, datasourceIds: output.datasourceIds }
+			}
+		: withoutOutput;
 	const history = getEnvPref<GadgetRunRequest[]>(environmentID, 'gadget-history') || [];
 
 	// Find if this exact gadget+params combination exists
 	const existingIndex = history.findIndex((item) => {
 		// Compare image and params, ignore timestamp
-		return item.image === request.image && deepEqual(item.params, request.params);
+		return item.image === historyRequest.image && deepEqual(item.params, historyRequest.params);
 	});
 
 	let updated: GadgetRunRequest[];
@@ -182,13 +190,13 @@ export function addGadgetToHistory(
 		// Exists - remove from current position and add to front with new timestamp
 		const existing = history[existingIndex];
 		updated = [
-			{ ...existing, timestamp: request.timestamp },
+			{ ...existing, timestamp: historyRequest.timestamp },
 			...history.slice(0, existingIndex),
 			...history.slice(existingIndex + 1)
 		];
 	} else {
 		// New entry - add to front
-		updated = [request, ...history];
+		updated = [historyRequest, ...history];
 	}
 
 	// Limit to maxEntries
@@ -223,6 +231,26 @@ function validHistory(value: unknown): GadgetRunRequest[] {
 			if (request[key] !== undefined && typeof request[key] !== 'boolean')
 				throw new Error(`Invalid host gadget ${key}`);
 		}
+		const rawOutput = request.output as { format?: unknown; datasourceIds?: unknown } | undefined;
+		if (
+			rawOutput !== undefined &&
+			(!rawOutput ||
+				typeof rawOutput !== 'object' ||
+				Array.isArray(rawOutput) ||
+				(rawOutput.format !== 'jsonl' && rawOutput.format !== 'pcap-ng'))
+		) {
+			throw new Error('Invalid host gadget output');
+		}
+		const output = rawOutput as
+			| { format: 'jsonl' | 'pcap-ng'; datasourceIds?: unknown }
+			| undefined;
+		if (
+			output?.datasourceIds !== undefined &&
+			(!Array.isArray(output.datasourceIds) ||
+				!output.datasourceIds.every((id) => typeof id === 'string'))
+		) {
+			throw new Error('Invalid host gadget output datasources');
+		}
 		return {
 			image: request.image,
 			environmentID: typeof request.environmentID === 'string' ? request.environmentID : undefined,
@@ -235,7 +263,10 @@ function validHistory(value: unknown): GadgetRunRequest[] {
 					: undefined,
 			record: request.record === true,
 			sessionId: typeof request.sessionId === 'string' ? request.sessionId : undefined,
-			sessionName: typeof request.sessionName === 'string' ? request.sessionName : undefined
+			sessionName: typeof request.sessionName === 'string' ? request.sessionName : undefined,
+			output: output
+				? { format: output.format, datasourceIds: output.datasourceIds as string[] | undefined }
+				: undefined
 		};
 	});
 }

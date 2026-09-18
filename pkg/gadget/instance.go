@@ -59,6 +59,15 @@ func (m *InstanceManager) Stop(instanceID string) error {
 	return nil
 }
 
+// StopAll requests graceful termination without releasing ownership early.
+func (m *InstanceManager) StopAll() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, cancel := range m.cancellers {
+		cancel()
+	}
+}
+
 // Unregister removes an instance from tracking (typically when it completes)
 func (m *InstanceManager) Unregister(instanceID string) {
 	m.mu.Lock()

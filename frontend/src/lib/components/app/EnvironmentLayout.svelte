@@ -16,7 +16,12 @@
 	let { children, showTabs = true }: { children: Snippet; showTabs?: boolean } = $props();
 
 	let instanceKeys = $derived(
-		Object.keys(instances).filter((key) => instances[key].environment === page.params.env)
+		Object.keys(instances).filter((key) => {
+			const instance = instances[key];
+			const terminalFileOutput =
+				instance.output?.state === 'completed' || instance.output?.state === 'failed';
+			return instance.environment === page.params.env && !terminalFileOutput;
+		})
 	);
 
 	const api = getContext<ApiContext>('api');
@@ -27,9 +32,16 @@
 			instance?.name || instance?.gadgetInfo?.imageName || instanceID.substring(0, 8);
 		const isAttached = instance?.attached;
 		const wasRunning = instance?.running;
+		const isFileCapture = !!instance?.output;
 
 		try {
 			await api.request({ cmd: 'stopInstance', data: { id: instanceID } });
+			if (isFileCapture && wasRunning) {
+				if (page.params.instanceID && page.params.instanceID === instanceID) {
+					goto(resolve(`/env/${page.params.env}`));
+				}
+				return;
+			}
 			console.log('stopped');
 
 			// Only show toast if we actually stopped/detached (was still running)

@@ -206,6 +206,19 @@ func (r *TransientKubernetes) sweep(now time.Time) {
 	}
 }
 
+// Describe returns an owned copy of safe display metadata, without credentials
+// or source paths. It does not reload the kubeconfig used to freeze the target.
+func (r *TransientKubernetes) Describe(id string) (*KubernetesTarget, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	target, err := r.lookup(id)
+	if err != nil {
+		return nil, err
+	}
+	description := target.KubernetesTarget
+	return &description, nil
+}
+
 // Lookup returns an owned config snapshot. Expiry/release does not affect it.
 func (r *TransientKubernetes) Lookup(id string) (*rest.Config, string, error) {
 	r.mu.Lock()

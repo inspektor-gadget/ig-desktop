@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"sync"
 
 	"github.com/inspektor-gadget/ig-desktop/internal/artifacthub"
 	"github.com/inspektor-gadget/ig-desktop/internal/environment"
@@ -27,6 +26,7 @@ import (
 	"github.com/inspektor-gadget/ig-desktop/internal/session"
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 	"github.com/inspektor-gadget/ig-desktop/pkg/api/transport"
+	"github.com/inspektor-gadget/ig-desktop/pkg/fileoutput"
 	"github.com/inspektor-gadget/ig-desktop/pkg/gadget"
 )
 
@@ -42,8 +42,14 @@ type Handler struct {
 	pluginService       *plugins.Service
 	helmDir             string
 	transientKubernetes *environment.TransientKubernetes
+	fileOutputs         *fileoutput.Manager
+	prepareFileOutput   bool
+	filePicker          func(string) (*fileoutput.Selection, error)
 
-	mu   sync.Mutex
+	// send forwards to the transport. Transports serialize concurrent Sends
+	// themselves (stdio and WebSocket lock per frame; Wails emits
+	// asynchronously), so no extra lock here: one would only make every
+	// sender wait behind a single slow write.
 	send func(any)
 }
 
@@ -130,6 +136,18 @@ func (h *Handler) Handlers() []api.CommandHandler {
 			commandHandler{"releaseKubernetesTarget", h.HandleReleaseKubernetesTarget},
 		)
 	}
+	if h.fileOutputs != nil {
+		handlers = append(handlers,
+			commandHandler{"getFileOutputCapabilities", h.HandleGetFileOutputCapabilities},
+			commandHandler{"releaseFileOutput", h.HandleReleaseFileOutput},
+		)
+		if h.prepareFileOutput {
+			handlers = append(handlers, commandHandler{"prepareFileOutput", h.HandlePrepareFileOutput})
+		}
+		if h.filePicker != nil {
+			handlers = append(handlers, commandHandler{"selectFileOutput", h.HandleSelectFileOutput})
+		}
+	}
 	return handlers
 }
 
@@ -137,8 +155,6 @@ func (h *Handler) Handlers() []api.CommandHandler {
 // The transport abstracts the communication layer (Wails events, WebSocket, etc.)
 func (h *Handler) Register(t transport.Transport) error {
 	h.send = func(ev any) {
-		h.mu.Lock()
-		defer h.mu.Unlock()
 		if err := t.Send(ev); err != nil {
 			log.Printf("handler: failed to send message: %v", err)
 		}

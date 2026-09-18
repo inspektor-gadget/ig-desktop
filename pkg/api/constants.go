@@ -22,6 +22,7 @@ const (
 	TypeGadgetLog          = 4
 	TypeGadgetStop         = 5
 	TypeGadgetEventArray   = 6
+	TypeGadgetOutput       = 7
 	TypeEnvironmentCreate  = 100
 	TypeEnvironmentDelete  = 101
 	TypeEnvironmentUpdate  = 102

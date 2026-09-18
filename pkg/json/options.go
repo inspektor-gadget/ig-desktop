@@ -16,6 +16,12 @@ package json
 
 type Option func(*Formatter)
 
+// WithExactIntegers encodes 64-bit scalars and integer arrays as decimal strings
+// and returns owned buffers, for durable JSON consumers without float rounding.
+func WithExactIntegers() Option {
+	return func(f *Formatter) { f.exactIntegers = true }
+}
+
 // WithFields specifies exactly which fields to export using this formatter;
 // field names can be prefixed with +/- to add or remove the field from the
 // output - if all fields are prefixed, the default visible fields will be

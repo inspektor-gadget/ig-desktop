@@ -4,7 +4,8 @@ import {
 	handleGadgetEvent,
 	handleGadgetLogging,
 	handleGadgetQuit,
-	handleGadgetArrayData
+	handleGadgetArrayData,
+	handleGadgetFileOutput
 } from '$lib/handlers/gadget.handler.svelte';
 import {
 	handleEnvironmentCreate,
@@ -58,6 +59,10 @@ export class MessageRouterService {
 
 			case 6: // Array data
 				handleGadgetArrayData(msg);
+				break;
+
+			case 7: // File output progress
+				handleGadgetFileOutput(msg);
 				break;
 
 			case 100: // Environment create

@@ -100,6 +100,29 @@ The exported `EmbeddableAppProps`, `EmbeddableAppState`, `ResultViewState`, and
 - `sessions?: boolean`: defaults to `true` for this application and controls the
   existing experimental recording/session UI. Desktop routes keep their existing
   configuration-controlled behavior.
+- `fileOutput?: { formats: ('jsonl' | 'pcap-ng')[]; host: string; notify?: boolean }`:
+  an explicit native-host capability for file-producing runs. Omit it for the
+  unchanged table-only behavior used by browser, demo, website, and Insights
+  embeddings. When supplied, the launcher offers **Default table view** and
+  **To a file**; table remains the default. JSONL is available for typed
+  datasources, while PCAP-NG is shown only for exactly one datasource advertising
+  `cli.supported-output-modes` with a comma-separated `pcap-ng` token.
+  The host must implement `selectFileOutput { format }` (returning either
+  `null` for silent cancellation or `{ token, format, path, host, overwrite }`),
+  `releaseFileOutput { token }`, and accept the one-use token in
+  `runGadget.output`. File starts are foreground-only and unrecorded; recent
+  presets retain only `{ format, datasourceIds? }`, never a token, path, or
+  overwrite decision. Use `notify: false` only when the host centrally presents
+  terminal file-capture notifications; picker/start/stop errors remain shared
+  UI operation errors. Embedded file-status Copy uses
+  `copyFileOutputPath { instanceID }` when `notify: false`.
+  Existing destinations require host-side explicit confirmation. A successful
+  replacement is no-clobber publication through a temporary recovery file. If
+  replacement fails, the prior file is kept at terminal `recoveryPath`, which
+  the shared status view displays as **Previous file**; after a successful
+  replacement it is deleted.
+  A brief interval without the final destination name is an intentional
+  replacement limitation.
 
 Navigation alone never starts a gadget. The existing launcher reads `env`,
 `params` (JSON), `detached`, and `instanceName` query parameters and still requires

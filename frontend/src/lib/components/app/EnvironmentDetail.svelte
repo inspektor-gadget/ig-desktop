@@ -260,6 +260,13 @@
 	}
 
 	async function runGadget(gadgetRunRequest: GadgetRunRequest) {
+		// A saved file-output preset is intentionally configuration-only: it has no reusable token/path.
+		if (gadgetRunRequest.output) {
+			const params = new URLSearchParams({ env: env.id, output: gadgetRunRequest.output.format });
+			if (gadgetRunRequest.params) params.set('params', JSON.stringify(gadgetRunRequest.params));
+			goto(resolve(`/gadgets/run/${gadgetRunRequest.image}?${params}`));
+			return;
+		}
 		// Apply recording settings from configuration (only when feature is enabled)
 		const alwaysRecord = configuration.get('alwaysRecord') === true;
 		const singleSessionPerStart = configuration.get('singleSessionPerStart') !== false;
@@ -531,6 +538,9 @@
 													}
 													if (entry.instanceName) {
 														params.set('instanceName', entry.instanceName);
+													}
+													if (entry.output) {
+														params.set('output', entry.output.format);
 													}
 													goto(resolve(`/gadgets/run/${entry.image}?${params.toString()}`));
 												}}><Cog /></button

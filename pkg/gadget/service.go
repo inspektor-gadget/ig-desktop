@@ -31,6 +31,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 
 	apiTypes "github.com/inspektor-gadget/ig-desktop/pkg/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/fileoutput"
 	grpcruntime "github.com/inspektor-gadget/ig-desktop/pkg/grpc-runtime"
 	json2 "github.com/inspektor-gadget/ig-desktop/pkg/json"
 	"github.com/inspektor-gadget/ig-desktop/pkg/operators/virtual"
@@ -51,7 +52,12 @@ type Service struct {
 	instanceManager *InstanceManager
 	sessionRecorder SessionRecorder
 	send            func(any)
+	fileOutputs     *fileoutput.Manager
 }
+
+// SetFileOutputs opts this service into host-authorized filesystem output.
+// Ordinary web/socket services deliberately never call it.
+func (s *Service) SetFileOutputs(outputs *fileoutput.Manager) { s.fileOutputs = outputs }
 
 // NewService creates a new gadget service
 func NewService(instanceManager *InstanceManager) *Service {
@@ -151,6 +157,9 @@ func (s *Service) subscribeToDataSources(gadgetCtx operators.GadgetContext, inst
 
 // RunRequest contains parameters for running a gadget
 type RunRequest struct {
+	Output           *fileoutput.Request
+	OutputStatus     *fileoutput.Status
+	OutputTarget     *fileoutput.Target
 	ID               string
 	Image            string
 	EnvironmentID    string
@@ -200,6 +209,14 @@ func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req Run
 	if err := ValidateDuration(req.DurationSeconds, req.Detached); err != nil {
 		return "", err
 	}
+	if req.Output != nil {
+		if s.fileOutputs == nil {
+			return "", fmt.Errorf("file output is unavailable on this host")
+		}
+		if req.Detached || req.Record || req.SessionID != "" || req.SessionName != "" {
+			return "", fmt.Errorf("file output requires foreground execution without session recording")
+		}
+	}
 	if req.Record && s.sessionRecorder == nil {
 		return "", fmt.Errorf("session recording is unavailable")
 	}
@@ -207,6 +224,24 @@ func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req Run
 		return "", fmt.Errorf("recording requires a foreground capture; detached creation has no event stream")
 	}
 	instanceID := uuid.New().String()
+	nctx, cancel := runContext(ctx, req.DurationSeconds)
+	var output *fileoutput.Sink
+	if req.Output != nil {
+		var err error
+		output, err = s.fileOutputs.Open(*req.Output)
+		if err != nil {
+			cancel()
+			return "", err
+		}
+		if req.OutputStatus != nil {
+			*req.OutputStatus = output.Status()
+		}
+	}
+	ready := make(chan struct{})
+	sendOutput := func(status fileoutput.Status) {
+		data, _ := json.Marshal(status)
+		s.send(&apiTypes.GadgetEvent{Type: apiTypes.TypeGadgetOutput, EnvironmentID: req.EnvironmentID, InstanceID: instanceID, Data: data})
+	}
 
 	xop := simple.New("exp", simple.WithPriority(1000), simple.OnPreStart(func(gadgetCtx operators.GadgetContext) error {
 		gi, err := gadgetCtx.SerializeGadgetInfo(false)
@@ -236,12 +271,33 @@ func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req Run
 			SessionInfo:   sessionInfo,
 		})
 
+		if output != nil {
+			err := output.Subscribe(gadgetCtx.GetDataSources(), map[string]any{
+				"image": req.Image, "environmentID": req.EnvironmentID, "instanceID": instanceID,
+				"params": req.Params, "durationSeconds": req.DurationSeconds,
+				"host":      output.Status().Host,
+				"target":    req.OutputTarget,
+				"startedAt": time.Now().UTC().Format(time.RFC3339Nano),
+			}, cancel)
+			close(ready)
+			if err != nil {
+				return err
+			}
+			sendOutput(output.Status())
+			return nil
+		}
 		return s.subscribeToDataSources(gadgetCtx, instanceID, req.Record)
 	}))
 
 	// Create logger and set session recorder if available
-	gadgetLogger := NewLogger(s.send, instanceID, logger.DebugLevel)
-	if s.sessionRecorder != nil {
+	logSend, logLevel := s.send, logger.DebugLevel
+	if output != nil {
+		// Gadget log strings may contain observed data; file runs expose only
+		// bounded status and terminal errors, never runtime log payloads.
+		logSend, logLevel = func(any) {}, logger.ErrorLevel
+	}
+	gadgetLogger := NewLogger(logSend, instanceID, logLevel)
+	if s.sessionRecorder != nil && output == nil {
 		gadgetLogger.SetSessionRecorder(s.sessionRecorder)
 	}
 
@@ -263,19 +319,49 @@ func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req Run
 		}
 	}
 
-	nctx, cancel := runContext(ctx, req.DurationSeconds)
 	s.instanceManager.Register(instanceID, cancel)
 
 	gadgetCtx := gadgetcontext.New(nctx, req.Image, options...)
+	if output != nil {
+		// A partial capture file is worse than a stopped run.
+		grpcruntime.SetFailFast(gadgetCtx)
+	}
 
 	go func() {
+		progressDone, progressStopped := make(chan struct{}), make(chan struct{})
+		if output != nil {
+			go func() {
+				defer close(progressStopped)
+				select {
+				case <-ready:
+				case <-progressDone:
+					return
+				}
+				ticker := time.NewTicker(time.Second)
+				defer ticker.Stop()
+				stopped := nctx.Done()
+				for {
+					select {
+					case <-ticker.C:
+						sendOutput(output.Status())
+					case <-stopped:
+						output.Stopping()
+						sendOutput(output.Status())
+						stopped = nil
+					case <-progressDone:
+						return
+					}
+				}
+			}()
+		}
 		err := runtime.RunGadget(gadgetCtx, rtParams, req.Params)
-		if err != nil {
+		gadgetCtx.StopLocalOperators()
+		if err != nil && output == nil {
 			log.Printf("gadget error: %v", err)
 		}
 
 		// Stop session recording if active
-		if s.sessionRecorder != nil {
+		if s.sessionRecorder != nil && output == nil {
 			if err := s.sessionRecorder.StopGadgetRun(instanceID); err != nil {
 				log.Printf("failed to stop gadget run: %v", err)
 			}
@@ -285,7 +371,21 @@ func (s *Service) Run(ctx context.Context, runtime *grpcruntime.Runtime, req Run
 		reason := stopReason(nctx)
 		cancel()
 
-		data, _ := json.Marshal(map[string]any{"error": errorString(err), "reason": reason})
+		terminal := map[string]any{"error": errorString(err), "reason": reason}
+		if output != nil {
+			close(progressDone)
+			<-progressStopped
+			// The runtime has joined its receive callbacks before returning.
+			status := output.Finalize(err)
+			terminal["output"] = status
+			terminal["error"] = status.Error
+			select {
+			case <-ready:
+				sendOutput(status)
+			default:
+			}
+		}
+		data, _ := json.Marshal(terminal)
 		s.send(&apiTypes.GadgetEvent{
 			Type:          apiTypes.TypeGadgetStop,
 			EnvironmentID: req.EnvironmentID,

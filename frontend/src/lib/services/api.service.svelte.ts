@@ -40,7 +40,40 @@ export type ResponseMessage = {
 	success?: boolean;
 	error?: unknown;
 	data?: unknown;
+	/** The host lost confirmation of the command outcome; it is not a backend rejection. */
+	uncertain?: boolean;
 };
+
+/** A command reached the backend and was explicitly rejected. */
+export class BackendCommandError extends Error {
+	readonly data: unknown;
+
+	constructor(error: unknown, data?: unknown) {
+		super(
+			typeof error === 'string'
+				? error
+				: error && typeof error === 'object' && 'message' in error
+					? String(error.message)
+					: 'Backend command rejected'
+		);
+		this.name = 'BackendCommandError';
+		this.data = data;
+	}
+}
+
+/** The command may have reached the backend, but its final outcome is unknown. */
+export class UncertainCommandError extends Error {
+	constructor(error: unknown) {
+		super(
+			typeof error === 'string'
+				? error
+				: error && typeof error === 'object' && 'message' in error
+					? String(error.message)
+					: 'Command outcome is unknown'
+		);
+		this.name = 'UncertainCommandError';
+	}
+}
 
 type PendingRequest = {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- type-erased registry: each pending request resolves to a different shape
@@ -91,7 +124,11 @@ export class ApiService {
 	handleResponse(msg: ResponseMessage): void {
 		if (msg.reqID && this.requests[msg.reqID]) {
 			if (!msg.success) {
-				this.requests[msg.reqID].reject(msg.error);
+				this.requests[msg.reqID].reject(
+					msg.uncertain
+						? new UncertainCommandError(msg.error)
+						: new BackendCommandError(msg.error, msg.data)
+				);
 				delete this.requests[msg.reqID];
 				return;
 			}

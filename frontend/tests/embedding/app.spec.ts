@@ -224,6 +224,45 @@ test('transient launchers keep target fixed and do not record or persist launch 
 	).toBeNull();
 });
 
+test('file output is host-opt-in, requires a destination, and opens its status without table data', async ({
+	page
+}) => {
+	await page.goto(
+		'/tests/embedding/?fileOutput&initialPath=%2Fgadgets%2Frun%2Ftest%2Fimage%3Alatest'
+	);
+	await page.waitForFunction(() => window.embedding);
+	await page.locator('select').first().selectOption('test-env');
+	await expect(page.getByText('Parameters', { exact: true })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Mode', exact: true })).toBeVisible();
+	await page.getByLabel('Mode', { exact: true }).selectOption({ label: 'To a file' });
+	await expect(page.getByRole('button', { name: 'Run Gadget', exact: true })).toBeDisabled();
+	await page.getByRole('button', { name: 'Choose destination', exact: true }).click();
+	await expect(
+		page.getByText('/captures/capture.jsonl (test host)', { exact: true })
+	).toBeVisible();
+	await page.getByRole('button', { name: 'Run Gadget', exact: true }).click();
+	await expect(page.getByText('File capture', { exact: true })).toBeVisible();
+	const request = await page.evaluate(
+		() => window.embedding.requests.findLast((entry) => entry.cmd === 'runGadget')?.data
+	);
+	expect(request).toMatchObject({
+		detached: false,
+		record: false,
+		output: { token: 'selected-once', format: 'jsonl' }
+	});
+});
+
+test('file mode stays hidden without an explicit host capability', async ({ page }) => {
+	await page.evaluate(() =>
+		window.embedding.update({
+			path: '/gadgets/run/test/image:latest?env=test-env',
+			fileOutput: undefined
+		})
+	);
+	await expect(page.getByText('Parameters', { exact: true })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Mode', exact: true })).toHaveCount(0);
+});
+
 test('external link overrides restore the normal browser fallback', async ({ page }) => {
 	expect(await page.evaluate(() => window.embedding.externalLinks())).toEqual([
 		{ kind: 'host', url: 'https://example.com/host' },
@@ -351,4 +390,16 @@ test('acknowledges actual result controls, manual changes and public disconnect 
 	);
 	await expect(page.getByRole('grid', { name: 'Gadget output: 2 rows' })).toBeVisible();
 	expect(await page.evaluate(() => window.embedding.cancelPending())).toBe(true);
+});
+
+test('malformed host paths render not-found instead of crashing the application', async ({
+	page
+}) => {
+	for (const path of ['env/test-env', '/env/%E0%A4%A', '/\\example.org']) {
+		await page.evaluate((path) => window.embedding.update({ path }), path);
+		await expect(page.getByText('Page not found', { exact: true })).toBeVisible();
+		await page.evaluate(() => window.embedding.update({ path: '/env/test-env' }));
+		await expect(page.getByText('Page not found', { exact: true })).toHaveCount(0);
+	}
+	expect(await page.evaluate(() => location.host)).toBe('127.0.0.1:4175');
 });

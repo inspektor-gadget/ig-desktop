@@ -6,16 +6,110 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/fileoutput"
 	"github.com/inspektor-gadget/ig-desktop/pkg/gadget"
 )
 
 type testTransport struct {
+	mu      sync.Mutex
 	handler func(string)
 	lines   []string
 	replies []*api.Event
+}
+
+// Hosts expose different file output commands: Desktop (native) only lets the
+// webview pick through a native dialog, never submit a path; the stdio host
+// accepts paths but the manager denies unsafe ones; without a manager nothing
+// is available.
+func TestFileOutputCommandsAndPathDenialPerHost(t *testing.T) {
+	dir := t.TempDir()
+	existing := filepath.Join(dir, "existing.jsonl")
+	if err := os.WriteFile(existing, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	prepare := func(reqID, path string) string {
+		return string(requestData(t, map[string]any{"cmd": "prepareFileOutput", "reqID": reqID, "data": map[string]string{"path": path, "format": "jsonl"}}))
+	}
+	type want struct {
+		success bool
+		error   string
+	}
+	for _, host := range []struct {
+		name    string
+		prepare bool
+		picker  bool
+		manager bool
+		want    map[string]want
+	}{
+		{name: "none", want: map[string]want{
+			"cap":      {error: "unknown command"},
+			"relative": {error: "unknown command"},
+			"select":   {error: "unknown command"},
+			"run":      {error: "file output is unavailable"},
+		}},
+		{name: "native", manager: true, picker: true, want: map[string]want{
+			"cap":      {success: true},
+			"relative": {error: "unknown command: prepareFileOutput"},
+			"select":   {success: true},
+		}},
+		{name: "stdio", manager: true, prepare: true, want: map[string]want{
+			"cap":      {success: true},
+			"relative": {error: "must be an absolute"},
+			"existing": {error: "explicit replacement confirmation required"},
+			"fresh":    {success: true},
+			"select":   {error: "unknown command: selectFileOutput"},
+		}},
+	} {
+		t.Run(host.name, func(t *testing.T) {
+			manager := gadget.NewInstanceManager()
+			handler := New(context.Background(), nil, nil, gadget.NewService(manager), manager, nil, nil, nil, "")
+			if host.manager {
+				outputs := fileoutput.NewManager("host")
+				defer outputs.Close()
+				var picker func(string) (*fileoutput.Selection, error)
+				if host.picker {
+					picker = func(string) (*fileoutput.Selection, error) { return nil, nil }
+				}
+				handler.EnableFileOutput(outputs, host.prepare, picker)
+			}
+			transport := &testTransport{lines: []string{
+				`{"cmd":"getFileOutputCapabilities","reqID":"cap","data":{}}`,
+				prepare("relative", "untrusted.jsonl"),
+				prepare("existing", existing),
+				prepare("fresh", filepath.Join(dir, host.name+".jsonl")),
+				`{"cmd":"selectFileOutput","reqID":"select","data":{"format":"jsonl"}}`,
+			}}
+			if !host.manager {
+				// With a manager, runGadget would go on to resolve a runtime.
+				transport.lines = append(transport.lines, `{"cmd":"runGadget","reqID":"run","data":{"output":{"token":"untrusted","format":"jsonl"}}}`)
+			}
+			if err := handler.Register(transport); err != nil {
+				t.Fatal(err)
+			}
+			if len(transport.replies) != len(transport.lines) {
+				t.Fatalf("got %d replies for %d requests", len(transport.replies), len(transport.lines))
+			}
+			for _, ev := range transport.replies {
+				w, ok := host.want[ev.RequestID]
+				if !ok {
+					continue
+				}
+				if ev.Success != w.success || !strings.Contains(ev.Error, w.error) {
+					t.Errorf("%s: want %+v, got %+v", ev.RequestID, w, ev)
+				}
+				if host.picker && ev.RequestID == "select" && string(ev.Data) != "null" {
+					t.Error("picker cancellation must be null")
+				}
+			}
+		})
+	}
 }
 
 func (t *testTransport) OnMessage(fn func(string)) { t.handler = fn }
@@ -35,7 +129,9 @@ func (t *testTransport) Send(value any) error {
 	if err := json.Unmarshal(data, &ev); err != nil {
 		return err
 	}
+	t.mu.Lock()
 	t.replies = append(t.replies, &ev)
+	t.mu.Unlock()
 	return nil
 }
 

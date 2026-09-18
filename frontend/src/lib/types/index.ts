@@ -35,6 +35,38 @@ export interface GadgetRunRequest {
 	record?: boolean;
 	sessionId?: string;
 	sessionName?: string;
+	/** File output is host-authorized and is intentionally not a persisted path. */
+	output?: FileOutputRequest;
+}
+
+export type FileOutputFormat = 'jsonl' | 'pcap-ng';
+
+export interface FileOutputRequest {
+	/** Present only for a newly host-authorized run, never for a saved preset. */
+	token?: string;
+	format: FileOutputFormat;
+	datasourceIds?: string[];
+}
+
+export interface FileOutputCapability {
+	formats: FileOutputFormat[];
+	host: string;
+	/** Hosts with their own notification center prevent duplicate shared toasts. */
+	notify?: boolean;
+}
+
+export interface FileCaptureStatus {
+	format: FileOutputFormat;
+	path: string;
+	partialPath?: string;
+	/** Original destination preserved during an explicitly confirmed replacement. */
+	recoveryPath?: string;
+	host: string;
+	state: 'starting' | 'running' | 'stopping' | 'completed' | 'failed' | 'unknown';
+	records: number;
+	bytes: number;
+	error?: string;
+	datasourceIds?: string[];
 }
 
 export interface GadgetInfo {
@@ -72,7 +104,7 @@ export interface ParamConfig {
 }
 
 export interface GadgetDatasource {
-	id: string;
+	id?: number;
 	name: string;
 	fields?: GadgetDatasourceField[];
 	annotations?: Record<string, string>;
@@ -124,6 +156,7 @@ export interface GadgetInstanceData {
 	eventCount: number;
 	session?: SessionInfo;
 	attached?: boolean;
+	output?: FileCaptureStatus;
 	[key: string]: unknown;
 }
 
@@ -236,6 +269,12 @@ export interface GadgetLogMessage extends GadgetMessageBase {
  */
 export interface GadgetQuitMessage {
 	instanceID: string;
+	data?: { output?: FileCaptureStatus };
+}
+
+/** File output progress (message type 7). */
+export interface GadgetFileOutputMessage extends GadgetMessageBase {
+	data: FileCaptureStatus;
 }
 
 /**

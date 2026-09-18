@@ -19,6 +19,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -30,6 +32,26 @@ import (
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/params"
 	"github.com/inspektor-gadget/inspektor-gadget/pkg/runtime"
 )
+
+// varFailFast is the gadget context variable that selects the fail-fast
+// stream policy for a run; see SetFailFast.
+const varFailFast = "ig-desktop.grpc-runtime.fail-fast"
+
+// SetFailFast opts a single run into fail-fast stream handling: an error on
+// any target cancels the whole run, and undecodable payloads or subscriber
+// errors abort the stream instead of being skipped. File-output runs use it
+// because a silently incomplete capture file is worse than a stopped run.
+// Interactive runs keep the default tolerant policy, where one failing node
+// or a malformed event does not stop the others. Call it before RunGadget.
+func SetFailFast(gadgetCtx runtime.GadgetContext) {
+	gadgetCtx.SetVar(varFailFast, true)
+}
+
+func failFast(gadgetCtx runtime.GadgetContext) bool {
+	v, _ := gadgetCtx.GetVar(varFailFast)
+	b, _ := v.(bool)
+	return b
+}
 
 func (r *Runtime) GetGadgetInfo(gadgetCtx runtime.GadgetContext, runtimeParams *params.Params, paramValues api.ParamValues) (*api.GadgetInfo, error) {
 	if runtimeParams == nil {
@@ -98,14 +120,46 @@ func (r *Runtime) runGadgetOnTargets(
 	targets []target,
 ) (runtime.CombinedGadgetResult, error) {
 	results := make(runtime.CombinedGadgetResult, len(targets))
+	strict := failFast(gadgetCtx)
 	var resultsLock sync.Mutex
+	var metadataLock sync.Mutex
+	var firstInfo *api.GadgetInfo
+	var initErr error
+	initialize := func(info *api.GadgetInfo) error {
+		metadataLock.Lock()
+		defer metadataLock.Unlock()
+		normalized := proto.Clone(info).(*api.GadgetInfo)
+		normalized = &api.GadgetInfo{DataSources: normalized.DataSources, Metadata: normalized.Metadata}
+		for _, ds := range normalized.DataSources {
+			ds.Id = 0
+		}
+		slices.SortFunc(normalized.DataSources, func(a, b *api.DataSource) int { return strings.Compare(a.Name, b.Name) })
+		if firstInfo != nil {
+			if !proto.Equal(firstInfo, normalized) {
+				return fmt.Errorf("gadget datasource metadata differs between targets")
+			}
+			return initErr
+		}
+		firstInfo = normalized
+		// IG v0.55.1 marks metadata loaded before operator initialization.
+		// Serialize initialization here so another target cannot emit early.
+		initErr = gadgetCtx.LoadGadgetInfo(info, paramMap, true, nil)
+		return initErr
+	}
 
 	wg := sync.WaitGroup{}
 	for _, t := range targets {
 		wg.Add(1)
 		go func(target target) {
 			gadgetCtx.Logger().Debugf("running gadget on node %q", target.node)
-			res, err := r.runGadget(gadgetCtx, target, paramMap)
+			res, err := r.runGadget(gadgetCtx, target, paramMap, initialize, strict)
+			if err != nil {
+				if strict {
+					gadgetCtx.Cancel()
+				} else {
+					gadgetCtx.Logger().Warnf("%-20s | gadget run failed: %v", target.node, err)
+				}
+			}
 			resultsLock.Lock()
 			results[target.node] = &runtime.GadgetResult{
 				Payload: res,
@@ -120,7 +174,7 @@ func (r *Runtime) runGadgetOnTargets(
 	return results, results.Err()
 }
 
-func (r *Runtime) runGadget(gadgetCtx runtime.GadgetContext, target target, allParams map[string]string) ([]byte, error) {
+func (r *Runtime) runGadget(gadgetCtx runtime.GadgetContext, target target, allParams map[string]string, initialize func(*api.GadgetInfo) error, strict bool) ([]byte, error) {
 	// Notice that we cannot use gadgetCtx.Context() here, as that would - when cancelled by the user - also cancel the
 	// underlying gRPC connection. That would then lead to results not being received anymore (mostly for profile
 	// gadgets.)
@@ -182,8 +236,17 @@ func (r *Runtime) runGadget(gadgetCtx runtime.GadgetContext, target target, allP
 
 	var result []byte
 	expectedSeq := uint32(1)
+	receiverDone := make(chan struct{})
+	defer func() {
+		// Cancellation/timeout can leave Recv or a synchronous datasource
+		// callback in flight. Join it before a caller finalizes its output sink.
+		cancel()
+		conn.Close()
+		<-receiverDone
+	}()
 
 	go func() {
+		defer close(receiverDone)
 		dsMap := make(map[uint32]datasource.DataSource)
 		dsNameMap := make(map[string]uint32)
 		initialized := false
@@ -220,10 +283,21 @@ func (r *Runtime) runGadget(gadgetCtx runtime.GadgetContext, target target, allP
 						continue
 					}
 					if err != nil {
-						gadgetCtx.Logger().Debugf("error unmarshaling payload: %v", err)
+						if strict {
+							doneChan <- fmt.Errorf("decoding datasource packet: %w", err)
+							return
+						}
+						gadgetCtx.Logger().Debugf("%-20s | error unmarshaling payload: %v", target.node, err)
 						continue
 					}
-					ds.EmitAndRelease(p)
+					// EmitAndRelease already maps ErrDiscard to nil.
+					if err := ds.EmitAndRelease(p); err != nil {
+						if strict {
+							doneChan <- fmt.Errorf("processing datasource event: %w", err)
+							return
+						}
+						gadgetCtx.Logger().Debugf("%-20s | error processing payload: %v", target.node, err)
+					}
 				}
 			case api.EventTypeGadgetResult:
 				gadgetCtx.Logger().Debugf("%-20s | got result from server", target.node)
@@ -242,7 +316,7 @@ func (r *Runtime) runGadget(gadgetCtx runtime.GadgetContext, target target, allP
 
 				// Try to load gadget info; if gadget info has already been loaded and this one
 				// doesn't match, this will terminate this particular client session
-				err = gadgetCtx.LoadGadgetInfo(gi, allParams, true, nil)
+				err = initialize(gi)
 				if err != nil {
 					doneChan <- fmt.Errorf("initializing gadget metadata: %w", err)
 					return

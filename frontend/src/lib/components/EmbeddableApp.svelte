@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, setContext, tick, untrack } from 'svelte';
+	import { onMount, onDestroy, setContext, tick, untrack } from 'svelte';
 	import { apiService } from '$lib/services/api.service.svelte';
 	import { setPage } from '$lib/compat/app-state';
 	import { setNavigationHandler } from '$lib/compat/app-navigation';
@@ -24,6 +24,7 @@
 	import Server from '$lib/icons/server.svelte';
 	import ArtifactHub from '$lib/icons/artifacthub-logo.svelte';
 	import Plus from '$lib/icons/circle-plus.svelte';
+	import { setFileOutputCapability } from '$lib/shared/file-output.svelte';
 
 	let {
 		path,
@@ -35,7 +36,8 @@
 		showToasts = true,
 		showNavigation = true,
 		showTabs = true,
-		launchPreset
+		launchPreset,
+		fileOutput
 	}: EmbeddableAppProps = $props();
 	let route = $state(untrack(() => embeddedRoute(path ?? '/')));
 	let result = $state<ResultViewChange | undefined>();
@@ -44,11 +46,19 @@
 
 	setContext('api', apiService);
 	setContext('sessionRecordingEnabled', () => sessions);
+	setContext('fileOutput', () => fileOutput);
 	setContext('navigateBack', () => navigate(history.pop() || '/', false));
 	updatePage();
 
+	$effect(() => setFileOutputCapability(fileOutput));
+	onDestroy(() => setFileOutputCapability(undefined));
+
 	function updatePage() {
-		setPage({ params: route.params, url: new URL(resolve(route.path), 'http://localhost') });
+		const { pathname, search, hash } = route.url;
+		setPage({
+			params: route.params,
+			url: new URL(resolve(pathname + search + hash), 'http://localhost')
+		});
 	}
 
 	function navigate(next: string, remember = true) {

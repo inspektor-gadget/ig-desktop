@@ -23,6 +23,7 @@ import (
 
 	"github.com/inspektor-gadget/ig-desktop/internal/environment"
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
+	"github.com/inspektor-gadget/ig-desktop/pkg/fileoutput"
 	"github.com/inspektor-gadget/ig-desktop/pkg/gadget"
 	igApi "github.com/inspektor-gadget/inspektor-gadget/pkg/gadget-service/api"
 )
@@ -30,22 +31,33 @@ import (
 // HandleRunGadget handles running a new gadget instance
 func (h *Handler) HandleRunGadget(ev *api.Event) {
 	var req struct {
-		ID               string            `json:"id"`
-		Image            string            `json:"image"`
-		EnvironmentID    string            `json:"environmentID"`
-		Params           map[string]string `json:"params"`
-		Detached         bool              `json:"detached"`
-		InstanceName     string            `json:"instanceName"`
-		Record           bool              `json:"record"`
-		SessionID        string            `json:"sessionId"`
-		SessionName      string            `json:"sessionName"`
-		DurationSeconds  int64             `json:"durationSeconds"`
-		RemoteInstanceID string            `json:"remoteInstanceID,omitempty"`
+		ID               string              `json:"id"`
+		Image            string              `json:"image"`
+		EnvironmentID    string              `json:"environmentID"`
+		Params           map[string]string   `json:"params"`
+		Detached         bool                `json:"detached"`
+		InstanceName     string              `json:"instanceName"`
+		Record           bool                `json:"record"`
+		SessionID        string              `json:"sessionId"`
+		SessionName      string              `json:"sessionName"`
+		DurationSeconds  int64               `json:"durationSeconds"`
+		RemoteInstanceID string              `json:"remoteInstanceID,omitempty"`
+		Output           *fileoutput.Request `json:"output,omitempty"`
 	}
 	err := json.Unmarshal(ev.Data, &req)
 	if err != nil {
 		h.send(ev.SetError(err))
 		return
+	}
+	if req.Output != nil {
+		if h.fileOutputs == nil {
+			h.send(ev.SetError(fmt.Errorf("file output is unavailable on this host")))
+			return
+		}
+		if req.Record || req.Detached || req.SessionID != "" || req.SessionName != "" {
+			h.send(ev.SetError(fmt.Errorf("file output requires foreground execution without session recording")))
+			return
+		}
 	}
 	if environment.IsTransientID(req.EnvironmentID) {
 		if err := validateTransientRun(ev.Data); err != nil {
@@ -77,7 +89,19 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 		return
 	}
 
+	var outputTarget *fileoutput.Target
+	if req.Output != nil {
+		outputTarget, err = h.fileOutputTarget(req.EnvironmentID)
+		if err != nil {
+			h.send(ev.SetError(err))
+			return
+		}
+	}
+	var outputStatus fileoutput.Status
 	runReq := gadget.RunRequest{
+		Output:           req.Output,
+		OutputStatus:     &outputStatus,
+		OutputTarget:     outputTarget,
 		ID:               req.ID,
 		Image:            req.Image,
 		EnvironmentID:    req.EnvironmentID,
@@ -99,7 +123,15 @@ func (h *Handler) HandleRunGadget(ev *api.Event) {
 
 	// Send acknowledgment with the instance ID
 	req.ID = instanceID
-	h.send(ev.SetData(req))
+	if req.Output != nil {
+		response, _ := json.Marshal(req)
+		var fields map[string]json.RawMessage
+		json.Unmarshal(response, &fields)
+		fields["output"], _ = json.Marshal(outputStatus)
+		h.send(ev.SetData(fields))
+	} else {
+		h.send(ev.SetData(req))
+	}
 
 }
 

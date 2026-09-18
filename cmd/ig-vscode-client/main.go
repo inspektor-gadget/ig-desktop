@@ -18,6 +18,7 @@ import (
 	"github.com/inspektor-gadget/ig-desktop/internal/app"
 	"github.com/inspektor-gadget/ig-desktop/internal/stdio"
 	"github.com/inspektor-gadget/ig-desktop/internal/version"
+	"github.com/inspektor-gadget/ig-desktop/pkg/fileoutput"
 )
 
 func main() {
@@ -41,10 +42,14 @@ func run() error {
 	if flags.NArg() != 0 {
 		return fmt.Errorf("unexpected positional arguments")
 	}
+	input, output, err := stdio.StdStreams()
+	if err != nil {
+		return fmt.Errorf("preparing stdio: %w", err)
+	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	hello := map[string]any{}
-	transport := stdio.New(ctx, os.Stdin, os.Stdout, hello)
+	transport := stdio.New(ctx, input, output, hello)
 	defer transport.Close()
 	services, err := app.NewServicesWithDataDir(transport.Context(), *root)
 	if err != nil {
@@ -59,6 +64,17 @@ func run() error {
 	}
 	commands := []string{"clientHello", "shutdown"}
 	services.Handler.EnableTransientKubernetes()
+	host, _ := os.Hostname()
+	outputs := fileoutput.NewManager(host)
+	defer outputs.Close()
+	services.Handler.EnableFileOutput(outputs, true, nil)
+	shutdownWaited := false
+	transport.SetShutdown(func() error {
+		shutdownWaited = true
+		drainCtx, stopDrain := context.WithTimeout(context.Background(), 35*time.Second)
+		defer stopDrain()
+		return services.InstanceManager.Wait(drainCtx)
+	})
 	for _, handler := range services.Handler.Handlers() {
 		commands = append(commands, handler.Command())
 	}
@@ -70,6 +86,7 @@ func run() error {
 		"commands":           commands,
 		"environments":       environments,
 		"capabilities": map[string]any{
+			"fileOutput":                 outputs.Capabilities(),
 			"transientKubernetesTargets": true,
 			"sessions":                   services.SessionService != nil,
 			"recording":                  services.SessionService != nil,
@@ -87,8 +104,10 @@ func run() error {
 	// The runtime allows 30s to drain final profile results after a stop request.
 	drainCtx, stopDrain := context.WithTimeout(context.Background(), 35*time.Second)
 	defer stopDrain()
-	if waitErr := services.InstanceManager.Wait(drainCtx); waitErr != nil {
-		err = errors.Join(err, fmt.Errorf("waiting for owned streams: %w", waitErr))
+	if !shutdownWaited {
+		if waitErr := services.InstanceManager.Wait(drainCtx); waitErr != nil {
+			err = errors.Join(err, fmt.Errorf("waiting for owned streams: %w", waitErr))
+		}
 	}
 	if services.SessionService != nil {
 		err = errors.Join(err, services.SessionService.Close())

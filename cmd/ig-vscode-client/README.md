@@ -19,7 +19,9 @@ extension host. Existing Desktop `NewServices()` callers retain their defaults.
 ## Framing and readiness
 
 Private stdin/stdout, one UTF-8 JSON object per line; stdout is protocol only,
-stderr is diagnostics. Maximum JSON frame: **8,388,608 bytes**, excluding LF.
+stderr is diagnostics. At startup the client keeps private copies of fds 0/1 and
+points fd 1 at stderr (fd 0 at the null device), so stray writes to stdout land
+in diagnostics instead of corrupting frames. Maximum JSON frame: **8,388,608 bytes**, excluding LF.
 Writes are serialized and backpressured (pipe writes time out after 5 seconds).
 At most **128** in-flight requests; request IDs must be unique while pending.
 Commands may execute concurrently; await a reply before a dependent command.
@@ -44,10 +46,14 @@ environment events and now acknowledges once. Repeated `clientHello` returns the
 startup environment snapshot; use `helo` for a fresh enumeration.
 
 Malformed JSON returns a type-1 error (empty reqID when unidentifiable). Invalid
-envelopes and unknown commands return errors, not success. Oversized frames,
-duplicate in-flight IDs, and write failures are fatal: diagnostics on stderr,
-owned-context cancellation, nonzero exit. Oversized output is not silently
-truncated. The host must bound retention, reject pending promises on process
+envelopes and unknown commands return errors, not success. Oversized incoming
+frames, duplicate in-flight IDs, and write failures (including a write that
+cannot complete within 5 seconds) are fatal: diagnostics on stderr,
+owned-context cancellation, nonzero exit. Oversized output is never truncated
+and does not end the connection: a response that would exceed the frame limit
+is replaced by an error reply (`response exceeds frame limit`) to the same
+`reqID`, and an oversized unsolicited event is dropped with a stderr warning.
+The host must bound retention, reject pending promises on process
 exit, and consume stdout continuously.
 
 ## Transient Kubernetes targets (private stdio only)
@@ -57,7 +63,8 @@ registering handlers. Desktop and WebSocket services do not expose these command
 by default. `clientHello.capabilities.transientKubernetesTargets` advertises support.
 
 `kubeconfig` is either `{"kind":"default"}` (normal client-go loading rules) or
-`{"kind":"file","path":"/absolute/path/to/config"}`. An explicit file or context
+`{"kind":"file","path":"/absolute/path/to/config"}`. File paths are lexically
+cleaned (`/a//b` and `/a/b` are the same source). An explicit file or context
 error never falls back to default/in-cluster configuration.
 
 | Command | Data | Successful result |
@@ -134,7 +141,7 @@ then associate them when the ACK arrives:
 ```
 
 Type 2 is protobuf-JSON gadget metadata, 3 a row, 4 a log, 5 terminal, 6 an
-array/snapshot. Metadata is emitted before datasource rows. Terminal `reason`
+array/snapshot, and 7 a file-output status. Metadata is emitted before datasource rows. Terminal `reason`
 is `completed`, `cancelled`, or `duration`; a nonempty `error` indicates failure.
 Session/run IDs are separate from both local and remote instance IDs.
 
@@ -151,6 +158,176 @@ Detached creation is explicitly independent after completion. Detached creation
 does not supply a recordable stream; `record:true` with detached is rejected.
 Multi-target creation can fail partially; inspect errors and list/remove
 explicitly rather than assuming automatic rollback.
+
+## Authorized foreground file output
+
+Only private stdio and explicitly enabled **native** Wails services support file
+output. Ordinary web/socket services, including a Wails `server` build, do not
+register its commands and independently reject `runGadget.data.output`.
+`clientHello.capabilities.fileOutput` and `getFileOutputCapabilities` return the
+same `{formats:["jsonl","pcap-ng"],host:"hostname"}` object. File selection grants
+no recording, detached execution, or remote-filesystem capability.
+
+| Command | Request data | Successful `data` |
+| --- | --- | --- |
+| `prepareFileOutput` (private stdio only) | `{path,format,overwrite?:false}` | `{token,format,path,host,overwrite}` |
+| `selectFileOutput` (native Wails only) | `{format}` | Same selection; `null` for cancelled native picker |
+| `releaseFileOutput` | `{token}` | `null`; idempotent for unused/unknown tokens |
+| `getFileOutputCapabilities` | `{}` | `{formats:["jsonl","pcap-ng"],host}` |
+
+The path must be absolute and on the backend host. Preparation opens the parent
+directory for identity tracking but **creates no file** and starts no gadget.
+Tokens are opaque, one-use, format-bound, expire after 30 minutes, and are capped
+at 128 outstanding selections. Release selection when format/target/gadget
+changes or the configuration closes. Never persist tokens or paths in presets.
+Selections and active writers reserve their final pathname within the host
+manager. A changed destination/directory invalidates approval.
+
+Existing destinations require explicit `overwrite:true` approval. Preparation
+records identity, mode, size, modification time and a streaming SHA-256 content
+fingerprint; Start revalidates the identity metadata. Native Wails additionally displays an explicit
+Replace confirmation **after** preparing that fingerprint and releases the token
+on cancellation. Trusted hosts should likewise prepare before confirmation and
+retain that token, rather than create a fresh approval after confirmation.
+The returned `overwrite` indicates whether an existing file was selected.
+The content is hashed twice: at preparation and once at publication, on the
+file actually moved aside, which is where it closes the check-then-act gap. Its
+cost is proportional to the previous file size, without holding a capture-wide
+buffer or any writer lock.
+
+**Replacement safety semantics:** portable OS APIs do not offer atomic
+identity/content-checked replacement. After clean capture finalization, move the
+destination to a unique sibling `.recovery` name with a native **no-replace**
+rename, verify the object actually moved against the approved fingerprint, then
+publish the new capture with the same no-replace rename. There is briefly no file
+at the final pathname; this is not an atomic exchange. A competing creation is
+never overwritten. On failure, restore the recovery with a no-replace rename
+only if the final name is free. Otherwise preserve both recovery and partial,
+return failure and expose `recoveryPath`. After successful publication the
+recovery file is deleted; processes that still hold the old file open keep it
+alive until they close it (POSIX unlink semantics; `FILE_SHARE_DELETE` on
+Windows). Linux uses
+`renameat2(RENAME_NOREPLACE)`, macOS `renameatx_np(RENAME_EXCL)`, and Windows
+handle-relative `NtSetInformationFile` with replacement disabled. All operations
+use the held parent directory. Where the filesystem or kernel lacks no-replace
+rename, publication of a new file falls back to an exclusive hard link plus
+removal of the partial; replacing an existing file requires no-replace rename,
+so preparation probes the directory and refuses `overwrite:true` up front where
+it is unsupported. There is no unconditional rename-over-target fallback.
+
+```json
+{"cmd":"runGadget","reqID":"capture","data":{"image":"example/gadget:tag","environmentID":"environment-uuid","params":{},"durationSeconds":30,"output":{"token":"opaque-one-use-token","format":"jsonl","datasourceIds":["events"]}}}
+```
+
+Omit `datasourceIds` for all supported JSONL sources. Unknown, duplicate, or
+unsupported sources fail, using actual runtime metadata rather than previously
+fetched configuration metadata. PCAP-NG requires exactly one packet-capable
+datasource in the gadget; an explicit selection must contain only that source.
+`record`, `detached`, nonempty `sessionId`, and nonempty `sessionName` are rejected.
+Known authorization/open failures reject the command before run acceptance;
+remote/metadata/encoding failures arrive as terminal failures after acceptance.
+
+The run acknowledgement has its usual fields and `data.output` is the **status**,
+not the consumed token. Type 7 carries this same object directly in `data`, with
+the usual `environmentID` and `instanceID`. Type 5's `data` includes `output`
+alongside `reason` and `error`:
+
+```json
+{"format":"jsonl","path":"/host/captures/run.jsonl","partialPath":"/host/captures/.run.jsonl.UUID.partial","host":"hostname","state":"running","records":100,"bytes":18254,"datasourceIds":["events"]}
+```
+
+States: `starting`, `running`, `stopping`, `completed`, `failed`. `error` is present
+on failure (bounded to 4 KiB plus a truncation marker); `partialPath` is present
+while writing and on failure if at least one record was written (a failed run
+without records removes its partial). `recoveryPath` identifies preserved previous/
+displaced destination data when replacement fails; it is absent after successful
+replacement (or if deleting the recovery file failed, it remains present).
+Progress is
+approximately once per second plus state changes and finalization; metadata
+precedes type-7 progress. An early setup failure can emit a type-5 final status
+without metadata. File runs send **no type-3/6 payloads or type-4 runtime logs**, use no frontend data
+buffer and do not write SQLite sessions. The host should retain only bounded
+terminal status summaries; this backend does not persist or expose file contents.
+
+The writer creates a mode-0600, exclusive, uniquely named sibling partial.
+Callbacks are synchronous/backpressured, bounded by the incoming record/snapshot,
+serialized against finalization, and stop the run on write errors. Runtime
+receivers and local operators stop before flush/close. Publication occurs only
+after successful flush, fsync and close, using an atomic **no-replace rename**
+through the held directory handle (so FAT32/exFAT, SMB and FUSE targets without
+hard links work), or an exclusive hard link where no-replace rename is
+unsupported. The recovery name is removed only after successful publication.
+Failed publication leaves the partial and restores the old destination if possible.
+A destination that appears during capture is never overwritten. If removing the
+redundant partial name fails after publication, completion retains `partialPath`
+as well as any `recoveryPath`.
+Bytes count successful OS writes. Before publication the capture is fsynced, and
+the directory is fsynced after publication (skipped on Windows and on
+filesystems that do not support directory fsync).
+
+### JSONL schema version 1
+
+UTF-8, one complete JSON object plus LF per line:
+
+1. `{"type":"capture","version":1,"format":"ig-jsonl","provenance":{...},"integerEncoding":"int64-uint64-and-integer-arrays-decimal-strings"}`
+2. One `{"type":"schema","datasourceId":"...","datasourceType":1|2,"fields":[...],"annotations":{...}}`
+   per selected datasource, before any data. Fields use the pinned IG field
+   descriptors (`fullName`, numeric `kind`, flags, tags, annotations, etc.).
+3. `{"type":"data","datasourceId":"...","data":{...}}` for a single event, or
+   `{"type":"snapshot","datasourceId":"...","data":[...]}` for one array update.
+   Empty snapshots remain `[]`, not missing events.
+
+Provenance contains image, environment ID, local instance ID, backend host, gadget
+params, requested duration, UTC start timestamp and a safe `target` descriptor.
+Saved targets supply `{name,runtime,transient:false}`. Frozen ad-hoc Kubernetes
+targets supply `{name,runtime:"grpc-k8s",context,defaultNamespace,transient:true}`,
+copied from the registration rather than reloading kubeconfig. Offline readers
+therefore retain the selected context/label after the ad-hoc UUID expires.
+`defaultNamespace` is the frozen default, not a collection-isolation guarantee;
+explicit gadget scope parameters remain in `params`. Target provenance never
+includes environment connection options, kubeconfig paths, credentials or API
+server configuration. Flattened field names and visibility follow the existing IG JSON
+formatter with all visible/hidden fields enabled (explicit `json.skip` and
+unreferenced fields are still omitted). Scalars `int64`/`uint64` and **all integer
+arrays** are decimal strings, avoiding JS rounding and unsigned-array overflow.
+Smaller integer scalars and finite floats remain JSON numbers; booleans and
+strings retain their types, binary/fallback fields use hexadecimal strings.
+Schema `kind` determines the original type. Non-JSON values fail the capture.
+`records` counts encoded data/snapshot lines, **one per snapshot**,
+including empty snapshots; schema/provenance lines contribute bytes but not
+records. Output is buffered and flushed at least once per second and at
+finalization, so a crash loses at most about one second of records; abruptly
+interrupted partial files may have an incomplete final line.
+
+### PCAP-NG annotation contract
+
+Uses `gopacket/pcapgo` v1.7.0 (the pinned IG v0.55.1 dependency), adapting the
+extcap writer without its subprocess, hardcoded datasource/field names or filter.
+`cli.supported-output-modes` is parsed as comma-separated tokens containing
+`pcap-ng`. `pcap.payload`, `pcap.timestamp`, and `pcap.packet-length` must point to
+bytes/uint8-array, timestamp, and uint32 original-length fields respectively.
+The pinned tcpdump annotation points at an RFC3339Nano **string** timestamp;
+the pinned formatter converts its raw field to Unix nanoseconds. For a string
+timestamp this writer uses the uint64 `<field>_raw` sibling when present (the
+string layout can be overridden by `formatters.timestamp.format`), otherwise it
+parses the string as RFC3339Nano; it also accepts an explicitly annotated uint64
+Unix-nanosecond field. It does not reproduce the pinned CLI's erroneous
+string-as-uint64 read.
+Timestamps outside nonnegative int64 nanoseconds are rejected.
+
+Ethernet link type follows that IG contract. Captured length is the payload
+length, original length comes from the annotation, and nanosecond resolution is
+preserved. Interface identity uses length-prefixed values of
+`pcap.interface-key:true` fields and string `pcap.interface-var` fields; metadata
+variables are query-escaped in interface descriptions. A present string
+`proc.comm` becomes a packet comment. Section comments include versioned
+provenance. The file has an initial placeholder interface 0 (pcapgo cannot
+write a section without one; it keeps zero-packet files valid) that no packet
+uses; observed interfaces are added separately. Limits: 65,536 observed interfaces,
+64 KiB identity keys (8 MiB aggregate), and 60,000-byte section/interface/comment metadata; exceeding
+them fails rather than growing memory or truncating metadata silently.
+`records` counts encoded packets (see buffering above); bytes include all headers
+and metadata. Packet payload never takes a JSON round trip.
 
 ## Recording and replay
 
@@ -169,16 +346,28 @@ Storage write/finalization failures are diagnosed on stderr.
   `{id,runId,timestamp,type,datasourceId?,data}`; timestamps are Unix milliseconds.
 - `deleteSession`: `{sessionId}`; retain the UI's explicit deletion workflow.
 
+`sessionId` must be a canonical (lowercase, hyphenated) UUID; anything else is
+rejected before it is used as a storage path.
+
 Frame limits still apply to replay pages and individual events; reduce the page
-limit for large events. Legacy full replay may exceed the frame limit.
+limit for large events. Legacy full replay may exceed the frame limit, in which
+case it fails with `response exceeds frame limit`.
 
 ## Shutdown and runtime semantics
 
-`{"type":1,"cmd":"shutdown","reqID":"bye","data":{}}` ACKs null, then cancels owned
-contexts; EOF and SIGTERM/SIGINT also cancel them. The reader remains responsive
-while commands run. Shutdown allows up to 5 seconds for command handlers and
+`{"type":1,"cmd":"shutdown","reqID":"bye","data":{}}` cancels owned contexts,
+drains command handlers and streams, then ACKs null (or a drain error).
+EOF and SIGTERM/SIGINT also cancel them, even while the host keeps stdin open,
+and the process exits after the same drain: status 0 unless draining fails.
+The reader remains responsive while commands run. A panicking command handler
+is logged to stderr and answered with an error reply; it does not end the
+process. Shutdown allows up to 5 seconds for command handlers and
 35 seconds for owned streams/final recording flush (the runtime allows 30 seconds
-for final profile results). Terminal events may follow the shutdown ACK.
+for final profile results). Orderly shutdown emits terminal file statuses before
+its ACK; EOF/signals have no acknowledgement. Native Wails shutdown also requests
+Stop for owned runs and allows 35 seconds to finalize before returning. Crashes,
+blocked storage, a non-reading pipe, and forced process termination can defeat
+graceful finalization; partial output is retained.
 
 Foreground runtime cancellation sends a gRPC stop request and drains final
 results. Attachment cancellation closes only its stream. A client crash cannot

@@ -30,6 +30,10 @@ export interface GadgetLaunchPreset {
 	record?: boolean;
 	sessionId?: string;
 	sessionName?: string;
+	output?: {
+		format: 'jsonl' | 'pcap-ng';
+		datasourceIds?: string[];
+	};
 }
 
 export interface EmbeddableAppProps {
@@ -51,4 +55,11 @@ export interface EmbeddableAppProps {
 	showTabs?: boolean;
 	/** Prefill the launcher shown by a matching launch route; it never auto-runs. */
 	launchPreset?: GadgetLaunchPreset;
+	/** Explicit native host capability. Omit it to keep browser/Insights behavior unchanged. */
+	fileOutput?: {
+		formats: ('jsonl' | 'pcap-ng')[];
+		host: string;
+		/** The embedding host presents completion/errors itself. */
+		notify?: boolean;
+	};
 }

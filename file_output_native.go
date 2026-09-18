@@ -1,0 +1,5 @@
+//go:build !server
+
+package main
+
+const nativeFileOutput = true

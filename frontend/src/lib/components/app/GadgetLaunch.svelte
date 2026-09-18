@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, setContext, onMount } from 'svelte';
+	import { getContext, setContext, onMount, onDestroy, untrack } from 'svelte';
 	import { getErrorMessage } from '$lib/utils/errors';
 	import type { ApiContext } from '$lib/types/context';
 	import Params from '$lib/components/Params.svelte';
@@ -19,7 +19,14 @@
 	import { page } from '$app/state';
 	import Title from '$lib/components/params/Title.svelte';
 	import Select from '$lib/components/forms/Select.svelte';
-	import type { GadgetInfo, GadgetRunRequest, SessionItem } from '$lib/types';
+	import type {
+		FileOutputCapability,
+		FileOutputFormat,
+		FileOutputRequest,
+		GadgetInfo,
+		GadgetRunRequest,
+		SessionItem
+	} from '$lib/types';
 	import type { GadgetLaunchPreset } from '$lib/types/embedding';
 	import { copyToClipboard } from '$lib/utils/clipboard';
 	import {
@@ -33,6 +40,7 @@
 	import { currentSessionStore } from '$lib/stores/current-session.svelte';
 	import { features } from '$lib/config/app-mode';
 	import { t } from '$lib/i18n/index.svelte';
+	import { BackendCommandError, UncertainCommandError } from '$lib/services/api.service.svelte';
 
 	// Redirect to home if running gadgets is not allowed (demo mode)
 	onMount(() => {
@@ -46,13 +54,61 @@
 	const api = getContext<ApiContext>('api');
 	const goBack = getContext<(() => void) | undefined>('navigateBack') ?? (() => history.back());
 	const hostSessionRecording = getContext<(() => boolean) | undefined>('sessionRecordingEnabled');
+	const hostFileOutput = getContext<(() => FileOutputCapability | undefined) | undefined>(
+		'fileOutput'
+	);
 
 	let environmentID = $state<string | null>(null);
 	let detached = $state(false);
 	let instanceName = $state('');
 	let values = $state<Record<string, string>>({});
+	let gadgetInfo = $state<GadgetInfo | null>(null);
 	let commandType = $state<'ig' | 'gadgetctl' | 'kubectl'>('ig');
 	let showAdvanced = $state(true);
+	let outputMode = $state<'table' | 'file'>('table');
+	let outputFormat = $state<FileOutputFormat>('jsonl');
+	let outputSelection = $state<(FileOutputRequest & { path?: string; host?: string }) | null>(null);
+	const fileOutput = $derived(hostFileOutput?.());
+	const pcapDatasources = $derived(
+		(gadgetInfo?.datasources ?? gadgetInfo?.dataSources ?? []).filter((datasource) =>
+			datasource.annotations?.['cli.supported-output-modes']
+				?.split(',')
+				.map((mode) => mode.trim())
+				.includes('pcap-ng')
+		)
+	);
+	const supportedFormats = $derived(
+		fileOutput
+			? [
+					...(fileOutput.formats.includes('jsonl') ? (['jsonl'] as const) : []),
+					...(fileOutput.formats.includes('pcap-ng') && pcapDatasources.length === 1
+						? (['pcap-ng'] as const)
+						: [])
+				]
+			: []
+	);
+	const fileOutputAvailable = $derived(supportedFormats.length > 0);
+
+	function clearFileSelection() {
+		const token = untrack(() => outputSelection?.token);
+		outputSelection = null;
+		if (token) void api.request({ cmd: 'releaseFileOutput', data: { token } }).catch(() => {});
+	}
+	onDestroy(clearFileSelection);
+
+	async function chooseFileOutput() {
+		if (!fileOutput) return;
+		clearFileSelection();
+		try {
+			const selection = await api.request<FileOutputRequest & { path: string; host: string }>({
+				cmd: 'selectFileOutput',
+				data: { format: outputFormat }
+			});
+			if (selection?.token) outputSelection = selection;
+		} catch (err) {
+			toastStore.error(getErrorMessage(err));
+		}
+	}
 
 	// Experimental feature flag for session recording
 	const sessionRecordingEnabled = $derived(
@@ -93,6 +149,7 @@
 
 	function canRun(): boolean {
 		if (!environmentID) return false;
+		if (outputMode === 'file' && !outputSelection?.token) return false;
 		if (
 			sessionRecordingEnabled &&
 			recordGadgetRun &&
@@ -114,7 +171,6 @@
 		}
 	});
 
-	let gadgetInfo = $state<GadgetInfo | null>(null);
 	setContext('currentGadget', () => gadgetInfo);
 	setContext('environmentID', () => environmentID);
 
@@ -150,6 +206,23 @@
 		} else {
 			values = {};
 		}
+		const requestedFormat = page.url.searchParams.get('output');
+		const presetOutput =
+			data.preset?.output ??
+			(requestedFormat === 'jsonl' || requestedFormat === 'pcap-ng'
+				? { format: requestedFormat }
+				: undefined);
+		outputMode = presetOutput && fileOutputAvailable ? 'file' : 'table';
+		outputFormat = presetOutput?.format ?? 'jsonl';
+	});
+
+	// A destination is authorized only for this target, gadget and encoder.
+	$effect(() => {
+		void environmentID;
+		void data.url;
+		void outputMode;
+		void outputFormat;
+		untrack(clearFileSelection);
 	});
 
 	let command = $derived.by(() => {
@@ -264,16 +337,26 @@
 			image: data.url,
 			params: $state.snapshot(values),
 			environmentID: environmentID || undefined,
-			detached: data.preset?.transient ? false : detached,
+			detached: outputMode === 'file' || data.preset?.transient ? false : detached,
 			instanceName,
 			timestamp: Date.now(),
-			record: shouldRecord,
+			record: outputMode === 'file' ? false : shouldRecord,
 			sessionId: sessionIdToUse,
 			sessionName:
 				!data.preset?.transient && sessionMode === 'new' && !sessionIdToUse
 					? sessionName
 					: undefined
 		};
+		if (outputMode === 'file' && outputSelection?.token) {
+			gadgetRunRequest.output = {
+				token: outputSelection.token,
+				format: outputFormat,
+				datasourceIds:
+					outputFormat === 'pcap-ng'
+						? pcapDatasources.map((datasource) => datasource.name)
+						: undefined
+			};
+		}
 
 		// Save K8s parameter values to recent lists
 		if (!data.preset?.transient && environmentID && gadgetInfo?.params) {
@@ -299,6 +382,7 @@
 
 		try {
 			const res = await api.request<{ id: string }>({ cmd: 'runGadget', data: gadgetRunRequest });
+			clearFileSelection();
 
 			// Track gadget run if analytics is enabled
 			analyticsService.trackRunGadget(data.url);
@@ -313,7 +397,7 @@
 				addGadgetToHistory(environmentID!, gadgetRunRequest, 50);
 			}
 
-			if (detached) {
+			if (detached && outputMode !== 'file') {
 				// Show info toast for headless instances (success confirmed when instance appears in list)
 				const displayName = instanceName || 'Unnamed instance';
 				toastStore.info(
@@ -325,6 +409,20 @@
 				goto(resolve(`/env/${environmentID}/running/${res.id}`));
 			}
 		} catch (err) {
+			const fileStartRejected = outputMode === 'file' && err instanceof BackendCommandError;
+			const fileStartUncertain = outputMode === 'file' && err instanceof UncertainCommandError;
+			if (fileStartRejected) clearFileSelection();
+			if (fileStartUncertain) {
+				if (fileOutput?.notify !== false) {
+					toastStore.error(
+						t(
+							'Capture start outcome is unknown. Inspect active captures before choosing another destination.'
+						),
+						7000
+					);
+				}
+				return;
+			}
 			// Show error toast
 			const errorMessage = getErrorMessage(err);
 			toastStore.error(
@@ -332,10 +430,12 @@
 					? t('Failed to start headless instance: {{errorMessage}}', { errorMessage })
 					: t('Failed to start gadget: {{errorMessage}}', { errorMessage }),
 				7000,
-				{
-					label: t('Retry'),
-					onClick: () => runGadget()
-				}
+				fileStartRejected
+					? undefined
+					: {
+							label: t('Retry'),
+							onClick: () => runGadget()
+						}
 			);
 		}
 	}
@@ -515,6 +615,68 @@
 					</div>
 				{/if}
 			{:else}
+				{#if fileOutputAvailable}
+					<Panel title={t('Mode')} icon={File} color="blue">
+						<div class="flex flex-col gap-4">
+							<label class="flex max-w-sm flex-col gap-1 text-sm">
+								<span>{t('Mode')}</span>
+								<select
+									aria-label={t('Mode')}
+									bind:value={outputMode}
+									class="border-ig-border-strong bg-ig-surface-raised rounded-ig-sm border p-2 text-ig-text"
+								>
+									<option value="table">{t('Default table view')}</option>
+									<option value="file">{t('To a file')}</option>
+								</select>
+							</label>
+							{#if outputMode === 'file'}
+								<div class="flex flex-col gap-3 rounded-ig-md border border-ig-border p-3">
+									<label class="flex flex-col gap-1 text-sm">
+										<span>{t('Format')}</span>
+										<select
+											aria-label={t('Format')}
+											bind:value={outputFormat}
+											class="border-ig-border-strong bg-ig-surface-raised rounded-ig-sm border p-2 text-ig-text"
+										>
+											{#each supportedFormats as format}
+												<option value={format}
+													>{format === 'jsonl'
+														? 'JSON Lines (.jsonl)'
+														: 'PCAP-NG (.pcapng)'}</option
+												>
+											{/each}
+										</select>
+									</label>
+									{#if outputFormat === 'pcap-ng' && pcapDatasources.length !== 1}
+										<p role="alert" class="text-sm text-ig-error">
+											{t('PCAP-NG requires exactly one packet datasource.')}
+										</p>
+									{/if}
+									<div class="flex items-center gap-3">
+										<button
+											aria-label={t('Choose destination')}
+											onclick={chooseFileOutput}
+											class="rounded-ig-sm border border-ig-border-strong px-3 py-2 text-sm hover:bg-ig-border"
+										>
+											{outputSelection?.path ? t('Change destination') : t('Choose destination')}
+										</button>
+										{#if outputSelection?.path}
+											<span class="break-all text-sm text-ig-text-secondary"
+												>{outputSelection.path} ({outputSelection.host})</span
+											>
+										{:else}
+											<span class="text-sm text-ig-text-muted"
+												>{t('Choose a destination on {{host}} before starting.', {
+													host: fileOutput?.host ?? ''
+												})}</span
+											>
+										{/if}
+									</div>
+								</div>
+							{/if}
+						</div>
+					</Panel>
+				{/if}
 				{#if !data.preset?.transient}
 					<!-- Panel-like container without header for detached settings -->
 					<div

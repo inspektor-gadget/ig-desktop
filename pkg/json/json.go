@@ -15,6 +15,7 @@
 package json
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"math"
@@ -50,6 +51,7 @@ const (
 )
 
 type Formatter struct {
+	exactIntegers     bool
 	ds                datasource.DataSource
 	fns               []func(e *encodeState, data datasource.Data)
 	fields            []string
@@ -142,7 +144,9 @@ func writeIntArrFn[T constraints.Integer](
 	toArrayFn func(datasource.Data) ([]T, error),
 	fieldSep []byte,
 	newIndent string,
+	exact bool,
 ) func(e *encodeState, data datasource.Data) {
+	signed := ^T(0) < 0
 	return func(e *encodeState, data datasource.Data) {
 		vals, _ := toArrayFn(data)
 		for i, v := range vals {
@@ -150,7 +154,20 @@ func writeIntArrFn[T constraints.Integer](
 				e.Write(fieldSep)
 			}
 			e.WriteString(newIndent)
-			b := strconv.AppendInt(e.scratch[:0], int64(v), 10)
+			var b []byte
+			if signed {
+				b = strconv.AppendInt(e.scratch[:0], int64(v), 10)
+			} else {
+				// int64(v) would wrap values above math.MaxInt64.
+				b = strconv.AppendUint(e.scratch[:0], uint64(v), 10)
+			}
+			if exact {
+				// Digits need no escaping.
+				e.WriteByte('"')
+				e.Write(b)
+				e.WriteByte('"')
+				continue
+			}
 			e.Write(b)
 		}
 	}
@@ -282,21 +299,21 @@ func (f *Formatter) addSubFields(accessors []datasource.FieldAccessor, prefix st
 			}
 			switch accessor.Type() {
 			case api.ArrayOf(api.Kind_Int8):
-				fn = writeIntArrFn(accessor.Int8Array, f.fieldSep, newIndent)
+				fn = writeIntArrFn(accessor.Int8Array, f.fieldSep, newIndent, f.exactIntegers)
 			case api.ArrayOf(api.Kind_Int16):
-				fn = writeIntArrFn(accessor.Int16Array, f.fieldSep, newIndent)
+				fn = writeIntArrFn(accessor.Int16Array, f.fieldSep, newIndent, f.exactIntegers)
 			case api.ArrayOf(api.Kind_Int32):
-				fn = writeIntArrFn(accessor.Int32Array, f.fieldSep, newIndent)
+				fn = writeIntArrFn(accessor.Int32Array, f.fieldSep, newIndent, f.exactIntegers)
 			case api.ArrayOf(api.Kind_Int64):
-				fn = writeIntArrFn(accessor.Int64Array, f.fieldSep, newIndent)
+				fn = writeIntArrFn(accessor.Int64Array, f.fieldSep, newIndent, f.exactIntegers)
 			case api.ArrayOf(api.Kind_Uint8):
-				fn = writeIntArrFn(accessor.Uint8Array, f.fieldSep, newIndent)
+				fn = writeIntArrFn(accessor.Uint8Array, f.fieldSep, newIndent, f.exactIntegers)
 			case api.ArrayOf(api.Kind_Uint16):
-				fn = writeIntArrFn(accessor.Uint16Array, f.fieldSep, newIndent)
+				fn = writeIntArrFn(accessor.Uint16Array, f.fieldSep, newIndent, f.exactIntegers)
 			case api.ArrayOf(api.Kind_Uint32):
-				fn = writeIntArrFn(accessor.Uint32Array, f.fieldSep, newIndent)
+				fn = writeIntArrFn(accessor.Uint32Array, f.fieldSep, newIndent, f.exactIntegers)
 			case api.ArrayOf(api.Kind_Uint64):
-				fn = writeIntArrFn(accessor.Uint64Array, f.fieldSep, newIndent)
+				fn = writeIntArrFn(accessor.Uint64Array, f.fieldSep, newIndent, f.exactIntegers)
 			case api.ArrayOf(api.Kind_Float32):
 				fn = writeFloatArrFn(accessor.Float32Array, f.fieldSep, newIndent)
 			case api.ArrayOf(api.Kind_Float64):
@@ -339,6 +356,10 @@ func (f *Formatter) addSubFields(accessors []datasource.FieldAccessor, prefix st
 		case api.Kind_Int64:
 			fn = func(e *encodeState, data datasource.Data) {
 				v, _ := accessor.Int64(data)
+				if f.exactIntegers {
+					writeString(e, strconv.FormatInt(v, 10))
+					return
+				}
 				b := strconv.AppendInt(e.scratch[:0], v, 10)
 				e.Write(b)
 			}
@@ -363,6 +384,10 @@ func (f *Formatter) addSubFields(accessors []datasource.FieldAccessor, prefix st
 		case api.Kind_Uint64:
 			fn = func(e *encodeState, data datasource.Data) {
 				v, _ := accessor.Uint64(data)
+				if f.exactIntegers {
+					writeString(e, strconv.FormatUint(v, 10))
+					return
+				}
 				b := strconv.AppendUint(e.scratch[:0], v, 10)
 				e.Write(b)
 			}
@@ -410,7 +435,8 @@ func (f *Formatter) Marshal(data datasource.Data) []byte {
 	for _, fn := range f.fns {
 		fn(e, data)
 	}
-	return e.Bytes()
+	// The buffer returns to the pool on exit; callers must own their bytes.
+	return bytes.Clone(e.Bytes())
 }
 
 func (f *Formatter) MarshalArray(a datasource.DataArray) []byte {
@@ -418,7 +444,9 @@ func (f *Formatter) MarshalArray(a datasource.DataArray) []byte {
 	// pretty is enabled or not)
 	len := a.Len()
 	if len == 0 {
-		return append(openerArray, closerArray...)
+		// A fresh slice: appending to the shared opener could write into
+		// its spare capacity concurrently.
+		return []byte("[]")
 	}
 
 	e := bufpool.Get().(*encodeState)
@@ -446,7 +474,8 @@ func (f *Formatter) MarshalArray(a datasource.DataArray) []byte {
 	}
 	e.Write([]byte(cArray))
 
-	return e.Bytes()
+	// The buffer returns to the pool on exit; callers must own their bytes.
+	return bytes.Clone(e.Bytes())
 }
 
 type floatEncoder int // number of bits

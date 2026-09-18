@@ -55,8 +55,12 @@
 	import PluginHookRenderer from '$lib/components/PluginHookRenderer.svelte';
 	import { t, getLanguage } from '$lib/i18n/index.svelte';
 	import { rtlLanguages } from '$lib/i18n/supported-languages';
+	import type { FileOutputCapability } from '$lib/types';
+	import { setFileOutputCapability } from '$lib/shared/file-output.svelte';
 
 	let { children } = $props();
+	let fileOutput = $state<FileOutputCapability | undefined>();
+	setContext('fileOutput', () => fileOutput);
 
 	// Deployment modal state
 	let deployModalOpen = $state(false);
@@ -247,6 +251,20 @@
 			},
 			isWailsApp
 		);
+		// Only the actual Wails transport may opt Desktop into host filesystem output.
+		if (isWailsApp) {
+			try {
+				const capability = await apiService.request<FileOutputCapability>({
+					cmd: 'getFileOutputCapabilities'
+				});
+				if (capability?.host && capability.formats?.length) {
+					fileOutput = capability;
+					setFileOutputCapability(capability);
+				}
+			} catch {
+				// Older/unsupported native backends simply retain the table-only UI.
+			}
+		}
 
 		// Set up legacy appState.api for browser mode compatibility
 		if (!isWailsApp) {

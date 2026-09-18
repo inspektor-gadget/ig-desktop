@@ -7,7 +7,8 @@ import type {
 	GadgetEventMessage,
 	GadgetLogMessage,
 	GadgetQuitMessage,
-	GadgetArrayDataMessage
+	GadgetArrayDataMessage,
+	GadgetFileOutputMessage
 } from '$lib/types';
 import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
 import {
@@ -19,6 +20,10 @@ import {
 import { PLUGIN_CAPABILITIES } from '$lib/types/plugin-system';
 import type { Datasource, DatasourceField } from '$lib/types/charts';
 import type { GadgetDatasource } from '$lib/types';
+import { toastStore } from '$lib/stores/toast.svelte';
+import { copyToClipboard } from '$lib/utils/clipboard';
+import { t } from '$lib/i18n/index.svelte';
+import { fileOutputNotificationsEnabled } from '$lib/shared/file-output.svelte';
 
 /**
  * Convert GadgetDatasource to Datasource type for processor context.
@@ -426,10 +431,36 @@ export function handleGadgetLogging(msg: GadgetLogMessage): void {
  */
 export function handleGadgetQuit(msg: GadgetQuitMessage): void {
 	if (instances[msg.instanceID]) {
+		if (msg.data?.output) {
+			handleGadgetFileOutput({ instanceID: msg.instanceID, data: msg.data.output });
+		}
 		instances[msg.instanceID].running = false;
 
 		// Cleanup data processors for this instance
 		cleanupProcessors(msg.instanceID);
+	}
+}
+
+/** Handle file-output progress (type 7) without retaining capture payloads. */
+export function handleGadgetFileOutput(msg: GadgetFileOutputMessage): void {
+	const instance = instances[msg.instanceID];
+	if (!instance) return;
+	const wasTerminal = instance.output?.state === 'completed' || instance.output?.state === 'failed';
+	instance.output = msg.data;
+	if (msg.data.state === 'completed' || msg.data.state === 'failed') {
+		instance.running = false;
+		if (msg.data.state === 'completed' && !wasTerminal && fileOutputNotificationsEnabled()) {
+			toastStore.show({
+				type: 'success',
+				message: t('File capture completed'),
+				action: {
+					label: t('Copy path'),
+					onClick: async () => {
+						await copyToClipboard(msg.data.path);
+					}
+				}
+			});
+		}
 	}
 }
 

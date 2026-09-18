@@ -25,6 +25,7 @@
 		applyDatasourceAnnotationProviders
 	} from '$lib/services/annotation-provider.service';
 	import { t } from '$lib/i18n/index.svelte';
+	import FileCaptureStatus from './FileCaptureStatus.svelte';
 
 	let {
 		instanceID,
@@ -318,7 +319,9 @@
 	}
 </script>
 
-{#if gadgetInfo}
+{#if instance?.output}
+	<FileCaptureStatus {instanceID} output={instance.output} />
+{:else if gadgetInfo}
 	<div class="flex flex-1 flex-row overflow-hidden">
 		<div class="flex flex-1 flex-col overflow-hidden">
 			<div class="flex grow flex-col overflow-hidden">

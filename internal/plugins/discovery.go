@@ -18,6 +18,7 @@ package plugins
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -159,7 +160,7 @@ func (s *Service) DiscoverPlugins() ([]DiscoveredPlugin, error) {
 		plugin, err := s.loadPlugin(pluginPath)
 		if err != nil {
 			// Log but don't fail on individual plugin errors
-			fmt.Printf("Skipping plugin %s: %v\n", entry.Name(), err)
+			log.Printf("plugins: skipping plugin %s: %v", entry.Name(), err)
 			continue
 		}
 

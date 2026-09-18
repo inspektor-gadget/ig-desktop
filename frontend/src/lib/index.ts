@@ -17,7 +17,12 @@ export { ElectronIPCAdapter } from './transport/electron-ipc.adapter';
 
 // --- Services ---
 export { WebSocketService, websocketService } from './services/websocket.service.svelte';
-export { ApiService, apiService } from './services/api.service.svelte';
+export {
+	ApiService,
+	apiService,
+	BackendCommandError,
+	UncertainCommandError
+} from './services/api.service.svelte';
 export { MessageRouterService, messageRouter } from './services/message-router.service.svelte';
 
 // --- Shared state ---
@@ -47,6 +52,13 @@ export type {
 	DeploymentProgress,
 	Deployments
 } from './types';
+export type {
+	FileOutputFormat,
+	FileOutputRequest,
+	FileOutputCapability,
+	FileCaptureStatus,
+	GadgetFileOutputMessage
+} from './types';
 
 // --- ViewConfig ---
 export type { ViewConfig } from './types/view-config';
@@ -73,6 +85,7 @@ export {
 
 // --- Key UI Components ---
 export { default as Gadget } from './components/Gadget.svelte';
+export { default as FileCaptureStatusComponent } from './components/FileCaptureStatus.svelte';
 export { default as EmbeddableApp } from './components/EmbeddableApp.svelte';
 export { default as EmbeddedGadget } from './components/EmbeddedGadget.svelte';
 export type {
