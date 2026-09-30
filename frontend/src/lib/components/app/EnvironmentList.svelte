@@ -163,7 +163,9 @@
 </script>
 
 <div
-	class="flex flex-1 flex-col gap-8 overflow-auto bg-gray-50/80 dark:bg-gray-950/80 p-8 text-gray-900 dark:text-gray-100"
+	class="flex flex-1 flex-col gap-8 overflow-auto p-8 {title === undefined
+		? 'bg-gray-50/80 dark:bg-gray-950/80 text-gray-900 dark:text-gray-100'
+		: 'bg-ig-surface text-ig-text'}"
 >
 	{#if !Object.keys(environments).length}
 		<!-- Welcome state when no environments exist -->
@@ -172,9 +174,11 @@
 			<div class="mt-12 mb-12 flex flex-col items-center gap-6 text-center">
 				<div class="flex flex-col gap-2">
 					<h1
-						class="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-6xl font-bold text-transparent"
+						class="text-6xl font-bold {title === undefined
+							? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent'
+							: 'text-ig-text'}"
 					>
-						{t('Welcome!')}
+						{title ?? t('Welcome!')}
 					</h1>
 					<p class="text-2xl text-gray-600 dark:text-gray-400">{t('The Inspektor awaits you.')}</p>
 				</div>

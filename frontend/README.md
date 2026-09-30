@@ -202,8 +202,9 @@ and `showTabs={false}` to hide environment/result tab headers when a host suppli
 native navigation. Both default to `true`; a host can retain internal result tabs
 without also showing the application toolbar.
 The optional `homeTitle` replaces the home greeting with a plain theme-colored
-heading. Without it, Desktop and library consumers retain the existing greeting
-and gradient.
+heading in both empty and populated environment lists, using a matching semantic
+surface background. Without it, Desktop and library consumers retain the
+existing greeting and gradient.
 
 Hosts can subscribe to `toastStore`, retain actions in their originating document,
 and await `toastStore.triggerAction(id)`. Actions are one-shot and reject expired

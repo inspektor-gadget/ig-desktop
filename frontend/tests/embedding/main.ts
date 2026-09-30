@@ -116,7 +116,7 @@ const adapter = {
 		const request = JSON.parse(message);
 		requests.push(request);
 		if (request.cmd === 'helo') {
-			emit({ type: 100, data: environment });
+			if (!query.has('empty')) emit({ type: 100, data: environment });
 			metadata();
 			return;
 		}

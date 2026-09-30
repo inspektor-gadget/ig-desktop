@@ -43,6 +43,21 @@ test.beforeEach(async ({ page }, testInfo) => {
 
 test.afterEach(() => expect(browserErrors).toEqual([]));
 
+test('empty welcome header honors the plain host title without changing the default', async ({
+	page
+}) => {
+	await page.goto('/tests/embedding/?empty');
+	const heading = page.getByRole('heading', { level: 1 });
+	await expect(heading).toHaveText('Welcome!');
+	expect(await heading.evaluate((node) => getComputedStyle(node).backgroundImage)).not.toBe('none');
+	await page.evaluate(() => window.embedding.update({ homeTitle: 'Inspektor Gadget' }));
+	await expect(heading).toHaveText('Inspektor Gadget');
+	expect(await heading.evaluate((node) => getComputedStyle(node).backgroundImage)).toBe('none');
+	expect(await heading.evaluate((node) => getComputedStyle(node).color)).not.toBe(
+		'rgba(0, 0, 0, 0)'
+	);
+});
+
 test('Kubernetes dashboard requires confirmed absence and explicit deployment, then recovers', async ({
 	page
 }) => {
