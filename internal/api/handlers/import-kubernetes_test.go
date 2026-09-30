@@ -126,3 +126,85 @@ func TestKubernetesImportRejectsInvalidSourceWithoutPersistence(t *testing.T) {
 		t.Fatal("failed import created an environment")
 	}
 }
+
+func TestKubernetesMenuStateIsReadOnlyAndPreservesUnknown(t *testing.T) {
+	var mu sync.Mutex
+	mode := "missing"
+	var paths []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		paths = append(paths, r.URL.Path)
+		if r.Method != http.MethodGet || !strings.HasPrefix(r.URL.Path, "/second/") {
+			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if mode == "denied" {
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprint(w, `{"apiVersion":"v1","kind":"Status","status":"Failure","reason":"Forbidden","code":403}`)
+			return
+		}
+		kind, version, items := "PodList", "v1", "[]"
+		if strings.HasSuffix(r.URL.Path, "/daemonsets") {
+			kind, version = "DaemonSetList", "apps/v1"
+			if mode == "deployed" {
+				items = `[{"metadata":{"name":"gadget","namespace":"custom-gadget"},"status":{"numberReady":0}}]`
+			}
+		} else if strings.HasSuffix(r.URL.Path, "/deployments") {
+			kind, version = "DeploymentList", "apps/v1"
+		}
+		fmt.Fprintf(w, `{"apiVersion":%q,"kind":%q,"items":%s}`, version, kind, items)
+	}))
+	defer server.Close()
+	h, tr, _, _, _ := matchedHandler(t, "http://127.0.0.1:1")
+	source := handlerSource(t, server.URL)
+	input := map[string]any{"kubeconfig": source, "context": "second"}
+	check := func(deployment, id string, wantError bool) {
+		t.Helper()
+		reply := tr.call(t, "getKubernetesMenuState", input)
+		var state struct {
+			EnvironmentID string `json:"environmentId"`
+			Deployment    string `json:"deployment"`
+			Error         string `json:"error"`
+		}
+		if err := json.Unmarshal(reply.Data, &state); err != nil || !reply.Success ||
+			state.Deployment != deployment || state.EnvironmentID != id || (state.Error != "") != wantError {
+			t.Fatalf("menu state: %+v %+v %v", reply, state, err)
+		}
+	}
+	before, _ := h.envStorage.List()
+	check("missing", "", false)
+	after, _ := h.envStorage.List()
+	if len(before) != len(after) {
+		t.Fatal("menu inspection imported an environment")
+	}
+	env, err := h.envStorage.ImportKubernetes(source, "second")
+	if err != nil {
+		t.Fatal(err)
+	}
+	env.Params["gadget-namespace"] = "custom-gadget"
+	if err := h.envStorage.Set(env); err != nil {
+		t.Fatal(err)
+	}
+	mu.Lock()
+	mode, paths = "deployed", nil
+	mu.Unlock()
+	check("deployed", env.ID, false)
+	mu.Lock()
+	if len(paths) == 0 || !strings.Contains(paths[0], "/namespaces/custom-gadget/") {
+		t.Errorf("saved namespace ignored: %v", paths)
+	}
+	mode = "denied"
+	mu.Unlock()
+	check("unknown", env.ID, true)
+	input = map[string]any{"environmentID": env.ID}
+	check("unknown", env.ID, true)
+	server.Close()
+	check("unknown", env.ID, true)
+	if err := os.Remove(source.Path); err != nil {
+		t.Fatal(err)
+	}
+	check("unknown", env.ID, true)
+	input = map[string]any{"kubeconfig": source, "context": "second"}
+	check("unknown", env.ID, true)
+}

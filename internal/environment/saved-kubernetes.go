@@ -23,22 +23,18 @@ type SavedKubernetesEnvironment struct {
 // ImportKubernetes persists only a source reference and explicit context, never
 // copied credentials. Repeated imports reuse the same saved connection.
 func (s *Storage) ImportKubernetes(source KubeconfigSource, name string) (*Environment, error) {
+	source = source.Normalized()
 	if _, _, err := ResolveKubernetesConfig(source, name); err != nil {
 		return nil, err
 	}
 	s.importMu.Lock()
 	defer s.importMu.Unlock()
-	environments, err := s.List()
+	existing, err := s.FindKubernetes(source, name)
 	if err != nil {
-		return nil, fmt.Errorf("could not list saved environments")
+		return nil, err
 	}
-	for _, env := range environments {
-		if env.Runtime != "grpc-k8s" || env.Params["context"] != name || uuid.Validate(env.ID) != nil {
-			continue
-		}
-		if env.Kubeconfig != nil && *env.Kubeconfig == source {
-			return env, nil
-		}
+	if existing != nil {
+		return existing, nil
 	}
 	env := &Environment{
 		Name: name, Runtime: "grpc-k8s", Params: map[string]string{"context": name}, Kubeconfig: &source,
@@ -47,6 +43,34 @@ func (s *Storage) ImportKubernetes(source KubeconfigSource, name string) (*Envir
 		return nil, err
 	}
 	return env, nil
+}
+
+// FindKubernetes uses connection identity, not the environment's display name.
+// Ambiguous legacy connections remain an explicit import rather than selecting
+// an arbitrary saved environment with potentially different runtime options.
+func (s *Storage) FindKubernetes(source KubeconfigSource, name string) (*Environment, error) {
+	source = source.Normalized()
+	environments, err := s.List()
+	if err != nil {
+		return nil, fmt.Errorf("could not list saved environments")
+	}
+	var legacy *Environment
+	legacyCount := 0
+	for _, env := range environments {
+		if env.Runtime != "grpc-k8s" || env.Params["context"] != name || uuid.Validate(env.ID) != nil {
+			continue
+		}
+		if env.Kubeconfig != nil && env.Kubeconfig.Normalized() == source {
+			return env, nil
+		}
+		if env.Kubeconfig == nil && source.Kind == "default" && source.Path == "" && env.Params["kubeconfig"] == "" {
+			legacy, legacyCount = env, legacyCount+1
+		}
+	}
+	if legacyCount == 1 {
+		return legacy, nil
+	}
+	return nil, nil
 }
 
 // Compare declarative, locally resolved configuration, not rest.Config: its
@@ -87,6 +111,7 @@ func sameKubernetesContext(a, b *clientcmdapi.Config, name string) bool {
 }
 
 func matchSavedKubernetes(storage *Storage, source KubeconfigSource, frozen *clientcmdapi.Config, name, namespace string) (map[string]*Environment, error) {
+	source = source.Normalized()
 	environments, err := storage.List()
 	if err != nil {
 		return nil, fmt.Errorf("could not list saved environments")
@@ -113,7 +138,7 @@ func matchSavedKubernetes(storage *Storage, source KubeconfigSource, frozen *cli
 		}
 		candidateConfig, candidateNamespace := savedConfig, savedNamespace
 		if env.Kubeconfig != nil {
-			if *env.Kubeconfig == source {
+			if env.Kubeconfig.Normalized() == source {
 				candidateConfig = frozen
 			} else {
 				candidateConfig, err = loadKubeconfig(*env.Kubeconfig)

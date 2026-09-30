@@ -24,10 +24,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/inspektor-gadget/ig-desktop/internal/environment"
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
-	"github.com/inspektor-gadget/ig-desktop/pkg/k8s"
 )
 
 // K8sResourceRequest represents a request for Kubernetes resources
@@ -66,32 +66,62 @@ func (h *Handler) getK8sClientFromEnvironment(environmentID, targetID string) (*
 	if err != nil {
 		return nil, fmt.Errorf("failed to get environment: %w", err)
 	}
-
-	if env.Kubeconfig != nil {
-		config, _, err := environment.ResolveKubernetesConfig(*env.Kubeconfig, env.Params["context"])
-		if err != nil {
-			return nil, err
-		}
-		return kubernetes.NewForConfig(config)
-	}
-
-	// Get kubeconfig and context from environment params
-	kubeConfigPath := env.Params["kubeconfig"]
-	kubeContext := env.Params["context"]
-
-	// Get Kubernetes config
-	config, err := k8s.GetKubeConfig(kubeConfigPath, kubeContext)
+	conn, err := resolveSavedKubernetes(env)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load kubeconfig: %w", err)
+		return nil, err
 	}
-
-	// Create clientset
-	clientset, err := kubernetes.NewForConfig(config)
+	clientset, err := kubernetes.NewForConfig(conn.Config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Kubernetes client: %w", err)
 	}
-
 	return clientset, nil
+}
+
+// savedKubernetesConnection is the cluster connection of a saved grpc-k8s
+// environment. Completion, deployment and menu state all use it so they reach
+// the same cluster as the environment's runtime.
+type savedKubernetesConnection struct {
+	Source          environment.KubeconfigSource
+	Context         string
+	Config          *rest.Config
+	GadgetNamespace string
+}
+
+// resolveSavedKubernetes resolves env like RuntimeFactory.GetRuntime: its
+// imported kubeconfig source and context, or the default kubeconfig with the
+// saved (else current) context. It never falls back to another source.
+func resolveSavedKubernetes(env *environment.Environment) (*savedKubernetesConnection, error) {
+	if env.Runtime != "grpc-k8s" {
+		return nil, fmt.Errorf("this operation requires a Kubernetes environment")
+	}
+	if env.Params["kubeconfig"] != "" {
+		// The runtime ignores this legacy parameter; honoring it here would
+		// manage a different cluster than the one gadgets run on.
+		return nil, fmt.Errorf("saved environment uses an unsupported legacy kubeconfig parameter; import the environment again from its kubeconfig")
+	}
+	conn := &savedKubernetesConnection{
+		Source:          environment.KubeconfigSource{Kind: "default"},
+		Context:         env.Params["context"],
+		GadgetNamespace: env.Params["gadget-namespace"],
+	}
+	if conn.GadgetNamespace == "" {
+		conn.GadgetNamespace = "gadget"
+	}
+	if env.Kubeconfig != nil {
+		conn.Source = *env.Kubeconfig
+	} else if conn.Context == "" {
+		contexts, err := environment.ListKubernetesContexts(conn.Source)
+		if err != nil {
+			return nil, fmt.Errorf("could not load saved Kubernetes context")
+		}
+		conn.Context = contexts.CurrentContext
+	}
+	config, _, err := environment.ResolveKubernetesConfig(conn.Source, conn.Context)
+	if err != nil {
+		return nil, err
+	}
+	conn.Config = config
+	return conn, nil
 }
 
 // HandleGetK8sNodes retrieves a list of Kubernetes nodes

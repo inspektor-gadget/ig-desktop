@@ -132,6 +132,7 @@ func (h *Handler) Handlers() []api.CommandHandler {
 		handlers = append(handlers,
 			commandHandler{"getKubernetesContexts", h.HandleGetKubernetesContexts},
 			commandHandler{"importKubernetesEnvironment", h.HandleImportKubernetesEnvironment},
+			commandHandler{"getKubernetesMenuState", h.HandleKubernetesMenuState},
 			commandHandler{"createKubernetesTarget", h.HandleCreateKubernetesTarget},
 			commandHandler{"touchKubernetesTarget", h.HandleTouchKubernetesTarget},
 			commandHandler{"releaseKubernetesTarget", h.HandleReleaseKubernetesTarget},

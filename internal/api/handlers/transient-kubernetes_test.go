@@ -72,7 +72,7 @@ contexts:
 func TestTransientHandlersOptInAndProtocol(t *testing.T) {
 	defaultHandler := New(context.Background(), nil, nil, nil, nil, nil, nil, nil, "")
 	commands := []string{"getKubernetesContexts", "createKubernetesTarget", "touchKubernetesTarget", "releaseKubernetesTarget"}
-	privateCommands := append(append([]string{}, commands...), "importKubernetesEnvironment")
+	privateCommands := append(append([]string{}, commands...), "importKubernetesEnvironment", "getKubernetesMenuState")
 	for _, handler := range defaultHandler.Handlers() {
 		for _, command := range privateCommands {
 			if handler.Command() == command {

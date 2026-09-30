@@ -78,6 +78,66 @@ func savedEnvironment(t *testing.T, storage *Storage, params map[string]string) 
 	return env
 }
 
+func TestKubernetesImportReusesOnlyUnambiguousSourceIdentity(t *testing.T) {
+	source := syntheticSource(t)
+	t.Setenv("KUBECONFIG", source.Path)
+	storage := NewStorage(t.TempDir())
+	legacy := savedEnvironment(t, storage, map[string]string{"context": "first", "gadget-namespace": "custom"})
+	reused, err := storage.ImportKubernetes(KubeconfigSource{Kind: "default"}, "first")
+	if err != nil || reused.ID != legacy.ID {
+		t.Fatalf("same default connection not reused: %+v %v", reused, err)
+	}
+	explicit, err := storage.ImportKubernetes(source, "first")
+	if err != nil || explicit.ID == legacy.ID {
+		t.Fatalf("different source reference merged: %+v %v", explicit, err)
+	}
+	savedEnvironment(t, storage, map[string]string{"context": "first"})
+	created, err := storage.ImportKubernetes(KubeconfigSource{Kind: "default"}, "first")
+	if err != nil || created.ID == legacy.ID || created.Kubeconfig == nil {
+		t.Fatalf("ambiguous legacy connection chosen: %+v %v", created, err)
+	}
+	found, err := storage.FindKubernetes(KubeconfigSource{Kind: "default"}, "first")
+	if err != nil || found.ID != created.ID {
+		t.Fatalf("explicit import did not take precedence: %+v %v", found, err)
+	}
+}
+
+func TestKubeconfigPathSpellingsShareIdentity(t *testing.T) {
+	source := syntheticSource(t)
+	t.Setenv("KUBECONFIG", filepath.Join(t.TempDir(), "missing-default"))
+	dir, file := filepath.Split(source.Path)
+	unclean := KubeconfigSource{Kind: "file", Path: dir + "." + string(filepath.Separator) + string(filepath.Separator) + file}
+	if unclean.Path == source.Path {
+		t.Fatal("test path is already clean")
+	}
+	storage := NewStorage(t.TempDir())
+	imported, err := storage.ImportKubernetes(unclean, "second")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if imported.Kubeconfig.Path != source.Path {
+		t.Fatalf("stored path not normalized: %q", imported.Kubeconfig.Path)
+	}
+	again, err := storage.ImportKubernetes(source, "second")
+	if err != nil || again.ID != imported.ID {
+		t.Fatalf("clean spelling did not reuse the import: %+v %v", again, err)
+	}
+
+	// Environments saved before normalization still match.
+	legacy := &Environment{ID: uuid.NewString(), Name: "Legacy", Runtime: "grpc-k8s", Params: map[string]string{"context": "first"}, Kubeconfig: &unclean}
+	if err := storage.Set(legacy); err != nil {
+		t.Fatal(err)
+	}
+	found, err := storage.FindKubernetes(source, "first")
+	if err != nil || found == nil || found.ID != legacy.ID {
+		t.Fatalf("unclean saved path not matched: %+v %v", found, err)
+	}
+	target, err := newTestRegistry(t).CreateMatching(source, "first", false, storage)
+	if err != nil || len(target.SavedEnvironments) != 1 || target.SavedEnvironments[0].ID != legacy.ID {
+		t.Fatalf("unclean saved path not paired: %+v %v", target, err)
+	}
+}
+
 func TestSavedKubernetesMatchCountsAndOptOut(t *testing.T) {
 	for _, sourceKind := range []string{"default", "file"} {
 		for _, count := range []int{0, 1, 2} {

@@ -29,6 +29,15 @@ type KubeconfigSource struct {
 	Path string `json:"path,omitempty"`
 }
 
+// Normalized returns the source with a lexically cleaned file path, so
+// equivalent spellings such as /a//b and /a/./b identify the same kubeconfig.
+func (s KubeconfigSource) Normalized() KubeconfigSource {
+	if s.Kind == "file" && s.Path != "" {
+		s.Path = filepath.Clean(s.Path)
+	}
+	return s
+}
+
 type KubernetesContext struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
@@ -98,6 +107,7 @@ func validateTransientID(id string) error {
 }
 
 func loadKubeconfig(source KubeconfigSource) (*clientcmdapi.Config, error) {
+	source = source.Normalized()
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()
 	switch source.Kind {
 	case "default":

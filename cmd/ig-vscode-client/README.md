@@ -74,6 +74,7 @@ error never falls back to default/in-cluster configuration.
 | --- | --- | --- |
 | `getKubernetesContexts` | `{kubeconfig}` | `{contexts:[{name,namespace}],currentContext}` |
 | `importKubernetesEnvironment` | `{kubeconfig,context}` | Saved `grpc-k8s` environment, after a type-100 environment event |
+| `getKubernetesMenuState` | `{kubeconfig,context}` or `{environmentID}` | `{environmentId?,deployment:"unknown"\|"deployed"\|"missing",namespace?,namespaceMismatch?,error?}` |
 | `createKubernetesTarget` | `{kubeconfig,context,requireCurrentContext?,matchSavedEnvironments?}` | `{id,name,runtime:"grpc-k8s",namespace,expiresAt,savedEnvironments?:[{id,name}]}` |
 | `touchKubernetesTarget` | `{id}` | `{expiresAt}` |
 | `releaseKubernetesTarget` | `{id}` | `{released}` |
@@ -86,6 +87,19 @@ operation; a missing source/context never falls back. Imported filter namespace
 defaults follow the selected context. Source-relative credential paths remain
 client-go resolved. Import serialization is per storage owner, not a cross-process
 transaction. The import command is private to this client, like target creation.
+An unambiguous legacy default-source connection with the same explicit context
+can also be reused; names alone or ambiguous legacy environments are not merged.
+
+Menu state is read-only and never imports an environment. It checks the same
+source/context and saved gadget namespace used for management, with a five-second
+cluster request deadline. Only successful checks establish absence; forbidden,
+unreachable, or invalid configurations return `unknown` with an explicit error.
+`deployed` also searches other namespaces; `namespace` names where IG was found
+and `namespaceMismatch` is true when that is not the managed gadget namespace.
+An existing environment ID is retained even if the cluster check fails. These
+cluster reads can invoke authentication helpers. Hosts must keep the source
+reference private, cache results, and log errors rather than treating them as
+absence. Default Desktop/WebSocket handlers do not expose this command.
 
 Only context display metadata is returned, never kubeconfig/authentication
 objects. Registration resolves the **selected** context and its namespace once,
