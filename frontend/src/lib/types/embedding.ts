@@ -65,6 +65,11 @@ export interface EmbeddableAppProps {
 	launchPreferences?: boolean;
 	/** Focus the Run button when the launcher becomes ready, unless the user has focused another control. */
 	focusLaunchAction?: boolean;
+	/** Prepare the saved Kubernetes environment's deployment dialog; never executes it. */
+	environmentDeployment?: {
+		action: 'deploy' | 'redeploy' | 'undeploy';
+		namespace: string;
+	};
 	/** Explicit native host capability. Omit it to keep browser/Insights behavior unchanged. */
 	fileOutput?: {
 		formats: ('jsonl' | 'pcap-ng')[];

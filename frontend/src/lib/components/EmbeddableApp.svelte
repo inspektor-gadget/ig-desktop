@@ -39,6 +39,7 @@
 		launchPreset,
 		launchPreferences = false,
 		focusLaunchAction = false,
+		environmentDeployment,
 		fileOutput
 	}: EmbeddableAppProps = $props();
 	let route = $state(untrack(() => embeddedRoute(path ?? '/')));
@@ -175,7 +176,7 @@
 						onViewStateChange={resultChanged}
 					/>
 				{:else}
-					<EnvironmentDetail />
+					<EnvironmentDetail deployment={environmentDeployment} />
 				{/if}
 			</EnvironmentLayout>
 		{:else if route.screen === 'session' && sessions}

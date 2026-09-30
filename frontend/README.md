@@ -157,6 +157,14 @@ The exported `EmbeddableAppProps`, `EmbeddableAppState`, `ResultViewState`, and
   A brief interval without the final destination name is an intentional
   replacement limitation.
 
+- `environmentDeployment?: { action: 'deploy' | 'redeploy' | 'undeploy'; namespace: string }`:
+  prepares the existing deployment dialog when mounting a saved Kubernetes
+  environment page. The user must still explicitly submit the action; this prop
+  never executes deployment. Use the saved environment's namespace (the backend
+  binds the operation to its saved connection). A new route, including a distinct
+  request query value, remounts the page for repeated actions. Omission preserves
+  existing behavior; deployment query parameters alone have no shared meaning.
+
 - `launchPreferences?: boolean`: defaults to `false`. VS Code opts in to a
   single **Output** selector and **Choose file and start...**. Without saved
   options, PCAP-ng is selected for exactly one packet datasource when supported

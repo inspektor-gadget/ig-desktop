@@ -46,6 +46,9 @@
 	import wizardTreeConfig from '$lib/data/gadget-wizard-tree.json';
 	import type { WizardTreeConfig } from '$lib/components/wizard/wizard-types';
 	import GadgetIcon from '$lib/icons/gadget.svelte';
+	import type { EmbeddableAppProps } from '$lib/types/embedding';
+
+	let { deployment }: { deployment?: EmbeddableAppProps['environmentDeployment'] } = $props();
 
 	const api = getContext<ApiContext>('api');
 	const hostSessionRecording = getContext<(() => boolean) | undefined>('sessionRecordingEnabled');
@@ -57,6 +60,7 @@
 	let missingEnvironmentID = $state<string>();
 	let missingNamespace = $state('gadget');
 	let deployModalOpen = $state(false);
+	let deploymentAction = $state<'deploy' | 'redeploy' | 'undeploy'>('deploy');
 	const deploymentMissing = $derived(
 		features.canCreateEnvironment && env?.runtime === 'grpc-k8s' && missingEnvironmentID === env.id
 	);
@@ -120,7 +124,10 @@
 		}
 		currentEnvId = env.id;
 		missingEnvironmentID = undefined;
-		deployModalOpen = false;
+		const prepared = untrack(() => deployment);
+		deploymentAction = prepared?.action ?? 'deploy';
+		missingNamespace = prepared?.namespace ?? env.params?.['gadget-namespace'] ?? 'gadget';
+		deployModalOpen = !!prepared && features.canCreateEnvironment && env.runtime === 'grpc-k8s';
 		detachedInstances = [];
 		currentEnvironment.setEnvironment(env);
 		untrack(() => getList(env.id));
@@ -215,7 +222,8 @@
 				) {
 					missingNamespace = err.data.gadgetNamespace;
 				} else {
-					missingNamespace = env?.params?.['gadget-namespace'] || 'gadget';
+					missingNamespace =
+						untrack(() => deployment)?.namespace || env?.params?.['gadget-namespace'] || 'gadget';
 				}
 				currentEnvironment.setConnectionStatus('error', (err as Error).message);
 			}
@@ -436,7 +444,12 @@
 								'No valid Inspektor Gadget deployment was found in this Kubernetes cluster. Deploy it to run gadgets and manage headless instances.'
 							)}
 						</p>
-						<Button onclick={() => (deployModalOpen = true)}>
+						<Button
+							onclick={() => {
+								deploymentAction = 'deploy';
+								deployModalOpen = true;
+							}}
+						>
 							{t('Deploy Inspektor Gadget')}
 						</Button>
 					</Panel>
@@ -758,6 +771,8 @@
 				open={deployModalOpen}
 				environmentID={env.id}
 				gadgetNamespace={missingNamespace}
+				redeploy={deploymentAction === 'redeploy'}
+				undeploy={deploymentAction === 'undeploy'}
 				onClose={() => (deployModalOpen = false)}
 				onSuccess={() => getList(env.id)}
 			/>

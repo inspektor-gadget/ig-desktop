@@ -108,6 +108,36 @@ test('Kubernetes errors, connected state and non-Kubernetes dashboards never off
 	}
 });
 
+test('host deployment dialog preparation is opt-in and never executes by itself', async ({
+	page
+}) => {
+	await page.goto(
+		'/tests/embedding/?dashboard=connected&initialPath=/env/test-env?deployment=undeploy'
+	);
+	await expect(page.getByText('Headless Gadget Instances', { exact: true })).toBeVisible();
+	await expect(page.getByRole('dialog')).toHaveCount(0);
+	for (const action of ['deploy', 'redeploy', 'undeploy'] as const) {
+		await page.evaluate(
+			(action) =>
+				window.embedding.update({
+					path: `/env/test-env?request=${action}`,
+					environmentDeployment: { action, namespace: 'host-namespace' }
+				}),
+			action
+		);
+		const modal = page.getByRole('dialog');
+		await expect(
+			modal.getByRole('button', { name: action[0].toUpperCase() + action.slice(1), exact: true })
+		).toBeVisible();
+		await expect(modal.getByLabel('Namespace', { exact: true })).toHaveValue('host-namespace');
+		expect(
+			await page.evaluate(() => window.embedding.requests.filter((r) => r.cmd === 'deployIG'))
+		).toEqual([]);
+		await modal.getByRole('button', { name: 'Close (Force)', exact: true }).click();
+		await expect(modal).toHaveCount(0);
+	}
+});
+
 test('a failed Kubernetes recheck clears the old deployment offer', async ({ page }) => {
 	await page.clock.install();
 	await page.goto('/tests/embedding/?dashboard=missing&initialPath=/env/test-env');
