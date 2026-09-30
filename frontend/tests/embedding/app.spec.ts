@@ -1,4 +1,20 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+/** Asserts that no matching command is sent, now or after the page settles. */
+async function expectNoRequests(page: Page, commands: string[], settleMs = 300) {
+	const matching = () =>
+		page.evaluate(
+			(commands) => window.embedding.requests.filter((request) => commands.includes(request.cmd)),
+			commands
+		);
+	expect(await matching()).toEqual([]);
+	await page.evaluate(
+		(settleMs) =>
+			new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, settleMs))),
+		settleMs
+	);
+	expect(await matching()).toEqual([]);
+}
 
 const browserErrors: string[] = [];
 test.beforeEach(async ({ page }, testInfo) => {
@@ -604,6 +620,101 @@ test('file output is host-opt-in, requires a destination, and opens its status w
 	});
 });
 
+test('opt-in custom options remember output and parameters, rebind scope, and reset per gadget', async ({
+	page
+}) => {
+	await page.goto('/tests/embedding/?fileOutput&pcap&launchPreferences&savedOptions');
+	await page.waitForFunction(() => window.embedding);
+	await page.evaluate(() =>
+		window.embedding.update({
+			path: '/gadgets/run/test/image:latest',
+			launchPreset: {
+				image: 'test/image:latest',
+				environmentID: 'test-env',
+				params: { 'operator.KubeManager.namespace': 'current-namespace' }
+			}
+		})
+	);
+	await expect(page.getByLabel('Output', { exact: true })).toHaveValue('jsonl');
+	await expect(page.getByText('Using your last custom options', { exact: true })).toBeVisible();
+	await expect(page.getByLabel('Mode', { exact: true })).toHaveCount(0);
+	await page.getByLabel('Output', { exact: true }).selectOption('table');
+	await page.getByRole('button', { name: 'Run Gadget', exact: true }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() => window.embedding.requests.filter((request) => request.cmd === 'runGadget').length
+			)
+		)
+		.toBe(1);
+	expect(
+		await page.evaluate(
+			() => window.embedding.requests.findLast((request) => request.cmd === 'runGadget')?.data
+		)
+	).toMatchObject({
+		rememberOptions: true,
+		params: { pid: '42', 'operator.KubeManager.namespace': 'current-namespace' }
+	});
+	await page.evaluate(() =>
+		window.embedding.update({
+			path: '/gadgets/run/test/image:latest?env=test-env',
+			launchPreset: undefined
+		})
+	);
+	await expect(page.getByLabel('Output', { exact: true })).toHaveValue('table');
+	await page.getByRole('button', { name: 'Reset to gadget defaults', exact: true }).click();
+	await expect(page.getByLabel('Output', { exact: true })).toHaveValue('pcap-ng');
+	await expect(page.getByText('Using your last custom options', { exact: true })).toHaveCount(0);
+	await page.getByRole('button', { name: 'Choose file and start...', exact: true }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() => window.embedding.requests.filter((request) => request.cmd === 'runGadget').length
+			)
+		)
+		.toBe(2);
+	const request = await page.evaluate(
+		() => window.embedding.requests.findLast((request) => request.cmd === 'runGadget')?.data
+	);
+	expect(request).toMatchObject({
+		rememberOptions: true,
+		output: { format: 'pcap-ng', datasourceIds: ['events'] },
+		detached: false,
+		record: false
+	});
+	expect(request?.params).not.toMatchObject({ pid: '42' });
+	expect(JSON.stringify(request)).not.toContain('current-namespace');
+	expect(JSON.stringify(request)).not.toContain('old-namespace');
+	await page.evaluate(() =>
+		window.embedding.update({
+			path: '/gadgets/run/test/image:latest',
+			launchPreset: {
+				image: 'test/image:latest',
+				environmentID: 'test-env',
+				restoreDefaults: false,
+				params: { pid: '7' }
+			}
+		})
+	);
+	await expect(page.getByLabel('Output', { exact: true })).toHaveValue('table');
+	await expect(page.getByText('Using your last custom options', { exact: true })).toHaveCount(0);
+	await page.evaluate(() =>
+		window.embedding.update({
+			path: '/gadgets/run/test/image:latest?env=test-env&params=%7B%22pid%22%3A%229%22%7D',
+			launchPreset: undefined
+		})
+	);
+	await expect(page.getByLabel('Output', { exact: true })).toHaveValue('table');
+	await expect(page.getByText('Using your last custom options', { exact: true })).toHaveCount(0);
+	expect(
+		await page.evaluate(() =>
+			JSON.parse(localStorage.getItem('env:test-env:gadget-history') ?? '[]').some(
+				(entry: { rememberOptions?: boolean }) => entry.rememberOptions
+			)
+		)
+	).toBe(false);
+});
+
 test('file mode stays hidden without an explicit host capability', async ({ page }) => {
 	await page.evaluate(() =>
 		window.embedding.update({
@@ -804,4 +915,40 @@ test('malformed host paths render not-found instead of crashing the application'
 		await expect(page.getByText('Page not found', { exact: true })).toHaveCount(0);
 	}
 	expect(await page.evaluate(() => location.host)).toBe('127.0.0.1:4175');
+});
+
+test('a launch preset applies only to the launch route for its image', async ({ page }) => {
+	await page.evaluate(() =>
+		window.embedding.update({
+			path: '/gadgets/run/other/image:latest?env=test-env',
+			launchPreset: {
+				image: 'test/image:latest',
+				environmentID: 'other-env',
+				params: { pid: '42' },
+				transient: true,
+				kubernetesTargetID: 'frozen-target',
+				kubernetesTargetName: 'Frozen context: fixture'
+			}
+		})
+	);
+	const pid = page.getByRole('textbox', { name: 'PID', exact: true });
+	await expect(pid).toHaveValue('');
+	await expect(page.getByRole('combobox', { name: 'Select environment' })).toBeEnabled();
+	await expect(page.getByRole('combobox', { name: 'Select environment' })).toHaveValue('test-env');
+	await expect(page.getByRole('status')).toHaveCount(0);
+	await expect(page.getByText('Detached', { exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Run Gadget', exact: true }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() => window.embedding.requests.find((request) => request.cmd === 'runGadget')?.data
+			)
+		)
+		.toMatchObject({ image: 'other/image:latest', environmentID: 'test-env', params: {} });
+	expect(
+		await page.evaluate(() => localStorage.getItem('env:test-env:gadget-history'))
+	).not.toBeNull();
+	await page.evaluate(() => window.embedding.update({ path: '/gadgets/run/test/image:latest/' }));
+	await expect(pid).toHaveValue('42');
+	await expect(page.getByRole('combobox', { name: 'Select environment' })).toBeDisabled();
 });

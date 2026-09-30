@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { embeddedRoute } from './embedded-route.ts';
+import { embeddedRoute, launchRouteImage } from './embedded-route.ts';
 
 test('embedded navigation covers Desktop routes without loading a router', () => {
 	for (const [path, screen] of [
@@ -36,5 +36,20 @@ test('unsupported and malformed paths render not-found instead of throwing', () 
 		assert.equal(route.path, path);
 		assert.equal(route.url.origin, 'http://localhost');
 		assert.deepEqual(route.params, {});
+	}
+});
+
+test('launch presets match the image a launch route decodes', () => {
+	for (const image of [
+		'registry.example/test:tag',
+		'ghcr.io/org/trace exec:v1',
+		'a/b/../c:latest'
+	]) {
+		const route = embeddedRoute(`/gadgets/run/${image}`);
+		assert.equal(launchRouteImage(image), route.params.path, image);
+	}
+	assert.equal(launchRouteImage('ghcr.io/org/gadget:v1/'), 'ghcr.io/org/gadget:v1');
+	for (const image of ['', 'image?env=one', 'image#x', '%']) {
+		assert.equal(launchRouteImage(image), undefined, image);
 	}
 });

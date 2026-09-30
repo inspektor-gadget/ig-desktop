@@ -4,7 +4,7 @@
 	import { setPage } from '$lib/compat/app-state';
 	import { setNavigationHandler } from '$lib/compat/app-navigation';
 	import { base, resolve } from '$lib/compat/app-paths';
-	import { embeddedRoute } from '$lib/utils/embedded-route';
+	import { embeddedRoute, launchRouteImage } from '$lib/utils/embedded-route';
 	import type { EmbeddableAppProps, ResultViewChange } from '$lib/types/embedding';
 	import { t } from '$lib/i18n/index.svelte';
 	import EnvironmentList from './app/EnvironmentList.svelte';
@@ -37,9 +37,18 @@
 		showNavigation = true,
 		showTabs = true,
 		launchPreset,
+		launchPreferences = false,
 		fileOutput
 	}: EmbeddableAppProps = $props();
 	let route = $state(untrack(() => embeddedRoute(path ?? '/')));
+	// A preset belongs to one image: never prefill (or lock/hide history for) another launch route.
+	const matchingLaunchPreset = $derived(
+		launchPreset &&
+			route.screen === 'launch' &&
+			launchRouteImage(launchPreset.image) === route.params.path
+			? launchPreset
+			: undefined
+	);
 	let result = $state<ResultViewChange | undefined>();
 	const history: string[] = [];
 	let revision = 0;
@@ -47,6 +56,7 @@
 	setContext('api', apiService);
 	setContext('sessionRecordingEnabled', () => sessions);
 	setContext('fileOutput', () => fileOutput);
+	setContext('launchPreferences', () => launchPreferences);
 	setContext('navigateBack', () => navigate(history.pop() || '/', false));
 	updatePage();
 
@@ -153,7 +163,7 @@
 		{:else if route.screen === 'artifact'}
 			<ArtifactHubDetail data={{ url: route.params.path }} />
 		{:else if route.screen === 'launch'}
-			<GadgetLaunch data={{ url: route.params.path, preset: launchPreset }} />
+			<GadgetLaunch data={{ url: route.params.path, preset: matchingLaunchPreset }} />
 		{:else if route.screen === 'environment' || route.screen === 'result'}
 			<EnvironmentLayout {showTabs}>
 				{#if route.screen === 'result'}

@@ -50,3 +50,12 @@ export function embeddedRoute(path: string): EmbeddedRoute {
 	}
 	return { path: url.pathname + url.search + url.hash, url, params, screen };
 }
+
+/** The image a launch route for `image` would show, or undefined when it is not a plain image route. */
+export function launchRouteImage(image: string): string | undefined {
+	if (typeof image !== 'string' || !image) return undefined;
+	const route = embeddedRoute(`/gadgets/run/${image}`);
+	return route.screen === 'launch' && !route.url.search && !route.url.hash
+		? route.params.path
+		: undefined;
+}

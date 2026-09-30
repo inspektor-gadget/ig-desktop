@@ -157,6 +157,25 @@ The exported `EmbeddableAppProps`, `EmbeddableAppState`, `ResultViewState`, and
   A brief interval without the final destination name is an intentional
   replacement limitation.
 
+- `launchPreferences?: boolean`: defaults to `false`. VS Code opts in to a
+  single **Output** selector and **Choose file and start...**. Without saved
+  options, PCAP-ng is selected for exactly one packet datasource when supported
+  by the host; other gadgets default to table output. The host must implement
+  `getGadgetDefaults { image }` returning `null` or `{ params, output? }`, and
+  `resetGadgetDefaults { image }`. Requests use the exact image reference.
+  The launcher marks custom starts with `rememberOptions: true`; the host strips
+  this field before runtime dispatch and persists sanitized options only after
+  acknowledgement, using protected storage, never browser localStorage.
+  `selectFileOutput` receives `startAfterSelection: true` for the combined action,
+  so the host can label confirmation **Start recording**. Cancellation returns
+  `null` and does not start anything.
+  Restored parameters are filtered against current metadata and exclude target
+  selectors; explicit current presets override them. `launchPreset.restoreDefaults:
+false` bypasses remembered options and packet-first defaults for explicit Recent
+  requests. Reset preserves current target selectors. Quick actions should use
+  the ordinary runtime path without `rememberOptions`, not execute via a preset.
+  Omission preserves Desktop/Insights launcher defaults.
+
 Navigation alone never starts a gadget. The existing launcher reads `env`,
 `params` (JSON), `detached`, and `instanceName` query parameters and still requires
 the user to click Run. Live instance IDs, remote detached IDs, and session/run IDs
@@ -196,7 +215,10 @@ Wails still uses `Browser.OpenURL` and browser consumers still use
 `configuration.snapshot()`, `apply(snapshot)` and `onChange(callback)` support
 host-owned preference synchronization, including resets. Hydrate before mounting
 and suppress feedback while applying host snapshots. `launchPreset` supplies a
-typed launcher preset without encoding parameters in a URL.
+typed launcher preset without encoding parameters in a URL. It applies only to
+the launch route whose image equals `launchPreset.image` (compared as the route
+decodes it); other launch routes keep their ordinary defaults, target selection
+and history.
 An optional `launchPreset.transient` locks the selected environment and suppresses
 detached execution, recording, and launch-history writes for temporary host
 targets. The default is unchanged; the host must enforce the same restrictions

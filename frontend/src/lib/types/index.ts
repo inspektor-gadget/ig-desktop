@@ -35,6 +35,8 @@ export interface GadgetRunRequest {
 	record?: boolean;
 	sessionId?: string;
 	sessionName?: string;
+	/** Opt-in embedding host persists custom options after an acknowledged start. */
+	rememberOptions?: boolean;
 	/** File output is host-authorized and is intentionally not a persisted path. */
 	output?: FileOutputRequest;
 }

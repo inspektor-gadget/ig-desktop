@@ -20,6 +20,7 @@ export interface EmbeddableAppState {
 
 /** A reviewed launcher prefill. Hosts must not use this to execute a gadget. */
 export interface GadgetLaunchPreset {
+	/** Applies only to the launch route for this image (compared as the route decodes it). */
 	image: string;
 	/** An ephemeral host target: fixed environment, foreground only, no history/recording. */
 	transient?: boolean;
@@ -37,6 +38,8 @@ export interface GadgetLaunchPreset {
 		format: 'jsonl' | 'pcap-ng';
 		datasourceIds?: string[];
 	};
+	/** Explicit recents bypass remembered defaults, including their output choice. */
+	restoreDefaults?: boolean;
 }
 
 export interface EmbeddableAppProps {
@@ -58,6 +61,8 @@ export interface EmbeddableAppProps {
 	showTabs?: boolean;
 	/** Prefill the launcher shown by a matching launch route; it never auto-runs. */
 	launchPreset?: GadgetLaunchPreset;
+	/** Opt in to outcome-based output, host-protected per-image defaults, and choose-file-and-start. */
+	launchPreferences?: boolean;
 	/** Explicit native host capability. Omit it to keep browser/Insights behavior unchanged. */
 	fileOutput?: {
 		formats: ('jsonl' | 'pcap-ng')[];

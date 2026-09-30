@@ -17,6 +17,12 @@ import '../../build-embedding/ig-frontend.css';
 const query = new URLSearchParams(location.search);
 let dashboardState = query.get('dashboard') || '';
 let conflictVersion = '17';
+let customOptions: Record<string, unknown> | null = query.has('savedOptions')
+	? {
+			params: { pid: '42', 'operator.KubeManager.namespace': 'old-namespace' },
+			output: { format: 'jsonl' }
+		}
+	: null;
 const environment = {
 	id: 'test-env',
 	name: 'Embedding environment',
@@ -25,12 +31,29 @@ const environment = {
 };
 const gadgetInfo = {
 	imageName: 'test/image:latest',
-	params: [{ key: 'pid', title: 'PID', type: 'uint32', defaultValue: '0' }],
+	params: [
+		{ key: 'pid', title: 'PID', type: 'uint32', defaultValue: '0' },
+		...(query.has('launchPreferences')
+			? [
+					{
+						key: 'namespace',
+						prefix: 'operator.KubeManager.',
+						title: 'Namespace',
+						type: 'string',
+						defaultValue: '',
+						valueHint: 'k8s:namespace'
+					}
+				]
+			: [])
+	],
 	dataSources: [
 		{
 			name: 'events',
 			fields: [{ name: 'comm', fullName: 'comm', kind: 'String', flags: 0, annotations: {} }],
-			annotations: { 'metrics.collect': 'true' }
+			annotations: {
+				'metrics.collect': 'true',
+				...(query.has('pcap') ? { 'cli.supported-output-modes': 'pcap-ng' } : {})
+			}
 		}
 	]
 };
@@ -203,6 +226,13 @@ const adapter = {
 			case 'getGadgetInfo':
 				data = gadgetInfo;
 				break;
+			case 'getGadgetDefaults':
+				data = customOptions;
+				break;
+			case 'resetGadgetDefaults':
+				customOptions = null;
+				data = null;
+				break;
 			case 'getChartValues':
 				data = { values: 'config: {}' };
 				break;
@@ -247,6 +277,13 @@ const adapter = {
 				};
 				break;
 			case 'runGadget':
+				if (request.data?.rememberOptions) {
+					const output = request.data.output as { format: string } | undefined;
+					customOptions = {
+						params: request.data.params,
+						...(output ? { output: { format: output.format } } : {})
+					};
+				}
 				metadata('manual-run');
 				if (request.data?.output) {
 					emit({
@@ -287,8 +324,14 @@ const adapter = {
 const cleanup = initializeIG({ adapter, language: 'en' });
 const props: EmbeddableAppProps = createReactiveProps({
 	path: new URLSearchParams(location.search).get('initialPath') || '/',
+	launchPreferences: query.has('launchPreferences'),
 	...(new URLSearchParams(location.search).has('fileOutput')
-		? { fileOutput: { formats: ['jsonl'], host: 'test host' } }
+		? {
+				fileOutput: {
+					formats: query.has('pcap') ? ['jsonl', 'pcap-ng'] : ['jsonl'],
+					host: 'test host'
+				}
+			}
 		: {}),
 	onNavigate: (path: string) => {
 		props.path = path;

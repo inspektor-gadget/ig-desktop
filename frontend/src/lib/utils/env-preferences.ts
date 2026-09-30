@@ -170,7 +170,7 @@ export function addGadgetToHistory(
 	maxEntries: number = 50
 ): void {
 	// Destination tokens authorize one start only and paths/overwrite consent are never history data.
-	const { output, ...withoutOutput } = request;
+	const { output, rememberOptions: _rememberOptions, ...withoutOutput } = request;
 	const historyRequest: GadgetRunRequest = output
 		? {
 				...withoutOutput,

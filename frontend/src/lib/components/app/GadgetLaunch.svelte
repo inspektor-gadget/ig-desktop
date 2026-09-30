@@ -57,6 +57,15 @@
 	const hostFileOutput = getContext<(() => FileOutputCapability | undefined) | undefined>(
 		'fileOutput'
 	);
+	const hostLaunchPreferences = getContext<(() => boolean) | undefined>('launchPreferences');
+	const launchPreferences = $derived(hostLaunchPreferences?.() ?? false);
+	const hasExplicitParams = $derived(page.url.searchParams.has('params'));
+	let usingSavedOptions = $state(false);
+	let starting = $state(false);
+	let resetting = $state(false);
+	let startUncertain = $state(false);
+	let parameterRevision = $state(0);
+	type CustomOptions = { params: Record<string, string>; output?: { format: FileOutputFormat } };
 
 	let environmentID = $state<string | null>(null);
 	let detached = $state(false);
@@ -96,13 +105,16 @@
 	}
 	onDestroy(clearFileSelection);
 
-	async function chooseFileOutput() {
+	async function chooseFileOutput(startAfterSelection = false) {
 		if (!fileOutput) return;
 		clearFileSelection();
 		try {
 			const selection = await api.request<FileOutputRequest & { path: string; host: string }>({
 				cmd: 'selectFileOutput',
-				data: { format: outputFormat }
+				data: {
+					format: outputFormat,
+					...(startAfterSelection ? { startAfterSelection: true } : {})
+				}
 			});
 			if (selection?.token) outputSelection = selection;
 		} catch (err) {
@@ -148,9 +160,11 @@
 	});
 
 	function canRun(): boolean {
-		if (!environmentID) return false;
-		if (outputMode === 'file' && !outputSelection?.token) return false;
+		if (!environmentID || !gadgetInfo || error || starting || resetting || startUncertain)
+			return false;
+		if (outputMode === 'file' && !outputSelection?.token && !launchPreferences) return false;
 		if (
+			outputMode !== 'file' &&
 			sessionRecordingEnabled &&
 			recordGadgetRun &&
 			sessionMode === 'existing' &&
@@ -206,14 +220,16 @@
 		} else {
 			values = {};
 		}
-		const requestedFormat = page.url.searchParams.get('output');
-		const presetOutput =
-			data.preset?.output ??
-			(requestedFormat === 'jsonl' || requestedFormat === 'pcap-ng'
-				? { format: requestedFormat }
-				: undefined);
-		outputMode = presetOutput && fileOutputAvailable ? 'file' : 'table';
-		outputFormat = presetOutput?.format ?? 'jsonl';
+		if (!launchPreferences) {
+			const requestedFormat = page.url.searchParams.get('output');
+			const presetOutput =
+				data.preset?.output ??
+				(requestedFormat === 'jsonl' || requestedFormat === 'pcap-ng'
+					? { format: requestedFormat }
+					: undefined);
+			outputMode = presetOutput && fileOutputAvailable ? 'file' : 'table';
+			outputFormat = presetOutput?.format ?? 'jsonl';
+		}
 	});
 
 	// A destination is authorized only for this target, gadget and encoder.
@@ -254,6 +270,61 @@
 		return manifest;
 	});
 
+	function isTargetParameter(param: NonNullable<GadgetInfo['params']>[number]): boolean {
+		return (
+			/^(k8s|docker|container):/.test(param.valueHint ?? '') ||
+			/^operator\.(KubeManager|LocalManager)\./.test((param.prefix ?? '') + param.key)
+		);
+	}
+
+	function setInitialOutput(saved: CustomOptions | null) {
+		const requested = data.preset?.output?.format ?? page.url.searchParams.get('output');
+		const explicitTable =
+			(data.preset?.restoreDefaults === false || hasExplicitParams) && !requested;
+		const format =
+			requested ||
+			(saved ? saved.output?.format : supportedFormats.includes('pcap-ng') ? 'pcap-ng' : undefined);
+		const supported =
+			(format === 'jsonl' || format === 'pcap-ng') && supportedFormats.includes(format);
+		outputMode = !explicitTable && supported ? 'file' : 'table';
+		outputFormat =
+			!explicitTable && supported
+				? format
+				: supportedFormats.includes('pcap-ng')
+					? 'pcap-ng'
+					: 'jsonl';
+		if (format && !explicitTable && outputMode === 'table') {
+			toastStore.warning(
+				t(
+					'The previous output format is unavailable for this gadget or host. Review the output before starting.'
+				)
+			);
+		}
+	}
+
+	async function resetCustomOptions() {
+		if (resetting || starting || !gadgetInfo) return;
+		resetting = true;
+		try {
+			await api.request({ cmd: 'resetGadgetDefaults', data: { image: data.url } });
+			const targetKeys = new Set(
+				(gadgetInfo?.params ?? [])
+					.filter(isTargetParameter)
+					.map((param) => (param.prefix ?? '') + param.key)
+			);
+			values = Object.fromEntries(Object.entries(values).filter(([key]) => targetKeys.has(key)));
+			parameterRevision++;
+			usingSavedOptions = false;
+			outputMode = supportedFormats.includes('pcap-ng') ? 'file' : 'table';
+			outputFormat = supportedFormats.includes('pcap-ng') ? 'pcap-ng' : 'jsonl';
+			clearFileSelection();
+		} catch (err) {
+			toastStore.error(getErrorMessage(err));
+		} finally {
+			resetting = false;
+		}
+	}
+
 	$effect(() => {
 		if (!environmentID) return;
 
@@ -264,13 +335,24 @@
 		error = null;
 		originalError = null;
 		gadgetInfo = null;
+		usingSavedOptions = false;
+		let cancelled = false;
+		const restore =
+			launchPreferences && data.preset?.restoreDefaults !== false && !hasExplicitParams;
+		const image = data.url;
+		const target = environmentID;
 
-		api
-			.request<GadgetInfo | null>({
+		Promise.all([
+			api.request<GadgetInfo | null>({
 				cmd: 'getGadgetInfo',
-				data: { url: data.url, environmentID: environmentID }
-			})
-			.then((res) => {
+				data: { url: image, environmentID: target }
+			}),
+			restore
+				? api.request<CustomOptions | null>({ cmd: 'getGadgetDefaults', data: { image } })
+				: Promise.resolve(null)
+		])
+			.then(([res, saved]) => {
+				if (cancelled) return;
 				if (!res) {
 					error = t('Could not fetch gadget information. Is the given URL correct?');
 					originalError = null;
@@ -279,8 +361,40 @@
 				error = null;
 				originalError = null;
 				gadgetInfo = res;
+				if (launchPreferences) {
+					if (saved) {
+						const allowed = new Map(
+							(res.params ?? [])
+								.filter((param) => !isTargetParameter(param))
+								.map((param) => [(param.prefix ?? '') + param.key, param])
+						);
+						const entries = Object.entries(saved.params).filter(([key, value]) => {
+							const param = allowed.get(key);
+							return (
+								param && (!param.possibleValues?.length || param.possibleValues.includes(value))
+							);
+						});
+						const changed = Object.keys(saved.params).some(
+							(key) =>
+								!entries.some(([name]) => name === key) &&
+								!(res.params ?? []).some(
+									(param) => (param.prefix ?? '') + param.key === key && isTargetParameter(param)
+								)
+						);
+						if (changed)
+							toastStore.warning(
+								t(
+									'Some saved parameters are no longer supported. Review the custom options before starting.'
+								)
+							);
+						values = { ...Object.fromEntries(entries), ...values };
+						usingSavedOptions = true;
+					}
+					setInitialOutput(saved);
+				}
 			})
 			.catch((err) => {
+				if (cancelled) return;
 				console.error('Failed to fetch gadget information:', err);
 				originalError = err?.message || String(err);
 				error = t(
@@ -288,6 +402,9 @@
 				);
 				gadgetInfo = null;
 			});
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	// Load existing sessions when recording is enabled
@@ -343,10 +460,12 @@
 			record: outputMode === 'file' ? false : shouldRecord,
 			sessionId: sessionIdToUse,
 			sessionName:
-				!data.preset?.transient && sessionMode === 'new' && !sessionIdToUse
+				outputMode !== 'file' && !data.preset?.transient && sessionMode === 'new' && !sessionIdToUse
 					? sessionName
-					: undefined
+					: undefined,
+			...(launchPreferences ? { rememberOptions: true } : {})
 		};
+		if (outputMode === 'file') gadgetRunRequest.sessionId = undefined;
 		if (outputMode === 'file' && outputSelection?.token) {
 			gadgetRunRequest.output = {
 				token: outputSelection.token,
@@ -410,9 +529,10 @@
 			}
 		} catch (err) {
 			const fileStartRejected = outputMode === 'file' && err instanceof BackendCommandError;
-			const fileStartUncertain = outputMode === 'file' && err instanceof UncertainCommandError;
+			const fileStartUncertain = err instanceof UncertainCommandError;
 			if (fileStartRejected) clearFileSelection();
 			if (fileStartUncertain) {
+				startUncertain = true;
 				if (fileOutput?.notify !== false) {
 					toastStore.error(
 						t(
@@ -434,9 +554,23 @@
 					? undefined
 					: {
 							label: t('Retry'),
-							onClick: () => runGadget()
+							onClick: () => startGadget()
 						}
 			);
+		}
+	}
+
+	async function startGadget() {
+		if (!canRun()) return;
+		starting = true;
+		try {
+			if (launchPreferences && outputMode === 'file' && !outputSelection?.token) {
+				await chooseFileOutput(true);
+				if (!outputSelection?.token) return;
+			}
+			await runGadget();
+		} finally {
+			starting = false;
 		}
 	}
 
@@ -619,60 +753,108 @@
 					</div>
 				{/if}
 			{:else}
+				{#if launchPreferences}
+					<div class="flex items-center justify-between gap-3 text-sm">
+						<span class="text-ig-text-muted"
+							>{usingSavedOptions
+								? t('Using your last custom options')
+								: t('Custom options are remembered after a successful start')}</span
+						>
+						<button
+							disabled={starting || resetting || !gadgetInfo}
+							onclick={resetCustomOptions}
+							class="text-ig-primary underline">{t('Reset to gadget defaults')}</button
+						>
+					</div>
+				{/if}
 				{#if fileOutputAvailable}
-					<Panel title={t('Mode')} icon={File} color="blue">
+					<Panel title={t(launchPreferences ? 'Output' : 'Mode')} icon={File} color="blue">
 						<div class="flex flex-col gap-4">
-							<label class="flex max-w-sm flex-col gap-1 text-sm">
-								<span>{t('Mode')}</span>
-								<select
-									aria-label={t('Mode')}
-									bind:value={outputMode}
-									class="border-ig-border-strong bg-ig-surface-raised rounded-ig-sm border p-2 text-ig-text"
-								>
-									<option value="table">{t('Default table view')}</option>
-									<option value="file">{t('To a file')}</option>
-								</select>
-							</label>
+							{#if launchPreferences}
+								<label class="flex max-w-sm flex-col gap-1 text-sm">
+									<span>{t('Output')}</span>
+									<select
+										aria-label={t('Output')}
+										disabled={starting || resetting}
+										value={outputMode === 'table' ? 'table' : outputFormat}
+										onchange={(event) => {
+											const value = event.currentTarget.value;
+											outputMode = value === 'table' ? 'table' : 'file';
+											if (value === 'jsonl' || value === 'pcap-ng') outputFormat = value;
+										}}
+										class="border-ig-border-strong bg-ig-surface-raised rounded-ig-sm border p-2 text-ig-text"
+									>
+										<option value="table">{t('Live table')}</option>
+										{#if supportedFormats.includes('pcap-ng')}<option value="pcap-ng"
+												>{t('PCAP-ng file')}</option
+											>{/if}
+										{#if supportedFormats.includes('jsonl')}<option value="jsonl"
+												>{t('JSON Lines file')}</option
+											>{/if}
+									</select>
+								</label>
+							{:else}
+								<label class="flex max-w-sm flex-col gap-1 text-sm">
+									<span>{t('Mode')}</span>
+									<select
+										aria-label={t('Mode')}
+										bind:value={outputMode}
+										class="border-ig-border-strong bg-ig-surface-raised rounded-ig-sm border p-2 text-ig-text"
+									>
+										<option value="table">{t('Default table view')}</option>
+										<option value="file">{t('To a file')}</option>
+									</select>
+								</label>
+							{/if}
 							{#if outputMode === 'file'}
 								<div class="flex flex-col gap-3 rounded-ig-md border border-ig-border p-3">
-									<label class="flex flex-col gap-1 text-sm">
-										<span>{t('Format')}</span>
-										<select
-											aria-label={t('Format')}
-											bind:value={outputFormat}
-											class="border-ig-border-strong bg-ig-surface-raised rounded-ig-sm border p-2 text-ig-text"
-										>
-											{#each supportedFormats as format}
-												<option value={format}
-													>{format === 'jsonl'
-														? 'JSON Lines (.jsonl)'
-														: 'PCAP-NG (.pcapng)'}</option
-												>
-											{/each}
-										</select>
-									</label>
+									{#if !launchPreferences}
+										<label class="flex flex-col gap-1 text-sm">
+											<span>{t('Format')}</span>
+											<select
+												aria-label={t('Format')}
+												bind:value={outputFormat}
+												class="border-ig-border-strong bg-ig-surface-raised rounded-ig-sm border p-2 text-ig-text"
+											>
+												{#each supportedFormats as format (format)}
+													<option value={format}
+														>{format === 'jsonl'
+															? 'JSON Lines (.jsonl)'
+															: 'PCAP-NG (.pcapng)'}</option
+													>
+												{/each}
+											</select>
+										</label>
+									{/if}
 									{#if outputFormat === 'pcap-ng' && pcapDatasources.length !== 1}
 										<p role="alert" class="text-sm text-ig-error">
 											{t('PCAP-NG requires exactly one packet datasource.')}
 										</p>
 									{/if}
 									<div class="flex items-center gap-3">
-										<button
-											aria-label={t('Choose destination')}
-											onclick={chooseFileOutput}
-											class="rounded-ig-sm border border-ig-border-strong px-3 py-2 text-sm hover:bg-ig-border"
-										>
-											{outputSelection?.path ? t('Change destination') : t('Choose destination')}
-										</button>
+										{#if !launchPreferences || outputSelection?.path}
+											<button
+												aria-label={t('Choose destination')}
+												disabled={starting}
+												onclick={() => chooseFileOutput()}
+												class="rounded-ig-sm border border-ig-border-strong px-3 py-2 text-sm hover:bg-ig-border"
+											>
+												{outputSelection?.path ? t('Change destination') : t('Choose destination')}
+											</button>
+										{/if}
 										{#if outputSelection?.path}
 											<span class="break-all text-sm text-ig-text-secondary"
 												>{outputSelection.path} ({outputSelection.host})</span
 											>
 										{:else}
 											<span class="text-sm text-ig-text-muted"
-												>{t('Choose a destination on {{host}} before starting.', {
-													host: fileOutput?.host ?? ''
-												})}</span
+												>{launchPreferences
+													? t('You will choose a destination on {{host}} when starting.', {
+															host: fileOutput?.host ?? ''
+														})
+													: t('Choose a destination on {{host}} before starting.', {
+															host: fileOutput?.host ?? ''
+														})}</span
 											>
 										{/if}
 									</div>
@@ -681,7 +863,7 @@
 						</div>
 					</Panel>
 				{/if}
-				{#if !data.preset?.transient}
+				{#if !data.preset?.transient && (!launchPreferences || outputMode !== 'file')}
 					<!-- Panel-like container without header for detached settings -->
 					<div
 						class="main-gradient flex flex-col gap-4 rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
@@ -746,7 +928,7 @@
 
 					<!-- Session recording settings (experimental) - not available for detached instances -->
 				{/if}
-				{#if sessionRecordingEnabled && !detached}
+				{#if sessionRecordingEnabled && !detached && (!launchPreferences || outputMode !== 'file')}
 					<div
 						class="main-gradient flex flex-col gap-4 rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 					>
@@ -848,7 +1030,9 @@
 						</div>
 					{/snippet}
 
-					<Params params={gadgetInfo.params ?? []} {values} {showAdvanced} />
+					{#key parameterRevision}
+						<Params params={gadgetInfo.params ?? []} {values} {showAdvanced} />
+					{/key}
 				</Panel>
 			{/if}
 		</div>
@@ -942,18 +1126,29 @@
 	<div></div>
 	<div>
 		<div class="flex flex-col items-end gap-2">
-			{#if sessionRecordingEnabled && recordGadgetRun && sessionMode === 'existing' && !selectedSessionId}
+			{#if startUncertain}
+				<p role="alert" class="text-sm text-ig-warning">
+					{t('Capture start outcome is unknown. Inspect active captures before starting again.')}
+				</p>
+			{/if}
+			{#if outputMode !== 'file' && sessionRecordingEnabled && recordGadgetRun && sessionMode === 'existing' && !selectedSessionId}
 				<span class="text-xs text-yellow-600 dark:text-yellow-400"
 					>{t('Please select a session to record to')}</span
 				>
 			{/if}
 			<button
 				disabled={!canRun()}
-				onclick={runGadget}
+				onclick={startGadget}
 				class="flex cursor-pointer flex-row gap-2 rounded-ig-sm bg-green-600 dark:bg-green-800 py-2 pr-4 pl-2 text-white hover:bg-green-500 dark:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-200 dark:disabled:bg-green-950 disabled:text-gray-500"
 			>
 				<span><Play /></span>
-				<span>{t('Run Gadget')}</span>
+				<span
+					>{starting
+						? t('Starting...')
+						: launchPreferences && outputMode === 'file' && !outputSelection?.token
+							? t('Choose file and start...')
+							: t('Run Gadget')}</span
+				>
 			</button>
 		</div>
 	</div>
