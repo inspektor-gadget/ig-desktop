@@ -16,10 +16,34 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/inspektor-gadget/ig-desktop/internal/environment"
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 )
+
+func (h *Handler) HandleImportKubernetesEnvironment(ev *api.Event) {
+	if h.transientKubernetes == nil {
+		h.send(ev.SetError(fmt.Errorf("Kubernetes environment import is disabled")))
+		return
+	}
+	var req struct {
+		Kubeconfig environment.KubeconfigSource `json:"kubeconfig"`
+		Context    string                       `json:"context"`
+	}
+	if err := json.Unmarshal(ev.Data, &req); err != nil {
+		h.send(ev.SetError(err))
+		return
+	}
+	env, err := h.envStorage.ImportKubernetes(req.Kubeconfig, req.Context)
+	if err != nil {
+		h.send(ev.SetError(err))
+		return
+	}
+	data, _ := json.Marshal(env)
+	h.send(&api.GadgetEvent{Type: api.TypeEnvironmentCreate, Data: data})
+	h.send(ev.SetData(env))
+}
 
 // HandleCreateEnvironment handles creating a new environment
 func (h *Handler) HandleCreateEnvironment(ev *api.Event) {

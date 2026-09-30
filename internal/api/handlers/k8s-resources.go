@@ -67,6 +67,14 @@ func (h *Handler) getK8sClientFromEnvironment(environmentID, targetID string) (*
 		return nil, fmt.Errorf("failed to get environment: %w", err)
 	}
 
+	if env.Kubeconfig != nil {
+		config, _, err := environment.ResolveKubernetesConfig(*env.Kubeconfig, env.Params["context"])
+		if err != nil {
+			return nil, err
+		}
+		return kubernetes.NewForConfig(config)
+	}
+
 	// Get kubeconfig and context from environment params
 	kubeConfigPath := env.Params["kubeconfig"]
 	kubeContext := env.Params["context"]

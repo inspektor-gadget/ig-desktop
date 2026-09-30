@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -17,6 +18,56 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
+
+func TestImportedKubernetesSourcePersistenceAndMatching(t *testing.T) {
+	source := syntheticSource(t)
+	t.Setenv("KUBECONFIG", filepath.Join(t.TempDir(), "missing-default"))
+	dir := t.TempDir()
+	storage := NewStorage(dir)
+	var wg sync.WaitGroup
+	for range 8 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if _, err := storage.ImportKubernetes(source, "second"); err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	wg.Wait()
+	storage = NewStorage(dir)
+	saved, err := storage.List()
+	if err != nil || len(saved) != 1 {
+		t.Fatalf("import must persist one connection: %v %v", saved, err)
+	}
+	env := saved[0]
+	data, err := os.ReadFile(filepath.Join(dir, env.ID+".json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "secret") || strings.Contains(string(data), "https://") {
+		t.Fatal("import copied kubeconfig credentials into environment storage")
+	}
+	if env.Kubeconfig == nil || *env.Kubeconfig != source || env.Params["context"] != "second" {
+		t.Fatalf("import lost its source: %+v", env)
+	}
+	config, ns, err := ResolveKubernetesConfig(*env.Kubeconfig, env.Params["context"])
+	if err != nil || config.Host != "https://second.invalid" || ns != "second-ns" {
+		t.Fatalf("import used default or current context: %v %v", config, err)
+	}
+	registry := newTestRegistry(t)
+	target, err := registry.CreateMatching(source, "second", false, storage)
+	if err != nil || len(target.SavedEnvironments) != 1 || target.SavedEnvironments[0].ID != env.ID {
+		t.Fatalf("imported source should match without a usable default config: %+v %v", target, err)
+	}
+	env.Kubeconfig = &KubeconfigSource{Kind: "default"}
+	if err := storage.Set(env); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := registry.LookupSaved(target.ID, env.ID, storage); err == nil {
+		t.Fatal("changed source did not invalidate the frozen saved pairing")
+	}
+}
 
 func savedEnvironment(t *testing.T, storage *Storage, params map[string]string) *Environment {
 	t.Helper()

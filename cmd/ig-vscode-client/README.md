@@ -39,7 +39,10 @@ Await the matching successful type-1 reply before declaring the process ready:
 ```
 
 `commands` is the actual complete handler list, not the abbreviated example.
-An environment is `{id,name,runtime,params}`; runtime is `grpc-k8s` or `grpc-ig`.
+An environment is `{id,name,runtime,params,kubeconfig?}`; runtime is `grpc-k8s` or `grpc-ig`.
+The optional top-level `kubeconfig` is a source reference for imported Kubernetes
+environments, not credential contents. The extension strips it and connection
+parameters from webview and agent projections.
 Unavailable sessions are advertised as false with a diagnostic `sessionError`;
 recording/session commands then return errors. Legacy `helo` broadcasts type-100
 environment events and now acknowledges once. Repeated `clientHello` returns the
@@ -70,9 +73,19 @@ error never falls back to default/in-cluster configuration.
 | Command | Data | Successful result |
 | --- | --- | --- |
 | `getKubernetesContexts` | `{kubeconfig}` | `{contexts:[{name,namespace}],currentContext}` |
+| `importKubernetesEnvironment` | `{kubeconfig,context}` | Saved `grpc-k8s` environment, after a type-100 environment event |
 | `createKubernetesTarget` | `{kubeconfig,context,requireCurrentContext?,matchSavedEnvironments?}` | `{id,name,runtime:"grpc-k8s",namespace,expiresAt,savedEnvironments?:[{id,name}]}` |
 | `touchKubernetesTarget` | `{id}` | `{expiresAt}` |
 | `releaseKubernetesTarget` | `{id}` | `{released}` |
+
+Import validates the selected named context locally, without cluster requests,
+credential-plugin execution or deployment. It stores only its source reference
+and context, and repeated imports of that source/context reuse the imported
+environment. Runtime, completion and deployment resolve that source on each
+operation; a missing source/context never falls back. Imported filter namespace
+defaults follow the selected context. Source-relative credential paths remain
+client-go resolved. Import serialization is per storage owner, not a cross-process
+transaction. The import command is private to this client, like target creation.
 
 Only context display metadata is returned, never kubeconfig/authentication
 objects. Registration resolves the **selected** context and its namespace once,
@@ -98,11 +111,13 @@ configuration, including TLS, proxy, impersonation, auth-provider and exec
 declarations. Context/source names alone are not evidence of equality.
 Only default runtime connection parameters match (omitted or explicitly equal
 `gadget-namespace`, `tcp-port`, and `connection-timeout`). Unknown parameters and
-nonempty `kubeconfig` overrides are conservatively excluded: the ordinary saved
-runtime currently does not consistently honor that override. Unusable individual
+nonempty legacy `params.kubeconfig` overrides are conservatively excluded: the
+legacy saved runtime does not consistently honor that override. Imported
+top-level `kubeconfig` references are supported and compared against their actual
+source, even when the default kubeconfig is unavailable. Unusable individual
 candidates are skipped; failure to enumerate saved storage is an error, not a
 no-match result. Matching neither connects nor executes credential plugins.
-The ordinary saved runtime currently derives its default gadget filter namespace
+The legacy saved runtime currently derives its default gadget filter namespace
 from the active context even with an explicit saved context. That default must
 also equal the frozen selected namespace; otherwise the candidate is excluded.
 

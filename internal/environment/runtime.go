@@ -67,6 +67,16 @@ func (f *RuntimeFactory) GetRuntime(id string) (*grpcruntime.Runtime, error) {
 	case "grpc-k8s":
 		rt = grpcruntime.New(grpcruntime.WithConnectUsingK8SProxy)
 
+		if environment.Kubeconfig != nil {
+			config, namespace, err := ResolveKubernetesConfig(*environment.Kubeconfig, environment.Params["context"])
+			if err != nil {
+				return nil, err
+			}
+			rt.SetRestConfig(config)
+			rt.SetDefaultValue(gadgets.K8SNamespace, namespace)
+			break
+		}
+
 		// Load Kubernetes config with context override if specified
 		context := environment.Params["context"]
 		config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(

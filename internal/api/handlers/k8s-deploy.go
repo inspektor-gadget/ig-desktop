@@ -25,6 +25,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
+	"github.com/inspektor-gadget/ig-desktop/internal/environment"
 	"github.com/inspektor-gadget/ig-desktop/pkg/api"
 	"github.com/inspektor-gadget/ig-desktop/pkg/helm"
 	"github.com/inspektor-gadget/ig-desktop/pkg/k8s"
@@ -227,20 +228,27 @@ func (h *Handler) resolveDeploymentEnvironment(req *DeployIGRequest) error {
 	}
 	// Resolve the same saved connection as RuntimeFactory, without exposing
 	// connection parameters to the frontend or accepting target overrides.
-	raw, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{},
-	).RawConfig()
-	if err != nil {
-		return fmt.Errorf("could not load kubernetes config")
-	}
 	req.KubeContext = env.Params["context"]
-	if req.KubeContext == "" {
-		req.KubeContext = raw.CurrentContext
-	}
-	if req.KubeContext == "" || raw.Contexts[req.KubeContext] == nil {
-		return fmt.Errorf("saved Kubernetes context does not exist")
-	}
 	req.KubeConfig = ""
+	if env.Kubeconfig != nil {
+		if _, _, err := environment.ResolveKubernetesConfig(*env.Kubeconfig, req.KubeContext); err != nil {
+			return err
+		}
+		req.KubeConfig = env.Kubeconfig.Path
+	} else {
+		raw, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+			clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{},
+		).RawConfig()
+		if err != nil {
+			return fmt.Errorf("could not load kubernetes config")
+		}
+		if req.KubeContext == "" {
+			req.KubeContext = raw.CurrentContext
+		}
+		if req.KubeContext == "" || raw.Contexts[req.KubeContext] == nil {
+			return fmt.Errorf("saved Kubernetes context does not exist")
+		}
+	}
 	req.Namespace = env.Params["gadget-namespace"]
 	if req.Namespace == "" {
 		req.Namespace = "gadget"

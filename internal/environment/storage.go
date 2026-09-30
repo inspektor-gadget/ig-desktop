@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/google/uuid"
 
@@ -27,7 +28,8 @@ import (
 
 // Storage handles persistence of environment configurations
 type Storage struct {
-	dir string
+	dir      string
+	importMu sync.Mutex
 }
 
 // NewStorage creates a new Storage instance that persists environments

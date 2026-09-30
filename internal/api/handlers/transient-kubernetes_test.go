@@ -72,15 +72,16 @@ contexts:
 func TestTransientHandlersOptInAndProtocol(t *testing.T) {
 	defaultHandler := New(context.Background(), nil, nil, nil, nil, nil, nil, nil, "")
 	commands := []string{"getKubernetesContexts", "createKubernetesTarget", "touchKubernetesTarget", "releaseKubernetesTarget"}
+	privateCommands := append(append([]string{}, commands...), "importKubernetesEnvironment")
 	for _, handler := range defaultHandler.Handlers() {
-		for _, command := range commands {
+		for _, command := range privateCommands {
 			if handler.Command() == command {
 				t.Fatalf("Desktop exposes %s", command)
 			}
 		}
 	}
 	transport := &testTransport{}
-	for _, command := range commands {
+	for _, command := range privateCommands {
 		transport.lines = append(transport.lines, fmt.Sprintf(`{"cmd":%q,"data":{}}`, command))
 	}
 	if err := defaultHandler.Register(transport); err != nil {

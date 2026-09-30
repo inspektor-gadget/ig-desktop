@@ -20,4 +20,6 @@ type Environment struct {
 	Name    string            `json:"name"`
 	Runtime string            `json:"runtime"`
 	Params  map[string]string `json:"params"`
+	// Set by the VS Code importer; nil preserves legacy Desktop loading rules.
+	Kubeconfig *KubeconfigSource `json:"kubeconfig,omitempty"`
 }

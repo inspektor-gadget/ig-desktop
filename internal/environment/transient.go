@@ -149,6 +149,37 @@ func safeContextText(value string) bool {
 	return strings.IndexFunc(value, func(r rune) bool { return !unicode.IsPrint(r) }) == -1
 }
 
+func ResolveKubernetesConfig(source KubeconfigSource, name string) (*rest.Config, string, error) {
+	config, err := loadKubeconfig(source)
+	if err != nil {
+		return nil, "", err
+	}
+	return resolveKubernetesConfig(config, name)
+}
+
+func resolveKubernetesConfig(config *clientcmdapi.Config, name string) (*rest.Config, string, error) {
+	selected := config.Contexts[name]
+	if name == "" || selected == nil {
+		return nil, "", fmt.Errorf("selected Kubernetes context does not exist")
+	}
+	if !safeContextText(name) || !safeContextText(selected.Namespace) {
+		return nil, "", fmt.Errorf("selected Kubernetes context has unsafe display text")
+	}
+	// Loading rules resolve relative certificate and exec paths. Direct loading
+	// avoids in-cluster fallback and never executes credential plugins here.
+	client := clientcmd.NewNonInteractiveClientConfig(*config, name, &clientcmd.ConfigOverrides{CurrentContext: name}, nil)
+	resolved, err := client.ClientConfig()
+	if err != nil {
+		return nil, "", fmt.Errorf("could not resolve selected Kubernetes context")
+	}
+	resolved.AuthConfigPersister = nil
+	namespace, _, err := client.Namespace()
+	if err != nil {
+		return nil, "", fmt.Errorf("could not resolve selected Kubernetes namespace")
+	}
+	return resolved, namespace, nil
+}
+
 func (r *TransientKubernetes) Create(source KubeconfigSource, name string, requireCurrentContext bool) (*KubernetesTarget, error) {
 	return r.create(source, name, requireCurrentContext, nil)
 }
@@ -172,26 +203,9 @@ func (r *TransientKubernetes) create(source KubeconfigSource, name string, requi
 	if requireCurrentContext && (name == "" || config.CurrentContext != name) {
 		return nil, fmt.Errorf("active Kubernetes context changed while preparing the target; retry from the Kubernetes explorer")
 	}
-	selected, ok := config.Contexts[name]
-	if name == "" || !ok || selected == nil {
-		return nil, fmt.Errorf("selected Kubernetes context does not exist")
-	}
-	if !safeContextText(name) || !safeContextText(selected.Namespace) {
-		return nil, fmt.Errorf("selected Kubernetes context has unsafe display text")
-	}
-	// Direct loading deliberately avoids deferred client's in-cluster fallback.
-	// LoadingRules has already resolved certificate and exec paths per source file.
-	client := clientcmd.NewNonInteractiveClientConfig(*config, name, &clientcmd.ConfigOverrides{CurrentContext: name}, nil)
-	resolved, err := client.ClientConfig()
+	resolved, namespace, err := resolveKubernetesConfig(config, name)
 	if err != nil {
-		return nil, fmt.Errorf("could not resolve selected Kubernetes context")
-	}
-	// client-go substitutes a no-op persister for nil, allowing auth-provider
-	// refresh in memory without ever rewriting the source kubeconfig.
-	resolved.AuthConfigPersister = nil
-	namespace, _, err := client.Namespace()
-	if err != nil {
-		return nil, fmt.Errorf("could not resolve selected Kubernetes namespace")
+		return nil, err
 	}
 	var saved map[string]*Environment
 	if storage != nil {

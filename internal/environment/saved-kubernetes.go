@@ -20,6 +20,35 @@ type SavedKubernetesEnvironment struct {
 	Name string `json:"name"`
 }
 
+// ImportKubernetes persists only a source reference and explicit context, never
+// copied credentials. Repeated imports reuse the same saved connection.
+func (s *Storage) ImportKubernetes(source KubeconfigSource, name string) (*Environment, error) {
+	if _, _, err := ResolveKubernetesConfig(source, name); err != nil {
+		return nil, err
+	}
+	s.importMu.Lock()
+	defer s.importMu.Unlock()
+	environments, err := s.List()
+	if err != nil {
+		return nil, fmt.Errorf("could not list saved environments")
+	}
+	for _, env := range environments {
+		if env.Runtime != "grpc-k8s" || env.Params["context"] != name || uuid.Validate(env.ID) != nil {
+			continue
+		}
+		if env.Kubeconfig != nil && *env.Kubeconfig == source {
+			return env, nil
+		}
+	}
+	env := &Environment{
+		Name: name, Runtime: "grpc-k8s", Params: map[string]string{"context": name}, Kubeconfig: &source,
+	}
+	if err := s.Add(env); err != nil {
+		return nil, err
+	}
+	return env, nil
+}
+
 // Compare declarative, locally resolved configuration, not rest.Config: its
 // proxy function is not comparable. Loading rules resolve file/exec paths; no
 // credential plugin is run and no external credential contents are compared.
@@ -63,27 +92,45 @@ func matchSavedKubernetes(storage *Storage, source KubeconfigSource, frozen *cli
 		return nil, fmt.Errorf("could not list saved environments")
 	}
 	matches := make(map[string]*Environment)
-	// Saved runtimes always use default loading rules. Reuse the very same load
-	// for default-source targets, including the current-context guard.
+	// Legacy saved runtimes use default loading rules. Imported connections
+	// explicitly retain their source and use their selected context's namespace.
 	savedConfig := frozen
 	if source.Kind != "default" {
 		savedConfig, err = loadKubeconfig(KubeconfigSource{Kind: "default"})
-		if err != nil {
-			// These candidates cannot be resolved locally; none is proven equal.
-			return matches, nil
-		}
 	}
 	// RuntimeFactory currently gets its gadget namespace default from the
 	// active context, even for an explicit saved context. Do not silently change
 	// that default when reusing a saved identity through the selected snapshot.
-	defaultClient := clientcmd.NewNonInteractiveClientConfig(*savedConfig, "", &clientcmd.ConfigOverrides{}, nil)
-	savedNamespace, _, err := defaultClient.Namespace()
-	if err != nil || savedNamespace != namespace {
-		return matches, nil
+	var savedNamespace string
+	if err == nil {
+		defaultClient := clientcmd.NewNonInteractiveClientConfig(*savedConfig, "", &clientcmd.ConfigOverrides{}, nil)
+		savedNamespace, _, _ = defaultClient.Namespace()
 	}
 	defaults := grpcruntime.New(grpcruntime.WithConnectUsingK8SProxy).GlobalParamDescs()
 	for _, env := range environments {
 		if env.Runtime != "grpc-k8s" || uuid.Validate(env.ID) != nil || !safeContextText(env.Name) {
+			continue
+		}
+		candidateConfig, candidateNamespace := savedConfig, savedNamespace
+		if env.Kubeconfig != nil {
+			if *env.Kubeconfig == source {
+				candidateConfig = frozen
+			} else {
+				candidateConfig, err = loadKubeconfig(*env.Kubeconfig)
+				if err != nil {
+					continue
+				}
+			}
+			selected := candidateConfig.Contexts[env.Params["context"]]
+			if selected == nil {
+				continue
+			}
+			candidateNamespace = selected.Namespace
+			if candidateNamespace == "" {
+				candidateNamespace = "default"
+			}
+		}
+		if candidateConfig == nil || candidateNamespace != namespace {
 			continue
 		}
 		supported := true
@@ -106,13 +153,17 @@ func matchSavedKubernetes(storage *Storage, source KubeconfigSource, frozen *cli
 		}
 		contextName := env.Params["context"]
 		if contextName == "" {
-			contextName = savedConfig.CurrentContext
+			contextName = candidateConfig.CurrentContext
 		}
-		if !supported || contextName != name || !sameKubernetesContext(frozen, savedConfig, name) {
+		if !supported || contextName != name || !sameKubernetesContext(frozen, candidateConfig, name) {
 			continue
 		}
 		owned := *env
 		owned.Params = maps.Clone(env.Params)
+		if env.Kubeconfig != nil {
+			sourceCopy := *env.Kubeconfig
+			owned.Kubeconfig = &sourceCopy
+		}
 		matches[env.ID] = &owned
 	}
 	return matches, nil
@@ -138,7 +189,8 @@ func (r *TransientKubernetes) LookupSaved(targetID, environmentID string, storag
 	if err != nil {
 		return nil, "", fmt.Errorf("matched saved environment is unavailable; prepare the Kubernetes target again")
 	}
-	if current.ID != snapshot.ID || current.Runtime != snapshot.Runtime || !maps.Equal(current.Params, snapshot.Params) {
+	if current.ID != snapshot.ID || current.Runtime != snapshot.Runtime || !maps.Equal(current.Params, snapshot.Params) ||
+		!reflect.DeepEqual(current.Kubeconfig, snapshot.Kubeconfig) {
 		return nil, "", fmt.Errorf("matched saved environment connection changed; prepare the Kubernetes target again")
 	}
 	return copyTransientConfig(target.config), target.Namespace, nil
