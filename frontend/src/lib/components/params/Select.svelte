@@ -52,5 +52,5 @@
 	<Title {param} />
 </div>
 <div>
-	<Select bind:value {options} class="text-sm" />
+	<Select bind:value {options} ariaLabel={param.title || param.key} class="text-sm" />
 </div>

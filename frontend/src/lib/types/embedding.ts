@@ -63,6 +63,8 @@ export interface EmbeddableAppProps {
 	launchPreset?: GadgetLaunchPreset;
 	/** Opt in to outcome-based output, host-protected per-image defaults, and choose-file-and-start. */
 	launchPreferences?: boolean;
+	/** Focus the Run button when the launcher becomes ready, unless the user has focused another control. */
+	focusLaunchAction?: boolean;
 	/** Explicit native host capability. Omit it to keep browser/Insights behavior unchanged. */
 	fileOutput?: {
 		formats: ('jsonl' | 'pcap-ng')[];

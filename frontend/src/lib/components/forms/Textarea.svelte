@@ -25,6 +25,8 @@
 		error?: string;
 		/** Label text */
 		label?: string;
+		/** Accessible name when the visible title is rendered by a parent. */
+		ariaLabel?: string;
 		/** Description/help text */
 		description?: string;
 		/** Required field */
@@ -44,6 +46,7 @@
 		disabled = false,
 		error,
 		label,
+		ariaLabel,
 		description,
 		required = false,
 		oninput,
@@ -88,6 +91,7 @@
 
 	<textarea
 		id={textareaId}
+		aria-label={!label ? ariaLabel : undefined}
 		{rows}
 		{placeholder}
 		{disabled}

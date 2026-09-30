@@ -41,5 +41,10 @@
 	<Title {param} />
 </div>
 <div class="grow">
-	<Input type="number" bind:value placeholder={param.defaultValue} />
+	<Input
+		type="number"
+		bind:value
+		placeholder={param.defaultValue}
+		ariaLabel={param.title || param.key}
+	/>
 </div>

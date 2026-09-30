@@ -46,8 +46,19 @@
 </div>
 <div class="grow">
 	{#if isMultiline}
-		<Textarea bind:value rows={4} placeholder={param.defaultValue} class="text-sm" />
+		<Textarea
+			bind:value
+			rows={4}
+			placeholder={param.defaultValue}
+			ariaLabel={param.title || param.key}
+			class="text-sm"
+		/>
 	{:else}
-		<Input bind:value placeholder={param.defaultValue} class="text-sm" />
+		<Input
+			bind:value
+			placeholder={param.defaultValue}
+			ariaLabel={param.title || param.key}
+			class="text-sm"
+		/>
 	{/if}
 </div>

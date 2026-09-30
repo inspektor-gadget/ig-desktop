@@ -45,7 +45,7 @@
 </script>
 
 <div class="flex flex-row gap-4">
-	<Checkbox bind:checked />
+	<Checkbox bind:checked ariaLabel={param.title || param.key} />
 	<Title
 		{param}
 		onclick={() => {

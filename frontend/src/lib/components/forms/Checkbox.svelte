@@ -17,6 +17,8 @@
 		disabled?: boolean;
 		/** Label text */
 		label?: string;
+		/** Accessible name when the visible title is rendered by a parent. */
+		ariaLabel?: string;
 		/** Description/help text */
 		description?: string;
 		/** Change handler */
@@ -27,6 +29,7 @@
 		checked = $bindable(false),
 		disabled = false,
 		label,
+		ariaLabel,
 		description,
 		onchange
 	}: Props = $props();
@@ -47,6 +50,7 @@
 <div class="flex items-start gap-3">
 	<input
 		id={checkboxId}
+		aria-label={!label ? ariaLabel : undefined}
 		type="checkbox"
 		bind:checked
 		{disabled}

@@ -620,6 +620,53 @@ test('file output is host-opt-in, requires a destination, and opens its status w
 	});
 });
 
+test('VS Code launcher focuses Run when ready and Enter starts; other hosts keep their focus', async ({
+	page
+}) => {
+	await page.goto(
+		'/tests/embedding/?initialPath=%2Fgadgets%2Frun%2Ftest%2Fimage%3Alatest%3Fenv%3Dtest-env'
+	);
+	await expect(page.getByRole('button', { name: 'Run Gadget', exact: true })).toBeEnabled();
+	expect(
+		await page
+			.getByRole('button', { name: 'Run Gadget', exact: true })
+			.evaluate((node) => node === document.activeElement)
+	).toBe(false);
+	await page.goto(
+		'/tests/embedding/?focusLaunchAction&initialPath=%2Fgadgets%2Frun%2Ftest%2Fimage%3Alatest%3Fenv%3Dtest-env'
+	);
+	const run = page.getByRole('button', { name: 'Run Gadget', exact: true });
+	await expect(run).toBeFocused();
+	await expect(page.getByRole('textbox', { name: 'PID' })).toBeVisible();
+	await expect(page.getByRole('checkbox', { name: /^Detached/ })).toHaveCount(1);
+	await expect(page.getByRole('checkbox', { name: 'Show advanced options' })).toHaveCount(1);
+	await page.keyboard.press('Enter');
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() => window.embedding.requests.filter((request) => request.cmd === 'runGadget').length
+			)
+		)
+		.toBe(1);
+	expect(
+		await page.evaluate(
+			() => window.embedding.requests.find((request) => request.cmd === 'runGadget')?.data?.image
+		)
+	).toBe('test/image:latest');
+});
+
+test('VS Code launcher does not steal keyboard focus during metadata loading', async ({ page }) => {
+	await page.goto(
+		'/tests/embedding/?focusLaunchAction&slowGadgetInfo&initialPath=%2Fgadgets%2Frun%2Ftest%2Fimage%3Alatest%3Fenv%3Dtest-env'
+	);
+	const environment = page.getByRole('combobox', { name: 'Select environment' });
+	await environment.focus();
+	await expect(page.getByRole('button', { name: 'Run Gadget', exact: true })).toBeEnabled();
+	await expect(environment).toBeFocused();
+	await page.keyboard.press('Tab');
+	expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY');
+});
+
 test('opt-in custom options remember output and parameters, rebind scope, and reset per gadget', async ({
 	page
 }) => {

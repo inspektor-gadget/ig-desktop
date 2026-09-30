@@ -38,6 +38,7 @@
 		showTabs = true,
 		launchPreset,
 		launchPreferences = false,
+		focusLaunchAction = false,
 		fileOutput
 	}: EmbeddableAppProps = $props();
 	let route = $state(untrack(() => embeddedRoute(path ?? '/')));
@@ -57,6 +58,7 @@
 	setContext('sessionRecordingEnabled', () => sessions);
 	setContext('fileOutput', () => fileOutput);
 	setContext('launchPreferences', () => launchPreferences);
+	setContext('focusLaunchAction', () => focusLaunchAction);
 	setContext('navigateBack', () => navigate(history.pop() || '/', false));
 	updatePage();
 

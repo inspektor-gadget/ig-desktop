@@ -58,7 +58,21 @@
 		'fileOutput'
 	);
 	const hostLaunchPreferences = getContext<(() => boolean) | undefined>('launchPreferences');
+	const hostFocusLaunchAction = getContext<(() => boolean) | undefined>('focusLaunchAction');
 	const launchPreferences = $derived(hostLaunchPreferences?.() ?? false);
+	let runButton: HTMLButtonElement;
+	$effect(() => {
+		if (
+			hostFocusLaunchAction?.() &&
+			runButton &&
+			canRun() &&
+			document.hasFocus() &&
+			(document.activeElement === document.body ||
+				document.activeElement === document.documentElement)
+		) {
+			runButton.focus();
+		}
+	});
 	const hasExplicitParams = $derived(page.url.searchParams.has('params'));
 	let usingSavedOptions = $state(false);
 	let starting = $state(false);
@@ -587,7 +601,7 @@
 	<div class="flex flex-row items-center gap-4">
 		<button
 			onclick={goBack}
-			class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
+			class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700 focus-visible:ring-2 focus-visible:ring-ig-primary"
 			title={t('Go back')}
 		>
 			<ChevronLeft />
@@ -609,9 +623,10 @@
 				></path>
 			</svg>
 			<select
+				aria-label={t('Select environment')}
 				bind:value={environmentID}
 				disabled={data.preset?.transient || !!data.preset?.kubernetesTargetID}
-				class="col-start-1 row-start-1 appearance-none rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 pr-8 pl-3"
+				class="col-start-1 row-start-1 appearance-none rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 pr-8 pl-3 focus-visible:ring-2 focus-visible:ring-ig-primary"
 			>
 				<option value="">{t('Select environment')}</option>
 				{#each Object.entries(environments) as [id, environment] (id)}
@@ -763,7 +778,8 @@
 						<button
 							disabled={starting || resetting || !gadgetInfo}
 							onclick={resetCustomOptions}
-							class="text-ig-primary underline">{t('Reset to gadget defaults')}</button
+							class="text-ig-primary underline focus-visible:ring-2 focus-visible:ring-ig-primary"
+							>{t('Reset to gadget defaults')}</button
 						>
 					</div>
 				{/if}
@@ -869,11 +885,11 @@
 						class="main-gradient flex flex-col gap-4 rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 					>
 						<!-- Detached checkbox -->
-						<div class="flex flex-row gap-4">
+						<label class="flex cursor-pointer flex-row gap-4">
 							<div class="grid items-center justify-center">
 								<input
 									type="checkbox"
-									class="peer col-start-1 row-start-1 h-4 w-4 appearance-none rounded-ig-sm border border-gray-300 ring-transparent checked:border-violet-600 checked:bg-violet-600 dark:border-gray-600 dark:checked:border-violet-600 forced-colors:appearance-auto"
+									class="peer col-start-1 row-start-1 h-4 w-4 appearance-none rounded-ig-sm border border-gray-300 ring-transparent checked:border-violet-600 checked:bg-violet-600 dark:border-gray-600 dark:checked:border-violet-600 focus-visible:ring-2 focus-visible:ring-ig-primary forced-colors:appearance-auto"
 									bind:checked={detached}
 								/>
 								<svg
@@ -896,11 +912,8 @@
 										'The server will keep running the gadget even after closing the app'
 									)
 								}}
-								onclick={() => {
-									detached = !detached;
-								}}
 							/>
-						</div>
+						</label>
 
 						<!-- Instance name input when detached -->
 						{#if detached}
@@ -916,6 +929,7 @@
 								</div>
 								<div class="grow">
 									<input
+										aria-label={t('Instance Name')}
 										class="w-full rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 text-sm"
 										type="text"
 										placeholder={t('My Gadget')}
@@ -933,11 +947,11 @@
 						class="main-gradient flex flex-col gap-4 rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 					>
 						<!-- Session recording toggle -->
-						<div class="flex flex-row gap-4">
+						<label class="flex cursor-pointer flex-row gap-4">
 							<div class="grid items-center justify-center">
 								<input
 									type="checkbox"
-									class="peer col-start-1 row-start-1 h-4 w-4 appearance-none rounded-ig-sm border border-gray-300 ring-transparent checked:border-violet-600 checked:bg-violet-600 dark:border-gray-600 dark:checked:border-violet-600 forced-colors:appearance-auto"
+									class="peer col-start-1 row-start-1 h-4 w-4 appearance-none rounded-ig-sm border border-gray-300 ring-transparent checked:border-violet-600 checked:bg-violet-600 dark:border-gray-600 dark:checked:border-violet-600 focus-visible:ring-2 focus-visible:ring-ig-primary forced-colors:appearance-auto"
 									bind:checked={recordGadgetRun}
 								/>
 								<svg
@@ -960,11 +974,8 @@
 										'Save all gadget events to a session file for later replay and analysis'
 									)
 								}}
-								onclick={() => {
-									recordGadgetRun = !recordGadgetRun;
-								}}
 							/>
-						</div>
+						</label>
 
 						<!-- Session mode selection -->
 						{#if recordGadgetRun}
@@ -997,6 +1008,7 @@
 								{#if sessionMode === 'new'}
 									<input
 										type="text"
+										aria-label={t('Session name (optional)')}
 										bind:value={sessionName}
 										placeholder={t('Session name (optional)')}
 										class="w-full rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-violet-600 focus:outline-none"
@@ -1009,6 +1021,7 @@
 										bind:value={selectedSessionId}
 										options={sessionOptions}
 										placeholder={t('Select a session...')}
+										ariaLabel={t('Select a session...')}
 										class="text-sm"
 									/>
 								{/if}
@@ -1020,13 +1033,10 @@
 				<Panel title={t('Parameters')} icon={Cog} color="blue">
 					{#snippet headerActions()}
 						<div class="flex flex-row items-center gap-2">
-							<input type="checkbox" bind:checked={showAdvanced} />
-							<button
-								onclick={() => {
-									showAdvanced = !showAdvanced;
-								}}
-								class="text-xs">{t('Show advanced options')}</button
-							>
+							<label class="flex cursor-pointer items-center gap-2 text-xs">
+								<input type="checkbox" bind:checked={showAdvanced} />
+								<span>{t('Show advanced options')}</span>
+							</label>
 						</div>
 					{/snippet}
 
@@ -1137,9 +1147,10 @@
 				>
 			{/if}
 			<button
+				bind:this={runButton}
 				disabled={!canRun()}
 				onclick={startGadget}
-				class="flex cursor-pointer flex-row gap-2 rounded-ig-sm bg-green-600 dark:bg-green-800 py-2 pr-4 pl-2 text-white hover:bg-green-500 dark:hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-200 dark:disabled:bg-green-950 disabled:text-gray-500"
+				class="flex cursor-pointer flex-row gap-2 rounded-ig-sm bg-green-600 dark:bg-green-800 py-2 pr-4 pl-2 text-white hover:bg-green-500 dark:hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-ig-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-green-200 dark:disabled:bg-green-950 disabled:text-gray-500"
 			>
 				<span><Play /></span>
 				<span

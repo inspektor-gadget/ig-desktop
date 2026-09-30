@@ -224,6 +224,13 @@ const adapter = {
 				);
 				break;
 			case 'getGadgetInfo':
+				if (query.has('slowGadgetInfo')) {
+					setTimeout(
+						() => emit({ type: 1, reqID: request.reqID, success: true, data: gadgetInfo }),
+						200
+					);
+					return;
+				}
 				data = gadgetInfo;
 				break;
 			case 'getGadgetDefaults':
@@ -325,6 +332,7 @@ const cleanup = initializeIG({ adapter, language: 'en' });
 const props: EmbeddableAppProps = createReactiveProps({
 	path: new URLSearchParams(location.search).get('initialPath') || '/',
 	launchPreferences: query.has('launchPreferences'),
+	focusLaunchAction: query.has('focusLaunchAction'),
 	...(new URLSearchParams(location.search).has('fileOutput')
 		? {
 				fileOutput: {
