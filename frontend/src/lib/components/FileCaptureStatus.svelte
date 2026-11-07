@@ -7,6 +7,9 @@
 	import Copy from '$lib/icons/copy.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 	import type { FileOutputCapability } from '$lib/types';
+	import { toastStore } from '$lib/stores/toast.svelte';
+	import { getErrorMessage } from '$lib/utils/errors';
+	import { UncertainCommandError } from '$lib/services/api.service.svelte';
 
 	let { instanceID, output }: { instanceID: string; output: FileCaptureStatus } = $props();
 	const api = getContext<ApiContext>('api');
@@ -21,18 +24,30 @@
 	);
 
 	async function copyPath() {
-		if (hostFileOutput?.()?.notify === false) {
-			await api.request({ cmd: 'copyFileOutputPath', data: { instanceID } });
-			return;
+		try {
+			if (hostFileOutput?.()?.notify === false) {
+				await api.request({ cmd: 'copyFileOutputPath', data: { instanceID } });
+				return;
+			}
+			if (!(await copyToClipboard(output.path))) throw new Error(t('Clipboard unavailable'));
+		} catch (err) {
+			toastStore.error(
+				t('Failed to copy the capture path: {{errorMessage}}', {
+					errorMessage: getErrorMessage(err)
+				})
+			);
 		}
-		await copyToClipboard(output.path);
 	}
 
 	async function stop() {
 		try {
 			await api.request({ cmd: 'stopInstance', data: { id: instanceID } });
-		} catch {
-			// The host owns error presentation and may offer retry for uncertain stops.
+		} catch (err) {
+			// A host presenting capture notifications owns retry for uncertain stops.
+			if (hostFileOutput?.()?.notify === false && err instanceof UncertainCommandError) return;
+			toastStore.error(
+				t('Failed to stop the capture: {{errorMessage}}', { errorMessage: getErrorMessage(err) })
+			);
 		}
 	}
 </script>

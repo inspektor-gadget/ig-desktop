@@ -59,11 +59,15 @@ const gadgetInfo = {
 };
 const requests: Array<{ cmd: string; reqID?: string; data?: Record<string, unknown> }> = [];
 const states: EmbeddableAppState[] = [];
+const cellEvents: unknown[] = [];
+const cellPositions: Array<{ x: number; y: number }> = [];
 declare global {
 	interface Window {
 		embedding: {
 			requests: typeof requests;
 			states: EmbeddableAppState[];
+			cellEvents: unknown[];
+			cellPositions: Array<{ x: number; y: number }>;
 			update: (next: Partial<EmbeddableAppProps>) => void;
 			cleanup: () => void;
 			cancelPending: () => Promise<boolean>;
@@ -75,6 +79,10 @@ declare global {
 			>;
 			initialResultVisible: boolean;
 			dashboard: (state: string) => void;
+			/** Routes external links to a recording host opener until cleanup. */
+			captureExternal: () => string[];
+			/** Re-sends the environment, as the backend does on updates and reconnects. */
+			environmentUpdate: () => void;
 		};
 	}
 }
@@ -117,10 +125,24 @@ const adapter = {
 		requests.push(request);
 		if (request.cmd === 'helo') {
 			if (!query.has('empty')) emit({ type: 100, data: environment });
+			if (query.has('extraEnvironment'))
+				emit({ type: 100, data: { ...environment, id: 'other-env', name: 'Other environment' } });
 			metadata();
 			return;
 		}
 		if (request.cmd === 'pending') return;
+		if (
+			(request.cmd === 'stopInstance' && query.has('stopError')) ||
+			(request.cmd === 'copyFileOutputPath' && query.has('copyError'))
+		) {
+			emit({
+				type: 1,
+				reqID: request.reqID,
+				success: false,
+				error: `fixture ${request.cmd} failed`
+			});
+			return;
+		}
 		if (request.cmd === 'listInstances' && dashboardState) {
 			if (dashboardState === 'loading') return;
 			if (dashboardState !== 'connected') {
@@ -333,11 +355,27 @@ const props: EmbeddableAppProps = createReactiveProps({
 	path: new URLSearchParams(location.search).get('initialPath') || '/',
 	launchPreferences: query.has('launchPreferences'),
 	focusLaunchAction: query.has('focusLaunchAction'),
+	...(query.has('cellActions')
+		? {
+				onCellContextMenu: (
+					event: import('../../src/lib/types/cell-interaction').CellInteractionEvent
+				) => {
+					cellEvents.push({
+						instanceID: event.instanceID,
+						datasource: event.datasource?.name,
+						row: { ...event.row },
+						fieldAnnotations: { ...event.fieldAnnotations }
+					});
+					cellPositions.push({ ...event.position });
+				}
+			}
+		: {}),
 	...(new URLSearchParams(location.search).has('fileOutput')
 		? {
 				fileOutput: {
 					formats: query.has('pcap') ? ['jsonl', 'pcap-ng'] : ['jsonl'],
-					host: 'test host'
+					host: 'test host',
+					...(query.has('hostNotifications') ? { notify: false } : {})
 				}
 			}
 		: {}),
@@ -360,6 +398,8 @@ if (new URLSearchParams(location.search).has('undeploy')) {
 Object.assign(window, {
 	embedding: {
 		requests,
+		cellEvents,
+		cellPositions,
 		dashboard: (state: string) => {
 			dashboardState = state;
 			const pending = requests.findLast((request) => request.cmd === 'listInstances');
@@ -373,6 +413,14 @@ Object.assign(window, {
 				});
 		},
 		states,
+		captureExternal: () => {
+			const opened: string[] = [];
+			setExternalURLOpener((url: string) => {
+				opened.push(url);
+			});
+			return opened;
+		},
+		environmentUpdate: () => emit({ type: 100, data: { ...environment } }),
 		initialResultVisible: !!document.querySelector('a[href="/env/test-env/running/run-one"]'),
 		update: (next: object) => Object.assign(props, next),
 		cleanup,
@@ -406,9 +454,25 @@ Object.assign(window, {
 			});
 			try {
 				await openExternalURL('https://example.com/host');
+				for (const unsafe of [
+					'javascript:alert(1)',
+					'https://user:secret@example.com/',
+					'file:///etc/passwd',
+					'not a url'
+				])
+					await openExternalURL(unsafe);
 			} finally {
 				restore();
 			}
+			// Out-of-order cleanup must not reinstall a disposed opener.
+			const restoreFirst = setExternalURLOpener((url: string) => {
+				calls.push({ kind: 'disposed', url });
+			});
+			const restoreSecond = setExternalURLOpener((url: string) => {
+				calls.push({ kind: 'disposed', url });
+			});
+			restoreFirst();
+			restoreSecond();
 			const original = window.open;
 			window.open = (url, target, features) => {
 				calls.push({ kind: 'browser', url: String(url), target, features });

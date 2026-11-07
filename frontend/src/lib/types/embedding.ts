@@ -1,3 +1,6 @@
+import type { CellContextMenuHandler } from './cell-interaction';
+import type { FileOutputCapability, GadgetInfo } from './index';
+
 /** Host commands are applied when the prop changes; manual controls remain usable. */
 export interface ResultViewState {
 	search?: string;
@@ -51,6 +54,7 @@ export interface EmbeddableAppProps {
 	viewState?: ResultViewState;
 	/** Effective state, including manual edits and unsupported-visualizer fallback. */
 	onStateChange?: (state: EmbeddableAppState) => void;
+	onCellContextMenu?: CellContextMenuHandler;
 	/** Expose the existing experimental recording/session UI in this application. */
 	sessions?: boolean;
 	/** Suppress the built-in renderer when the embedding host renders native toasts. */
@@ -65,16 +69,19 @@ export interface EmbeddableAppProps {
 	launchPreferences?: boolean;
 	/** Focus the Run button when the launcher becomes ready, unless the user has focused another control. */
 	focusLaunchAction?: boolean;
+	/** Resolve a host's semantic prefill against the metadata actually loaded by the launcher. Never starts a gadget. */
+	resolveLaunchParameters?: (
+		metadata: GadgetInfo,
+		environmentID: string
+	) => {
+		params: Record<string, string>;
+		warnings?: string[];
+	};
 	/** Prepare the saved Kubernetes environment's deployment dialog; never executes it. */
 	environmentDeployment?: {
 		action: 'deploy' | 'redeploy' | 'undeploy';
 		namespace: string;
 	};
 	/** Explicit native host capability. Omit it to keep browser/Insights behavior unchanged. */
-	fileOutput?: {
-		formats: ('jsonl' | 'pcap-ng')[];
-		host: string;
-		/** The embedding host presents completion/errors itself. */
-		notify?: boolean;
-	};
+	fileOutput?: FileOutputCapability;
 }

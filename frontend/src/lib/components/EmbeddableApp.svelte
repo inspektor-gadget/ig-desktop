@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy, setContext, tick, untrack } from 'svelte';
+	import { onMount, setContext, tick, untrack } from 'svelte';
 	import { apiService } from '$lib/services/api.service.svelte';
 	import { setPage } from '$lib/compat/app-state';
 	import { setNavigationHandler } from '$lib/compat/app-navigation';
@@ -32,6 +32,7 @@
 		onNavigate,
 		viewState,
 		onStateChange,
+		onCellContextMenu,
 		sessions = true,
 		showToasts = true,
 		showNavigation = true,
@@ -39,6 +40,7 @@
 		launchPreset,
 		launchPreferences = false,
 		focusLaunchAction = false,
+		resolveLaunchParameters,
 		environmentDeployment,
 		fileOutput
 	}: EmbeddableAppProps = $props();
@@ -60,11 +62,12 @@
 	setContext('fileOutput', () => fileOutput);
 	setContext('launchPreferences', () => launchPreferences);
 	setContext('focusLaunchAction', () => focusLaunchAction);
+	setContext('resolveLaunchParameters', () => resolveLaunchParameters);
 	setContext('navigateBack', () => navigate(history.pop() || '/', false));
 	updatePage();
 
+	// Token-checked: unmounting one embedding never clears another's capability.
 	$effect(() => setFileOutputCapability(fileOutput));
-	onDestroy(() => setFileOutputCapability(undefined));
 
 	function updatePage() {
 		const { pathname, search, hash } = route.url;
@@ -174,6 +177,7 @@
 						instanceID={route.params.instanceID}
 						{viewState}
 						onViewStateChange={resultChanged}
+						{onCellContextMenu}
 					/>
 				{:else}
 					<EnvironmentDetail deployment={environmentDeployment} />

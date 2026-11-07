@@ -667,6 +667,65 @@
 
 	let env = $derived(environments[page.params.env || '']);
 
+	// Roving tabindex for keyboard-invocable cell actions: one tab stop, arrow keys move it.
+	let activeCell = $state({ row: 0, col: 0 });
+	// Clamp so that filtering or hiding columns never leaves the grid without a tab stop.
+	const tabStop = $derived.by(() => ({
+		row: Math.max(0, Math.min(activeCell.row, displayEvents.length - 1)),
+		col: Math.max(0, Math.min(activeCell.col, visibleFields.length - 1))
+	}));
+
+	function moveCellFocus(event: KeyboardEvent, row: number, col: number) {
+		const cell = event.currentTarget as HTMLElement;
+		const tr = cell.parentElement;
+		let target: Element | null | undefined;
+		switch (event.key) {
+			case 'ArrowLeft':
+				target = cell.previousElementSibling;
+				break;
+			case 'ArrowRight':
+				target = cell.nextElementSibling;
+				break;
+			case 'Home':
+				target = tr?.firstElementChild;
+				break;
+			case 'End':
+				target = tr?.lastElementChild;
+				break;
+			case 'ArrowUp':
+				target = tr?.previousElementSibling?.children[col];
+				break;
+			case 'ArrowDown':
+				target = tr?.nextElementSibling?.children[col];
+				break;
+			default:
+				return;
+		}
+		// Within the grid, these keys move the cell focus instead of the row selection.
+		event.preventDefault();
+		event.stopPropagation();
+		if (!(target instanceof HTMLElement) || target.getAttribute('role') !== 'gridcell') return;
+		const nextRow = Number(target.dataset.row ?? row);
+		const nextCol = Number(target.dataset.col ?? col);
+		activeCell = { row: nextRow, col: nextCol };
+		target.focus();
+		target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+	}
+
+	/** Keyboard-invoked menus (context-menu key, Shift+F10) report no useful pointer position. */
+	function cellMenuPosition(event: MouseEvent) {
+		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+		const pointerInCell =
+			(event.clientX !== 0 || event.clientY !== 0) &&
+			event.clientX >= rect.left &&
+			event.clientX <= rect.right &&
+			event.clientY >= rect.top &&
+			event.clientY <= rect.bottom;
+		return pointerInCell
+			? { x: event.clientX, y: event.clientY }
+			: { x: rect.left, y: rect.bottom };
+	}
+
 	// Reference to VirtualTableBody for scrolling
 	let virtualTableRef: { scrollToIndex: (index: number) => void } | undefined = $state();
 
@@ -1016,7 +1075,7 @@
 						{/each}
 					</tr>
 				{/snippet}
-				{#snippet row(entry)}
+				{#snippet row(entry, rowIndex)}
 					{#each visibleFields as field, i (field.fullName)}
 						{@const cellValue = renderCellValue(entry, field, allColumns[i])}
 						{@const isClickable = field.annotations?.['interaction.clickable'] === 'true'}
@@ -1026,6 +1085,19 @@
 							class:text-center={columns[i]?.align === 'center'}
 							class:ig-cell-clickable={isClickable && onCellClick}
 							role="gridcell"
+							tabindex={onCellContextMenu
+								? tabStop.row === rowIndex && tabStop.col === i
+									? 0
+									: -1
+								: undefined}
+							data-row={rowIndex}
+							data-col={i}
+							onfocus={() => {
+								if (onCellContextMenu) activeCell = { row: rowIndex, col: i };
+							}}
+							onkeydown={(e) => {
+								if (onCellContextMenu) moveCellFocus(e, rowIndex, i);
+							}}
 							onclick={(e) => {
 								if (isClickable && onCellClick) {
 									e.stopPropagation();
@@ -1048,7 +1120,7 @@
 										fieldName: field.fullName,
 										fieldAnnotations: field.annotations ?? {},
 										row: entry,
-										position: { x: e.clientX, y: e.clientY },
+										position: cellMenuPosition(e),
 										event: e
 									});
 								}

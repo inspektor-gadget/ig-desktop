@@ -19,7 +19,11 @@
 	import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
 	import { resolvePluginIcon } from '$lib/utils/plugin-icons';
 	import PluginHookRenderer from '$lib/components/PluginHookRenderer.svelte';
-	import type { CellClickHandler, CellContextMenuHandler } from '$lib/types/cell-interaction';
+	import type {
+		CellClickHandler,
+		CellContextMenuHandler,
+		CellInteractionEvent
+	} from '$lib/types/cell-interaction';
 	import { t } from '$lib/i18n/index.svelte';
 
 	interface Props {
@@ -622,8 +626,13 @@
 				onSortChange={handleSortChange}
 				sortReset={sortResetTrigger}
 				onMenuController={(ctrl: TableMenuController) => (tableMenuController = ctrl)}
-				{onCellClick}
-				{onCellContextMenu}
+				onCellClick={onCellClick
+					? (event: CellInteractionEvent) => onCellClick({ ...event, instanceID, datasource: ds })
+					: undefined}
+				onCellContextMenu={onCellContextMenu
+					? (event: CellInteractionEvent) =>
+							onCellContextMenu({ ...event, instanceID, datasource: ds })
+					: undefined}
 			/>
 		</div>
 	{/if}

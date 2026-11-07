@@ -1,5 +1,10 @@
+import type { Datasource } from './charts';
+
 /** Payload delivered to cell click and context menu callbacks. */
 export interface CellInteractionEvent {
+	/** Originating result and enriched schema, when emitted by a gadget view. */
+	instanceID?: string;
+	datasource?: Datasource;
 	/** Cell display value */
 	value: unknown;
 	/** Dot-notation field name, e.g. "k8s.podName" */

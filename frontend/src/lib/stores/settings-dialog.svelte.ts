@@ -1,3 +1,5 @@
+import { overrideStack } from '$lib/utils/override-stack';
+
 /**
  * Global store for managing the settings dialog state with deep-linking support.
  * Allows opening the settings dialog and navigating directly to a specific category/setting.
@@ -17,15 +19,12 @@ const state = $state<SettingsDialogState>({
 	hostManaged: false
 });
 
-let hostOpener: ((category?: string, setting?: string) => void) | undefined;
+const hostOpeners = overrideStack<(category?: string, setting?: string) => void>();
 
 export const settingsDialog = {
+	/** Cleanup removes only this opener, so out-of-order cleanup never reinstalls a disposed one. */
 	setOpener(opener: (category?: string, setting?: string) => void) {
-		const previous = hostOpener;
-		hostOpener = opener;
-		return () => {
-			hostOpener = previous;
-		};
+		return hostOpeners.push(opener);
 	},
 	get hostManaged() {
 		return state.hostManaged;
@@ -37,6 +36,7 @@ export const settingsDialog = {
 		return state.open;
 	},
 	set open(value: boolean) {
+		const hostOpener = hostOpeners.current;
 		if (value && hostOpener) {
 			hostOpener(state.targetCategory ?? undefined, state.targetSetting ?? undefined);
 			return;
@@ -61,6 +61,7 @@ export const settingsDialog = {
 	 * @param setting - The setting key to highlight (e.g., 'maxEventsPerGadget')
 	 */
 	openTo(category?: string, setting?: string) {
+		const hostOpener = hostOpeners.current;
 		if (hostOpener) {
 			hostOpener(category, setting);
 			return;

@@ -18,6 +18,7 @@ export type ConfigurationValue =
 export type ConfigurationSnapshot = Record<string, ConfigurationValue>;
 export type ConfigurationChange = (snapshot: Readonly<ConfigurationSnapshot>) => void;
 
+/** Built per call because plugins can extend the schema; callers hoist it out of loops. */
 function settingsByKey(): Map<string, Setting> {
 	return new Map(
 		getFullConfigurationSchema()
@@ -61,8 +62,9 @@ class ConfigurationStore {
 				const parsed = JSON.parse(stored);
 				if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
 					const defaults = this.getDefaults();
+					const settings = settingsByKey();
 					for (const [key, value] of Object.entries(parsed)) {
-						const setting = settingsByKey().get(key);
+						const setting = settings.get(key);
 						if (setting && validValue(setting, value)) defaults[key] = value;
 					}
 					return defaults;
@@ -159,8 +161,9 @@ class ConfigurationStore {
 	apply(snapshot: Record<string, unknown>): void {
 		const defaults = this.getDefaults();
 		const next = { ...defaults };
+		const settings = settingsByKey();
 		for (const [key, value] of Object.entries(snapshot)) {
-			const setting = settingsByKey().get(key);
+			const setting = settings.get(key);
 			if (setting && validValue(setting, value)) next[key] = value;
 		}
 		this.settings = next;

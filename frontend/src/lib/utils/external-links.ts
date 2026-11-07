@@ -5,16 +5,31 @@
  */
 
 import { environment } from '$lib/services/environment.service.svelte';
+import { overrideStack } from './override-stack';
 
-let hostOpener: ((url: string) => void | Promise<void>) | undefined;
+const hostOpeners = overrideStack<(url: string) => void | Promise<void>>();
 
-/** Override external links for an embedding host; cleanup restores the previous behavior. */
+/**
+ * Override external links for an embedding host. Cleanup removes only this opener, so
+ * out-of-order cleanup never reinstalls a disposed one.
+ */
 export function setExternalURLOpener(opener: (url: string) => void | Promise<void>): () => void {
-	const previous = hostOpener;
-	hostOpener = opener;
-	return () => {
-		hostOpener = previous;
-	};
+	return hostOpeners.push(opener);
+}
+
+/** Only absolute http(s) URLs without embedded credentials may leave the application. */
+export function isSafeExternalURL(url: unknown): url is string {
+	if (typeof url !== 'string') return false;
+	try {
+		const parsed = new URL(url);
+		return (
+			(parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+			!parsed.username &&
+			!parsed.password
+		);
+	} catch {
+		return false;
+	}
 }
 
 /**
@@ -22,9 +37,16 @@ export function setExternalURLOpener(opener: (url: string) => void | Promise<voi
  * In Wails desktop mode, uses the native browser opener.
  * In browser mode, opens in a new tab.
  *
+ * Unsafe URLs (see `isSafeExternalURL`) are ignored for every opener.
+ *
  * @param url - The URL to open
  */
 export async function openExternalURL(url: string): Promise<void> {
+	if (!isSafeExternalURL(url)) {
+		console.warn('Blocked external URL that is not plain http(s):', url);
+		return;
+	}
+	const hostOpener = hostOpeners.current;
 	if (hostOpener) {
 		await hostOpener(url);
 		return;

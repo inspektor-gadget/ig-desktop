@@ -27,7 +27,7 @@
 		GadgetRunRequest,
 		SessionItem
 	} from '$lib/types';
-	import type { GadgetLaunchPreset } from '$lib/types/embedding';
+	import type { GadgetLaunchPreset, EmbeddableAppProps } from '$lib/types/embedding';
 	import { copyToClipboard } from '$lib/utils/clipboard';
 	import {
 		addGadgetToHistory,
@@ -51,6 +51,16 @@
 
 	let { data }: { data: { url: string; preset?: GadgetLaunchPreset } } = $props();
 
+	// Hosts may pass an equal preset object on every render: apply it once per route and content.
+	// Effects read these primitives so that a new `data` wrapper alone does not re-run them.
+	const imageURL = $derived(data.url);
+	const presetKey = $derived(data.preset ? JSON.stringify(data.preset) : '');
+	let appliedPresetKey = untrack(() => presetKey);
+	let preset = $state.raw<GadgetLaunchPreset | undefined>(
+		untrack(() => (data.preset ? $state.snapshot(data.preset) : undefined))
+	);
+	let launchRevision = $state(0);
+
 	const api = getContext<ApiContext>('api');
 	const goBack = getContext<(() => void) | undefined>('navigateBack') ?? (() => history.back());
 	const hostSessionRecording = getContext<(() => boolean) | undefined>('sessionRecordingEnabled');
@@ -59,19 +69,32 @@
 	);
 	const hostLaunchPreferences = getContext<(() => boolean) | undefined>('launchPreferences');
 	const hostFocusLaunchAction = getContext<(() => boolean) | undefined>('focusLaunchAction');
+	const hostLaunchParameters = getContext<
+		(() => EmbeddableAppProps['resolveLaunchParameters']) | undefined
+	>('resolveLaunchParameters');
+	let contextWarnings = $state<string[]>([]);
+	let contextParameterKeys: string[] = [];
 	const launchPreferences = $derived(hostLaunchPreferences?.() ?? false);
 	let runButton: HTMLButtonElement;
+	// One attempt per loaded metadata: later state changes must not move focus to Run,
+	// where a stray Enter would start the gadget.
+	let focusAttemptFor: GadgetInfo | null = null;
 	$effect(() => {
-		if (
-			hostFocusLaunchAction?.() &&
-			runButton &&
-			canRun() &&
-			document.hasFocus() &&
-			(document.activeElement === document.body ||
-				document.activeElement === document.documentElement)
-		) {
-			runButton.focus();
-		}
+		const info = gadgetInfo;
+		if (!info || !runButton || info === focusAttemptFor) return;
+		focusAttemptFor = info;
+		untrack(() => {
+			if (
+				hostFocusLaunchAction?.() &&
+				!contextWarnings.length &&
+				canRun() &&
+				document.hasFocus() &&
+				(document.activeElement === document.body ||
+					document.activeElement === document.documentElement)
+			) {
+				runButton.focus();
+			}
+		});
 	});
 	const hasExplicitParams = $derived(page.url.searchParams.has('params'));
 	let usingSavedOptions = $state(false);
@@ -138,7 +161,7 @@
 
 	// Experimental feature flag for session recording
 	const sessionRecordingEnabled = $derived(
-		!data.preset?.transient &&
+		!preset?.transient &&
 			(hostSessionRecording?.() ?? configuration.get('experimentalSessionRecording') === true)
 	);
 
@@ -162,10 +185,10 @@
 	// Initialize recordGadgetRun from alwaysRecord setting on mount
 	// Also reset when detached mode is enabled (session recording doesn't make sense for detached)
 	$effect(() => {
-		if (detached || data.preset?.transient) {
+		if (detached || preset?.transient) {
 			recordGadgetRun = false;
-		} else if (data.preset?.record !== undefined) {
-			recordGadgetRun = data.preset.record;
+		} else if (preset?.record !== undefined) {
+			recordGadgetRun = preset.record;
 		} else if (sessionRecordingEnabled && alwaysRecord) {
 			recordGadgetRun = true;
 		} else if (!sessionRecordingEnabled) {
@@ -206,24 +229,39 @@
 	let originalError = $state<string | null>(null);
 	let retryTrigger = $state(0);
 
-	// Load initial values from URL parameters
+	// Load initial values from the preset or URL parameters, once per launch input revision.
+	let appliedLaunchKey: string | undefined;
 	$effect(() => {
-		environmentID = data.preset?.environmentID ?? page.url.searchParams.get('env');
-		detached = data.preset?.transient
+		const key = `${imageURL}\n${page.url.search}\n${presetKey}`;
+		if (key === appliedLaunchKey) return;
+		appliedLaunchKey = key;
+		untrack(() => {
+			if (presetKey !== appliedPresetKey) {
+				appliedPresetKey = presetKey;
+				preset = data.preset ? $state.snapshot(data.preset) : undefined;
+			}
+			applyLaunchInputs();
+			launchRevision++;
+		});
+	});
+
+	function applyLaunchInputs() {
+		environmentID = preset?.environmentID ?? page.url.searchParams.get('env');
+		detached = preset?.transient
 			? false
-			: (data.preset?.detached ?? page.url.searchParams.get('detached') === 'true');
-		instanceName = data.preset?.instanceName ?? (page.url.searchParams.get('instanceName') || '');
-		if (data.preset?.sessionId) {
+			: (preset?.detached ?? page.url.searchParams.get('detached') === 'true');
+		instanceName = preset?.instanceName ?? (page.url.searchParams.get('instanceName') || '');
+		if (preset?.sessionId) {
 			sessionMode = 'existing';
-			selectedSessionId = data.preset.sessionId;
-		} else if (data.preset?.sessionName) {
+			selectedSessionId = preset.sessionId;
+		} else if (preset?.sessionName) {
 			sessionMode = 'new';
-			sessionName = data.preset.sessionName;
+			sessionName = preset.sessionName;
 		}
 
 		const paramsStr = page.url.searchParams.get('params');
-		if (data.preset?.params) {
-			values = { ...data.preset.params };
+		if (preset?.params) {
+			values = { ...preset.params };
 		} else if (paramsStr) {
 			try {
 				values = JSON.parse(paramsStr);
@@ -234,22 +272,12 @@
 		} else {
 			values = {};
 		}
-		if (!launchPreferences) {
-			const requestedFormat = page.url.searchParams.get('output');
-			const presetOutput =
-				data.preset?.output ??
-				(requestedFormat === 'jsonl' || requestedFormat === 'pcap-ng'
-					? { format: requestedFormat }
-					: undefined);
-			outputMode = presetOutput && fileOutputAvailable ? 'file' : 'table';
-			outputFormat = presetOutput?.format ?? 'jsonl';
-		}
-	});
+	}
 
 	// A destination is authorized only for this target, gadget and encoder.
 	$effect(() => {
 		void environmentID;
-		void data.url;
+		void imageURL;
 		void outputMode;
 		void outputFormat;
 		untrack(clearFileSelection);
@@ -291,23 +319,45 @@
 		);
 	}
 
-	function setInitialOutput(saved: CustomOptions | null) {
-		const requested = data.preset?.output?.format ?? page.url.searchParams.get('output');
-		const explicitTable =
-			(data.preset?.restoreDefaults === false || hasExplicitParams) && !requested;
+	/**
+	 * The launcher's single source of default output, used after metadata loads and on Reset.
+	 * A requested (preset/URL/history) or saved format is honored only when this host and gadget
+	 * support it; otherwise the launcher falls back to table output with a supported format.
+	 */
+	function resolveInitialOutput(
+		saved: CustomOptions | null,
+		reset = false
+	): { mode: 'table' | 'file'; format: FileOutputFormat; unavailable: boolean } {
+		const requested = reset
+			? undefined
+			: (preset?.output?.format ?? (page.url.searchParams.get('output') || undefined));
+		// Explicit Recent/URL launches start from table output unless they name a format.
+		const packetFirst =
+			launchPreferences && (reset || (preset?.restoreDefaults !== false && !hasExplicitParams));
 		const format =
-			requested ||
-			(saved ? saved.output?.format : supportedFormats.includes('pcap-ng') ? 'pcap-ng' : undefined);
-		const supported =
-			(format === 'jsonl' || format === 'pcap-ng') && supportedFormats.includes(format);
-		outputMode = !explicitTable && supported ? 'file' : 'table';
-		outputFormat =
-			!explicitTable && supported
-				? format
-				: supportedFormats.includes('pcap-ng')
+			requested ??
+			(saved
+				? saved.output?.format
+				: packetFirst && supportedFormats.includes('pcap-ng')
 					? 'pcap-ng'
-					: 'jsonl';
-		if (format && !explicitTable && outputMode === 'table') {
+					: undefined);
+		const supported = supportedFormats.find((candidate) => candidate === format);
+		const fallback =
+			launchPreferences && supportedFormats.includes('pcap-ng')
+				? 'pcap-ng'
+				: (supportedFormats[0] ?? 'jsonl');
+		return {
+			mode: supported ? 'file' : 'table',
+			format: supported ?? fallback,
+			unavailable: !!format && !supported
+		};
+	}
+
+	function applyInitialOutput(saved: CustomOptions | null, reset = false) {
+		const output = resolveInitialOutput(saved, reset);
+		outputMode = output.mode;
+		outputFormat = output.format;
+		if (output.unavailable) {
 			toastStore.warning(
 				t(
 					'The previous output format is unavailable for this gadget or host. Review the output before starting.'
@@ -321,16 +371,16 @@
 		resetting = true;
 		try {
 			await api.request({ cmd: 'resetGadgetDefaults', data: { image: data.url } });
-			const targetKeys = new Set(
-				(gadgetInfo?.params ?? [])
+			const targetKeys = new Set([
+				...contextParameterKeys,
+				...(gadgetInfo?.params ?? [])
 					.filter(isTargetParameter)
 					.map((param) => (param.prefix ?? '') + param.key)
-			);
+			]);
 			values = Object.fromEntries(Object.entries(values).filter(([key]) => targetKeys.has(key)));
 			parameterRevision++;
 			usingSavedOptions = false;
-			outputMode = supportedFormats.includes('pcap-ng') ? 'file' : 'table';
-			outputFormat = supportedFormats.includes('pcap-ng') ? 'pcap-ng' : 'jsonl';
+			applyInitialOutput(null, true);
 			clearFileSelection();
 		} catch (err) {
 			toastStore.error(getErrorMessage(err));
@@ -344,16 +394,18 @@
 
 		// retryTrigger is used to force re-fetch when retry button is clicked
 		void retryTrigger;
+		// A changed preset or URL re-resolves saved options and host prefills.
+		void launchRevision;
 
 		// Reset states when environment changes
 		error = null;
 		originalError = null;
 		gadgetInfo = null;
+		contextWarnings = [];
 		usingSavedOptions = false;
 		let cancelled = false;
-		const restore =
-			launchPreferences && data.preset?.restoreDefaults !== false && !hasExplicitParams;
-		const image = data.url;
+		const restore = launchPreferences && preset?.restoreDefaults !== false && !hasExplicitParams;
+		const image = imageURL;
 		const target = environmentID;
 
 		Promise.all([
@@ -404,7 +456,19 @@
 						values = { ...Object.fromEntries(entries), ...values };
 						usingSavedOptions = true;
 					}
-					setInitialOutput(saved);
+				}
+				applyInitialOutput(launchPreferences ? saved : null);
+				const prefill = hostLaunchParameters?.()?.(res, target);
+				if (prefill || contextParameterKeys.length) {
+					values = {
+						...Object.fromEntries(
+							Object.entries(values).filter(([key]) => !contextParameterKeys.includes(key))
+						),
+						...prefill?.params
+					};
+					contextParameterKeys = Object.keys(prefill?.params ?? {});
+					contextWarnings = prefill?.warnings ?? [];
+					parameterRevision++;
 				}
 			})
 			.catch((err) => {
@@ -468,13 +532,13 @@
 			image: data.url,
 			params: $state.snapshot(values),
 			environmentID: environmentID || undefined,
-			detached: outputMode === 'file' || data.preset?.transient ? false : detached,
+			detached: outputMode === 'file' || preset?.transient ? false : detached,
 			instanceName,
 			timestamp: Date.now(),
 			record: outputMode === 'file' ? false : shouldRecord,
 			sessionId: sessionIdToUse,
 			sessionName:
-				outputMode !== 'file' && !data.preset?.transient && sessionMode === 'new' && !sessionIdToUse
+				outputMode !== 'file' && !preset?.transient && sessionMode === 'new' && !sessionIdToUse
 					? sessionName
 					: undefined,
 			...(launchPreferences ? { rememberOptions: true } : {})
@@ -492,7 +556,7 @@
 		}
 
 		// Save K8s parameter values to recent lists
-		if (!data.preset?.transient && environmentID && gadgetInfo?.params) {
+		if (!preset?.transient && environmentID && gadgetInfo?.params) {
 			for (const param of gadgetInfo.params) {
 				// Only save K8s parameters that have values
 				if (param.valueHint?.startsWith('k8s:') && values[(param.prefix || '') + param.key]) {
@@ -521,12 +585,12 @@
 			analyticsService.trackRunGadget(data.url);
 
 			// Save gadget URL to recents
-			if (!data.preset?.transient && environmentID && data.url) {
+			if (!preset?.transient && environmentID && data.url) {
 				saveGadgetURLRecent(environmentID!, data.url);
 			}
 
 			// Add to per-environment history with deduplication (max 50 entries)
-			if (!data.preset?.transient && environmentID) {
+			if (!preset?.transient && environmentID) {
 				addGadgetToHistory(environmentID!, gadgetRunRequest, 50);
 			}
 
@@ -625,7 +689,7 @@
 			<select
 				aria-label={t('Select environment')}
 				bind:value={environmentID}
-				disabled={data.preset?.transient || !!data.preset?.kubernetesTargetID}
+				disabled={preset?.transient || !!preset?.kubernetesTargetID}
 				class="col-start-1 row-start-1 appearance-none rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 pr-8 pl-3 focus-visible:ring-2 focus-visible:ring-ig-primary"
 			>
 				<option value="">{t('Select environment')}</option>
@@ -638,15 +702,20 @@
 </div>
 
 <div class="flex grow flex-col overflow-auto bg-gray-50/80 dark:bg-gray-950/80 p-8">
-	{#if data.preset?.transient}
+	{#if preset?.transient}
 		<p role="status" class="mb-4 text-sm text-ig-text-secondary">
 			{t('Ad-hoc Kubernetes target: not saved. Only foreground, unrecorded runs are available.')}
 		</p>
-	{:else if data.preset?.kubernetesTargetID}
+	{:else if preset?.kubernetesTargetID}
 		<p role="status" class="mb-4 text-sm text-ig-text-secondary">
-			{data.preset.kubernetesTargetName}
+			{preset.kubernetesTargetName}
 		</p>
 	{/if}
+	{#each contextWarnings as warning, index (index)}
+		<p role="alert" class="mb-4 rounded-ig-sm border border-ig-warning p-3 text-sm text-ig-text">
+			{warning}
+		</p>
+	{/each}
 	<div class="mx-auto flex w-full max-w-7xl flex-row gap-6">
 		<div class="flex grow flex-col gap-6">
 			{#if !gadgetInfo}
@@ -842,6 +911,11 @@
 											</select>
 										</label>
 									{/if}
+									<p class="text-sm text-ig-text-muted">
+										{t(
+											'File captures run in the foreground and are not recorded to a session, so headless and recording options do not apply.'
+										)}
+									</p>
 									{#if outputFormat === 'pcap-ng' && pcapDatasources.length !== 1}
 										<p role="alert" class="text-sm text-ig-error">
 											{t('PCAP-NG requires exactly one packet datasource.')}
@@ -879,7 +953,7 @@
 						</div>
 					</Panel>
 				{/if}
-				{#if !data.preset?.transient && (!launchPreferences || outputMode !== 'file')}
+				{#if !preset?.transient && outputMode !== 'file'}
 					<!-- Panel-like container without header for detached settings -->
 					<div
 						class="main-gradient flex flex-col gap-4 rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
@@ -942,7 +1016,7 @@
 
 					<!-- Session recording settings (experimental) - not available for detached instances -->
 				{/if}
-				{#if sessionRecordingEnabled && !detached && (!launchPreferences || outputMode !== 'file')}
+				{#if sessionRecordingEnabled && !detached && outputMode !== 'file'}
 					<div
 						class="main-gradient flex flex-col gap-4 rounded-ig-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 p-4 shadow-sm transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 					>

@@ -4,18 +4,17 @@
  * In library mode, the host app provides its own navigation handler.
  */
 
-let _navigate: (url: string) => void = () => {
-	console.warn('Navigation handler not set. Call setNavigationHandler() first.');
-};
+import { overrideStack } from '$lib/utils/override-stack';
 
+const handlers = overrideStack<(url: string) => void>();
+
+/** Cleanup removes only this handler, so out-of-order cleanup never reinstalls a disposed one. */
 export function setNavigationHandler(handler: (url: string) => void): () => void {
-	const previous = _navigate;
-	_navigate = handler;
-	return () => {
-		if (_navigate === handler) _navigate = previous;
-	};
+	return handlers.push(handler);
 }
 
 export function goto(url: string): void {
-	_navigate(url);
+	const navigate = handlers.current;
+	if (navigate) navigate(url);
+	else console.warn('Navigation handler not set. Call setNavigationHandler() first.');
 }

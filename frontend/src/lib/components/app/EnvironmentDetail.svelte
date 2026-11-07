@@ -47,6 +47,7 @@
 	import type { WizardTreeConfig } from '$lib/components/wizard/wizard-types';
 	import GadgetIcon from '$lib/icons/gadget.svelte';
 	import type { EmbeddableAppProps } from '$lib/types/embedding';
+	import { openExternalURL } from '$lib/utils/external-links';
 
 	let { deployment }: { deployment?: EmbeddableAppProps['environmentDeployment'] } = $props();
 
@@ -115,28 +116,31 @@
 		}
 	}
 
+	// Environment objects are replaced on every update/reconnect: key per-environment state by ID.
+	const envId = $derived(env?.id);
 	$effect(() => {
-		if (!env) {
+		const id = envId;
+		if (!id) {
 			currentEnvId = null;
 			listRevision++;
 			currentEnvironment.clear();
 			return;
 		}
-		currentEnvId = env.id;
-		missingEnvironmentID = undefined;
-		const prepared = untrack(() => deployment);
-		deploymentAction = prepared?.action ?? 'deploy';
-		missingNamespace = prepared?.namespace ?? env.params?.['gadget-namespace'] ?? 'gadget';
-		deployModalOpen = !!prepared && features.canCreateEnvironment && env.runtime === 'grpc-k8s';
-		detachedInstances = [];
-		currentEnvironment.setEnvironment(env);
-		untrack(() => getList(env.id));
-		loadSessions();
+		untrack(() => {
+			currentEnvId = id;
+			missingEnvironmentID = undefined;
+			deployModalOpen = false;
+			deploymentAction = 'deploy';
+			missingNamespace = env.params?.['gadget-namespace'] ?? 'gadget';
+			detachedInstances = [];
+			currentEnvironment.setEnvironment(env);
+			getList(id);
+		});
 
 		// Poll for headless instances every 7 seconds
 		const pollInterval = setInterval(() => {
-			if (currentEnvId === env.id) {
-				getList(env.id);
+			if (currentEnvId === id) {
+				getList(id);
 			}
 		}, 7000);
 
@@ -145,6 +149,31 @@
 			listRevision++;
 			clearInterval(pollInterval);
 		};
+	});
+
+	// Keep the status bar's environment details current without resetting its connection state.
+	$effect(() => {
+		if (env && currentEnvironment.environment?.id === env.id) currentEnvironment.environment = env;
+	});
+
+	$effect(() => {
+		if (envId && sessionRecordingEnabled) untrack(loadSessions);
+	});
+
+	// Consume each host deployment request once per environment; equal re-sent requests are ignored.
+	let consumedDeployment: string | undefined;
+	$effect(() => {
+		const runtime = env?.runtime;
+		if (!envId || !deployment) return;
+		const key = `${envId}\n${JSON.stringify(deployment)}`;
+		if (key === consumedDeployment) return;
+		consumedDeployment = key;
+		const prepared = $state.snapshot(deployment);
+		untrack(() => {
+			deploymentAction = prepared.action;
+			missingNamespace = prepared.namespace;
+			deployModalOpen = features.canCreateEnvironment && runtime === 'grpc-k8s';
+		});
 	});
 
 	async function loadSessions() {
@@ -651,6 +680,11 @@
 								href="https://inspektor-gadget.io/docs/latest/reference/headless"
 								title={t('Documentation')}
 								target="_blank"
+								rel="noopener noreferrer"
+								onclick={(event) => {
+									event.preventDefault();
+									void openExternalURL(event.currentTarget.href);
+								}}
 								class="text-gray-600 dark:text-gray-400 transition-all hover:text-blue-400"
 								><Info /></a
 							>

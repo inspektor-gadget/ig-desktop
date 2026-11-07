@@ -133,6 +133,27 @@ The exported `EmbeddableAppProps`, `EmbeddableAppState`, `ResultViewState`, and
 - `sessions?: boolean`: defaults to `true` for this application and controls the
   existing experimental recording/session UI. Desktop routes keep their existing
   configuration-controlled behavior.
+- `onCellContextMenu?(event)`: optional result-table interaction callback, also
+  supported by `EmbeddedGadget`. Gadget views enrich `CellInteractionEvent` with
+  `instanceID` and the originating `datasource`, including merged field
+  annotations and hidden fields. Consumers can resolve semantic row context
+  without assuming field names or a particular source gadget. When a callback
+  is supplied, the table has one cell tab stop (roving tabindex): arrow keys,
+  Home and End move between cells, and the context-menu key/Shift+F10 invokes
+  the callback with a position anchored to the focused cell.
+  Omission preserves the existing result UI; no action or run is created by the
+  shared frontend. The event contains a DOM event and possibly reactive data:
+  project the required scalar values before crossing a host message boundary,
+  validate them against host-owned metadata, and bind the originating target.
+- `resolveLaunchParameters?(metadata, environmentID)`: optional synchronous host
+  resolver returning `{ params, warnings? }` after the launcher loads its actual
+  gadget metadata. Bind semantic context only to supported parameter descriptors;
+  put unsupported-scope explanations in `warnings`. Warnings stay on the
+  parameter page and suppress automatic Run focus, but explicit execution remains
+  available. Metadata reloads/environment changes replace previously injected
+  keys; unrelated renders do not overwrite manual edits. Explicit Reset preserves
+  injected scope keys. The host must restrict the resolver to the intended image
+  and target. Omission preserves ordinary Desktop/Insights launcher behavior.
 - `fileOutput?: { formats: ('jsonl' | 'pcap-ng')[]; host: string; notify?: boolean }`:
   an explicit native-host capability for file-producing runs. Omit it for the
   unchanged table-only behavior used by browser, demo, website, and Insights
@@ -162,7 +183,9 @@ The exported `EmbeddableAppProps`, `EmbeddableAppState`, `ResultViewState`, and
   environment page. The user must still explicitly submit the action; this prop
   never executes deployment. Use the saved environment's namespace (the backend
   binds the operation to its saved connection). A new route, including a distinct
-  request query value, remounts the page for repeated actions. Omission preserves
+  request query value, remounts the page for repeated actions. Within a page, each
+  request is consumed once per environment: environment updates, reconnects and
+  equal re-sent requests neither reopen nor close the dialog. Omission preserves
   existing behavior; deployment query parameters alone have no shared meaning.
 
 - `launchPreferences?: boolean`: defaults to `false`. VS Code opts in to a
@@ -214,12 +237,16 @@ or evicted toasts; host navigation/disposal checks remain the host's responsibil
 appearance/language options; the default keeps Desktop's controls enabled.
 Hosts with a native settings editor can install
 `settingsDialog.setOpener((category, setting) => ...)` before mounting to route
-settings links to that editor instead. It returns a cleanup function that restores
-the previous opener. Without an opener, the existing modal behavior is unchanged.
+settings links to that editor instead. It returns a cleanup function that removes
+only that opener (out-of-order cleanup never reinstalls a disposed one). Without an opener, the existing modal behavior is unchanged.
 `setExternalURLOpener(opener)` similarly redirects calls to `openExternalURL`;
-its cleanup restores the previous opener. When no host override is installed,
+its cleanup behaves the same way, as do `setNavigationHandler` and the
+`initializeIG()` cleanup for its `onNavigate` handler. When no host override is installed,
 Wails still uses `Browser.OpenURL` and browser consumers still use
-`window.open(..., '_blank', 'noopener,noreferrer')`.
+`window.open(..., '_blank', 'noopener,noreferrer')`. `openExternalURL` passes only
+absolute `http:`/`https:` URLs without embedded credentials to any opener
+(`isSafeExternalURL`); other values, such as repository URLs from package
+metadata, are ignored with a console warning.
 
 `configuration.snapshot()`, `apply(snapshot)` and `onChange(callback)` support
 host-owned preference synchronization, including resets. Hydrate before mounting

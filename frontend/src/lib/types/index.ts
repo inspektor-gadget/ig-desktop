@@ -53,7 +53,7 @@ export interface FileOutputRequest {
 export interface FileOutputCapability {
 	formats: FileOutputFormat[];
 	host: string;
-	/** Hosts with their own notification center prevent duplicate shared toasts. */
+	/** `false`: the embedding host presents capture completion/errors itself (no shared toasts). */
 	notify?: boolean;
 }
 

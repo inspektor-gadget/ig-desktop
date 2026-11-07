@@ -43,6 +43,84 @@ test.beforeEach(async ({ page }, testInfo) => {
 
 test.afterEach(() => expect(browserErrors).toEqual([]));
 
+test('cell interaction embedding is opt-in and forwards the originating instance and schema', async ({
+	page
+}) => {
+	for (const enabled of [false, true]) {
+		await page.goto(
+			`/tests/embedding/?initialPath=/env/test-env/running/run-one${enabled ? '&cellActions' : ''}`
+		);
+		await page.getByText('Table', { exact: true }).click();
+		const cell = page
+			.getByRole('gridcell')
+			.filter({ hasText: /^alpha$/ })
+			.first();
+		await cell.click({ button: 'right' });
+		expect(await page.evaluate(() => window.embedding.cellEvents)).toEqual(
+			enabled
+				? [
+						{
+							instanceID: 'run-one',
+							datasource: 'events',
+							row: { comm: 'alpha' },
+							fieldAnnotations: {}
+						}
+					]
+				: []
+		);
+		await expectNoRequests(page, ['runGadget']);
+	}
+});
+
+test('metadata-based launch prefills are opt-in, preserve edits and warn on a different target', async ({
+	page
+}) => {
+	await page.goto('/tests/embedding/?extraEnvironment&fileOutput&pcap');
+	await page.waitForFunction(() => window.embedding);
+	await page.evaluate(() =>
+		window.embedding.update({
+			path: '/gadgets/run/test/image:latest?env=test-env'
+		})
+	);
+	const pid = page.getByRole('textbox', { name: 'PID', exact: true });
+	await expect(pid).toHaveValue('');
+	await expect(page.getByRole('alert')).toHaveCount(0);
+	await page.evaluate(() =>
+		window.embedding.update({
+			path: '/gadgets/run/test/image:latest?env=test-env&context=1',
+			resolveLaunchParameters: (
+				metadata,
+				environmentID
+			): { params: Record<string, string>; warnings?: string[] } =>
+				environmentID === 'test-env' && metadata.params?.some((param) => param.key === 'pid')
+					? { params: { pid: '123' } }
+					: { params: {}, warnings: ['The selected process filter is unavailable.'] }
+		})
+	);
+	await expect(pid).toHaveValue('123');
+	await pid.fill('456');
+	await page.evaluate(() => window.embedding.update({ homeTitle: 'Unrelated host update' }));
+	await expect(pid).toHaveValue('456');
+	await page.locator('select').first().selectOption('other-env');
+	await expect(pid).toHaveValue('');
+	await expect(page.getByRole('alert')).toHaveText('The selected process filter is unavailable.');
+	await expectNoRequests(page, ['runGadget']);
+	await page.getByRole('button', { name: 'Run Gadget', exact: true }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() => window.embedding.requests.filter((request) => request.cmd === 'runGadget').length
+			)
+		)
+		.toBe(1);
+	expect(
+		await page.evaluate(
+			() =>
+				window.embedding.requests.findLast((request) => request.cmd === 'runGadget')?.data?.params
+		)
+	).toEqual({});
+});
+
 test('empty welcome header honors the plain host title without changing the default', async ({
 	page
 }) => {
@@ -145,9 +223,7 @@ test('host deployment dialog preparation is opt-in and never executes by itself'
 			modal.getByRole('button', { name: action[0].toUpperCase() + action.slice(1), exact: true })
 		).toBeVisible();
 		await expect(modal.getByLabel('Namespace', { exact: true })).toHaveValue('host-namespace');
-		expect(
-			await page.evaluate(() => window.embedding.requests.filter((r) => r.cmd === 'deployIG'))
-		).toEqual([]);
+		await expectNoRequests(page, ['deployIG']);
 		await modal.getByRole('button', { name: 'Close (Force)', exact: true }).click();
 		await expect(modal).toHaveCount(0);
 	}
@@ -647,7 +723,15 @@ test('file output is host-opt-in, requires a destination, and opens its status w
 	await page.locator('select').first().selectOption('test-env');
 	await expect(page.getByText('Parameters', { exact: true })).toBeVisible();
 	await expect(page.getByRole('heading', { name: 'Mode', exact: true })).toBeVisible();
+	const fileModeNote = page.getByText('File captures run in the foreground', { exact: false });
+	await expect(page.getByText('Detached', { exact: true })).toBeVisible();
+	await expect(page.getByText('Record to Session', { exact: true })).toBeVisible();
+	await expect(fileModeNote).toHaveCount(0);
 	await page.getByLabel('Mode', { exact: true }).selectOption({ label: 'To a file' });
+	// File starts ignore headless and recording options, so they are not offered.
+	await expect(page.getByText('Detached', { exact: true })).toHaveCount(0);
+	await expect(page.getByText('Record to Session', { exact: true })).toHaveCount(0);
+	await expect(fileModeNote).toBeVisible();
 	await expect(page.getByRole('button', { name: 'Run Gadget', exact: true })).toBeDisabled();
 	await page.getByRole('button', { name: 'Choose destination', exact: true }).click();
 	await expect(
@@ -729,6 +813,10 @@ test('opt-in custom options remember output and parameters, rebind scope, and re
 	);
 	await expect(page.getByLabel('Output', { exact: true })).toHaveValue('jsonl');
 	await expect(page.getByText('Using your last custom options', { exact: true })).toBeVisible();
+	await expect(page.getByText('Detached', { exact: true })).toHaveCount(0);
+	await expect(
+		page.getByText('File captures run in the foreground', { exact: false })
+	).toBeVisible();
 	await expect(page.getByLabel('Mode', { exact: true })).toHaveCount(0);
 	await page.getByLabel('Output', { exact: true }).selectOption('table');
 	await page.getByRole('button', { name: 'Run Gadget', exact: true }).click();
@@ -858,9 +946,7 @@ test('reuses environment, discovery, launcher and replay screens without navigat
 				)
 		)
 		.toBe(true);
-	expect(
-		await page.evaluate(() => window.embedding.requests.some((r) => r.cmd === 'runGadget'))
-	).toBe(false);
+	await expectNoRequests(page, ['runGadget']);
 	await page.getByText('Record to Session', { exact: true }).click();
 	await page.getByRole('button', { name: 'Run Gadget', exact: true }).click();
 	await expect(page.getByPlaceholder('Search...')).toBeVisible();
@@ -927,11 +1013,7 @@ test('frozen saved launcher locks only its target and keeps recording and detach
 	await expect(page.getByRole('status')).toHaveText('Frozen context: fixture');
 	await expect(page.getByText('Detached', { exact: true })).toBeVisible();
 	await page.getByText('Record to Session', { exact: true }).click();
-	expect(
-		await page.evaluate(() =>
-			window.embedding.requests.some((request) => request.cmd === 'runGadget')
-		)
-	).toBe(false);
+	await expectNoRequests(page, ['runGadget']);
 	await page.getByRole('button', { name: 'Run Gadget', exact: true }).click();
 	await expect
 		.poll(() =>
@@ -1043,4 +1125,200 @@ test('a launch preset applies only to the launch route for its image', async ({ 
 	await page.evaluate(() => window.embedding.update({ path: '/gadgets/run/test/image:latest/' }));
 	await expect(pid).toHaveValue('42');
 	await expect(page.getByRole('combobox', { name: 'Select environment' })).toBeDisabled();
+});
+
+test('an equal launch preset object keeps launcher edits; changed content re-applies', async ({
+	page
+}) => {
+	const preset = {
+		image: 'test/image:latest',
+		environmentID: 'test-env',
+		params: { pid: '42' },
+		instanceName: 'from-host'
+	};
+	await page.evaluate(
+		(launchPreset) =>
+			window.embedding.update({ path: '/gadgets/run/test/image:latest', launchPreset }),
+		preset
+	);
+	const pid = page.getByRole('textbox', { name: 'PID', exact: true });
+	await expect(pid).toHaveValue('42');
+	const infoRequests = () =>
+		page.evaluate(
+			() => window.embedding.requests.filter((request) => request.cmd === 'getGadgetInfo').length
+		);
+	const fetched = await infoRequests();
+	await pid.fill('456');
+	await page.getByText('Detached', { exact: true }).click();
+	await expect(page.getByRole('textbox', { name: 'Instance Name' })).toHaveValue('from-host');
+	await page.getByRole('textbox', { name: 'Instance Name' }).fill('edited');
+	// React hosts commonly recreate an equal object on every render.
+	for (let render = 0; render < 3; render++) {
+		await page.evaluate(
+			(launchPreset) => window.embedding.update({ launchPreset: { ...launchPreset } }),
+			preset
+		);
+	}
+	await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 200)));
+	await expect(pid).toHaveValue('456');
+	await expect(page.getByRole('textbox', { name: 'Instance Name' })).toHaveValue('edited');
+	expect(await infoRequests()).toBe(fetched);
+	await page.evaluate(
+		(launchPreset) =>
+			window.embedding.update({ launchPreset: { ...launchPreset, params: { pid: '7' } } }),
+		preset
+	);
+	await expect(pid).toHaveValue('7');
+});
+
+test('an unsupported output format from history falls back to table with a supported format', async ({
+	page
+}) => {
+	await page.goto(
+		'/tests/embedding/?fileOutput&initialPath=' +
+			encodeURIComponent('/gadgets/run/test/image:latest?env=test-env&output=pcap-ng')
+	);
+	await expect(page.getByLabel('Mode', { exact: true })).toHaveValue('table');
+	await page.getByLabel('Mode', { exact: true }).selectOption({ label: 'To a file' });
+	await expect(page.getByLabel('Format', { exact: true })).toHaveValue('jsonl');
+	await expect(page.getByText('PCAP-NG requires exactly one packet datasource.')).toHaveCount(0);
+	await page.goto(
+		'/tests/embedding/?fileOutput&pcap&initialPath=' +
+			encodeURIComponent('/gadgets/run/test/image:latest?env=test-env&output=pcap-ng')
+	);
+	await expect(page.getByLabel('Mode', { exact: true })).toHaveValue('file');
+	await expect(page.getByLabel('Format', { exact: true })).toHaveValue('pcap-ng');
+});
+
+test('VS Code launcher focuses Run once per metadata load, not on later state changes', async ({
+	page
+}) => {
+	await page.goto(
+		'/tests/embedding/?focusLaunchAction&initialPath=%2Fgadgets%2Frun%2Ftest%2Fimage%3Alatest%3Fenv%3Dtest-env'
+	);
+	const run = page.getByRole('button', { name: 'Run Gadget', exact: true });
+	await expect(run).toBeFocused();
+	// A state change while nothing is focused (element.click() does not move focus).
+	await page.getByRole('checkbox', { name: /^Record to Session/ }).evaluate((node) => {
+		(document.activeElement as HTMLElement | null)?.blur();
+		(node as HTMLInputElement).click();
+	});
+	await expect(page.getByRole('checkbox', { name: /^Record to Session/ })).toBeChecked();
+	await page.getByRole('radio', { name: 'Add to Existing' }).evaluate((node) => {
+		(node as HTMLInputElement).click();
+		(document.activeElement as HTMLElement | null)?.blur();
+	});
+	await page.getByRole('radio', { name: 'New Session' }).evaluate((node) => {
+		(node as HTMLInputElement).click();
+		(document.activeElement as HTMLElement | null)?.blur();
+	});
+	await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve(null))));
+	await expect(run).toBeEnabled();
+	await expect(run).not.toBeFocused();
+	await page.keyboard.press('Enter');
+	await expectNoRequests(page, ['runGadget']);
+});
+
+test('a prepared deployment dialog survives environment updates and is consumed once', async ({
+	page
+}) => {
+	await page.goto('/tests/embedding/?dashboard=connected&initialPath=/env/test-env');
+	await expect(page.getByText('Headless Gadget Instances', { exact: true })).toBeVisible();
+	const deployment = { action: 'redeploy', namespace: 'host-namespace' } as const;
+	await page.evaluate(
+		(environmentDeployment) =>
+			window.embedding.update({ path: '/env/test-env?request=1', environmentDeployment }),
+		deployment
+	);
+	const modal = page.getByRole('dialog');
+	await expect(modal.getByRole('button', { name: 'Redeploy', exact: true })).toBeVisible();
+	// Environment replacement (update/reconnect) must not close an open dialog...
+	await page.evaluate(() => window.embedding.environmentUpdate());
+	await page.evaluate(() => window.embedding.update({ sessions: false }));
+	await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 200)));
+	await expect(modal.getByRole('button', { name: 'Redeploy', exact: true })).toBeVisible();
+	await expect(modal.getByLabel('Namespace', { exact: true })).toHaveValue('host-namespace');
+	await modal.getByRole('button', { name: 'Close (Force)', exact: true }).click();
+	await expect(modal).toHaveCount(0);
+	// ...nor reopen a closed one, including when the host re-sends an equal request.
+	await page.evaluate(() => window.embedding.environmentUpdate());
+	await page.evaluate(() => window.embedding.update({ sessions: true }));
+	await page.evaluate(
+		(environmentDeployment) =>
+			window.embedding.update({ environmentDeployment: { ...environmentDeployment } }),
+		deployment
+	);
+	await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 300)));
+	await expect(modal).toHaveCount(0);
+	await expectNoRequests(page, ['deployIG']);
+});
+
+test('the headless documentation link uses the host external-link opener', async ({ page }) => {
+	await page.evaluate(() => {
+		(window as unknown as { opened: string[] }).opened = window.embedding.captureExternal();
+		window.embedding.update({ path: '/env/test-env' });
+	});
+	const pages = page.context().pages().length;
+	await page.getByTitle('Documentation', { exact: true }).click();
+	await expect
+		.poll(() => page.evaluate(() => (window as unknown as { opened: string[] }).opened))
+		.toEqual(['https://inspektor-gadget.io/docs/latest/reference/headless']);
+	expect(page.context().pages()).toHaveLength(pages);
+});
+
+test('file capture Stop and Copy path failures are reported, not swallowed', async ({ page }) => {
+	for (const hostNotifications of [false, true]) {
+		await page.goto(
+			`/tests/embedding/?fileOutput&stopError&copyError${hostNotifications ? '&hostNotifications' : ''}&initialPath=${encodeURIComponent('/gadgets/run/test/image:latest?env=test-env')}`
+		);
+		await page.getByLabel('Mode', { exact: true }).selectOption({ label: 'To a file' });
+		await page.getByRole('button', { name: 'Choose destination', exact: true }).click();
+		await page.getByRole('button', { name: 'Run Gadget', exact: true }).click();
+		await expect(page.getByText('File capture', { exact: true })).toBeVisible();
+		await page.getByRole('button', { name: 'Stop', exact: true }).click();
+		await expect(
+			page.getByText('Failed to stop the capture: fixture stopInstance failed', { exact: true })
+		).toBeVisible();
+		await page.getByRole('button', { name: 'Copy path', exact: true }).click();
+		await expect(
+			page.getByText('Failed to copy the capture path:', { exact: false })
+		).toBeVisible();
+	}
+});
+
+test('keyboard cell actions use one roving tab stop and anchor menus to the cell', async ({
+	page
+}) => {
+	await page.goto('/tests/embedding/?initialPath=/env/test-env/running/run-one&cellActions');
+	await page.getByText('Table', { exact: true }).click();
+	const cells = page.getByRole('gridcell');
+	await expect(cells.filter({ hasText: /^beta$/ })).toHaveCount(1);
+	const tabbable = page.locator('[role="gridcell"][tabindex="0"]');
+	await expect(tabbable).toHaveCount(1);
+	expect(await cells.count()).toBeGreaterThan(1);
+	await tabbable.focus();
+	const first = await tabbable.textContent();
+	await page.keyboard.press('ArrowDown');
+	const focused = page.locator('[role="gridcell"]:focus');
+	await expect(focused).not.toHaveText(first ?? '');
+	await expect(tabbable).toHaveCount(1);
+	await expect(focused).toHaveAttribute('tabindex', '0');
+	await page.keyboard.press('ArrowUp');
+	await expect(focused).toHaveText(first ?? '');
+	await page.keyboard.press('Shift+F10');
+	await expect.poll(() => page.evaluate(() => window.embedding.cellPositions.length)).toBe(1);
+	const box = await focused.boundingBox();
+	const position = await page.evaluate(() => window.embedding.cellPositions[0]);
+	// Anchored to the focused cell, never the viewport origin.
+	expect(position.x).toBeGreaterThanOrEqual(Math.floor(box!.x));
+	expect(position.x).toBeLessThanOrEqual(Math.ceil(box!.x + box!.width));
+	expect(position.y).toBeGreaterThanOrEqual(Math.floor(box!.y));
+	expect(position.y).toBeLessThanOrEqual(Math.ceil(box!.y + box!.height));
+	await focused.dispatchEvent('contextmenu', { clientX: 0, clientY: 0 });
+	await expect.poll(() => page.evaluate(() => window.embedding.cellPositions.length)).toBe(2);
+	expect(await page.evaluate(() => window.embedding.cellPositions[1])).toEqual({
+		x: expect.closeTo(box!.x, 0),
+		y: expect.closeTo(box!.y + box!.height, 0)
+	});
+	await expectNoRequests(page, ['runGadget']);
 });

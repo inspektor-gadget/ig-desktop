@@ -120,7 +120,7 @@ export type {
 	ConfigurationChange
 } from './stores/configuration.svelte';
 export { settingsDialog } from './stores/settings-dialog.svelte';
-export { openExternalURL, setExternalURLOpener } from './utils/external-links';
+export { openExternalURL, setExternalURLOpener, isSafeExternalURL } from './utils/external-links';
 export { applyGadgetHistories, useHostGadgetHistory } from './utils/env-preferences';
 export type { GadgetHistoryByEnvironment } from './utils/env-preferences';
 
@@ -167,7 +167,9 @@ export function initializeIG(options: {
 }): () => void {
 	registerBuiltinPlugins();
 	if (options.basePath) setBasePath(options.basePath);
-	if (options.onNavigate) setNavigationHandler(options.onNavigate);
+	const restoreNavigation = options.onNavigate
+		? setNavigationHandler(options.onNavigate)
+		: undefined;
 	if (options.language) setLanguage(options.language);
 	websocketService.initialize(
 		options.adapter,
@@ -175,5 +177,8 @@ export function initializeIG(options: {
 		false,
 		(reason) => apiService.cancelPending(reason)
 	);
-	return () => websocketService.disconnect(options.adapter);
+	return () => {
+		restoreNavigation?.();
+		websocketService.disconnect(options.adapter);
+	};
 }
