@@ -4,8 +4,9 @@ go 1.26.0
 
 require (
 	github.com/coder/websocket v1.8.15
+	github.com/google/gnostic-models v0.7.0
 	github.com/google/uuid v1.6.0
-	github.com/gopacket/gopacket v1.7.0
+	github.com/gopacket/gopacket v1.7.2
 	github.com/inspektor-gadget/inspektor-gadget v0.55.1
 	github.com/sirupsen/logrus v1.10.2
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.79
@@ -91,7 +92,6 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/btree v1.1.3 // indirect
-	github.com/google/gnostic-models v0.7.0 // indirect
 	github.com/google/go-containerregistry v0.21.3 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/gosuri/uitable v0.0.4 // indirect
