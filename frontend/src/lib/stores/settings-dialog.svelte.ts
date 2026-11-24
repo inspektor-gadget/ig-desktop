@@ -1,4 +1,4 @@
-import { overrideStack } from '$lib/utils/override-stack';
+import { overrideStack } from '#lib/utils/override-stack.ts';
 
 /**
  * Global store for managing the settings dialog state with deep-linking support.

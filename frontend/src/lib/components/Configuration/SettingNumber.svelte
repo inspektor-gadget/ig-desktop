@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { NumberSetting } from '$lib/config.types';
-	import Input from '$lib/components/forms/Input.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { NumberSetting } from '#lib/config.types.ts';
+	import Input from '#lib/components/forms/Input.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		setting: NumberSetting;

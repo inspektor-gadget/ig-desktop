@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import type { GadgetContext } from '$lib/types/context';
+	import type { GadgetContext } from '#lib/types/context.ts';
 	import FlamegraphChart from './FlamegraphChart.svelte';
 	import {
 		extractFlamegraphConfig,
@@ -8,9 +8,9 @@
 		extractGroupableFields,
 		buildFlameHierarchyWithGroups,
 		DEFAULT_GROUP_FIELDS
-	} from '$lib/utils/flamegraphConfig';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import type { VisualizerPluginProps } from '$lib/types/plugin-api';
+	} from '#lib/utils/flamegraphConfig.ts';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import type { VisualizerPluginProps } from '#lib/types/plugin-api.ts';
 
 	type Props = VisualizerPluginProps;
 

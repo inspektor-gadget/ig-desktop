@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { BaseEdge, EdgeLabel, getBezierPath, type EdgeProps } from '@xyflow/svelte';
-	import type { DnsMapEdgeData } from '$lib/utils/dns/dnsMapGraph';
-	import { formatLatencyNs, stateColorClass, stateLabel } from '$lib/utils/dns/dnsFormat';
+	import type { DnsMapEdgeData } from '#lib/utils/dns/dnsMapGraph.ts';
+	import { formatLatencyNs, stateColorClass, stateLabel } from '#lib/utils/dns/dnsFormat.ts';
 	import {
 		primarySeverityReason,
 		severityCardClass,
@@ -9,8 +9,8 @@
 		severityEdgeClass,
 		severityIcon,
 		severityLabel
-	} from '$lib/utils/dns/dnsSeverity';
-	import { t } from '$lib/i18n/index.svelte';
+	} from '#lib/utils/dns/dnsSeverity.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	// `data` is typed as optional and read defensively below: SvelteFlow's
 	// generic edge props don't statically guarantee our custom edge data

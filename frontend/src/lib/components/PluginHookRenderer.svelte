@@ -10,7 +10,7 @@
 	 * provided props.
 	 */
 
-	import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
+	import { pluginRegistry } from '#lib/services/plugin-registry.service.svelte.ts';
 
 	interface Props {
 		/** The hook ID to render (e.g., 'sidebar:navigation', 'gadget:toolbar') */

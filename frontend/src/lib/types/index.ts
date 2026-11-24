@@ -1,6 +1,6 @@
 // Common TypeScript interfaces for the IG Frontend
 
-import type { EventRingBuffer } from '$lib/utils/ring-buffer';
+import type { EventRingBuffer } from '#lib/utils/ring-buffer.ts';
 
 // Re-export context types
 export type { ApiContext, GadgetContext, InspectSnapshot } from './context';

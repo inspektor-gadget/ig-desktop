@@ -1,9 +1,9 @@
 <script lang="ts">
 	import BaseModal from './BaseModal.svelte';
 	import Button from './Button.svelte';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import { t } from '$lib/i18n/index.svelte';
-	import updateIcon from '$lib/icons/arrow-path.svelte';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
+	import updateIcon from '#lib/icons/arrow-path.svelte';
 
 	interface Props {
 		open?: boolean;

@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Environment } from '$lib/types';
-import { APP_MODE } from '$lib/config/app-mode';
-import { base } from '$app/paths';
+import type { AssetPath } from '$app/types';
+import type { Environment } from '#lib/types/index.ts';
+import { APP_MODE } from '#lib/config/app-mode.ts';
+import { asset } from '$app/paths';
 
 /**
  * Configuration for single-environment mode.
@@ -46,7 +47,8 @@ export async function loadSingleEnvConfig(): Promise<SingleEnvConfig | null> {
 	if (APP_MODE !== 'single-env') return null;
 
 	try {
-		const response = await fetch(`${base}/config.json`);
+		// This file is supplied by the host at runtime, not included in static asset types.
+		const response = await fetch(asset('config.json' as AssetPath));
 		if (!response.ok) {
 			console.error('Failed to load config.json:', response.status, response.statusText);
 			return null;
@@ -66,7 +68,7 @@ export async function loadDemoConfig(): Promise<DemoConfig | null> {
 	if (APP_MODE !== 'demo') return null;
 
 	try {
-		const response = await fetch(`${base}/demo/config.json`);
+		const response = await fetch(asset('demo/config.json'));
 		if (!response.ok) {
 			console.error('Failed to load demo config:', response.status, response.statusText);
 			return null;

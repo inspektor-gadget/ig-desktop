@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount, setContext, tick, untrack } from 'svelte';
-	import { apiService } from '$lib/services/api.service.svelte';
-	import { setPage } from '$lib/compat/app-state';
-	import { setNavigationHandler } from '$lib/compat/app-navigation';
-	import { base, resolve } from '$lib/compat/app-paths';
-	import { embeddedRoute, launchRouteImage } from '$lib/utils/embedded-route';
-	import type { EmbeddableAppProps, ResultViewChange } from '$lib/types/embedding';
-	import { t } from '$lib/i18n/index.svelte';
+	import { apiService } from '#lib/services/api.service.svelte.ts';
+	import { setPage } from '#lib/compat/app-state.ts';
+	import { setNavigationHandler } from '#lib/compat/app-navigation.ts';
+	import { resolve } from '#lib/compat/app-paths.ts';
+	import { embeddedRoute, launchRouteImage } from '#lib/utils/embedded-route.ts';
+	import type { EmbeddableAppProps, ResultViewChange } from '#lib/types/embedding.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import EnvironmentList from './app/EnvironmentList.svelte';
 	import EnvironmentCreate from './app/EnvironmentCreate.svelte';
 	import EnvironmentDetail from './app/EnvironmentDetail.svelte';
@@ -20,11 +20,11 @@
 	import ConfirmationModal from './ConfirmationModal.svelte';
 	import ConfigurationModal from './ConfigurationModal.svelte';
 	import ToastContainer from './ToastContainer.svelte';
-	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
-	import Server from '$lib/icons/server.svelte';
-	import ArtifactHub from '$lib/icons/artifacthub-logo.svelte';
-	import Plus from '$lib/icons/circle-plus.svelte';
-	import { setFileOutputCapability } from '$lib/shared/file-output.svelte';
+	import { settingsDialog } from '#lib/stores/settings-dialog.svelte.ts';
+	import Server from '#lib/icons/server-icon.svelte';
+	import ArtifactHub from '#lib/icons/artifacthub-logo.svelte';
+	import Plus from '#lib/icons/circle-plus.svelte';
+	import { setFileOutputCapability } from '#lib/shared/file-output.svelte.ts';
 
 	let {
 		path,
@@ -73,7 +73,7 @@
 		const { pathname, search, hash } = route.url;
 		setPage({
 			params: route.params,
-			url: new URL(resolve(pathname + search + hash), 'http://localhost')
+			url: new URL(resolve(pathname.slice(1) + search + hash), 'http://localhost')
 		});
 	}
 
@@ -105,6 +105,7 @@
 	}
 
 	function fromResolved(url: string) {
+		const base = resolve('/').slice(0, -1);
 		return base && url.startsWith(base + '/') ? url.slice(base.length) : url;
 	}
 

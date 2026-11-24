@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
-	import { t } from '$lib/i18n/index.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		children: Snippet;

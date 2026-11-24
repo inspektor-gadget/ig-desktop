@@ -7,7 +7,7 @@
  * This allows for automatic cleanup when environments are deleted.
  */
 
-import type { GadgetRunRequest } from '$lib/types';
+import type { GadgetRunRequest } from '#lib/types/index.ts';
 
 export type GadgetHistoryByEnvironment = Record<string, GadgetRunRequest[]>;
 let hostGadgetHistory: Map<string, string> | undefined;

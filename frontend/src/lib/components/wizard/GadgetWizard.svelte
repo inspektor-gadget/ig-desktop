@@ -3,12 +3,12 @@
 	import WizardEndpoint from './WizardEndpoint.svelte';
 	import { isBranchNode, isEndpointNode, getNodeLabel } from './wizard-types';
 	import type { WizardTreeConfig, WizardBranchNode, WizardEndpointNode } from './wizard-types';
-	import type { Environment, GadgetRunRequest } from '$lib/types';
+	import type { Environment, GadgetRunRequest } from '#lib/types/index.ts';
 
-	import Gadget from '$lib/icons/gadget.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import Close from '$lib/icons/close-small.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import Gadget from '#lib/icons/gadget.svelte';
+	import ChevronLeft from '#lib/icons/chevron-left.svelte';
+	import Close from '#lib/icons/close-small.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		treeConfig: WizardTreeConfig;

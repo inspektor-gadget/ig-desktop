@@ -4,27 +4,27 @@
 	import Log from './Gadget/Log.svelte';
 	import Input from './forms/Input.svelte';
 
-	import Play from '$lib/icons/play-small.svelte';
-	import Stop from '$lib/icons/stop-small.svelte';
-	import Adjustments from '$lib/icons/adjustments-small.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left-small.svelte';
-	import ChevronRight from '$lib/icons/chevron-right-small.svelte';
-	import FilterIcon from '$lib/icons/filter-small.svelte';
-	import { instances } from '$lib/shared/instances.svelte';
-	import { environments } from '$lib/shared/environments.svelte';
+	import Play from '#lib/icons/play-small.svelte';
+	import Stop from '#lib/icons/stop-small.svelte';
+	import Adjustments from '#lib/icons/adjustments-small.svelte';
+	import ChevronLeft from '#lib/icons/chevron-left-small.svelte';
+	import ChevronRight from '#lib/icons/chevron-right-small.svelte';
+	import FilterIcon from '#lib/icons/filter-small.svelte';
+	import { instances } from '#lib/shared/instances.svelte.ts';
+	import { environments } from '#lib/shared/environments.svelte.ts';
 	import { getContext, setContext, untrack } from 'svelte';
-	import type { ResultViewState, ResultViewChange } from '$lib/types/embedding';
-	import { preferences } from '$lib/shared/preferences.svelte';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
-	import type { ViewConfig } from '$lib/types/view-config';
-	import { resolveViewConfig } from '$lib/types/view-config';
-	import type { CellClickHandler, CellContextMenuHandler } from '$lib/types/cell-interaction';
+	import type { ResultViewState, ResultViewChange } from '#lib/types/embedding.ts';
+	import { preferences } from '#lib/shared/preferences.svelte.ts';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import { settingsDialog } from '#lib/stores/settings-dialog.svelte.ts';
+	import type { ViewConfig } from '#lib/types/view-config.ts';
+	import { resolveViewConfig } from '#lib/types/view-config.ts';
+	import type { CellClickHandler, CellContextMenuHandler } from '#lib/types/cell-interaction.ts';
 	import {
 		applyFieldAnnotationProviders,
 		applyDatasourceAnnotationProviders
-	} from '$lib/services/annotation-provider.service';
-	import { t } from '$lib/i18n/index.svelte';
+	} from '#lib/services/annotation-provider.service.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import FileCaptureStatus from './FileCaptureStatus.svelte';
 
 	let {

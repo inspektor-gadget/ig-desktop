@@ -8,7 +8,7 @@
  * - 'reset': Clear worker state
  */
 
-import { entryMatchesSearch } from '$lib/utils/search-match';
+import { entryMatchesSearch } from '#lib/utils/search-match.ts';
 
 export interface FilterRequest {
 	type: 'filter';

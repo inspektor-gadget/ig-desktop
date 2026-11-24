@@ -1,28 +1,28 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
-	import Table from '$lib/icons/table-column.svelte';
-	import Dots from '$lib/icons/dots-vertical.svelte';
+	import Table from '#lib/icons/table-column.svelte';
+	import Dots from '#lib/icons/dots-vertical.svelte';
 	import { getContext } from 'svelte';
-	import { environments } from '$lib/shared/environments.svelte';
+	import { environments } from '#lib/shared/environments.svelte.ts';
 	import { page } from '$app/state';
-	import { t } from '$lib/i18n/index.svelte';
-	import VirtualTableBody from '$lib/components/VirtualTable/VirtualTableBody.svelte';
-	import RawHtml from '$lib/components/RawHtml.svelte';
-	import type { TableHookRegistry } from '$lib/types/table-hooks';
-	import type { TableColumn, EnrichedRow, TableMenuController } from '$lib/types/table';
-	import type { GadgetContext } from '$lib/types';
-	import type { DatasourceField } from '$lib/types/charts';
+	import { t } from '#lib/i18n/index.svelte.ts';
+	import VirtualTableBody from '#lib/components/VirtualTable/VirtualTableBody.svelte';
+	import RawHtml from '#lib/components/RawHtml.svelte';
+	import type { TableHookRegistry } from '#lib/types/table-hooks.ts';
+	import type { TableColumn, EnrichedRow, TableMenuController } from '#lib/types/table.ts';
+	import type { GadgetContext } from '#lib/types/index.ts';
+	import type { DatasourceField } from '#lib/types/charts.ts';
 	import {
 		gadgetFieldToColumn,
 		wrapRowsForEnrichment,
 		getColumnAlignment
-	} from '$lib/utils/table-adapters';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import { entryMatchesSearch } from '$lib/utils/search-match';
-	import { datasourceTitle } from '$lib/utils/datasource';
-	import type { SearchableVisualizerProps } from '$lib/types/plugin-api';
-	import type { CellClickHandler, CellContextMenuHandler } from '$lib/types/cell-interaction';
-	import FilterWorker from '$lib/workers/filter.worker?worker&inline';
+	} from '#lib/utils/table-adapters.ts';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import { entryMatchesSearch } from '#lib/utils/search-match.ts';
+	import { datasourceTitle } from '#lib/utils/datasource.ts';
+	import type { SearchableVisualizerProps } from '#lib/types/plugin-api.ts';
+	import type { CellClickHandler, CellContextMenuHandler } from '#lib/types/cell-interaction.ts';
+	import FilterWorker from '#lib/workers/filter.worker.ts?worker&inline';
 
 	interface Props extends SearchableVisualizerProps {
 		/** Whether to show highlight matches even in filter mode */

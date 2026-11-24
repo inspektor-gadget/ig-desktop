@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { setContext } from 'svelte';
-	import { apiService, type RequestCommand } from '$lib/services/api.service.svelte';
+	import { apiService, type RequestCommand } from '#lib/services/api.service.svelte.ts';
 	import K8sDeployModal from '../K8sDeployModal.svelte';
 
 	interface Props {

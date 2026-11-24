@@ -4,7 +4,7 @@
  * Provides an annotation editor for gadget annotate parameters.
  */
 
-import type { PluginManifest } from '$lib/types/plugin-manifest';
+import type { PluginManifest } from '#lib/types/plugin-manifest.ts';
 
 export const manifest: PluginManifest = {
 	id: 'builtin:param-annotation',

@@ -1,15 +1,15 @@
 <script lang="ts">
 	import * as d3 from 'd3';
-	import Chart from '$lib/components/charts/Chart/Chart.svelte';
-	import Line from '$lib/components/charts/Chart/Line.svelte';
-	import Axis from '$lib/components/charts/Chart/Axis.svelte';
-	import Gradient from '$lib/components/charts/Chart/Gradient.svelte';
-	import Grid from '$lib/components/charts/Chart/Grid.svelte';
-	import Tooltip from '$lib/components/charts/Chart/Tooltip.svelte';
+	import Chart from '#lib/components/charts/Chart/Chart.svelte';
+	import Line from '#lib/components/charts/Chart/Line.svelte';
+	import Axis from '#lib/components/charts/Chart/Axis.svelte';
+	import Gradient from '#lib/components/charts/Chart/Gradient.svelte';
+	import Grid from '#lib/components/charts/Chart/Grid.svelte';
+	import Tooltip from '#lib/components/charts/Chart/Tooltip.svelte';
 	import BarSeries from './BarSeries.svelte';
-	import { getUniqueId } from '$lib/components/charts/Chart/utils';
-	import type { ChartSeriesConfig, ChartDimensions } from '$lib/types/charts';
-	import { t } from '$lib/i18n/index.svelte';
+	import { getUniqueId } from '#lib/components/charts/Chart/utils.ts';
+	import type { ChartSeriesConfig, ChartDimensions } from '#lib/types/charts.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	// Time range options
 	const timeRanges = [

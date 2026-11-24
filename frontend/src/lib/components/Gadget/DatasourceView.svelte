@@ -1,30 +1,30 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import type { ResultViewState } from '$lib/types/embedding';
+	import type { ResultViewState } from '#lib/types/embedding.ts';
 	import { SvelteSet } from 'svelte/reactivity';
-	import type { TableMenuController } from '$lib/types/table';
+	import type { TableMenuController } from '#lib/types/table.ts';
 	import SnapshotTimeline from './SnapshotTimeline.svelte';
-	import RawHtml from '$lib/components/RawHtml.svelte';
-	import Dots from '$lib/icons/dots-vertical.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import ChevronRight from '$lib/icons/chevron-right.svelte';
-	import ArrowRotateLeft from '$lib/icons/arrow-rotate-left.svelte';
-	import InfoIcon from '$lib/icons/info-small.svelte';
-	import { preferences } from '$lib/shared/preferences.svelte';
-	import { getArraySnapshots } from '$lib/handlers/gadget.handler.svelte';
-	import { clickOutside } from '$lib/utils/click-outside';
-	import { datasourceTitle } from '$lib/utils/datasource';
-	import type { Datasource } from '$lib/types/charts';
-	import type { EventRingBuffer } from '$lib/utils/ring-buffer';
-	import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
-	import { resolvePluginIcon } from '$lib/utils/plugin-icons';
-	import PluginHookRenderer from '$lib/components/PluginHookRenderer.svelte';
+	import RawHtml from '#lib/components/RawHtml.svelte';
+	import Dots from '#lib/icons/dots-vertical.svelte';
+	import ChevronLeft from '#lib/icons/chevron-left.svelte';
+	import ChevronRight from '#lib/icons/chevron-right.svelte';
+	import ArrowRotateLeft from '#lib/icons/arrow-rotate-left.svelte';
+	import InfoIcon from '#lib/icons/info-small.svelte';
+	import { preferences } from '#lib/shared/preferences.svelte.ts';
+	import { getArraySnapshots } from '#lib/handlers/gadget.handler.svelte.ts';
+	import { clickOutside } from '#lib/utils/click-outside.ts';
+	import { datasourceTitle } from '#lib/utils/datasource.ts';
+	import type { Datasource } from '#lib/types/charts.ts';
+	import type { EventRingBuffer } from '#lib/utils/ring-buffer.ts';
+	import { pluginRegistry } from '#lib/services/plugin-registry.service.svelte.ts';
+	import { resolvePluginIcon } from '#lib/utils/plugin-icons.ts';
+	import PluginHookRenderer from '#lib/components/PluginHookRenderer.svelte';
 	import type {
 		CellClickHandler,
 		CellContextMenuHandler,
 		CellInteractionEvent
-	} from '$lib/types/cell-interaction';
-	import { t } from '$lib/i18n/index.svelte';
+	} from '#lib/types/cell-interaction.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		ds: Datasource;

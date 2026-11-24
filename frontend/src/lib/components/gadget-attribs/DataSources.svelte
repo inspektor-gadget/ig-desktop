@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-	import CodeIcon from '$lib/icons/code-small.svelte';
-	import ChevronRight from '$lib/icons/chevron-right.svelte';
-	import Eye from '$lib/icons/fa/eye.svelte';
-	import EyeSlash from '$lib/icons/fa/eye-slash.svelte';
-	import SearchIcon from '$lib/icons/search-small.svelte';
-	import { preferences } from '$lib/shared/preferences.svelte.js';
-	import { configuration } from '$lib/stores/configuration.svelte.js';
-	import type { GadgetInfo, GadgetDatasource, GadgetDatasourceField } from '$lib/types';
-	import { t } from '$lib/i18n/index.svelte';
+	import CodeIcon from '#lib/icons/code-small.svelte';
+	import ChevronRight from '#lib/icons/chevron-right.svelte';
+	import Eye from '#lib/icons/fa/eye.svelte';
+	import EyeSlash from '#lib/icons/fa/eye-slash.svelte';
+	import SearchIcon from '#lib/icons/search-small.svelte';
+	import { preferences } from '#lib/shared/preferences.svelte.ts';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import type { GadgetInfo, GadgetDatasource, GadgetDatasourceField } from '#lib/types/index.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let { gadgetInfo }: { gadgetInfo: GadgetInfo } = $props();
 

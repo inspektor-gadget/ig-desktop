@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import ArtifactHub from '$lib/icons/artifacthub.svelte';
-	import Signed from '$lib/icons/signature-locked.svelte';
-	import Unsigned from '$lib/icons/signature-slash.svelte';
-	import Play from '$lib/icons/play-small.svelte';
-	import Star from '$lib/icons/star-sharp.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import Search from '$lib/icons/search-small.svelte';
+	import ArtifactHub from '#lib/icons/artifacthub.svelte';
+	import Signed from '#lib/icons/signature-locked.svelte';
+	import Unsigned from '#lib/icons/signature-slash.svelte';
+	import Play from '#lib/icons/play-small.svelte';
+	import Star from '#lib/icons/star-sharp.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import ChevronLeft from '#lib/icons/chevron-left.svelte';
+	import Search from '#lib/icons/search-small.svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { t } from '$lib/i18n/index.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface ArtifactHubPackage {
 		package_id: string;
@@ -116,7 +116,7 @@
 				{#each results as entry (`${entry.repository.name}/${entry.normalized_name}`)}
 					<!-- eslint-disable svelte/no-navigation-without-resolve -- route path is resolved via resolve(); the optional env query string is appended separately -->
 					<a
-						href={`${resolve(`/browse/artifacthub/${entry.repository.name}/${entry.normalized_name}/${entry.version}`)}${environmentID ? `?env=${environmentID}` : ''}`}
+						href={`${resolve(`browse/artifacthub/${entry.repository.name}/${entry.normalized_name}/${entry.version}`)}${environmentID ? `?env=${environmentID}` : ''}`}
 						class="group relative flex flex-col justify-between gap-3 rounded-ig-lg border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 p-5 shadow-lg shadow-gray-200/50 dark:shadow-gray-950/50 transition-all hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/10"
 					>
 						{#if entry.official}

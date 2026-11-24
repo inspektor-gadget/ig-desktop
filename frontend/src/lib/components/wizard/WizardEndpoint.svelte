@@ -10,12 +10,12 @@
 		type WizardTargetParams,
 		type WizardTreeConfig
 	} from './wizard-types';
-	import type { Environment, GadgetRunRequest } from '$lib/types';
+	import type { Environment, GadgetRunRequest } from '#lib/types/index.ts';
 
-	import PlaySmall from '$lib/icons/fa/play.svelte';
-	import CogSmall from '$lib/icons/cog-small.svelte';
-	import ChevronDown from '$lib/icons/chevron-down.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import PlaySmall from '#lib/icons/fa/play.svelte';
+	import CogSmall from '#lib/icons/cog-small.svelte';
+	import ChevronDown from '#lib/icons/chevron-down.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 	// Note: Breadcrumbs and back navigation are handled by parent GadgetWizard
 
 	interface Props {
@@ -150,7 +150,7 @@
 			searchParams.set('instanceName', spec.suggestedInstanceName);
 		}
 
-		goto(resolve(`/gadgets/run/${fullImage}?${searchParams.toString()}`));
+		goto(resolve(`gadgets/run/${fullImage}?${searchParams.toString()}`));
 	}
 </script>
 

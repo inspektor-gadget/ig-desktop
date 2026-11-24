@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { RangeSetting } from '$lib/config.types';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { RangeSetting } from '#lib/config.types.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		setting: RangeSetting;

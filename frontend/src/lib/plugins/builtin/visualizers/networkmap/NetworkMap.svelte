@@ -6,11 +6,11 @@
 		updateActivityStates,
 		graphStateToArrays,
 		createEmptyGraphState
-	} from '$lib/utils/networkMapConfig';
-	import type { VisualizerPluginProps } from '$lib/types/plugin-api';
-	import type { NetworkGraphState, NetworkMapOptions } from '$lib/types/networkmap';
-	import { EDGE_ANIMATION_DURATION, DEFAULT_EPHEMERAL_PORT_THRESHOLD } from '$lib/types/networkmap';
-	import { t } from '$lib/i18n/index.svelte';
+	} from '#lib/utils/networkMapConfig.ts';
+	import type { VisualizerPluginProps } from '#lib/types/plugin-api.ts';
+	import type { NetworkGraphState, NetworkMapOptions } from '#lib/types/networkmap.ts';
+	import { EDGE_ANIMATION_DURATION, DEFAULT_EPHEMERAL_PORT_THRESHOLD } from '#lib/types/networkmap.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	type Props = VisualizerPluginProps;
 

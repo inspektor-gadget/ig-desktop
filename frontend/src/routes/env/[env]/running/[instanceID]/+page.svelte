@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Gadget from '$lib/components/Gadget.svelte';
+	import Gadget from '#lib/components/Gadget.svelte';
 	import { page } from '$app/state';
 </script>
 

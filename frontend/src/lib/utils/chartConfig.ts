@@ -8,7 +8,7 @@ import type {
 	TimestampConfig,
 	HistogramConfig,
 	CounterMode
-} from '$lib/types/charts';
+} from '#lib/types/charts.ts';
 
 // Grafana-style classic palette for auto-generated series
 // Based on Grafana's createVisualizationColors.ts

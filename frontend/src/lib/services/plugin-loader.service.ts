@@ -7,7 +7,7 @@
 
 import { apiService, type DiscoveredPlugin } from './api.service.svelte';
 import { pluginRegistry } from './plugin-registry.service.svelte';
-import { features } from '$lib/config/app-mode';
+import { features } from '#lib/config/app-mode.ts';
 
 let initialized = false;
 let localPluginsDir = '';

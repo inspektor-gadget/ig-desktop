@@ -1,19 +1,19 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import type { GadgetContext } from '$lib/types/context';
+	import type { GadgetContext } from '#lib/types/context.ts';
 	import HistogramBarChart from './HistogramBarChart.svelte';
 	import HistogramHeatmap from './HistogramHeatmap.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 	import {
 		extractHistogramConfig,
 		extractGroupableFields,
 		aggregateHistogramsByGroup,
 		buildHeatmapData,
 		DEFAULT_GROUP_FIELDS
-	} from '$lib/utils/histogramConfig';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import type { VisualizerPluginProps } from '$lib/types/plugin-api';
-	import type { HistogramSnapshot } from '$lib/types/histogram';
+	} from '#lib/utils/histogramConfig.ts';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import type { VisualizerPluginProps } from '#lib/types/plugin-api.ts';
+	import type { HistogramSnapshot } from '#lib/types/histogram.ts';
 
 	type ViewMode = 'heatmap' | 'barchart';
 

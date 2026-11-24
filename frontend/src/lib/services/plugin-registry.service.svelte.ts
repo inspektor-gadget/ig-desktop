@@ -13,7 +13,7 @@ import type {
 	PluginStatus,
 	RegisteredPlugin,
 	VisualizerComponent
-} from '$lib/types/plugin-system';
+} from '#lib/types/plugin-system.ts';
 import type {
 	PluginManifest,
 	VisualizerConditions,
@@ -22,12 +22,12 @@ import type {
 	InspectorTabCapability,
 	PluginHookDefinition,
 	RouteCapability
-} from '$lib/types/plugin-manifest';
-import { createRouteMatcher, type RouteMatcher } from '$lib/utils/route-matcher';
-import type { DataProcessorExports } from '$lib/types/plugin-api';
-import type { Datasource } from '$lib/types/charts';
-import type { GadgetParam } from '$lib/types/index';
-import { isVisualizerExcluded } from '$lib/utils/visualizerConfig';
+} from '#lib/types/plugin-manifest.ts';
+import { createRouteMatcher, type RouteMatcher } from '#lib/utils/route-matcher.ts';
+import type { DataProcessorExports } from '#lib/types/plugin-api.ts';
+import type { Datasource } from '#lib/types/charts.ts';
+import type { GadgetParam } from '#lib/types/index.ts';
+import { isVisualizerExcluded } from '#lib/utils/visualizerConfig.ts';
 import { pluginService } from './plugin.service';
 import { pluginCache, type CachedPlugin } from './plugin-cache.service';
 
@@ -938,12 +938,12 @@ class PluginRegistry {
 	 */
 	getDataProcessorsForStage(stage: 'pre-buffer' | 'post-buffer'): Array<
 		RegisteredPlugin & {
-			dataProcessor: import('$lib/types/plugin-manifest').DataProcessorCapability;
+			dataProcessor: import('#lib/types/plugin-manifest.ts').DataProcessorCapability;
 		}
 	> {
 		const result: Array<
 			RegisteredPlugin & {
-				dataProcessor: import('$lib/types/plugin-manifest').DataProcessorCapability;
+				dataProcessor: import('#lib/types/plugin-manifest.ts').DataProcessorCapability;
 			}
 		> = [];
 

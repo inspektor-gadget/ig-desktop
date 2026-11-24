@@ -45,6 +45,6 @@ jobs:
           build-platform: ${{ matrix.build.platform }}
           build-tags: "withoutebpf"
           package: true
-          go-version: '1.25'
+          go-version: '1.26.11'
           node-version: '24'
           wails-build-webview2: "embed"

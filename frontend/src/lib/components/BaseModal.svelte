@@ -37,7 +37,7 @@
 		children?: Snippet;
 	}
 
-	import { t } from '$lib/i18n/index.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
 		open = $bindable(false),

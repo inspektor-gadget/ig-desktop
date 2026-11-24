@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ArraySnapshot } from '$lib/handlers/gadget.handler.svelte';
+	import type { ArraySnapshot } from '#lib/handlers/gadget.handler.svelte.ts';
 
 	interface Props {
 		snapshots: ArraySnapshot[];

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { openExternalURL } from '$lib/utils/external-links';
+	import { openExternalURL } from '#lib/utils/external-links.ts';
 	import BaseModal from './BaseModal.svelte';
 	import Button from './Button.svelte';
-	import { apiService, type CheckForUpdatesResponse } from '$lib/services/api.service.svelte';
-	import { t } from '$lib/i18n/index.svelte';
-	import infoIcon from '$lib/icons/info-circle.svelte';
+	import { apiService, type CheckForUpdatesResponse } from '#lib/services/api.service.svelte.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
+	import infoIcon from '#lib/icons/info-circle.svelte';
 
 	interface Props {
 		open?: boolean;

@@ -1,5 +1,5 @@
-import type { Environment } from '$lib/types';
-import { t } from '$lib/i18n/index.svelte';
+import type { Environment } from '#lib/types/index.ts';
+import { t } from '#lib/i18n/index.svelte.ts';
 
 /**
  * State for tracking the currently viewed environment and its connection status.

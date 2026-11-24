@@ -1,5 +1,5 @@
-import { deployments } from '$lib/shared/deployments.svelte';
-import type { DeploymentResourceConflict } from '$lib/types';
+import { deployments } from '#lib/shared/deployments.svelte.ts';
+import type { DeploymentResourceConflict } from '#lib/types/index.ts';
 
 interface DeploymentEventData {
 	deploymentId?: string;

@@ -4,9 +4,9 @@
 	import { untrack } from 'svelte';
 	import AddressNode from './AddressNode.svelte';
 	import NamespaceGroupNode from './NamespaceGroupNode.svelte';
-	import type { NetworkNode, NetworkEdge, NetworkNamespaceGroupNode } from '$lib/types/networkmap';
-	import { layoutNetworkMap, networkMapTopologyKey } from '$lib/utils/networkMapLayout';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { NetworkNode, NetworkEdge, NetworkNamespaceGroupNode } from '#lib/types/networkmap.ts';
+	import { layoutNetworkMap, networkMapTopologyKey } from '#lib/utils/networkMapLayout.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		nodes: NetworkNode[];

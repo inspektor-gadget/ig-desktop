@@ -5,7 +5,7 @@
  * interactive graph with nodes and edges.
  */
 
-import type { PluginManifest } from '$lib/types/plugin-manifest';
+import type { PluginManifest } from '#lib/types/plugin-manifest.ts';
 
 const icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 8v4m-4.5 3.5L10 12m4 0l2.5 3.5"/></svg>`;
 

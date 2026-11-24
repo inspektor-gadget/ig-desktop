@@ -5,7 +5,7 @@
  * and plugins, ensuring consistent data exchange with minimal performance overhead.
  */
 
-import type { EventRingBuffer } from '$lib/utils/ring-buffer';
+import type { EventRingBuffer } from '#lib/utils/ring-buffer.ts';
 import type { Datasource } from './charts';
 import type { GadgetInfo, GadgetParam, ParamConfig } from './index';
 import type { PluginCapabilities } from './plugin-system';

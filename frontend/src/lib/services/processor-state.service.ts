@@ -5,10 +5,10 @@
  * State persists within a single gadget run and is cleaned up when the gadget stops.
  */
 
-import type { Datasource } from '$lib/types/charts';
-import type { GadgetInfo } from '$lib/types';
-import type { PluginCapabilities } from '$lib/types/plugin-system';
-import type { DataProcessorContext } from '$lib/types/plugin-api';
+import type { Datasource } from '#lib/types/charts.ts';
+import type { GadgetInfo } from '#lib/types/index.ts';
+import type { PluginCapabilities } from '#lib/types/plugin-system.ts';
+import type { DataProcessorContext } from '#lib/types/plugin-api.ts';
 
 /**
  * State storage structure: instanceID -> processorID -> key -> value

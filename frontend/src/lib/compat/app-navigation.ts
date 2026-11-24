@@ -4,7 +4,7 @@
  * In library mode, the host app provides its own navigation handler.
  */
 
-import { overrideStack } from '$lib/utils/override-stack';
+import { overrideStack } from '#lib/utils/override-stack.ts';
 
 const handlers = overrideStack<(url: string) => void>();
 
@@ -13,8 +13,8 @@ export function setNavigationHandler(handler: (url: string) => void): () => void
 	return handlers.push(handler);
 }
 
-export function goto(url: string): void {
+export async function goto(url: string | URL): Promise<void> {
 	const navigate = handlers.current;
-	if (navigate) navigate(url);
+	if (navigate) navigate(url.toString());
 	else console.warn('Navigation handler not set. Call setNavigationHandler() first.');
 }

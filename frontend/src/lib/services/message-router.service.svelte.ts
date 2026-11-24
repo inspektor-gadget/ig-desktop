@@ -1,4 +1,4 @@
-import { handleRequestResponse } from '$lib/handlers/request.handler';
+import { handleRequestResponse } from '#lib/handlers/request.handler.ts';
 import {
 	handleGadgetInfo,
 	handleGadgetEvent,
@@ -6,16 +6,16 @@ import {
 	handleGadgetQuit,
 	handleGadgetArrayData,
 	handleGadgetFileOutput
-} from '$lib/handlers/gadget.handler.svelte';
+} from '#lib/handlers/gadget.handler.svelte.ts';
 import {
 	handleEnvironmentCreate,
 	handleEnvironmentDelete
-} from '$lib/handlers/environment.handler';
+} from '#lib/handlers/environment.handler.ts';
 import {
 	handleDeploymentProgress,
 	handleDeploymentComplete,
 	handleDeploymentError
-} from '$lib/handlers/deployment.handler';
+} from '#lib/handlers/deployment.handler.ts';
 
 /**
  * Message router that dispatches incoming WebSocket messages to appropriate handlers.

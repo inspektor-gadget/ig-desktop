@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import Input from '$lib/components/forms/Input.svelte';
-	import Select from '$lib/components/forms/Select.svelte';
-	import Toggle from '$lib/components/forms/Toggle.svelte';
-	import Trash from '$lib/icons/trash.svelte';
-	import Plus from '$lib/icons/plus.svelte';
-	import Edit from '$lib/icons/pencil.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import Input from '#lib/components/forms/Input.svelte';
+	import Select from '#lib/components/forms/Select.svelte';
+	import Toggle from '#lib/components/forms/Toggle.svelte';
+	import Trash from '#lib/icons/trash.svelte';
+	import Plus from '#lib/icons/plus.svelte';
+	import Edit from '#lib/icons/pencil.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	/**
 	 * Configuration for a single OpenTelemetry exporter

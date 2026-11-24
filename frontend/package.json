@@ -4,6 +4,13 @@
 	"version": "0.0.1",
 	"type": "module",
 	"main": "dist-lib/ig-frontend.js",
+	"engines": {
+		"node": ">=22.17"
+	},
+	"imports": {
+		"#lib": "./src/lib/index.ts",
+		"#lib/*": "./src/lib/*"
+	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -12,10 +19,10 @@
 		"build:demo:subdir": "VITE_APP_MODE=demo VITE_BASE_PATH=/igd-demo vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"test": "node --test 'src/lib/utils/**/*.test.ts'",
+		"check": "svelte-kit sync && svelte-check --config ./vite.config.ts --tsconfig ./tsconfig.json",
+		"test": "node --test 'src/lib/utils/**/*.test.ts' 'src/lib/compat/*.test.ts'",
 		"test:e2e": "playwright test",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"check:watch": "svelte-kit sync && svelte-check --config ./vite.config.ts --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"build:dev": "vite build --minify false --mode development",
@@ -26,9 +33,9 @@
 		"@eslint/compat": "^2.0.3",
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.62.1",
-		"@sveltejs/adapter-auto": "^7.0.0",
-		"@sveltejs/adapter-static": "^3.0.10",
-		"@sveltejs/kit": "2.70.2",
+		"@sveltejs/adapter-auto": "^8.0.1",
+		"@sveltejs/adapter-static": "^4.0.1",
+		"@sveltejs/kit": "3.1.1",
 		"@sveltejs/vite-plugin-svelte": "^7.3.0",
 		"@tailwindcss/container-queries": "^0.1.1",
 		"@tailwindcss/forms": "^0.5.11",
@@ -45,7 +52,7 @@
 		"prettier": "^3.7.4",
 		"prettier-plugin-svelte": "^4.1.1",
 		"prettier-plugin-tailwindcss": "^0.8.0",
-		"svelte": "^5.57.0",
+		"svelte": "^5.57.3",
 		"svelte-check": "^4.7.4",
 		"tailwindcss": "^4.3",
 		"typescript": "^6.0.3",
@@ -66,6 +73,10 @@
 		"posthog-js": "^1.409.4"
 	},
 	"overrides": {
-		"cookie": "1.1.1"
+		"dompurify": "$dompurify",
+		"minimatch": "^11.0.5",
+		"@tailwindcss/typography": {
+			"postcss-selector-parser": "^6.1.5"
+		}
 	}
 }

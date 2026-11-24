@@ -1,24 +1,24 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import type { ApiContext } from '$lib/types/context';
+	import type { ApiContext } from '#lib/types/context.ts';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import Panel from '$lib/components/Panel.svelte';
-	import Params from '$lib/components/Params.svelte';
-	import K8sDeployModal from '$lib/components/K8sDeployModal.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import { deployments } from '$lib/shared/deployments.svelte';
-	import Plus from '$lib/icons/circle-plus.svelte';
-	import Server from '$lib/icons/server-small.svelte';
-	import Refresh from '$lib/icons/refresh-small.svelte';
-	import Info from '$lib/icons/info.svelte';
-	import Trash from '$lib/icons/fa/trash.svelte';
-	import Code from '$lib/icons/code.svelte';
-	import Adjustments from '$lib/icons/adjustments.svelte';
-	import type { IGDeploymentStatus, RuntimeInfo, GadgetParam } from '$lib/types';
-	import Input from '$lib/components/forms/Input.svelte';
-	import Select from '$lib/components/forms/Select.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import Panel from '#lib/components/Panel.svelte';
+	import Params from '#lib/components/Params.svelte';
+	import K8sDeployModal from '#lib/components/K8sDeployModal.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import { deployments } from '#lib/shared/deployments.svelte.ts';
+	import Plus from '#lib/icons/circle-plus.svelte';
+	import Server from '#lib/icons/server-small.svelte';
+	import Refresh from '#lib/icons/refresh-small.svelte';
+	import Info from '#lib/icons/info.svelte';
+	import Trash from '#lib/icons/fa/trash.svelte';
+	import Code from '#lib/icons/code.svelte';
+	import Adjustments from '#lib/icons/adjustments.svelte';
+	import type { IGDeploymentStatus, RuntimeInfo, GadgetParam } from '#lib/types/index.ts';
+	import Input from '#lib/components/forms/Input.svelte';
+	import Select from '#lib/components/forms/Select.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	const api = getContext<ApiContext>('api');
 
@@ -134,7 +134,7 @@
 		});
 		// TODO: Feedback
 		console.log('env', res);
-		goto(resolve(`/env/${res.id}`));
+		goto(resolve(`env/${res.id}`));
 	}
 
 	let isRedeploy = $state(false);

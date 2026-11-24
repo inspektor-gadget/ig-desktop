@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { setContext, type Snippet } from 'svelte';
-	import type { ChartDimensions } from '$lib/types/charts';
+	import type { ChartDimensions } from '#lib/types/charts.ts';
 
 	interface Props {
 		dimensions: ChartDimensions;

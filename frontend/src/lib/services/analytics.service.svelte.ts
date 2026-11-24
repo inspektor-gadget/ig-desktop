@@ -4,8 +4,8 @@
  */
 
 import posthog from 'posthog-js';
-import { browser } from '$app/environment';
-import { configuration } from '$lib/stores/configuration.svelte';
+import { browser } from '$app/env';
+import { configuration } from '#lib/stores/configuration.svelte.ts';
 
 class AnalyticsService {
 	private initialized = false;

@@ -1,5 +1,7 @@
 {
-	"extends": "./.svelte-kit/tsconfig.json",
+	"extends": "$app/tsconfig",
+	"include": ["src", "tests", "*.js", "*.ts"],
+	"exclude": ["src/service-worker"],
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
@@ -12,12 +14,7 @@
 		"moduleResolution": "bundler",
 		// Allows relative ".ts" import specifiers (e.g. in dns/ correlator tests),
 		// which Node's built-in test runner requires for ESM resolution. Safe with
-		// noEmit (inherited from .svelte-kit/tsconfig.json).
+		// noEmit (inherited from $app/tsconfig).
 		"allowImportingTsExtensions": true
 	}
-	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
-	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
-	//
-	// If you want to overwrite includes/excludes, make sure to copy over the relevant includes/excludes
-	// from the referenced tsconfig.json - TypeScript does not merge them in
 }

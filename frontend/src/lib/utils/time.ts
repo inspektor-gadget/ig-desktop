@@ -1,4 +1,4 @@
-import { t, getLanguage } from '$lib/i18n/index.svelte';
+import { t, getLanguage } from '#lib/i18n/index.svelte.ts';
 
 /**
  * Formats a timestamp as a relative time string (e.g., "2 hours ago")

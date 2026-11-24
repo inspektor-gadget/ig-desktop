@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { mount, unmount, type Component } from 'svelte';
-	import type { CompiledPlugin } from '$lib/types/plugin';
-	import type { Datasource } from '$lib/types/charts';
-	import type { EventRingBuffer } from '$lib/utils/ring-buffer';
+	import type { CompiledPlugin } from '#lib/types/plugin.ts';
+	import type { Datasource } from '#lib/types/charts.ts';
+	import type { EventRingBuffer } from '#lib/utils/ring-buffer.ts';
 
 	interface Props {
 		plugin: CompiledPlugin;

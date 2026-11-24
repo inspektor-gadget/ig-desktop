@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
-	import Bug from '$lib/icons/bug.svelte';
-	import Filter from '$lib/icons/filter-small.svelte';
-	import Trash from '$lib/icons/trash-small.svelte';
-	import { preferences } from '$lib/shared/preferences.svelte';
-	import { instances } from '$lib/shared/instances.svelte';
-	import type { LogEntry } from '$lib/types';
-	import { t } from '$lib/i18n/index.svelte';
+	import Bug from '#lib/icons/bug.svelte';
+	import Filter from '#lib/icons/filter-small.svelte';
+	import Trash from '#lib/icons/trash-small.svelte';
+	import { preferences } from '#lib/shared/preferences.svelte.ts';
+	import { instances } from '#lib/shared/instances.svelte.ts';
+	import type { LogEntry } from '#lib/types/index.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let { log, instanceID }: { log: LogEntry[]; instanceID?: string } = $props();
 

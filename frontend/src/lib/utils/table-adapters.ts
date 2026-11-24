@@ -7,9 +7,9 @@
  * - Access row values with enrichment support
  */
 
-import type { TableColumn, EnrichedRow } from '$lib/types/table';
-import type { Environment } from '$lib/types';
-import type { DatasourceField } from '$lib/types/charts';
+import type { TableColumn, EnrichedRow } from '#lib/types/table.ts';
+import type { Environment } from '#lib/types/index.ts';
+import type { DatasourceField } from '#lib/types/charts.ts';
 
 /**
  * Converts a gadget field to a TableColumn definition.

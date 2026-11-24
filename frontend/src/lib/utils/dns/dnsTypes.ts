@@ -1,7 +1,7 @@
 /**
  * Pure type definitions for DNS transaction correlation.
  *
- * Kept dependency-free (no `$lib` imports) so this module — and the
+ * Kept dependency-free (no `#lib/index.ts` imports) so this module — and the
  * correlator that consumes it — can run directly under Node's built-in
  * test runner without a SvelteKit/bundler resolution step.
  */

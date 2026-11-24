@@ -4,7 +4,7 @@
  * navigator.clipboard in browser mode.
  */
 
-import { environment } from '$lib/services/environment.service.svelte';
+import { environment } from '#lib/services/environment.service.svelte.ts';
 
 /**
  * Copies text to the clipboard.

@@ -1,29 +1,29 @@
 <script lang="ts">
-	import { openExternalURL } from '$lib/utils/external-links';
-	import { getErrorMessage } from '$lib/utils/errors';
-	import { environments } from '$lib/shared/environments.svelte.js';
+	import { openExternalURL } from '#lib/utils/external-links.ts';
+	import { getErrorMessage } from '#lib/utils/errors.ts';
+	import { environments } from '#lib/shared/environments.svelte.ts';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import type { GadgetRunRequest } from '$lib/types';
-	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
-	import { getEnvPref } from '$lib/utils/env-preferences';
+	import type { GadgetRunRequest } from '#lib/types/index.ts';
+	import { currentEnvironment } from '#lib/shared/current-environment.svelte.ts';
+	import { getEnvPref } from '#lib/utils/env-preferences.ts';
 	import { getContext, onMount } from 'svelte';
-	import type { ApiContext } from '$lib/types/context';
-	import { features } from '$lib/config/app-mode';
-	import { toastStore } from '$lib/stores/toast.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { ApiContext } from '#lib/types/context.ts';
+	import { features } from '#lib/config/app-mode.ts';
+	import { toastStore } from '#lib/stores/toast.svelte.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
-	import Panel from '$lib/components/Panel.svelte';
-	import Server from '$lib/icons/fa/server.svelte';
-	import History from '$lib/icons/fa/clock-rotate-left.svelte';
-	import Grid from '$lib/icons/grid.svelte';
-	import GridSmall from '$lib/icons/grid-small.svelte';
-	import ChevronRight from '$lib/icons/chevron-right.svelte';
-	import ArtifactHub from '$lib/icons/artifacthub-logo.svelte';
-	import Book from '$lib/icons/book.svelte';
-	import BookSmall from '$lib/icons/book-small.svelte';
-	import Link from '$lib/icons/link.svelte';
-	import CirclePlus from '$lib/icons/circle-plus.svelte';
+	import Panel from '#lib/components/Panel.svelte';
+	import Server from '#lib/icons/fa/server-icon.svelte';
+	import History from '#lib/icons/fa/clock-rotate-left.svelte';
+	import Grid from '#lib/icons/grid.svelte';
+	import GridSmall from '#lib/icons/grid-small.svelte';
+	import ChevronRight from '#lib/icons/chevron-right.svelte';
+	import ArtifactHub from '#lib/icons/artifacthub-logo.svelte';
+	import Book from '#lib/icons/book.svelte';
+	import BookSmall from '#lib/icons/book-small.svelte';
+	import Link from '#lib/icons/link.svelte';
+	import CirclePlus from '#lib/icons/circle-plus.svelte';
 
 	let { title }: { title?: string } = $props();
 
@@ -115,7 +115,7 @@
 					environmentID: envId
 				}
 			});
-			goto(resolve(`/env/${envId}/running/${res.id}`));
+			goto(resolve(`env/${envId}/running/${res.id}`));
 		} catch (err) {
 			const errorMessage = getErrorMessage(err);
 			toastStore.error(t('Failed to run gadget: {{errorMessage}}', { errorMessage }), 7000, {
@@ -294,7 +294,7 @@
 						<div class="flex flex-col gap-2">
 							{#each Object.values(environments).slice(0, 4) as env (env.id)}
 								<button
-									onclick={() => goto(resolve(`/env/${env.id}`))}
+									onclick={() => goto(resolve(`env/${env.id}`))}
 									class="group/item flex items-center justify-between rounded-ig-md border border-gray-200 dark:border-gray-800 bg-gray-100/50 dark:bg-gray-900/50 px-4 py-3 text-left transition-all hover:border-blue-500/50 hover:bg-gray-100 dark:hover:bg-gray-900"
 								>
 									<div class="flex flex-col gap-1">

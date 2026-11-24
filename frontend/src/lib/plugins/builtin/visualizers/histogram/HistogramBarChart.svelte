@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
 	import * as d3 from 'd3';
-	import { clickOutside } from '$lib/utils/click-outside';
-	import { formatBucketLabel, getGroupKeys } from '$lib/utils/histogramConfig';
-	import ChevronDown from '$lib/icons/chevron-down.svelte';
-	import type { AggregatedHistogram, HistogramFieldConfig } from '$lib/types/histogram';
-	import type { GroupableField } from '$lib/types/flamegraph';
-	import { t } from '$lib/i18n/index.svelte';
+	import { clickOutside } from '#lib/utils/click-outside.ts';
+	import { formatBucketLabel, getGroupKeys } from '#lib/utils/histogramConfig.ts';
+	import ChevronDown from '#lib/icons/chevron-down.svelte';
+	import type { AggregatedHistogram, HistogramFieldConfig } from '#lib/types/histogram.ts';
+	import type { GroupableField } from '#lib/types/flamegraph.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		histograms: Map<string, AggregatedHistogram>;

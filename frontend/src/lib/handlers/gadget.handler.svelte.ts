@@ -1,7 +1,7 @@
-import { instances } from '$lib/shared/instances.svelte';
-import { currentSessionStore } from '$lib/stores/current-session.svelte';
-import { configuration } from '$lib/stores/configuration.svelte';
-import { EventRingBuffer } from '$lib/utils/ring-buffer';
+import { instances } from '#lib/shared/instances.svelte.ts';
+import { currentSessionStore } from '#lib/stores/current-session.svelte.ts';
+import { configuration } from '#lib/stores/configuration.svelte.ts';
+import { EventRingBuffer } from '#lib/utils/ring-buffer.ts';
 import type {
 	GadgetInfoMessage,
 	GadgetEventMessage,
@@ -9,21 +9,21 @@ import type {
 	GadgetQuitMessage,
 	GadgetArrayDataMessage,
 	GadgetFileOutputMessage
-} from '$lib/types';
-import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
+} from '#lib/types/index.ts';
+import { pluginRegistry } from '#lib/services/plugin-registry.service.svelte.ts';
 import {
 	createProcessorContext,
 	drainSyntheticEvents,
 	cleanupInstanceState,
 	initProcessorState
-} from '$lib/services/processor-state.service';
-import { PLUGIN_CAPABILITIES } from '$lib/types/plugin-system';
-import type { Datasource, DatasourceField } from '$lib/types/charts';
-import type { GadgetDatasource } from '$lib/types';
-import { toastStore } from '$lib/stores/toast.svelte';
-import { copyToClipboard } from '$lib/utils/clipboard';
-import { t } from '$lib/i18n/index.svelte';
-import { fileOutputNotificationsEnabled } from '$lib/shared/file-output.svelte';
+} from '#lib/services/processor-state.service.ts';
+import { PLUGIN_CAPABILITIES } from '#lib/types/plugin-system.ts';
+import type { Datasource, DatasourceField } from '#lib/types/charts.ts';
+import type { GadgetDatasource } from '#lib/types/index.ts';
+import { toastStore } from '#lib/stores/toast.svelte.ts';
+import { copyToClipboard } from '#lib/utils/clipboard.ts';
+import { t } from '#lib/i18n/index.svelte.ts';
+import { fileOutputNotificationsEnabled } from '#lib/shared/file-output.svelte.ts';
 
 /**
  * Convert GadgetDatasource to Datasource type for processor context.

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { getContext, untrack } from 'svelte';
-	import type { ApiContext } from '$lib/types/context';
-	import Title from '$lib/components/params/Title.svelte';
-	import AutocompleteInput from '$lib/components/forms/AutocompleteInput.svelte';
-	import { getK8sRecents } from '$lib/utils/env-preferences';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { ApiContext } from '#lib/types/context.ts';
+	import Title from '#lib/components/params/Title.svelte';
+	import AutocompleteInput from '#lib/components/forms/AutocompleteInput.svelte';
+	import { getK8sRecents } from '#lib/utils/env-preferences.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Param {
 		key: string;

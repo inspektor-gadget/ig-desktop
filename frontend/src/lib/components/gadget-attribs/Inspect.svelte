@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import type { GadgetContext } from '$lib/types';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { GadgetContext } from '#lib/types/index.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	const gadget = getContext<GadgetContext>('gadget');
 

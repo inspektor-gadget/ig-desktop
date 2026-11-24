@@ -15,8 +15,8 @@ import type {
 	PluginCompileRequest,
 	PluginCompileResponse,
 	CompiledFile
-} from '$lib/types/plugin';
-import { getPluginEntrypoint, validatePluginBundle } from '$lib/types/plugin';
+} from '#lib/types/plugin.ts';
+import { getPluginEntrypoint, validatePluginBundle } from '#lib/types/plugin.ts';
 // The plugin runtime shim must compose Svelte's internal client APIs to execute
 // JIT-compiled plugin modules; no public API exposes these. Disables are scoped
 // to these two imports only.
@@ -27,7 +27,7 @@ import * as svelteInternalClient from 'svelte/internal/client';
 import * as svelteInternalDiscloseVersion from 'svelte/internal/disclose-version';
 /* eslint-enable svelte/no-svelte-internal */
 import * as svelte from 'svelte';
-import CompilerWorker from '$lib/workers/svelte-compiler.worker?worker';
+import CompilerWorker from '#lib/workers/svelte-compiler.worker.ts?worker';
 
 const svelteRuntime = {
 	...svelteInternalClient,

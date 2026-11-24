@@ -4,7 +4,7 @@
  * Provides a sort field selector for gadget sort parameters.
  */
 
-import type { PluginManifest } from '$lib/types/plugin-manifest';
+import type { PluginManifest } from '#lib/types/plugin-manifest.ts';
 
 export const manifest: PluginManifest = {
 	id: 'builtin:param-sort',

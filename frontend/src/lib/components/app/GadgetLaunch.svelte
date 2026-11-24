@@ -1,24 +1,24 @@
 <script lang="ts">
 	import { getContext, setContext, onMount, onDestroy, untrack } from 'svelte';
-	import { getErrorMessage } from '$lib/utils/errors';
-	import type { ApiContext } from '$lib/types/context';
-	import Params from '$lib/components/Params.svelte';
-	import Panel from '$lib/components/Panel.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import Play from '$lib/icons/play.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import ChevronRight from '$lib/icons/chevron-right.svelte';
-	import Copy from '$lib/icons/copy.svelte';
-	import Cog from '$lib/icons/cog.svelte';
-	import Code from '$lib/icons/code.svelte';
-	import File from '$lib/icons/file.svelte';
-	import Server from '$lib/icons/server.svelte';
-	import { environments } from '$lib/shared/environments.svelte';
+	import { getErrorMessage } from '#lib/utils/errors.ts';
+	import type { ApiContext } from '#lib/types/context.ts';
+	import Params from '#lib/components/Params.svelte';
+	import Panel from '#lib/components/Panel.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import Play from '#lib/icons/play.svelte';
+	import ChevronLeft from '#lib/icons/chevron-left.svelte';
+	import ChevronRight from '#lib/icons/chevron-right.svelte';
+	import Copy from '#lib/icons/copy.svelte';
+	import Cog from '#lib/icons/cog.svelte';
+	import Code from '#lib/icons/code.svelte';
+	import File from '#lib/icons/file.svelte';
+	import Server from '#lib/icons/server-icon.svelte';
+	import { environments } from '#lib/shared/environments.svelte.ts';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import Title from '$lib/components/params/Title.svelte';
-	import Select from '$lib/components/forms/Select.svelte';
+	import Title from '#lib/components/params/Title.svelte';
+	import Select from '#lib/components/forms/Select.svelte';
 	import type {
 		FileOutputCapability,
 		FileOutputFormat,
@@ -26,21 +26,21 @@
 		GadgetInfo,
 		GadgetRunRequest,
 		SessionItem
-	} from '$lib/types';
-	import type { GadgetLaunchPreset, EmbeddableAppProps } from '$lib/types/embedding';
-	import { copyToClipboard } from '$lib/utils/clipboard';
+	} from '#lib/types/index.ts';
+	import type { GadgetLaunchPreset, EmbeddableAppProps } from '#lib/types/embedding.ts';
+	import { copyToClipboard } from '#lib/utils/clipboard.ts';
 	import {
 		addGadgetToHistory,
 		saveGadgetURLRecent,
 		saveK8sRecent
-	} from '$lib/utils/env-preferences';
-	import { toastStore } from '$lib/stores/toast.svelte';
-	import { analyticsService } from '$lib/services/analytics.service.svelte';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import { currentSessionStore } from '$lib/stores/current-session.svelte';
-	import { features } from '$lib/config/app-mode';
-	import { t } from '$lib/i18n/index.svelte';
-	import { BackendCommandError, UncertainCommandError } from '$lib/services/api.service.svelte';
+	} from '#lib/utils/env-preferences.ts';
+	import { toastStore } from '#lib/stores/toast.svelte.ts';
+	import { analyticsService } from '#lib/services/analytics.service.svelte.ts';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import { currentSessionStore } from '#lib/stores/current-session.svelte.ts';
+	import { features } from '#lib/config/app-mode.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
+	import { BackendCommandError, UncertainCommandError } from '#lib/services/api.service.svelte.ts';
 
 	// Redirect to home if running gadgets is not allowed (demo mode)
 	onMount(() => {
@@ -601,9 +601,9 @@
 					t('Starting headless instance "{{displayName}}"...', { displayName }),
 					3000
 				);
-				goto(resolve(`/env/${environmentID}`));
+				goto(resolve(`env/${environmentID}`));
 			} else {
-				goto(resolve(`/env/${environmentID}/running/${res.id}`));
+				goto(resolve(`env/${environmentID}/running/${res.id}`));
 			}
 		} catch (err) {
 			const fileStartRejected = outputMode === 'file' && err instanceof BackendCommandError;

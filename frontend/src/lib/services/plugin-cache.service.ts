@@ -6,7 +6,7 @@
  * ensuring cache invalidation when plugin source changes.
  */
 
-import type { PluginManifest } from '$lib/types/plugin-manifest';
+import type { PluginManifest } from '#lib/types/plugin-manifest.ts';
 
 /**
  * Cached plugin data stored in IndexedDB.

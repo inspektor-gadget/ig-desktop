@@ -1,5 +1,5 @@
 import { defineConfig, type Plugin } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { svelte, vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
 import { cpSync, mkdirSync } from 'fs';
@@ -28,6 +28,7 @@ export default defineConfig({
 	},
 	plugins: [
 		svelte({
+			preprocess: vitePreprocess(),
 			compilerOptions: {
 				// Library components need to work without SvelteKit
 				css: 'injected'
@@ -38,10 +39,9 @@ export default defineConfig({
 	],
 	resolve: {
 		alias: {
-			$lib: resolve(__dirname, 'src/lib'),
 			'$app/paths': resolve(__dirname, 'src/lib/compat/app-paths.ts'),
 			'$app/state': resolve(__dirname, 'src/lib/compat/app-state.ts'),
-			'$app/environment': resolve(__dirname, 'src/lib/compat/app-environment.ts'),
+			'$app/env': resolve(__dirname, 'src/lib/compat/app-environment.ts'),
 			'$app/navigation': resolve(__dirname, 'src/lib/compat/app-navigation.ts')
 		}
 	},

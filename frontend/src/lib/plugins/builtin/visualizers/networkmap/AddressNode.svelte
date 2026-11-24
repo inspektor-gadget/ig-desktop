@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Handle, Position } from '@xyflow/svelte';
-	import type { NetworkNodeData } from '$lib/types/networkmap';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { NetworkNodeData } from '#lib/types/networkmap.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		data: NetworkNodeData;

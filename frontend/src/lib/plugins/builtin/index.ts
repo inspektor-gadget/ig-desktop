@@ -5,7 +5,7 @@
  * These plugins are statically imported and have zero compilation overhead.
  */
 
-import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
+import { pluginRegistry } from '#lib/services/plugin-registry.service.svelte.ts';
 
 // Import visualizers
 import {

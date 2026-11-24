@@ -9,7 +9,7 @@
  * - metrics.buckets contains optional comma-separated bucket boundaries
  */
 
-import type { Datasource, DatasourceField } from '$lib/types/charts';
+import type { Datasource, DatasourceField } from '#lib/types/charts.ts';
 import type {
 	HistogramConfig,
 	HistogramFieldConfig,
@@ -18,8 +18,8 @@ import type {
 	HeatmapData,
 	HeatmapCell,
 	HistogramSnapshot
-} from '$lib/types/histogram';
-import type { GroupableField } from '$lib/types/flamegraph';
+} from '#lib/types/histogram.ts';
+import type { GroupableField } from '#lib/types/flamegraph.ts';
 
 // Re-export groupable field utilities (same as flamegraph)
 export { extractGroupableFields, DEFAULT_GROUP_FIELDS } from './flamegraphConfig';

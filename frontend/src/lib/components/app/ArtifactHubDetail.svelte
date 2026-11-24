@@ -1,23 +1,23 @@
 <script lang="ts">
 	import { marked } from 'marked';
 	import { getContext } from 'svelte';
-	import { openExternalURL } from '$lib/utils/external-links';
-	import Panel from '$lib/components/Panel.svelte';
-	import RawHtml from '$lib/components/RawHtml.svelte';
-	import ArtifactHub from '$lib/icons/artifacthub.svelte';
-	import Play from '$lib/icons/play-circle.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import Book from '$lib/icons/book.svelte';
-	import Code from '$lib/icons/code.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import Signed from '$lib/icons/signature-locked.svelte';
-	import Unsigned from '$lib/icons/signature-slash.svelte';
-	import Star from '$lib/icons/star-sharp.svelte';
-	import Link from '$lib/icons/href.svelte';
+	import { openExternalURL } from '#lib/utils/external-links.ts';
+	import Panel from '#lib/components/Panel.svelte';
+	import RawHtml from '#lib/components/RawHtml.svelte';
+	import ArtifactHub from '#lib/icons/artifacthub.svelte';
+	import Play from '#lib/icons/play-circle.svelte';
+	import ChevronLeft from '#lib/icons/chevron-left.svelte';
+	import Book from '#lib/icons/book.svelte';
+	import Code from '#lib/icons/code.svelte';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import Signed from '#lib/icons/signature-locked.svelte';
+	import Unsigned from '#lib/icons/signature-slash.svelte';
+	import Star from '#lib/icons/star-sharp.svelte';
+	import Link from '#lib/icons/href.svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import type { ApiContext } from '$lib/types';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { ApiContext } from '#lib/types/index.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface ArtifactHubPackageDetail {
 		name: string;
@@ -284,7 +284,7 @@
 							{#each pkg.containers_images as image (image.image)}
 								<a
 									href={resolve(
-										`/gadgets/run/${image.image}${environmentID ? `?env=${environmentID}` : ''}`
+										`gadgets/run/${image.image}${environmentID ? `?env=${environmentID}` : ''}`
 									)}
 									class="group"
 								>

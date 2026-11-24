@@ -2,13 +2,13 @@ import {
 	handleGadgetEvent,
 	handleGadgetLogging,
 	handleGadgetArrayData
-} from '$lib/handlers/gadget.handler.svelte';
+} from '#lib/handlers/gadget.handler.svelte.ts';
 import type {
 	RecordedEvent,
 	GadgetEventMessage,
 	GadgetLogMessage,
 	GadgetArrayDataMessage
-} from '$lib/types';
+} from '#lib/types/index.ts';
 
 // Event type constants (from internal/api/constants.go)
 const TypeGadgetEvent = 3;

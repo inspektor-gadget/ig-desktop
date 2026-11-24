@@ -3,7 +3,7 @@
  * Provides a promise-based API for showing confirmation dialogs
  */
 
-import { t } from '$lib/i18n/index.svelte';
+import { t } from '#lib/i18n/index.svelte.ts';
 
 type ConfirmationOptions = {
 	message: string;

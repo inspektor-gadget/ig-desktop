@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { Toast } from '$lib/stores/toast.svelte';
+	import type { Toast } from '#lib/stores/toast.svelte.ts';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
-	import { t } from '$lib/i18n/index.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		toast: Toast;

@@ -10,7 +10,7 @@
 		DnsResolverNode,
 		DnsNamespaceGroupNode,
 		DnsMapEdge as DnsMapEdgeType
-	} from '$lib/utils/dns/dnsMapGraph';
+	} from '#lib/utils/dns/dnsMapGraph.ts';
 
 	interface Props {
 		nodes: (DnsWorkloadNode | DnsResolverNode | DnsNamespaceGroupNode)[];

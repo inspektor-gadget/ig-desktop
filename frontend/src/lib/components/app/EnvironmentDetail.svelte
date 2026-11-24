@@ -1,53 +1,53 @@
 <script lang="ts">
 	import { getContext, untrack } from 'svelte';
-	import { BackendCommandError } from '$lib/services/api.service.svelte';
-	import { getErrorMessage } from '$lib/utils/errors';
-	import type { ApiContext } from '$lib/types/context';
+	import { BackendCommandError } from '#lib/services/api.service.svelte.ts';
+	import { getErrorMessage } from '#lib/utils/errors.ts';
+	import type { ApiContext } from '#lib/types/context.ts';
 	import { page } from '$app/state';
-	import { environments } from '$lib/shared/environments.svelte';
+	import { environments } from '#lib/shared/environments.svelte.ts';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import type { GadgetInstance, GadgetRunRequest, SessionItem } from '$lib/types';
-	import Panel from '$lib/components/Panel.svelte';
-	import { confirmationModal } from '$lib/stores/confirmation-modal.svelte';
-	import { toastStore } from '$lib/stores/toast.svelte';
-	import { analyticsService } from '$lib/services/analytics.service.svelte';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import { currentSessionStore } from '$lib/stores/current-session.svelte';
-	import BaseModal from '$lib/components/BaseModal.svelte';
-	import K8sDeployModal from '$lib/components/K8sDeployModal.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import SessionItemComponent from '$lib/components/SessionItem.svelte';
-	import { features } from '$lib/config/app-mode';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { GadgetInstance, GadgetRunRequest, SessionItem } from '#lib/types/index.ts';
+	import Panel from '#lib/components/Panel.svelte';
+	import { confirmationModal } from '#lib/stores/confirmation-modal.svelte.ts';
+	import { toastStore } from '#lib/stores/toast.svelte.ts';
+	import { analyticsService } from '#lib/services/analytics.service.svelte.ts';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import { currentSessionStore } from '#lib/stores/current-session.svelte.ts';
+	import BaseModal from '#lib/components/BaseModal.svelte';
+	import K8sDeployModal from '#lib/components/K8sDeployModal.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import SessionItemComponent from '#lib/components/SessionItem.svelte';
+	import { features } from '#lib/config/app-mode.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
-	import Browser from '$lib/icons/fa/browser.svelte';
-	import Trash from '$lib/icons/fa/trash.svelte';
-	import PlaySmall from '$lib/icons/fa/play.svelte';
-	import History from '$lib/icons/fa/clock-rotate-left.svelte';
-	import Info from '$lib/icons/fa/info.svelte';
-	import Server from '$lib/icons/fa/server.svelte';
-	import Cog from '$lib/icons/cog-small.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import ChevronRight from '$lib/icons/chevron-right.svelte';
-	import Grid from '$lib/icons/grid-small.svelte';
-	import Refresh from '$lib/icons/refresh-small.svelte';
-	import { formatAbsoluteTime, formatRelativeTime } from '$lib/utils/time';
-	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
+	import Browser from '#lib/icons/fa/browser.svelte';
+	import Trash from '#lib/icons/fa/trash.svelte';
+	import PlaySmall from '#lib/icons/fa/play.svelte';
+	import History from '#lib/icons/fa/clock-rotate-left.svelte';
+	import Info from '#lib/icons/fa/info.svelte';
+	import Server from '#lib/icons/fa/server-icon.svelte';
+	import Cog from '#lib/icons/cog-small.svelte';
+	import ChevronLeft from '#lib/icons/chevron-left.svelte';
+	import ChevronRight from '#lib/icons/chevron-right.svelte';
+	import Grid from '#lib/icons/grid-small.svelte';
+	import Refresh from '#lib/icons/refresh-small.svelte';
+	import { formatAbsoluteTime, formatRelativeTime } from '#lib/utils/time.ts';
+	import { currentEnvironment } from '#lib/shared/current-environment.svelte.ts';
 	import {
 		cleanupEnvironment,
 		getGadgetURLRecents,
 		saveGadgetURLRecent,
 		getEnvPref,
 		setEnvPref
-	} from '$lib/utils/env-preferences';
-	import AutocompleteInput from '$lib/components/forms/AutocompleteInput.svelte';
-	import GadgetWizard from '$lib/components/wizard/GadgetWizard.svelte';
-	import wizardTreeConfig from '$lib/data/gadget-wizard-tree.json';
-	import type { WizardTreeConfig } from '$lib/components/wizard/wizard-types';
-	import GadgetIcon from '$lib/icons/gadget.svelte';
-	import type { EmbeddableAppProps } from '$lib/types/embedding';
-	import { openExternalURL } from '$lib/utils/external-links';
+	} from '#lib/utils/env-preferences.ts';
+	import AutocompleteInput from '#lib/components/forms/AutocompleteInput.svelte';
+	import GadgetWizard from '#lib/components/wizard/GadgetWizard.svelte';
+	import wizardTreeConfig from '#lib/data/gadget-wizard-tree.json';
+	import type { WizardTreeConfig } from '#lib/components/wizard/wizard-types.ts';
+	import GadgetIcon from '#lib/icons/gadget.svelte';
+	import type { EmbeddableAppProps } from '#lib/types/embedding.ts';
+	import { openExternalURL } from '#lib/utils/external-links.ts';
 
 	let { deployment }: { deployment?: EmbeddableAppProps['environmentDeployment'] } = $props();
 
@@ -283,7 +283,7 @@
 			cmd: 'attachInstance',
 			data: { environmentID: env.id, image: instance.id, instanceName: instance.name }
 		});
-		goto(resolve(`/env/${env.id}/running/${res.id}`));
+		goto(resolve(`env/${env.id}/running/${res.id}`));
 	}
 
 	async function removeInstance(instance: GadgetInstance) {
@@ -329,7 +329,7 @@
 		if (env?.id && gadgetURL) {
 			saveGadgetURLRecent(env.id, gadgetURL);
 		}
-		goto(resolve(`/gadgets/run/${gadgetURL}?env=${env.id}`));
+		goto(resolve(`gadgets/run/${gadgetURL}?env=${env.id}`));
 	}
 
 	async function runGadget(gadgetRunRequest: GadgetRunRequest) {
@@ -341,7 +341,7 @@
 				output: gadgetRunRequest.output.format,
 				...(gadgetRunRequest.params ? { params: JSON.stringify(gadgetRunRequest.params) } : {})
 			});
-			goto(resolve(`/gadgets/run/${gadgetRunRequest.image}?${params}`));
+			goto(resolve(`gadgets/run/${gadgetRunRequest.image}?${params}`));
 			return;
 		}
 		// Apply recording settings from configuration (only when feature is enabled)
@@ -382,7 +382,7 @@
 				);
 				getList(env.id);
 			} else {
-				goto(resolve(`/env/${env.id}/running/${res.id}`));
+				goto(resolve(`env/${env.id}/running/${res.id}`));
 			}
 		} catch (err) {
 			// Show error toast
@@ -643,7 +643,7 @@
 														if (entry.output) {
 															params.set('output', entry.output.format);
 														}
-														goto(resolve(`/gadgets/run/${entry.image}?${params.toString()}`));
+														goto(resolve(`gadgets/run/${entry.image}?${params.toString()}`));
 													}}><Cog /></button
 												>
 											{/if}

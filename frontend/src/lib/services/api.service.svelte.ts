@@ -1,6 +1,6 @@
 import { websocketService } from './websocket.service.svelte';
-import type { SessionItem, SessionWithRuns, GadgetRun, RecordedEvent } from '$lib/types';
-import type { PluginManifest } from '$lib/types/plugin-manifest';
+import type { SessionItem, SessionWithRuns, GadgetRun, RecordedEvent } from '#lib/types/index.ts';
+import type { PluginManifest } from '#lib/types/plugin-manifest.ts';
 
 export interface DiscoveredPlugin {
 	manifest: PluginManifest;

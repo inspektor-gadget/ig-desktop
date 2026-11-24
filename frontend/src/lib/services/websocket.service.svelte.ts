@@ -1,4 +1,4 @@
-import type { ITransportAdapter, MessageHandler } from '$lib/transport/adapter';
+import type { ITransportAdapter, MessageHandler } from '#lib/transport/adapter.ts';
 
 /**
  * WebSocket service that manages connection lifecycle via pluggable transport adapters.

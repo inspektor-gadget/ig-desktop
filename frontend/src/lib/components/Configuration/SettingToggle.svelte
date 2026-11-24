@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { ToggleSetting } from '$lib/config.types';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { ToggleSetting } from '#lib/config.types.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		setting: ToggleSetting;

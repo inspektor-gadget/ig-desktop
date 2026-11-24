@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { setContext } from 'svelte';
-	import { apiService, type RequestCommand } from '$lib/services/api.service.svelte';
+	import { apiService, type RequestCommand } from '#lib/services/api.service.svelte.ts';
 	import Gadget from '../Gadget.svelte';
-	import type { ViewConfig } from '$lib/types/view-config';
-	import type { ResultViewState, ResultViewChange } from '$lib/types/embedding';
-	import type { CellClickHandler, CellContextMenuHandler } from '$lib/types/cell-interaction';
+	import type { ViewConfig } from '#lib/types/view-config.ts';
+	import type { ResultViewState, ResultViewChange } from '#lib/types/embedding.ts';
+	import type { CellClickHandler, CellContextMenuHandler } from '#lib/types/cell-interaction.ts';
 
 	interface Props {
 		instanceID: string;

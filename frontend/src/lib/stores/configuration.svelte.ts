@@ -3,8 +3,8 @@
  * Manages both modal state and configuration settings with localStorage persistence
  */
 
-import { configurationSchema, getFullConfigurationSchema } from '$lib/config';
-import type { Setting } from '$lib/config.types';
+import { configurationSchema, getFullConfigurationSchema } from '#lib/config.ts';
+import type { Setting } from '#lib/config.types.ts';
 
 export const configurationStorageKey = 'ig-configuration';
 

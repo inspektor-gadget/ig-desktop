@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import type { ScaleLinear } from 'd3';
-	import type { ChartDimensions } from '$lib/types/charts';
+	import type { ChartDimensions } from '#lib/types/charts.ts';
 
 	interface ChartContext {
 		dimensions: ChartDimensions;

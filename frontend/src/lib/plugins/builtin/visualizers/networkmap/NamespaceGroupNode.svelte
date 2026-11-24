@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NetworkNamespaceGroupData } from '$lib/types/networkmap';
+	import type { NetworkNamespaceGroupData } from '#lib/types/networkmap.ts';
 
 	interface Props {
 		data: NetworkNamespaceGroupData;

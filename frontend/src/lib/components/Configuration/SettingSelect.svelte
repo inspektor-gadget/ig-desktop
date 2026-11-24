@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { SelectSetting } from '$lib/config.types';
-	import Select from '$lib/components/forms/Select.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { SelectSetting } from '#lib/config.types.ts';
+	import Select from '#lib/components/forms/Select.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		setting: SelectSetting;

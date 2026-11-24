@@ -10,9 +10,9 @@
 		calculateCounterRates,
 		getCounterMode,
 		aggregateByTimestamp
-	} from '$lib/utils/chartConfig';
-	import type { ChartSeriesConfig, CounterMode } from '$lib/types/charts';
-	import type { VisualizerPluginProps } from '$lib/types/plugin-api';
+	} from '#lib/utils/chartConfig.ts';
+	import type { ChartSeriesConfig, CounterMode } from '#lib/types/charts.ts';
+	import type { VisualizerPluginProps } from '#lib/types/plugin-api.ts';
 
 	/** Default chart colors for series without explicit color annotations */
 	const DEFAULT_CHART_COLORS = ['#77bb41', '#3b82f6', '#f59e0b', '#ef4444'];

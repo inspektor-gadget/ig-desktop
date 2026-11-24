@@ -1,5 +1,5 @@
 /**
- * Compatibility shim for $app/environment in library mode.
+ * Compatibility shim for $app/env in library mode.
  * In SvelteKit, `browser` indicates whether the code is running in the browser.
  * In library mode, we detect this directly.
  */

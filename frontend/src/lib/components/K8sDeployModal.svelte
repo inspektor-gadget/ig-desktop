@@ -1,23 +1,23 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import type { ApiContext } from '$lib/types/context';
+	import type { ApiContext } from '#lib/types/context.ts';
 	import yaml from 'js-yaml';
-	import { deployments } from '$lib/shared/deployments.svelte';
-	import type { DeploymentConfig, DeploymentResourceConflict } from '$lib/types';
-	import { t } from '$lib/i18n/index.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import Server from '$lib/icons/server.svelte';
-	import Play from '$lib/icons/play-circle.svelte';
-	import ExclamationCircle from '$lib/icons/close-circle.svelte';
-	import Certificate from '$lib/icons/certificate.svelte';
-	import ChevronDown from '$lib/icons/chevron-down.svelte';
-	import ChevronRight from '$lib/icons/chevron-right.svelte';
-	import Input from '$lib/components/forms/Input.svelte';
-	import Textarea from '$lib/components/forms/Textarea.svelte';
-	import Toggle from '$lib/components/forms/Toggle.svelte';
+	import { deployments } from '#lib/shared/deployments.svelte.ts';
+	import type { DeploymentConfig, DeploymentResourceConflict } from '#lib/types/index.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import Server from '#lib/icons/server-icon.svelte';
+	import Play from '#lib/icons/play-circle.svelte';
+	import ExclamationCircle from '#lib/icons/close-circle.svelte';
+	import Certificate from '#lib/icons/certificate.svelte';
+	import ChevronDown from '#lib/icons/chevron-down.svelte';
+	import ChevronRight from '#lib/icons/chevron-right.svelte';
+	import Input from '#lib/components/forms/Input.svelte';
+	import Textarea from '#lib/components/forms/Textarea.svelte';
+	import Toggle from '#lib/components/forms/Toggle.svelte';
 	import OtelExportersModal, {
 		type OtelExportersMap
-	} from '$lib/components/OtelExportersModal.svelte';
+	} from '#lib/components/OtelExportersModal.svelte';
 
 	interface Props {
 		open: boolean;

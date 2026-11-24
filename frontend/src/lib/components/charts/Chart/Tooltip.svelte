@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import type { ChartDimensions } from '$lib/types/charts';
+	import type { ChartDimensions } from '#lib/types/charts.ts';
 
 	interface TooltipData {
 		x: number;

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { FlameNode, FlamegraphRenderNode, GroupableField } from '$lib/types/flamegraph';
-	import { getPercentage } from '$lib/utils/flamegraphConfig';
-	import { clickOutside } from '$lib/utils/click-outside';
-	import SearchIcon from '$lib/icons/search-small.svelte';
-	import CloseIcon from '$lib/icons/close-small.svelte';
-	import ChevronDown from '$lib/icons/chevron-down.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { FlameNode, FlamegraphRenderNode, GroupableField } from '#lib/types/flamegraph.ts';
+	import { getPercentage } from '#lib/utils/flamegraphConfig.ts';
+	import { clickOutside } from '#lib/utils/click-outside.ts';
+	import SearchIcon from '#lib/icons/search-small.svelte';
+	import CloseIcon from '#lib/icons/close-small.svelte';
+	import ChevronDown from '#lib/icons/chevron-down.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		data: FlameNode | null;

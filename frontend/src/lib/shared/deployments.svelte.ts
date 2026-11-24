@@ -1,4 +1,4 @@
-import type { Deployments, DeploymentProgress, DeploymentConfig } from '$lib/types';
+import type { Deployments, DeploymentProgress, DeploymentConfig } from '#lib/types/index.ts';
 
 class DeploymentsStore {
 	deployments = $state<Deployments>({});

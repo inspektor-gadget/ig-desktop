@@ -3,7 +3,7 @@
  * and building hierarchical flame data from events.
  */
 
-import type { Datasource } from '$lib/types/charts';
+import type { Datasource } from '#lib/types/charts.ts';
 import type {
 	FlameNode,
 	FlameNodeSource,
@@ -11,7 +11,7 @@ import type {
 	GroupableField,
 	ParsedFrame,
 	StackField
-} from '$lib/types/flamegraph';
+} from '#lib/types/flamegraph.ts';
 
 /**
  * Hardcoded groupable field levels for common fields.

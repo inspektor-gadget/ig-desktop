@@ -1,11 +1,11 @@
 <script lang="ts">
 	import * as d3 from 'd3';
-	import Chart from '$lib/components/charts/Chart/Chart.svelte';
-	import Axis from '$lib/components/charts/Chart/Axis.svelte';
-	import Grid from '$lib/components/charts/Chart/Grid.svelte';
-	import { transformHistogramData, getStableColor } from '$lib/utils/chartConfig';
-	import type { ChartDimensions, DatasourceField } from '$lib/types/charts';
-	import { t } from '$lib/i18n/index.svelte';
+	import Chart from '#lib/components/charts/Chart/Chart.svelte';
+	import Axis from '#lib/components/charts/Chart/Axis.svelte';
+	import Grid from '#lib/components/charts/Chart/Grid.svelte';
+	import { transformHistogramData, getStableColor } from '#lib/utils/chartConfig.ts';
+	import type { ChartDimensions, DatasourceField } from '#lib/types/charts.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		data: Record<string, unknown>[];

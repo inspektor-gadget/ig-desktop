@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import Title from './Title.svelte';
-	import Checkbox from '$lib/components/forms/Checkbox.svelte';
+	import Checkbox from '#lib/components/forms/Checkbox.svelte';
 
 	interface Param {
 		key: string;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import Title from './Title.svelte';
-	import Select from '$lib/components/forms/Select.svelte';
+	import Select from '#lib/components/forms/Select.svelte';
 
 	interface Param {
 		key: string;

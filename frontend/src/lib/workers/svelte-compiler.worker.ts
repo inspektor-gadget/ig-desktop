@@ -9,7 +9,7 @@
  */
 
 import { compile } from 'svelte/compiler';
-import type { PluginCompileRequest, PluginCompileResponse, CompiledFile } from '$lib/types/plugin';
+import type { PluginCompileRequest, PluginCompileResponse, CompiledFile } from '#lib/types/plugin.ts';
 
 /**
  * Allowed imports for sandboxed (gadget) plugins.

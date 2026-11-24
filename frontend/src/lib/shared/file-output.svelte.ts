@@ -1,5 +1,5 @@
-import type { FileOutputCapability } from '$lib/types';
-import { overrideStack } from '$lib/utils/override-stack';
+import type { FileOutputCapability } from '#lib/types/index.ts';
+import { overrideStack } from '#lib/utils/override-stack.ts';
 
 let capability = $state<FileOutputCapability | undefined>();
 const owners = overrideStack<FileOutputCapability | undefined>((current) => {

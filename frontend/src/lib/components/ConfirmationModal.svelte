@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { confirmationModal } from '$lib/stores/confirmation-modal.svelte';
+	import { confirmationModal } from '#lib/stores/confirmation-modal.svelte.ts';
 	import BaseModal from './BaseModal.svelte';
 	import Button from './Button.svelte';
-	import questionIcon from '$lib/icons/question-circle.svelte';
+	import questionIcon from '#lib/icons/question-circle.svelte';
 
 	/**
 	 * Handle Enter key for confirmation

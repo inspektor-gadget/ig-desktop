@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import type { ApiContext } from '$lib/types/context';
-	import type { FileCaptureStatus } from '$lib/types';
-	import { copyToClipboard } from '$lib/utils/clipboard';
-	import Stop from '$lib/icons/stop-small.svelte';
-	import Copy from '$lib/icons/copy.svelte';
-	import { t } from '$lib/i18n/index.svelte';
-	import type { FileOutputCapability } from '$lib/types';
-	import { toastStore } from '$lib/stores/toast.svelte';
-	import { getErrorMessage } from '$lib/utils/errors';
-	import { UncertainCommandError } from '$lib/services/api.service.svelte';
+	import type { ApiContext } from '#lib/types/context.ts';
+	import type { FileCaptureStatus } from '#lib/types/index.ts';
+	import { copyToClipboard } from '#lib/utils/clipboard.ts';
+	import Stop from '#lib/icons/stop-small.svelte';
+	import Copy from '#lib/icons/copy.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
+	import type { FileOutputCapability } from '#lib/types/index.ts';
+	import { toastStore } from '#lib/stores/toast.svelte.ts';
+	import { getErrorMessage } from '#lib/utils/errors.ts';
+	import { UncertainCommandError } from '#lib/services/api.service.svelte.ts';
 
 	let { instanceID, output }: { instanceID: string; output: FileCaptureStatus } = $props();
 	const api = getContext<ApiContext>('api');

@@ -1,18 +1,18 @@
 <script lang="ts">
 	import type { Component as SvelteComponent } from 'svelte';
-	import Server from '$lib/icons/server.svelte';
-	import Book from '$lib/icons/book.svelte';
-	import Bug from '$lib/icons/bug.svelte';
-	import Layers from '$lib/icons/layers.svelte';
-	import Close from '$lib/icons/close-small.svelte';
+	import Server from '#lib/icons/server-icon.svelte';
+	import Book from '#lib/icons/book.svelte';
+	import Bug from '#lib/icons/bug.svelte';
+	import Layers from '#lib/icons/layers.svelte';
+	import Close from '#lib/icons/close-small.svelte';
 
 	import DataSources from './gadget-attribs/DataSources.svelte';
 	import Metadata from './gadget-attribs/Metadata.svelte';
 	import GadgetInfoComponent from './gadget-attribs/GadgetInfo.svelte';
 	import Inspect from './gadget-attribs/Inspect.svelte';
-	import type { GadgetInfo } from '$lib/types';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { GadgetInfo } from '#lib/types/index.ts';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let { gadgetInfo, onclose = () => {} }: { gadgetInfo: GadgetInfo; onclose?: () => void } =
 		$props();

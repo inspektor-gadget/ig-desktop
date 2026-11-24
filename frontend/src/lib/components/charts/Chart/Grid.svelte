@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import type { ChartDimensions } from '$lib/types/charts';
+	import type { ChartDimensions } from '#lib/types/charts.ts';
 	import type { ScaleTime, ScaleLinear, ScaleBand } from 'd3';
 
 	/** Continuous scales that support .ticks() method */

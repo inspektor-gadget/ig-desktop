@@ -1,5 +1,5 @@
-import { environments } from '$lib/shared/environments.svelte.js';
-import type { Environment } from '$lib/types';
+import { environments } from '#lib/shared/environments.svelte.ts';
+import type { Environment } from '#lib/types/index.ts';
 
 /**
  * Handle environment creation (type 100).

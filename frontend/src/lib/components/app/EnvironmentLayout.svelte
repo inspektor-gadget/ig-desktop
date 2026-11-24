@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { getErrorMessage } from '$lib/utils/errors';
-	import List from '$lib/icons/list.svelte';
-	import Delete from '$lib/icons/close-small.svelte';
-	import Tab from '$lib/components/Tab.svelte';
-	import { instances } from '$lib/shared/instances.svelte';
+	import { getErrorMessage } from '#lib/utils/errors.ts';
+	import List from '#lib/icons/list.svelte';
+	import Delete from '#lib/icons/close-small.svelte';
+	import Tab from '#lib/components/Tab.svelte';
+	import { instances } from '#lib/shared/instances.svelte.ts';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { Snippet } from 'svelte';
-	import type { ApiContext } from '$lib/types/context';
+	import type { ApiContext } from '#lib/types/context.ts';
 	import { getContext } from 'svelte';
-	import { toastStore } from '$lib/stores/toast.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import { toastStore } from '#lib/stores/toast.svelte.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let { children, showTabs = true }: { children: Snippet; showTabs?: boolean } = $props();
 
@@ -38,7 +38,7 @@
 			await api.request({ cmd: 'stopInstance', data: { id: instanceID } });
 			if (isFileCapture && wasRunning) {
 				if (page.params.instanceID && page.params.instanceID === instanceID) {
-					goto(resolve(`/env/${page.params.env}`));
+					goto(resolve(`env/${page.params.env}`));
 				}
 				return;
 			}
@@ -57,7 +57,7 @@
 
 			if (page.params.instanceID && page.params.instanceID === instanceID) {
 				// Page is currently open, move to env
-				goto(resolve(`/env/${page.params.env}`));
+				goto(resolve(`env/${page.params.env}`));
 			}
 			delete instances[instanceID];
 		} catch (err) {
@@ -88,10 +88,10 @@
 		<div
 			class="nowrap flex w-full flex-row items-center overscroll-x-auto text-sm text-gray-600 dark:text-gray-500"
 		>
-			<Tab href={resolve(`/env/${page.params.env}`)} shrink={true} exact={true}><List /></Tab>
+			<Tab href={resolve(`env/${page.params.env}`)} shrink={true} exact={true}><List /></Tab>
 			{#each instanceKeys as instanceKey (instanceKey)}
 				<Tab
-					href={resolve(`/env/${page.params.env}/running/${instanceKey}`)}
+					href={resolve(`env/${page.params.env}/running/${instanceKey}`)}
 					shrink={false}
 					exact={true}
 					><div class="flex flex-row items-center gap-2">

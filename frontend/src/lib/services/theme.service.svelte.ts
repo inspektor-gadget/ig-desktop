@@ -3,11 +3,11 @@
  * Manages dark/light/system theme switching with reactive state
  */
 
-import { browser } from '$app/environment';
-import { configuration } from '$lib/stores/configuration.svelte';
-import { setTheme, resetTheme } from '$lib/themes/set-theme';
-import { materialLight, materialDark } from '$lib/themes/material-tokens';
-import { headlampLight, headlampDark } from '$lib/themes/headlamp-tokens';
+import { browser } from '$app/env';
+import { configuration } from '#lib/stores/configuration.svelte.ts';
+import { setTheme, resetTheme } from '#lib/themes/set-theme.ts';
+import { materialLight, materialDark } from '#lib/themes/material-tokens.ts';
+import { headlampLight, headlampDark } from '#lib/themes/headlamp-tokens.ts';
 
 type ThemePreference = 'dark' | 'light' | 'system';
 type ResolvedTheme = 'dark' | 'light';

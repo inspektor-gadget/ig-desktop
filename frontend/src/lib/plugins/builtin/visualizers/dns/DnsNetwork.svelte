@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import DnsNetworkChart from './DnsNetworkChart.svelte';
-	import BaseModal from '$lib/components/BaseModal.svelte';
-	import Select from '$lib/components/forms/Select.svelte';
-	import type { VisualizerPluginProps } from '$lib/types/plugin-api';
+	import BaseModal from '#lib/components/BaseModal.svelte';
+	import Select from '#lib/components/forms/Select.svelte';
+	import type { VisualizerPluginProps } from '#lib/types/plugin-api.ts';
 	import {
 		extractDnsConfig,
 		extractDnsResponseTimeoutMs,
 		extractDnsViewConfig,
 		showDnsNamespaceSelector
-	} from '$lib/utils/dns/dnsConfig';
-	import { createDnsCorrelation } from '$lib/utils/dns/useDnsCorrelation.svelte';
+	} from '#lib/utils/dns/dnsConfig.ts';
+	import { createDnsCorrelation } from '#lib/utils/dns/useDnsCorrelation.svelte.ts';
 	import {
 		buildDnsMapModel,
 		extractDnsMapNamespaces,
@@ -21,7 +21,7 @@
 		dnsMapTopologyKey,
 		refreshDnsMapLayoutData,
 		type DnsMapLayout
-	} from '$lib/utils/dns/dnsMapGraph';
+	} from '#lib/utils/dns/dnsMapGraph.ts';
 	import {
 		formatEndpoint,
 		formatLatencyNs,
@@ -29,11 +29,11 @@
 		stateLabel,
 		attemptsSummary,
 		primaryTime
-	} from '$lib/utils/dns/dnsFormat';
-	import { severityColorClass, severityIcon } from '$lib/utils/dns/dnsSeverity';
-	import { formatRfc3339Time } from '$lib/utils/time';
-	import type { DnsTransaction } from '$lib/utils/dns/dnsTypes';
-	import { t } from '$lib/i18n/index.svelte';
+	} from '#lib/utils/dns/dnsFormat.ts';
+	import { severityColorClass, severityIcon } from '#lib/utils/dns/dnsSeverity.ts';
+	import { formatRfc3339Time } from '#lib/utils/time.ts';
+	import type { DnsTransaction } from '#lib/utils/dns/dnsTypes.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	type Props = VisualizerPluginProps;
 

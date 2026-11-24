@@ -1,11 +1,11 @@
 <script lang="ts">
 	import BaseModal from '../BaseModal.svelte';
 	import Button from '../Button.svelte';
-	import { pluginService } from '$lib/services/plugin.service';
-	import type { PluginBundle, CompiledPlugin } from '$lib/types/plugin';
-	import { getPluginEntrypoint } from '$lib/types/plugin';
-	import WarningIcon from '$lib/icons/warning.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import { pluginService } from '#lib/services/plugin.service.ts';
+	import type { PluginBundle, CompiledPlugin } from '#lib/types/plugin.ts';
+	import { getPluginEntrypoint } from '#lib/types/plugin.ts';
+	import WarningIcon from '#lib/icons/warning.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		/** The plugin bundle to load */

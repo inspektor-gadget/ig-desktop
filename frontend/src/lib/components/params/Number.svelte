@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import Title from './Title.svelte';
-	import Input from '$lib/components/forms/Input.svelte';
+	import Input from '#lib/components/forms/Input.svelte';
 
 	interface Param {
 		key: string;

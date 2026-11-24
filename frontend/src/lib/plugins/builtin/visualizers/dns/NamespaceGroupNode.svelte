@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { DnsNamespaceGroupData } from '$lib/utils/dns/dnsMapGraph';
+	import type { DnsNamespaceGroupData } from '#lib/utils/dns/dnsMapGraph.ts';
 
 	interface Props {
 		data: DnsNamespaceGroupData;

@@ -1,5 +1,5 @@
 import dagre from '@dagrejs/dagre';
-import type { NetworkEdge, NetworkNamespaceGroupNode, NetworkNode } from '$lib/types/networkmap';
+import type { NetworkEdge, NetworkNamespaceGroupNode, NetworkNode } from '#lib/types/networkmap.ts';
 
 const NODE_WIDTH = 180;
 const NODE_GAP = 80;

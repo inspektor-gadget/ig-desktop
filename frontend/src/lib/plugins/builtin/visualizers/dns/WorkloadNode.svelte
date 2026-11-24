@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Handle, Position } from '@xyflow/svelte';
-	import type { DnsWorkloadNodeData } from '$lib/utils/dns/dnsMapGraph';
-	import { severityColorClass, severityIcon, severityLabel } from '$lib/utils/dns/dnsSeverity';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { DnsWorkloadNodeData } from '#lib/utils/dns/dnsMapGraph.ts';
+	import { severityColorClass, severityIcon, severityLabel } from '#lib/utils/dns/dnsSeverity.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		data: DnsWorkloadNodeData;

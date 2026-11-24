@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Cog from '$lib/icons/cog.svelte';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import type { SettingType } from '$lib/config.types';
-	import { getFullConfigurationSchema } from '$lib/config';
+	import Cog from '#lib/icons/cog.svelte';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import type { SettingType } from '#lib/config.types.ts';
+	import { getFullConfigurationSchema } from '#lib/config.ts';
 	import SettingToggle from './Configuration/SettingToggle.svelte';
 	import SettingSelect from './Configuration/SettingSelect.svelte';
 	import SettingText from './Configuration/SettingText.svelte';
@@ -11,11 +11,11 @@
 	import BaseModal from './BaseModal.svelte';
 	import Button from './Button.svelte';
 	import type { Component } from 'svelte';
-	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
-	import { t, getLanguage, setLanguage } from '$lib/i18n/index.svelte';
-	import { supportedLanguages } from '$lib/i18n/supported-languages';
+	import { settingsDialog } from '#lib/stores/settings-dialog.svelte.ts';
+	import { t, getLanguage, setLanguage } from '#lib/i18n/index.svelte.ts';
+	import { supportedLanguages } from '#lib/i18n/supported-languages.ts';
 	// Import to ensure plugin config service is initialized
-	import '$lib/services/plugin-config.service';
+	import '#lib/services/plugin-config.service.ts';
 
 	interface Props {
 		open?: boolean;

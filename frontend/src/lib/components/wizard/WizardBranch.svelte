@@ -2,15 +2,15 @@
 	import type { Component } from 'svelte';
 	import type { WizardBranchNode, WizardNode, WizardTreeConfig } from './wizard-types';
 	import { isBranchNode, getNodeLabel } from './wizard-types';
-	import { t } from '$lib/i18n/index.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
-	import Bug from '$lib/icons/bug.svelte';
-	import Chart from '$lib/icons/chart.svelte';
-	import Server from '$lib/icons/server.svelte';
-	import Layers from '$lib/icons/layers.svelte';
-	import File from '$lib/icons/file.svelte';
-	import ChevronRight from '$lib/icons/chevron-right.svelte';
-	import Info from '$lib/icons/info.svelte';
+	import Bug from '#lib/icons/bug.svelte';
+	import Chart from '#lib/icons/chart.svelte';
+	import Server from '#lib/icons/server-icon.svelte';
+	import Layers from '#lib/icons/layers.svelte';
+	import File from '#lib/icons/file.svelte';
+	import ChevronRight from '#lib/icons/chevron-right.svelte';
+	import Info from '#lib/icons/info.svelte';
 	// Note: Breadcrumbs and back navigation are handled by parent GadgetWizard
 
 	interface Props {

@@ -1,21 +1,21 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import type { ApiContext } from '$lib/types/context';
+	import type { ApiContext } from '#lib/types/context.ts';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { formatAbsoluteTime, formatRelativeTime } from '$lib/utils/time';
-	import type { SessionWithRuns, GadgetRun } from '$lib/types';
-	import { instances } from '$lib/shared/instances.svelte';
-	import { ReplayService } from '$lib/services/replay.service';
-	import { EventRingBuffer } from '$lib/utils/ring-buffer';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import Gadget from '$lib/components/Gadget.svelte';
-	import Play from '$lib/icons/play-small.svelte';
-	import Eye from '$lib/icons/fa/eye.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import { t } from '$lib/i18n/index.svelte';
-	import type { ResultViewState, ResultViewChange } from '$lib/types/embedding';
+	import { formatAbsoluteTime, formatRelativeTime } from '#lib/utils/time.ts';
+	import type { SessionWithRuns, GadgetRun } from '#lib/types/index.ts';
+	import { instances } from '#lib/shared/instances.svelte.ts';
+	import { ReplayService } from '#lib/services/replay.service.ts';
+	import { EventRingBuffer } from '#lib/utils/ring-buffer.ts';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import Gadget from '#lib/components/Gadget.svelte';
+	import Play from '#lib/icons/play-small.svelte';
+	import Eye from '#lib/icons/fa/eye.svelte';
+	import ChevronLeft from '#lib/icons/chevron-left.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
+	import type { ResultViewState, ResultViewChange } from '#lib/types/embedding.ts';
 
 	let {
 		viewState,
@@ -201,7 +201,7 @@
 			<div class="flex w-full items-center justify-between">
 				<div class="flex items-center gap-3">
 					<a
-						href={resolve(`/env/${session.environmentId}`)}
+						href={resolve(`env/${session.environmentId}`)}
 						class="flex cursor-pointer items-center rounded-ig-sm bg-gray-200 dark:bg-gray-800 p-1.5 hover:bg-gray-300 dark:hover:bg-gray-700"
 						title={t('Back to Environment')}
 					>

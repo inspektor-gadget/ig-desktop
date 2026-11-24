@@ -1,9 +1,9 @@
 <script lang="ts">
-	import VirtualTableBody from '$lib/components/VirtualTable/VirtualTableBody.svelte';
-	import type { VisualizerPluginProps } from '$lib/types/plugin-api';
-	import type { VirtualTableColumn } from '$lib/components/VirtualTable/types';
-	import { extractDnsConfig, extractDnsResponseTimeoutMs } from '$lib/utils/dns/dnsConfig';
-	import { createDnsCorrelation } from '$lib/utils/dns/useDnsCorrelation.svelte';
+	import VirtualTableBody from '#lib/components/VirtualTable/VirtualTableBody.svelte';
+	import type { VisualizerPluginProps } from '#lib/types/plugin-api.ts';
+	import type { VirtualTableColumn } from '#lib/components/VirtualTable/types.ts';
+	import { extractDnsConfig, extractDnsResponseTimeoutMs } from '#lib/utils/dns/dnsConfig.ts';
+	import { createDnsCorrelation } from '#lib/utils/dns/useDnsCorrelation.svelte.ts';
 	import {
 		formatDnsEndpointIdentity,
 		formatLatencyNs,
@@ -11,10 +11,10 @@
 		stateLabel,
 		attemptsSummary,
 		primaryTime
-	} from '$lib/utils/dns/dnsFormat';
-	import { formatRfc3339Time } from '$lib/utils/time';
-	import type { DnsTransaction } from '$lib/utils/dns/dnsTypes';
-	import { t } from '$lib/i18n/index.svelte';
+	} from '#lib/utils/dns/dnsFormat.ts';
+	import { formatRfc3339Time } from '#lib/utils/time.ts';
+	import type { DnsTransaction } from '#lib/utils/dns/dnsTypes.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	type Props = VisualizerPluginProps;
 

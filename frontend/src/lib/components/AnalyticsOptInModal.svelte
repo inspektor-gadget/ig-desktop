@@ -1,10 +1,10 @@
 <script lang="ts">
 	import BaseModal from './BaseModal.svelte';
 	import Button from './Button.svelte';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import { analyticsService } from '$lib/services/analytics.service.svelte';
-	import { t } from '$lib/i18n/index.svelte';
-	import analyticsIcon from '$lib/icons/chart-bars.svelte';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import { analyticsService } from '#lib/services/analytics.service.svelte.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
+	import analyticsIcon from '#lib/icons/chart-bars.svelte';
 
 	interface Props {
 		open?: boolean;

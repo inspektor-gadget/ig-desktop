@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { AssetPath } from '$app/types';
 import type {
 	Environment,
 	SessionItem,
@@ -19,9 +20,9 @@ import type {
 	RecordedEvent,
 	GadgetInfo,
 	GadgetRunRequest
-} from '$lib/types';
-import { base } from '$app/paths';
-import { setEnvPref } from '$lib/utils/env-preferences';
+} from '#lib/types/index.ts';
+import { asset } from '$app/paths';
+import { setEnvPref } from '#lib/utils/env-preferences.ts';
 
 /**
  * Demo session data structure - loaded from JSON files
@@ -85,7 +86,7 @@ export class DemoBackendService {
 	async initialize(): Promise<void> {
 		try {
 			// Load demo config
-			const configResponse = await fetch(`${base}/demo/config.json`);
+			const configResponse = await fetch(asset('demo/config.json'));
 			if (!configResponse.ok) {
 				console.error('Failed to load demo config:', configResponse.status);
 				return;
@@ -102,7 +103,7 @@ export class DemoBackendService {
 			// Load all session files
 			for (const sessionPath of config.sessions) {
 				try {
-					const response = await fetch(`${base}/demo/sessions/${sessionPath}`);
+					const response = await fetch(asset(`demo/sessions/${sessionPath}` as AssetPath));
 					if (!response.ok) {
 						console.error(`Failed to load session ${sessionPath}:`, response.status);
 						continue;
@@ -117,7 +118,7 @@ export class DemoBackendService {
 			// Load all recent gadget files
 			for (const recentPath of config.recents || []) {
 				try {
-					const response = await fetch(`${base}/demo/recents/${recentPath}`);
+					const response = await fetch(asset(`demo/recents/${recentPath}` as AssetPath));
 					if (!response.ok) {
 						console.error(`Failed to load recent ${recentPath}:`, response.status);
 						continue;
@@ -132,7 +133,7 @@ export class DemoBackendService {
 			// Load all instance files
 			for (const instancePath of config.instances || []) {
 				try {
-					const response = await fetch(`${base}/demo/instances/${instancePath}`);
+					const response = await fetch(asset(`demo/instances/${instancePath}` as AssetPath));
 					if (!response.ok) {
 						console.error(`Failed to load instance ${instancePath}:`, response.status);
 						continue;

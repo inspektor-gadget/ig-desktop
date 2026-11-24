@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Handle, Position } from '@xyflow/svelte';
-	import type { DnsResolverNodeData } from '$lib/utils/dns/dnsMapGraph';
-	import { severityColorClass, severityIcon, severityLabel } from '$lib/utils/dns/dnsSeverity';
-	import { formatEndpoint } from '$lib/utils/dns/dnsFormat';
-	import { t } from '$lib/i18n/index.svelte';
+	import type { DnsResolverNodeData } from '#lib/utils/dns/dnsMapGraph.ts';
+	import { severityColorClass, severityIcon, severityLabel } from '#lib/utils/dns/dnsSeverity.ts';
+	import { formatEndpoint } from '#lib/utils/dns/dnsFormat.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		data: DnsResolverNodeData;

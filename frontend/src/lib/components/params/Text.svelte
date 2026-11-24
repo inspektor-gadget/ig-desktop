@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import Title from './Title.svelte';
-	import Input from '$lib/components/forms/Input.svelte';
-	import Textarea from '$lib/components/forms/Textarea.svelte';
+	import Input from '#lib/components/forms/Input.svelte';
+	import Textarea from '#lib/components/forms/Textarea.svelte';
 
 	interface Param {
 		key: string;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import * as d3 from 'd3';
-	import type { ChartDimensions } from '$lib/types/charts';
+	import type { ChartDimensions } from '#lib/types/charts.ts';
 
 	let { dimension = 'x', scale = null, label, formatTick = d3.format(',') } = $props();
 

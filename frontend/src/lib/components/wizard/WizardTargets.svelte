@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { setContext } from 'svelte';
-	import K8sAutocomplete from '$lib/plugins/builtin/params/k8s-autocomplete/K8sAutocomplete.svelte';
-	import AutocompleteInput from '$lib/components/forms/AutocompleteInput.svelte';
+	import K8sAutocomplete from '#lib/plugins/builtin/params/k8s-autocomplete/K8sAutocomplete.svelte';
+	import AutocompleteInput from '#lib/components/forms/AutocompleteInput.svelte';
 	import type { WizardTargetParams } from './wizard-types';
-	import { t } from '$lib/i18n/index.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface Props {
 		isKubernetes: boolean;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { toastStore } from '$lib/stores/toast.svelte';
+	import { toastStore } from '#lib/stores/toast.svelte.ts';
 	import Toast from './Toast.svelte';
 
 	interface Props {

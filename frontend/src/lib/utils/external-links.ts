@@ -4,7 +4,7 @@
  * in browser mode.
  */
 
-import { environment } from '$lib/services/environment.service.svelte';
+import { environment } from '#lib/services/environment.service.svelte.ts';
 import { overrideStack } from './override-stack';
 
 const hostOpeners = overrideStack<(url: string) => void | Promise<void>>();

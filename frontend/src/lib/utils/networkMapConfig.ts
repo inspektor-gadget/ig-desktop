@@ -3,7 +3,7 @@
  * and processing network connection events into a graph structure.
  */
 
-import type { Datasource } from '$lib/types/charts';
+import type { Datasource } from '#lib/types/charts.ts';
 import type {
 	NetworkMapConfig,
 	NetworkMapFieldConfig,
@@ -13,13 +13,13 @@ import type {
 	NetworkGraphState,
 	NetworkNodeLabel,
 	NetworkMapOptions
-} from '$lib/types/networkmap';
+} from '#lib/types/networkmap.ts';
 import {
 	EDGE_ANIMATION_DURATION,
 	NODE_ACTIVITY_TIMEOUT,
 	DEFAULT_EPHEMERAL_PORT_THRESHOLD
-} from '$lib/types/networkmap';
-import { mergeHandleType, shouldReverseByPort } from '$lib/utils/networkmap/portDirection';
+} from '#lib/types/networkmap.ts';
+import { mergeHandleType, shouldReverseByPort } from '#lib/utils/networkmap/portDirection.ts';
 
 /**
  * Hardcoded field name patterns for network map detection.

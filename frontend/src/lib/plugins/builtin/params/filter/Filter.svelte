@@ -1,11 +1,11 @@
 <script lang="ts">
-	import Title from '$lib/components/params/Title.svelte';
+	import Title from '#lib/components/params/Title.svelte';
 	import { getContext } from 'svelte';
-	import Delete from '$lib/icons/fa/trash.svelte';
-	import Select from '$lib/components/forms/Select.svelte';
-	import Input from '$lib/components/forms/Input.svelte';
-	import type { GadgetParam, ParamConfig, GadgetInfo } from '$lib/types';
-	import { t } from '$lib/i18n/index.svelte';
+	import Delete from '#lib/icons/fa/trash.svelte';
+	import Select from '#lib/components/forms/Select.svelte';
+	import Input from '#lib/components/forms/Input.svelte';
+	import type { GadgetParam, ParamConfig, GadgetInfo } from '#lib/types/index.ts';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	interface FieldInfo {
 		ds: string;

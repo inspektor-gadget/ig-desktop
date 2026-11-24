@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Monaco from '../Monaco.svelte';
-	import { t } from '$lib/i18n/index.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let { gadgetInfo } = $props();
 

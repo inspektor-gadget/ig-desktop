@@ -15,8 +15,8 @@
 	import Select from './params/Select.svelte';
 	import Bool from './params/Bool.svelte';
 	import Number from './params/Number.svelte';
-	import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
-	import type { GadgetParam } from '$lib/types';
+	import { pluginRegistry } from '#lib/services/plugin-registry.service.svelte.ts';
+	import type { GadgetParam } from '#lib/types/index.ts';
 	import type { Component } from 'svelte';
 
 	// Param input components have heterogeneous prop shapes (each setting type

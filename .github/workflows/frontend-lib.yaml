@@ -95,7 +95,7 @@ jobs:
             },
             "peerDependencies": {
               "react": "^18.0.0 || ^19.0.0",
-              "svelte": "^5.0.0"
+              "svelte": "^5.57.3"
             }
           }
           EOF

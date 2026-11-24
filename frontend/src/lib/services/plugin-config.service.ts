@@ -5,14 +5,14 @@
  * Plugin settings are namespaced as `plugin:{pluginId}:{key}` in the main config store.
  */
 
-import { configuration } from '$lib/stores/configuration.svelte';
-import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
-import { registerPluginCategoriesProvider } from '$lib/config';
-import type { Category, Setting } from '$lib/config.types';
-import type { PluginSettingDefinition } from '$lib/types/plugin-manifest';
-import type { PluginContext } from '$lib/types/plugin-api';
-import type { GadgetInfo } from '$lib/types';
-import type { PluginCapabilities } from '$lib/types/plugin-system';
+import { configuration } from '#lib/stores/configuration.svelte.ts';
+import { pluginRegistry } from '#lib/services/plugin-registry.service.svelte.ts';
+import { registerPluginCategoriesProvider } from '#lib/config.ts';
+import type { Category, Setting } from '#lib/config.types.ts';
+import type { PluginSettingDefinition } from '#lib/types/plugin-manifest.ts';
+import type { PluginContext } from '#lib/types/plugin-api.ts';
+import type { GadgetInfo } from '#lib/types/index.ts';
+import type { PluginCapabilities } from '#lib/types/plugin-system.ts';
 
 /** Prefix for plugin settings in the configuration store */
 const PLUGIN_PREFIX = 'plugin:';

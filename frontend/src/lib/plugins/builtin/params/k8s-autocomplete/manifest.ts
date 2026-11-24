@@ -5,7 +5,7 @@
  * namespaces, containers, etc.
  */
 
-import type { PluginManifest } from '$lib/types/plugin-manifest';
+import type { PluginManifest } from '#lib/types/plugin-manifest.ts';
 
 export const manifest: PluginManifest = {
 	id: 'builtin:param-k8s-autocomplete',

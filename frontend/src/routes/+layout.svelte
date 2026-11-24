@@ -1,62 +1,62 @@
 <script lang="ts">
 	import '../app.css';
 	// Initialize i18next (language detection) on app boot.
-	import '$lib/i18n/config';
+	import '#lib/i18n/config.ts';
 	import { setContext, onMount } from 'svelte';
 
-	import BrandIcon from '$lib/icons/ig/small.svelte';
-	import BrandIconLarge from '$lib/icons/ig/large.svelte';
-	import Gadget from '$lib/icons/gadget.svelte';
-	import Plus from '$lib/icons/circle-plus.svelte';
-	import Info from '$lib/icons/info.svelte';
-	import Book from '$lib/icons/book.svelte';
-	import Close from '$lib/icons/close-small.svelte';
-	import Maximize from '$lib/icons/fa/window-maximize.svelte';
-	import Minimize from '$lib/icons/fa/window-minimize.svelte';
-	import Restore from '$lib/icons/fa/window-restore.svelte';
-	import ArtifactHub from '$lib/icons/artifacthub-logo.svelte';
-	import NavbarLink from '$lib/components/NavbarLink.svelte';
-	import K8sDeployModal from '$lib/components/K8sDeployModal.svelte';
-	import ConfirmationModal from '$lib/components/ConfirmationModal.svelte';
-	import ConfigurationModal from '$lib/components/ConfigurationModal.svelte';
-	import UpdateCheckModal from '$lib/components/UpdateCheckModal.svelte';
-	import AnalyticsOptInModal from '$lib/components/AnalyticsOptInModal.svelte';
-	import VersionInfoModal from '$lib/components/VersionInfoModal.svelte';
-	import { analyticsService } from '$lib/services/analytics.service.svelte';
-	import { themeService } from '$lib/services/theme.service.svelte';
-	import ToastContainer from '$lib/components/ToastContainer.svelte';
+	import BrandIcon from '#lib/icons/ig/small.svelte';
+	import BrandIconLarge from '#lib/icons/ig/large.svelte';
+	import Gadget from '#lib/icons/gadget.svelte';
+	import Plus from '#lib/icons/circle-plus.svelte';
+	import Info from '#lib/icons/info.svelte';
+	import Book from '#lib/icons/book.svelte';
+	import Close from '#lib/icons/close-small.svelte';
+	import Maximize from '#lib/icons/fa/window-maximize.svelte';
+	import Minimize from '#lib/icons/fa/window-minimize.svelte';
+	import Restore from '#lib/icons/fa/window-restore.svelte';
+	import ArtifactHub from '#lib/icons/artifacthub-logo.svelte';
+	import NavbarLink from '#lib/components/NavbarLink.svelte';
+	import K8sDeployModal from '#lib/components/K8sDeployModal.svelte';
+	import ConfirmationModal from '#lib/components/ConfirmationModal.svelte';
+	import ConfigurationModal from '#lib/components/ConfigurationModal.svelte';
+	import UpdateCheckModal from '#lib/components/UpdateCheckModal.svelte';
+	import AnalyticsOptInModal from '#lib/components/AnalyticsOptInModal.svelte';
+	import VersionInfoModal from '#lib/components/VersionInfoModal.svelte';
+	import { analyticsService } from '#lib/services/analytics.service.svelte.ts';
+	import { themeService } from '#lib/services/theme.service.svelte.ts';
+	import ToastContainer from '#lib/components/ToastContainer.svelte';
 	import { appState } from './state.svelte.js';
-	import { environments } from '$lib/shared/environments.svelte.js';
-	import { deployments } from '$lib/shared/deployments.svelte';
-	import Server from '$lib/icons/server.svelte';
-	import { websocketService } from '$lib/services/websocket.service.svelte';
+	import { environments } from '#lib/shared/environments.svelte.ts';
+	import { deployments } from '#lib/shared/deployments.svelte.ts';
+	import Server from '#lib/icons/server-icon.svelte';
+	import { websocketService } from '#lib/services/websocket.service.svelte.ts';
 	import {
 		apiService,
 		type CheckForUpdatesResponse,
 		type GetVersionResponse
-	} from '$lib/services/api.service.svelte';
-	import { messageRouter } from '$lib/services/message-router.service.svelte';
-	import { currentEnvironment } from '$lib/shared/current-environment.svelte';
-	import { configuration } from '$lib/stores/configuration.svelte';
-	import { settingsDialog } from '$lib/stores/settings-dialog.svelte';
-	import { environment } from '$lib/services/environment.service.svelte';
-	import Lock from '$lib/icons/fa/lock.svelte';
-	import LockOpen from '$lib/icons/fa/lock-open.svelte';
-	import Cog from '$lib/icons/cog.svelte';
-	import { APP_MODE, features } from '$lib/config/app-mode';
-	import { loadSingleEnvConfig } from '$lib/services/config-loader.service';
+	} from '#lib/services/api.service.svelte.ts';
+	import { messageRouter } from '#lib/services/message-router.service.svelte.ts';
+	import { currentEnvironment } from '#lib/shared/current-environment.svelte.ts';
+	import { configuration } from '#lib/stores/configuration.svelte.ts';
+	import { settingsDialog } from '#lib/stores/settings-dialog.svelte.ts';
+	import { environment } from '#lib/services/environment.service.svelte.ts';
+	import Lock from '#lib/icons/fa/lock.svelte';
+	import LockOpen from '#lib/icons/fa/lock-open.svelte';
+	import Cog from '#lib/icons/cog.svelte';
+	import { APP_MODE, features } from '#lib/config/app-mode.ts';
+	import { loadSingleEnvConfig } from '#lib/services/config-loader.service.ts';
 	import { resolve } from '$app/paths';
-	import { WailsAdapter } from '$lib/transport/wails.adapter';
-	import { WebSocketAdapter } from '$lib/transport/websocket.adapter';
-	import { DemoAdapter } from '$lib/transport/demo.adapter';
-	import type { ITransportAdapter } from '$lib/transport/adapter';
-	import { registerBuiltinPlugins } from '$lib/plugins/builtin';
-	import { loadLocalPlugins } from '$lib/services/plugin-loader.service';
-	import PluginHookRenderer from '$lib/components/PluginHookRenderer.svelte';
-	import { t, getLanguage } from '$lib/i18n/index.svelte';
-	import { rtlLanguages } from '$lib/i18n/supported-languages';
-	import type { FileOutputCapability } from '$lib/types';
-	import { setFileOutputCapability } from '$lib/shared/file-output.svelte';
+	import { WailsAdapter } from '#lib/transport/wails.adapter.ts';
+	import { WebSocketAdapter } from '#lib/transport/websocket.adapter.ts';
+	import { DemoAdapter } from '#lib/transport/demo.adapter.ts';
+	import type { ITransportAdapter } from '#lib/transport/adapter.ts';
+	import { registerBuiltinPlugins } from '#lib/plugins/builtin/index.ts';
+	import { loadLocalPlugins } from '#lib/services/plugin-loader.service.ts';
+	import PluginHookRenderer from '#lib/components/PluginHookRenderer.svelte';
+	import { t, getLanguage } from '#lib/i18n/index.svelte.ts';
+	import { rtlLanguages } from '#lib/i18n/supported-languages.ts';
+	import type { FileOutputCapability } from '#lib/types/index.ts';
+	import { setFileOutputCapability } from '#lib/shared/file-output.svelte.ts';
 
 	let { children } = $props();
 	let fileOutput = $state<FileOutputCapability | undefined>();
@@ -414,7 +414,7 @@
 					{#if features.isSingleEnvironment}
 						<!-- Single-env mode: show Home button that links to the single environment -->
 						{#each Object.entries(environments) as [id] (id)}
-							<NavbarLink href={resolve(`/env/${id}`)} title={t('Home')}>
+							<NavbarLink href={resolve(`env/${id}`)} title={t('Home')}>
 								<BrandIconLarge />
 							</NavbarLink>
 						{/each}
@@ -422,7 +422,7 @@
 						<!-- Full mode: show brand logo linking to home page -->
 						<NavbarLink href={resolve('/')} title={t('Home')}><BrandIconLarge /></NavbarLink>
 						{#each Object.entries(environments) as [id, env] (id)}
-							<NavbarLink href={resolve(`/env/${id}`)} title={env.name}>
+							<NavbarLink href={resolve(`env/${id}`)} title={env.name}>
 								<div class="grid" title={env.name}>
 									<div class="col-start-1 row-start-1 text-gray-200 dark:text-gray-600 opacity-80">
 										<Gadget />

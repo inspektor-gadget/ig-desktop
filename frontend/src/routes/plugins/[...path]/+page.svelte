@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { pluginRegistry } from '$lib/services/plugin-registry.service.svelte';
-	import Spinner from '$lib/components/Spinner.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import { pluginRegistry } from '#lib/services/plugin-registry.service.svelte.ts';
+	import Spinner from '#lib/components/Spinner.svelte';
+	import ChevronLeft from '#lib/icons/chevron-left.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { t } from '$lib/i18n/index.svelte';
+	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let { data } = $props();
 
