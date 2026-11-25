@@ -6,7 +6,7 @@ require (
 	github.com/coder/websocket v1.8.15
 	github.com/google/gnostic-models v0.7.0
 	github.com/google/uuid v1.6.0
-	github.com/gopacket/gopacket v1.7.4
+	github.com/gopacket/gopacket v1.8.0
 	github.com/inspektor-gadget/inspektor-gadget v0.58.0
 	github.com/sirupsen/logrus v1.10.2
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.79
