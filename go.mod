@@ -20,7 +20,7 @@ require (
 	k8s.io/apimachinery v0.37.1
 	k8s.io/cli-runtime v0.37.1
 	k8s.io/client-go v0.37.1
-	modernc.org/sqlite v1.59.0
+	modernc.org/sqlite v1.62.0
 )
 
 require (
@@ -126,7 +126,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/ncruces/go-strftime v1.0.0 // indirect
+	github.com/ncruces/go-strftime v1.1.0 // indirect
 	github.com/notaryproject/notation-core-go v1.3.0 // indirect
 	github.com/notaryproject/notation-go v1.3.2 // indirect
 	github.com/notaryproject/notation-plugin-framework-go v1.0.0 // indirect
@@ -193,7 +193,7 @@ require (
 	k8s.io/kubectl v0.37.0 // indirect
 	k8s.io/streaming v0.37.1 // indirect
 	k8s.io/utils v0.0.0-20260626114624-be93311217bd // indirect
-	modernc.org/libc v1.75.7 // indirect
+	modernc.org/libc v1.80.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
 	oras.land/oras-go/v2 v2.6.2 // indirect
