@@ -4,7 +4,7 @@ go 1.26.11
 
 require (
 	github.com/coder/websocket v1.8.15
-	github.com/google/gnostic-models v0.7.0
+	github.com/google/gnostic-models v0.7.1
 	github.com/google/uuid v1.6.0
 	github.com/gopacket/gopacket v1.8.0
 	github.com/inspektor-gadget/inspektor-gadget v0.58.0
